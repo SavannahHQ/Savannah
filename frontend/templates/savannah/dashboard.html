@@ -1,0 +1,57 @@
+{% extends "savannah/base.html" %}
+
+{% block body %}
+<h1>{{ community.name }}</h1>
+
+<h2>Members</h2>
+<ul>
+{% for member in community.member_set.all %}
+<li>{{ member.name }}{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
+<ul>
+{% for contact in member.contact_set.all %}
+<li>{{contact.source.name}}: {{contact.detail}}</li>
+{% endfor %}
+{% for note in member.note_set.all %}
+<li><b>Note:</b> {{note}}</li>
+{% endfor %}
+</ul>
+{% endfor %}
+</ul>
+
+<h2>Projects</h2>
+<ul>
+{% for project in community.project_set.all %}
+<li>{{ project.name }}{% include 'savannah/tags.html' with tags=project.tags.all %}</li>
+<ul>
+    {% for task in project.task_set.all %}
+    <li>{% if task.is_done %}<strike>{% endif %}{{task.name}}{% if task.is_done %}</strike>{% else %}
+    (due: {{task.due}}) {% endif %}
+    {% include 'savannah/tags.html' with tags=task.tags.all %}</li>
+    {% endfor %}
+</ul>
+{% endfor %}
+</ul>
+
+<h2>Activity</h2>
+<ul>
+{% for activity in community.activity_set.all %}
+<li>{{activity.activity_type.name}}: <a target="_blank" href="{{activity.location}}">{{ activity.title }}</a>{% include 'savannah/tags.html' with tags=activity.tags.all %}</li>
+{% endfor %}
+</ul>
+
+<h2>Conversations</h2>
+
+{% for source in community.source_set.all %}
+<h3>{{source.name}}</h3>
+<ul>
+    {% for channel in source.channel_set.all %}
+    <li>{{channel.name}}</li>
+    <ul>
+        {% for convo in channel.conversation_set.all %}
+        <li><a target="_blank" href="{{convo.location}}">{{convo}}</a>{% include 'savannah/tags.html' with tags=convo.tags.all %}</li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}
