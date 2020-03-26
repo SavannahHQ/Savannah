@@ -1,57 +1,121 @@
 {% extends "savannah/base.html" %}
 
+{% block style %}
+<style>
+h2 {
+    background-color: #efefef;
+    padding: 10px
+}
+h4 {
+    margin-block-start: 0px;
+    margin-block-end: 0px;
+}
+li {
+    padding-bottom: 3px
+}
+ul {
+    margin-block-start: 5px;
+    margin-block-end: 5px;
+}
+</style>
+{% endblock %}
+
 {% block body %}
 <h1>{{ community.name }}</h1>
 
-<h2>Members</h2>
+<table width="100%%">
+<tr>
+    <td valign="top" width="66%%">
+
+<h2>Tasks <a target="_blank" href="/admin/corm/task/add/?community={{community.id}}&owner={{request.user.id}}">+</a></h2>
 <ul>
-{% for member in community.member_set.all %}
-<li>{{ member.name }}{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
-<ul>
-{% for contact in member.contact_set.all %}
-<li>{{contact.source.name}}: {{contact.detail}}</li>
-{% endfor %}
-{% for note in member.note_set.all %}
-<li><b>Note:</b> {{note}}</li>
-{% endfor %}
-</ul>
+{% for task in community.task_set.all %}
+{% if not task.is_done %}
+<li>{% if task.is_done %}<strike>{% endif %}<a target="_blank" href="/admin/corm/task/{{task.id}}/change/">{{task.name}}</a>
+{% if task.is_done %}</strike>{% else %}
+due {{task.due}} {% endif %}
+{% include 'savannah/tags.html' with tags=task.tags.all %}</li>
+{% if task.stakeholders.all.count %}
+<ul><li>For: {% for stakeholder in task.stakeholders.all %}{{stakeholder.name}}{% if not forloop.last %}, {% endif %}{% endfor %}</li></ul>
+{% endif %}
+{% if task.conversation %}
+<ul><li>{{task.conversation.channel.source.name}} {{task.conversation.channel.name}}: 
+{% if task.conversation.location %}<a target="_blank" href="{{task.conversation.location}}">{% endif %}{{task.conversation}}{% if task.conversation.location %}</a>{% endif %}
+on {{task.conversation.timestamp}}
+</li></ul>
+{% endif %}
+{% endif %}
 {% endfor %}
 </ul>
 
-<h2>Projects</h2>
+<h2>Projects  <a target="_blank" href="/admin/corm/project/add/?community={{community.id}}">+</a></h2>
 <ul>
 {% for project in community.project_set.all %}
-<li>{{ project.name }}{% include 'savannah/tags.html' with tags=project.tags.all %}</li>
-<ul>
-    {% for task in project.task_set.all %}
-    <li>{% if task.is_done %}<strike>{% endif %}{{task.name}}{% if task.is_done %}</strike>{% else %}
-    (due: {{task.due}}) {% endif %}
-    {% include 'savannah/tags.html' with tags=task.tags.all %}</li>
-    {% endfor %}
-</ul>
+<li>
+<a target="_blank" href="/admin/corm/project/{{project.id}}/change">{{ project.name }}</a>
+{% if project.tag %}<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{project.tag.color}};">#{{project.tag.name}}</span>{% endif %}
+</li>
 {% endfor %}
 </ul>
 
-<h2>Activity</h2>
-<ul>
-{% for activity in community.activity_set.all %}
-<li>{{activity.activity_type.name}}: <a target="_blank" href="{{activity.location}}">{{ activity.title }}</a>{% include 'savannah/tags.html' with tags=activity.tags.all %}</li>
-{% endfor %}
-</ul>
-
-<h2>Conversations</h2>
+<h2>Engagement <a target="_blank" href="/admin/corm/conversation/add/">+C</a> <a target="_blank" href="/admin/corm/activity/add/?community={{community.id}}">+A</a></h2>
 
 {% for source in community.source_set.all %}
-<h3>{{source.name}}</h3>
+{% if source.has_engagement %}
+<h4>{{source.name}}</h4>
 <ul>
+    {% for activity in source.activity_set.all %}
+    <li>
+    {% if activity.location %}<a target="_blank" href="{{activity.location}}">{% endif %}
+    "{{ activity.title }}"
+    {% if activity.location %}</a>{% endif %}
+    on {{activity.timestamp}} {% include 'savannah/tags.html' with tags=activity.tags.all %}</li>
+    {% endfor %}
     {% for channel in source.channel_set.all %}
+    {% if channel.conversation_set.all.count %}
     <li>{{channel.name}}</li>
     <ul>
         {% for convo in channel.conversation_set.all %}
-        <li><a target="_blank" href="{{convo.location}}">{{convo}}</a>{% include 'savannah/tags.html' with tags=convo.tags.all %}</li>
+        <li>{{convo.timestamp}} <a target="_blank" href="/admin/corm/conversation/{{convo.id}}/change">{{convo}}</a>{% include 'savannah/tags.html' with tags=convo.tags.all %}</li>
         {% endfor %}
     </ul>
+    {% endif %}
     {% endfor %}
 </ul>
+{% endif %}
 {% endfor %}
+
+    </td>
+    <td valign="top">
+
+{% if user_member %}
+<h2>{{user_member.memberconnection_set.count}} Connections </h2>
+<ul>
+{% for connection in user_member.memberconnection_set.all %}
+<li>
+  <a target="_blank" href="/admin/corm/member/{{connection.to_member.id}}/change/">{{ connection.to_member.name }}</a>
+  ({{connection.via.name}} on {{connection.timestamp}})
+</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h2>{{community.member_set.count }} Members <a target="_blank" href="/admin/corm/member/add/?community={{community.id}}">+</a></h2>
+<ul>
+{% for member in community.member_set.all %}
+<li><a target="_blank" href="/admin/corm/member/{{member.id}}/change/">{{ member.name }}</a> <a target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}">+</a>{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
+{% if member.note_set.all.count %}
+<ul>
+{% for note in member.note_set.all %}
+<li><b>Note:</b> {{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/"><i>!</i></a></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% endfor %}
+</ul>
+
+    </td>
+</tr>
+</table>
+
 {% endblock %}

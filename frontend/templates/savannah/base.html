@@ -1,7 +1,13 @@
 <html>
     <head>
+    {% block style %}{% endblock %}
     </head>
     <body>
+        <div id="communities_list">
+        {% for c in communities %}
+            <span style="padding: 10px;{% if c.id == community.id %}font-weight: bold;{% endif %}"><a href="{% url 'dashboard' c.id %}">{{ c.name }}</a></span>
+        {% endfor %}
+        </div>
         {% block body %}{% endblock %}
     </body>
 </html>

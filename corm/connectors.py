@@ -10,4 +10,5 @@ class ConnectionManager(object):
             ("corm.plugins.rss", "RSS"),
             ("corm.plugins.reddit", "Reddit"),
             ("corm.plugins.github", "Github"),
+            ("corm.plugins.twitter", "Twitter"),
         ]

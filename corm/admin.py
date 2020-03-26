@@ -83,7 +83,7 @@ admin.site.register(Channel, ChannelAdmin)
 
 class ProjectAdmin(admin.ModelAdmin):
     list_display = ("name", "community", "member_count", "task_count")
-    list_filter = ("community", "tags")
+    list_filter = ("community",)
     search_fields = ("name",)
     def task_count(self, project):
         count = project.task_set.filter(done__isnull=True).count()
@@ -97,8 +97,13 @@ class ProjectAdmin(admin.ModelAdmin):
     member_count.short_description = "Collaborators"
 admin.site.register(Project, ProjectAdmin)
 
+class MemberConnectionAdmin(admin.ModelAdmin):
+    list_display = ("from_member", "to_member", "via", "timestamp")
+    list_filter = ("via__community", "via")
+admin.site.register(MemberConnection, MemberConnectionAdmin)
+
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("name", "user_email", "community", "task_count", "conversation_count")
+    list_display = ("name", "user_email", "community", "task_count", "conversation_count", "connection_count")
     list_filter = ("community", "tags")
     search_fields = ("name",)
     def task_count(self, member):
@@ -117,6 +122,10 @@ class MemberAdmin(admin.ModelAdmin):
     def conversation_count(self, member):
         return Conversation.objects.filter(participants=member).count()
     conversation_count.short_description = "Conversations"
+
+    def connection_count(self, member):
+        return member.connections.count()
+    connection_count.short_description = "Connections"
 
 admin.site.register(Member, MemberAdmin)
 
@@ -145,8 +154,8 @@ class ConversationAdmin(admin.ModelAdmin):
 admin.site.register(Conversation, ConversationAdmin)
 
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ("name", "owner", "due", "project", "stakeholder_list", "is_done")
-    list_filter = (isNotNull("done"), "owner", "project__community", "project", "tags", "stakeholders")
+    list_display = ("name", "owner", "due", "community", "project", "stakeholder_list", "is_done")
+    list_filter = (isNotNull("done"), "community", "owner", "project__community", "project", "tags", "stakeholders")
     actions = ('mark_done',"mark_notdone")
     def stakeholder_list(self, task):
         return ", ".join([member.name for member in task.stakeholders.all()[:10]])
