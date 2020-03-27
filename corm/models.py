@@ -138,7 +138,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     def __str__(self):
         if len(self.content) > 2:
             try:
-                return self.content[:self.content.index('\n')]
+                return self.content[:min(self.content.index('\n'), 64)]
             except:
                 return self.content[:min(len(self.content), 64)]
         else:
