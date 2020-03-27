@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'corm.apps.CormConfig',
     'frontend.apps.FrontendConfig',
     'grimoire',
+    'django_slack_oauth',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +122,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = './static/'
+
+SLACK_CLIENT_ID = os.environ.get('SLACK_CLIENT_ID')
+SLACK_CLIENT_SECRET = os.environ.get('SLACK_CLIENT_SECRET')
+SLACK_SCOPE = 'channels:history,channels:read,users:read'
+
+SLACK_PIPELINES = [
+    'savannah.utils.add_slack_source',
+]

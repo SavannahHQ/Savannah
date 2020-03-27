@@ -2,9 +2,34 @@
 
 {% block style %}
 <style>
+body {
+    font-family: sans-serif;
+    background-color: #c6e9f7;
+}
+h2 > a {
+    color: #fefefe;
+    text-decoration: none;
+    border-radius: 10px 10px 0px 0px;
+}
 h2 {
-    background-color: #efefef;
-    padding: 10px
+    font-size: 1.2em;
+    background-color: #18afee;
+    background-image: linear-gradient(to bottom, #18afee, #028beb);
+    border-radius: 10px 10px 0px 0px;
+    color: #fefefe;
+    text-shadow: 1px 1px #005ea1aa;
+    padding: 5px 10px;
+    margin-bottom: 0px;
+}
+.box {
+    border: #028beb55 1px solid;
+    border-top: 0px;
+    margin-top: 0px;
+    padding: 10px;
+    background-image: linear-gradient(to bottom right, #fefefe, #f5fdff);
+}
+a {
+    color: #028beb;
 }
 h4 {
     margin-block-start: 0px;
@@ -21,13 +46,13 @@ ul {
 {% endblock %}
 
 {% block body %}
-<h1>{{ community.name }}</h1>
 
 <table width="100%%">
 <tr>
-    <td valign="top" width="66%%">
+    <td valign="top" width="60%">
 
 <h2>Tasks <a target="_blank" href="/admin/corm/task/add/?community={{community.id}}&owner={{request.user.id}}">+</a></h2>
+<div class="box">
 <ul>
 {% for task in community.task_set.all %}
 {% if not task.is_done %}
@@ -47,8 +72,10 @@ on {{task.conversation.timestamp}}
 {% endif %}
 {% endfor %}
 </ul>
+</div>
 
 <h2>Projects  <a target="_blank" href="/admin/corm/project/add/?community={{community.id}}">+</a></h2>
+<div class="box">
 <ul>
 {% for project in community.project_set.all %}
 <li>
@@ -57,9 +84,14 @@ on {{task.conversation.timestamp}}
 </li>
 {% endfor %}
 </ul>
+</div>
 
-<h2>Engagement <a target="_blank" href="/admin/corm/conversation/add/">+C</a> <a target="_blank" href="/admin/corm/activity/add/?community={{community.id}}">+A</a></h2>
-
+<h2>Engagement 
+    <a target="_blank" href="/admin/corm/conversation/add/">+C</a> 
+    <a target="_blank" href="/admin/corm/activity/add/?community={{community.id}}">+A</a>
+    <a href='{% url 'slack_auth' %}'>+Slack</a>
+</h2>
+<div class="box">
 {% for source in community.source_set.all %}
 {% if source.has_engagement %}
 <h4>{{source.name}}</h4>
@@ -84,12 +116,14 @@ on {{task.conversation.timestamp}}
 </ul>
 {% endif %}
 {% endfor %}
+</div>
 
     </td>
     <td valign="top">
 
 {% if user_member %}
 <h2>{{user_member.memberconnection_set.count}} Connections </h2>
+<div class="box">
 <ul>
 {% for connection in user_member.memberconnection_set.all %}
 <li>
@@ -98,9 +132,11 @@ on {{task.conversation.timestamp}}
 </li>
 {% endfor %}
 </ul>
+</div>
 {% endif %}
 
 <h2>{{community.member_set.count }} Members <a target="_blank" href="/admin/corm/member/add/?community={{community.id}}">+</a></h2>
+<div class="box">
 <ul>
 {% for member in community.member_set.all %}
 <li><a target="_blank" href="/admin/corm/member/{{member.id}}/change/">{{ member.name }}</a> <a target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}">+</a>{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
@@ -113,6 +149,7 @@ on {{task.conversation.timestamp}}
 {% endif %}
 {% endfor %}
 </ul>
+</div>
 
     </td>
 </tr>

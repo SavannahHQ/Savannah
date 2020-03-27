@@ -19,6 +19,7 @@ from django.urls import path
 from frontend import views
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('dashboard/<int:community_id>/', views.dashboard, name='dashboard')
+    path('', views.index, name='index'),
+    path('home/', views.home, name='home'),
+    path('dashboard/<int:community_id>/', views.dashboard, name='dashboard'),
 ]
