@@ -1,4 +1,5 @@
 {% extends "savannah/base.html" %}
+{% load simple_math %}
 
 {% block style %}
 <style>
@@ -108,11 +109,14 @@ on {{task.conversation.timestamp}}
     {% if channel.conversation_set.all.count %}
     <li>{{channel.name}}</li>
     <ul>
-        {% for convo in channel.conversation_set.all %}
+        {% for convo in channel.conversation_set.all|slice:"10" %}
         <li>{{convo.timestamp}} <a target="_blank" href="/admin/corm/conversation/{{convo.id}}/change">{{convo}}</a>
         {% if convo.tags.count %}<br/>{% include 'savannah/tags.html' with tags=convo.tags.all %}{% endif %}</li>
 
         {% endfor %}
+        {% if channel.conversation_set.all.count > 10 %}
+        <li><a target="_blank" href="/admin/corm/conversation/?channel={{channel.id}}">{{channel.conversation_set.all.count|subtract:10}} More...</a></li>
+        {% endif %}
     </ul>
     {% endif %}
     {% endfor %}
@@ -128,12 +132,15 @@ on {{task.conversation.timestamp}}
 <h2>{{user_member.memberconnection_set.count}} Connections </h2>
 <div class="box">
 <ul>
-{% for connection in user_member.memberconnection_set.all %}
+{% for connection in user_member.memberconnection_set.all|slice:20 %}
 <li>
   <a target="_blank" href="/admin/corm/member/{{connection.to_member.id}}/change/">{{ connection.to_member.name }}</a>
   ({{connection.via.name}} on {{connection.timestamp}})
 </li>
 {% endfor %}
+{% if user_member.memberconnection_set.all.count > 20 %}
+<li>{{user_member.memberconnection_set.all.count|subtract:20}} More...</li>
+{% endif %}
 </ul>
 </div>
 {% endif %}
