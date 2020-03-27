@@ -38,6 +38,8 @@ class ImportedDataModel(models.Model):
     origin_id = models.CharField(max_length=256, null=True, blank=True, unique=True)
 
 class MemberConnection(models.Model):
+    class Meta:
+        ordering = ("-timestamp",)
     from_member = models.ForeignKey('Member', on_delete=models.CASCADE)
     to_member = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='connectors')
     via = models.ForeignKey('Source', on_delete=models.SET_NULL, null=True)
