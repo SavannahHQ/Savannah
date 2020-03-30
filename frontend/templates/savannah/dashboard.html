@@ -72,10 +72,11 @@ ul {
 <ul><li><span class="note">For: {% for stakeholder in task.stakeholders.all %}{{stakeholder.name}}{% if not forloop.last %}, {% endif %}{% endfor %}</span></li></ul>
 {% endif %}
 {% if task.conversation %}
-<ul><li>{{task.conversation.channel.source.name}} {{task.conversation.channel.name}}: 
+<ul><li><span class="note">
+{{task.conversation.channel.source.name}} {{task.conversation.channel.name}}: 
 {% if task.conversation.location %}<a target="_blank" href="{{task.conversation.location}}">{% endif %}{{task.conversation}}{% if task.conversation.location %}</a>{% endif %}
 on {{task.conversation.timestamp}}
-</li></ul>
+</span></li></ul>
 {% endif %}
 {% endif %}
 {% endfor %}
