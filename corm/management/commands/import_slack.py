@@ -41,7 +41,9 @@ def import_slack(channel):
               convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
         convo_text = item.get('data').get('user_data').get('real_name') + ": " + convo_text
         slack_convo_id = "slack.com/conversation/%s" % item.get('data').get('client_msg_id')
-        convo, created = Conversation.objects.get_or_create(origin_id=slack_convo_id, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp})
+        server = source.server or "slack.com"
+        slack_convo_link = "https://%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
+        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
         convo.participants.add(contact.member)
         for tagged_user in tagged:
           if not slack._users.get(tagged_user):

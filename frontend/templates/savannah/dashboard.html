@@ -134,7 +134,7 @@ on {{task.conversation.timestamp}}
 <ul>
 {% for connection in user_member.memberconnection_set.all|slice:20 %}
 <li>
-  <a target="_blank" href="/admin/corm/member/{{connection.to_member.id}}/change/">{{ connection.to_member.name }}</a>
+  <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{connection.to_member.id}}">{{ connection.to_member.name }}</a>
   ({{connection.via.name}} on {{connection.timestamp}})
 </li>
 {% endfor %}
