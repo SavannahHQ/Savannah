@@ -61,6 +61,9 @@ h2 > .actions {
 .actions > a {
     margin-left: 10px;
 }
+.fa,.far {
+    font-size: 0.7em;
+}
 </style>
 {% endblock %}
 
@@ -182,11 +185,11 @@ on {{task.conversation.timestamp}}
 <div class="box">
 <ul>
 {% for member in community.member_set.all %}
-<li><a target="_blank" href="/admin/corm/contact/?member={{member.id}}">{{ member.name }}</a> <a target="_blank" href="/admin/corm/member/{{member.id}}/change/">&#9998;</a> <a target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}">+</a>{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
+<li><a target="_blank" href="/admin/corm/contact/?member={{member.id}}">{{ member.name }}</a> <a target="_blank" href="/admin/corm/member/{{member.id}}/change/" title="Edit Member"><i class="fa fa-edit"></i></a> <a title="Add Note" target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}"><i class="far fa-sticky-note"> </i></a>{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
 {% if member.note_set.all.count %}
 <ul>
 {% for note in member.note_set.all %}
-<li><span class="note"><b>Note:</b> {{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/">&#9998;</a></span></li>
+<li><span class="note">{{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/">&#9998;</a></span></li>
 {% endfor %}
 </ul>
 {% endif %}
