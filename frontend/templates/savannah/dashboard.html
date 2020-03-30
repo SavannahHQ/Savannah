@@ -140,7 +140,7 @@ on {{task.conversation.timestamp}}
 </li>
 {% endfor %}
 {% if user_member.memberconnection_set.all.count > 20 %}
-<li>{{user_member.memberconnection_set.all.count|subtract:20}} More...</li>
+<li><a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{user_member.id}}">{{user_member.memberconnection_set.all.count|subtract:20}} More...</a></li>
 {% endif %}
 </ul>
 </div>
