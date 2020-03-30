@@ -43,6 +43,8 @@ def import_slack(channel):
         slack_convo_id = "slack.com/conversation/%s" % item.get('data').get('client_msg_id')
         server = source.server or "slack.com"
         slack_convo_link = "https://%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
+        if 'thread_ts' in item.get('data'):
+          slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
         convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
         convo.participants.add(contact.member)
         for tagged_user in tagged:

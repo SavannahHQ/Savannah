@@ -104,6 +104,10 @@ on {{task.conversation.timestamp}}
 <li>
 <a target="_blank" href="/admin/corm/project/{{project.id}}/change">{{ project.name }}</a>
 {% if project.tag %}<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{project.tag.color}};">#{{project.tag.name}}</span>{% endif %}
+<ul>
+    <li><span class="note">{{project.collaborators.all.count}} Contributors</span></li>
+    <li><span class="note">{{project.task_set.all.count}} Tasks</span></li>
+</ul>
 </li>
 {% endfor %}
 </ul>
