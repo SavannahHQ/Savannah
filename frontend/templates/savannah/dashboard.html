@@ -154,6 +154,11 @@ on {{task.conversation.timestamp}}
 
     </td>
     <td valign="top">
+<h2>Tags</h2>
+<div class="box">
+{% include 'savannah/tags.html' with tags=community.tag_set.all %}
+</div>
+
 {% if most_active %}
 <h2>Most Active Members</h2>
 <div class="box">

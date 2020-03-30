@@ -130,13 +130,10 @@ class MemberAdmin(admin.ModelAdmin):
 admin.site.register(Member, MemberAdmin)
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ("detail", "source", "member", "conversation_count")
+    list_display = ("detail", "source", "member")
     list_filter = ("source__connector", "member__community", "source")
     search_fields = ("name",)
-    def conversation_count(self, contact):
-        return contact.member.conversation_set.all().count()
 
-    conversation_count.short_description = "Conversations"
 admin.site.register(Contact, ContactAdmin)
 
 class ConversationAdmin(admin.ModelAdmin):
