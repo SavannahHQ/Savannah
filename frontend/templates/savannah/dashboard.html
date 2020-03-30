@@ -7,7 +7,7 @@ body {
     font-family: sans-serif;
     background-color: #c6e9f7;
 }
-h2 > a {
+h2 a {
     color: #fefefe;
     text-decoration: none;
     border-radius: 10px 10px 0px 0px;
@@ -50,6 +50,17 @@ ul {
 .note {
     font-size: 0.8em;
 }
+.actions {
+    right: 0px;
+    font-size: 0.7em;
+}
+h2 > .actions {
+    float: right;
+    margin-top: 4px;    
+}
+.actions > a {
+    margin-left: 10px;
+}
 </style>
 {% endblock %}
 
@@ -59,7 +70,7 @@ ul {
 <tr>
     <td valign="top" width="60%">
 
-<h2>Tasks <a target="_blank" href="/admin/corm/task/add/?community={{community.id}}&owner={{request.user.id}}">+</a></h2>
+<h2>Tasks <span class="actions"><a target="_blank" href="/admin/corm/task/add/?community={{community.id}}&owner={{request.user.id}}">+Task</a></span></h2>
 <div class="box">
 <ul>
 {% for task in community.task_set.all %}
@@ -83,7 +94,7 @@ on {{task.conversation.timestamp}}
 </ul>
 </div>
 
-<h2>Projects  <a target="_blank" href="/admin/corm/project/add/?community={{community.id}}">+</a></h2>
+<h2>Projects  <span class="actions"><a target="_blank" href="/admin/corm/project/add/?community={{community.id}}">+Project</a></span></h2>
 <div class="box">
 <ul>
 {% for project in community.project_set.all %}
@@ -95,11 +106,11 @@ on {{task.conversation.timestamp}}
 </ul>
 </div>
 
-<h2>Engagement 
-    <a target="_blank" href="/admin/corm/conversation/add/">+C</a> 
-    <a target="_blank" href="/admin/corm/activity/add/?community={{community.id}}">+A</a>
+<h2>Engagement <span class="actions">
+    <a target="_blank" href="/admin/corm/conversation/add/">+Conversation</a> 
+    <a target="_blank" href="/admin/corm/activity/add/?community={{community.id}}">+Activity</a>
     <a href='{% url 'slack_auth' %}'>+Slack</a>
-</h2>
+</span></h2>
 <div class="box">
 {% for source in community.source_set.all %}
 {% if source.has_engagement %}
@@ -167,11 +178,11 @@ on {{task.conversation.timestamp}}
 </div>
 {% endif %}
 
-<h2>{{community.member_set.count }} Members <a target="_blank" href="/admin/corm/member/add/?community={{community.id}}">+</a></h2>
+<h2>{{community.member_set.count }} Members <span class="actions"><a target="_blank" href="/admin/corm/member/add/?community={{community.id}}">+Member</a></span></h2>
 <div class="box">
 <ul>
 {% for member in community.member_set.all %}
-<li><a target="_blank" href="/admin/corm/member/{{member.id}}/change/">{{ member.name }}</a> <a target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}">+</a>{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
+<li><a target="_blank" href="/admin/corm/contact/?member={{member.id}}">{{ member.name }}</a> <a target="_blank" href="/admin/corm/member/{{member.id}}/change/">&#9998;</a> <a target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}">+</a>{% include 'savannah/tags.html' with tags=member.tags.all %}</li>
 {% if member.note_set.all.count %}
 <ul>
 {% for note in member.note_set.all %}
