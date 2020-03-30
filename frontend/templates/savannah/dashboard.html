@@ -136,19 +136,32 @@ on {{task.conversation.timestamp}}
 
     </td>
     <td valign="top">
+{% if most_active %}
+<h2>Most Active Members</h2>
+<div class="box">
+<ul>
+{% for member, count in most_active %}
+<li>
+  <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}">{{ member.name }}</a>
+  <span class="note">{{count}} conversations</span>
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
 
 {% if user_member %}
 <h2>{{user_member.memberconnection_set.count}} Connections </h2>
 <div class="box">
 <ul>
-{% for connection in user_member.memberconnection_set.all|slice:20 %}
+{% for connection in user_member.memberconnection_set.all|slice:10 %}
 <li>
   <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{connection.to_member.id}}">{{ connection.to_member.name }}</a>
   <span class="timestamp">{{connection.via.name}} on {{connection.timestamp}}</span>
 </li>
 {% endfor %}
-{% if user_member.memberconnection_set.all.count > 20 %}
-<li><a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{user_member.id}}">{{user_member.memberconnection_set.all.count|subtract:20}} More...</a></li>
+{% if user_member.memberconnection_set.all.count > 10 %}
+<li><a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{user_member.id}}">{{user_member.memberconnection_set.all.count|subtract:10}} More...</a></li>
 {% endif %}
 </ul>
 </div>
