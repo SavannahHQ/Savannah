@@ -110,7 +110,8 @@ on {{task.conversation.timestamp}}
     <li>{{channel.name}}</li>
     <ul>
         {% for convo in channel.conversation_set.all|slice:"10" %}
-        <li>{{convo.timestamp}} <a target="_blank" href="/admin/corm/conversation/{{convo.id}}/change">{{convo}}</a>
+        <li>{{convo.timestamp}} {% if convo.location %}<a href="{{convo.location}}" target="_blank">{{convo}}</a>{% else %}{{convo}}{% endif %}
+        <a target="_blank" href="/admin/corm/conversation/{{convo.id}}/change">&#9998;</a>
         {% if convo.tags.count %}<br/>{% include 'savannah/tags.html' with tags=convo.tags.all %}{% endif %}</li>
 
         {% endfor %}
@@ -153,7 +154,7 @@ on {{task.conversation.timestamp}}
 {% if member.note_set.all.count %}
 <ul>
 {% for note in member.note_set.all %}
-<li><b>Note:</b> {{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/"><i>!</i></a></li>
+<li><b>Note:</b> {{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/">&#9998;</a></li>
 {% endfor %}
 </ul>
 {% endif %}
