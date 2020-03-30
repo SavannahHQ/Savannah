@@ -43,6 +43,13 @@ ul {
     margin-block-start: 5px;
     margin-block-end: 5px;
 }
+.timestamp {
+    font-size: 0.7em;
+    color: #000000aa;
+}
+.note {
+    font-size: 0.8em;
+}
 </style>
 {% endblock %}
 
@@ -59,10 +66,10 @@ ul {
 {% if not task.is_done %}
 <li>{% if task.is_done %}<strike>{% endif %}<a target="_blank" href="/admin/corm/task/{{task.id}}/change/">{{task.name}}</a>
 {% if task.is_done %}</strike>{% else %}
-due {{task.due}} {% endif %}
+<span class="timestamp">due {{task.due}}</span> {% endif %}
 {% if task.tags.count %}<br/>{% include 'savannah/tags.html' with tags=task.tags.all %}{% endif %}</li>
 {% if task.stakeholders.all.count %}
-<ul><li>For: {% for stakeholder in task.stakeholders.all %}{{stakeholder.name}}{% if not forloop.last %}, {% endif %}{% endfor %}</li></ul>
+<ul><li><span class="note">For: {% for stakeholder in task.stakeholders.all %}{{stakeholder.name}}{% if not forloop.last %}, {% endif %}{% endfor %}</span></li></ul>
 {% endif %}
 {% if task.conversation %}
 <ul><li>{{task.conversation.channel.source.name}} {{task.conversation.channel.name}}: 
@@ -102,7 +109,7 @@ on {{task.conversation.timestamp}}
     {% if activity.location %}<a target="_blank" href="{{activity.location}}">{% endif %}
     "{{ activity.title }}"
     {% if activity.location %}</a>{% endif %}
-    on {{activity.timestamp}}
+    <span class="timestamp">on {{activity.timestamp}}</span>
     {% if activity.tags.count %}<br/>{% include 'savannah/tags.html' with tags=activity.tags.all %}{% endif %}</li>
     {% endfor %}
     {% for channel in source.channel_set.all %}
@@ -110,7 +117,7 @@ on {{task.conversation.timestamp}}
     <li>{{channel.name}}</li>
     <ul>
         {% for convo in channel.conversation_set.all|slice:"10" %}
-        <li>{{convo.timestamp}} {% if convo.location %}<a href="{{convo.location}}" target="_blank">{{convo}}</a>{% else %}{{convo}}{% endif %}
+        <li><span class="timestamp">{{convo.timestamp}}</span> {% if convo.location %}<a href="{{convo.location}}" target="_blank">{{convo}}</a>{% else %}{{convo}}{% endif %}
         <a target="_blank" href="/admin/corm/conversation/{{convo.id}}/change">&#9998;</a>
         {% if convo.tags.count %}<br/>{% include 'savannah/tags.html' with tags=convo.tags.all %}{% endif %}</li>
 
@@ -136,7 +143,7 @@ on {{task.conversation.timestamp}}
 {% for connection in user_member.memberconnection_set.all|slice:20 %}
 <li>
   <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{connection.to_member.id}}">{{ connection.to_member.name }}</a>
-  ({{connection.via.name}} on {{connection.timestamp}})
+  <span class="timestamp">{{connection.via.name}} on {{connection.timestamp}}</span>
 </li>
 {% endfor %}
 {% if user_member.memberconnection_set.all.count > 20 %}
@@ -154,7 +161,7 @@ on {{task.conversation.timestamp}}
 {% if member.note_set.all.count %}
 <ul>
 {% for note in member.note_set.all %}
-<li><b>Note:</b> {{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/">&#9998;</a></li>
+<li><span class="note"><b>Note:</b> {{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/">&#9998;</a></span></li>
 {% endfor %}
 </ul>
 {% endif %}
