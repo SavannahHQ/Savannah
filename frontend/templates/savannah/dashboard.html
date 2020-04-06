@@ -167,6 +167,7 @@ on {{task.conversation.timestamp}}
 <li>
   <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}">{{ member.name }}</a>
   <span class="note">{{count}} conversations</span>
+  {% include 'savannah/tags.html' with tags=member.tags.all %}
 </li>
 {% endfor %}
 </ul>
@@ -181,6 +182,7 @@ on {{task.conversation.timestamp}}
 <li>
   <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
   <span class="note">{{count}} connections</span>
+  {% include 'savannah/tags.html' with tags=member.tags.all %}
 </li>
 {% endfor %}
 </ul>
@@ -195,6 +197,7 @@ on {{task.conversation.timestamp}}
 <li>
   <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{connection.to_member.id}}">{{ connection.to_member.name }}</a>
   <span class="timestamp">{{connection.via.name}} on {{connection.timestamp}}</span>
+  {% include 'savannah/tags.html' with tags=connection.to_member.tags.all %}
 </li>
 {% endfor %}
 {% if user_member.memberconnection_set.all.count > 10 %}
