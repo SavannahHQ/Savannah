@@ -160,13 +160,27 @@ on {{task.conversation.timestamp}}
 </div>
 
 {% if most_active %}
-<h2>Most Active Members</h2>
+<h2>Most Active (30 days)</h2>
 <div class="box">
 <ul>
 {% for member, count in most_active %}
 <li>
   <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}">{{ member.name }}</a>
   <span class="note">{{count}} conversations</span>
+</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+
+{% if most_connected %}
+<h2>Most Engaged (30 days)</h2>
+<div class="box">
+<ul>
+{% for member, count in most_connected %}
+<li>
+  <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
+  <span class="note">{{count}} connections</span>
 </li>
 {% endfor %}
 </ul>
