@@ -38,7 +38,7 @@ def dashboard(request, community_id):
     most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
     most_active.reverse()
 
-    connections = MemberConnection.objects.filter(from_member__community=community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+    connections = MemberConnection.objects.filter(from_member__community=community, first_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
     connection_counts = dict()
     for c in connections:
             if c.from_member in connection_counts:
