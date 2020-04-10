@@ -98,12 +98,12 @@ class ProjectAdmin(admin.ModelAdmin):
 admin.site.register(Project, ProjectAdmin)
 
 class MemberConnectionAdmin(admin.ModelAdmin):
-    list_display = ("from_member", "to_member", "via", "timestamp")
+    list_display = ("from_member", "to_member", "via", "first_connected", "last_connected")
     list_filter = ("via__community", "via")
 admin.site.register(MemberConnection, MemberConnectionAdmin)
 
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("name", "user_email", "community", "task_count", "conversation_count", "connection_count")
+    list_display = ("name", "user_email", "community", "date_added", "task_count", "conversation_count", "connection_count")
     list_filter = ("community", "tags")
     search_fields = ("name",)
     def task_count(self, member):

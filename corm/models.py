@@ -14,6 +14,7 @@ class Community(models.Model):
     name = models.CharField(max_length=256)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
+    icon_path = models.CharField(max_length=256)
 
     def __str__(self):
         return self.name
@@ -39,11 +40,12 @@ class ImportedDataModel(models.Model):
 
 class MemberConnection(models.Model):
     class Meta:
-        ordering = ("-timestamp",)
+        ordering = ("-last_connected",)
     from_member = models.ForeignKey('Member', on_delete=models.CASCADE)
     to_member = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='connectors')
     via = models.ForeignKey('Source', on_delete=models.SET_NULL, null=True)
-    timestamp = models.DateTimeField()
+    first_connected = models.DateTimeField()
+    last_connected = models.DateTimeField()
     
     def __str__(self):
         return "%s -> %s" % (self.from_member, self.to_member)
@@ -55,6 +57,7 @@ class Member(TaggableModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=256)
+    date_added = models.DateTimeField(auto_now_add=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
@@ -62,8 +65,12 @@ class Member(TaggableModel):
         return MemberConnection.objects.filter(from_member=self, to_member=other).count() > 0
 
     def add_connection(self, other, source, timestamp=None):
-        MemberConnection.objects.create(from_member=self, to_member=other, via=source, timestamp=timestamp)
-        MemberConnection.objects.create(from_member=other, to_member=self, via=source, timestamp=timestamp)
+        if self.is_connected(other):
+            MemberConnection.objects.filter(from_member=self, to_member=other).update(last_connected=timestamp)
+            MemberConnection.objects.filter(from_member=other, to_member=self).update(last_connected=timestamp)
+        else:              
+            MemberConnection.objects.create(from_member=self, to_member=other, via=source, first_connected=timestamp, last_connected=timestamp)
+            MemberConnection.objects.create(from_member=other, to_member=self, via=source, first_connected=timestamp, last_connected=timestamp)
         
     def remove_connection(self, other):
         MemberConnection.objects.filter(from_member=self, to_member=other).delete()

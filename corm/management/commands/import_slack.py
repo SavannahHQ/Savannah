@@ -59,8 +59,7 @@ def import_slack(channel):
           except:
             print("Failed to find Contact for %s" % slack._users.get(tagged_user).get('name'))
           try:
-            if not contact.member.is_connected(tagged_contact.member):
-              contact.member.add_connection(tagged_contact.member, source, tstamp)
+            contact.member.add_connection(tagged_contact.member, source, tstamp)
           except Exception as e:
             print("Failed to make connection between %s and %s" % (contact.member, tagged_contact.member))
             print(e)

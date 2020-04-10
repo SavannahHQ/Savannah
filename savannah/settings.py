@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corm.apps.CormConfig',
     'frontend.apps.FrontendConfig',
+    'frontendv2.apps.FrontendConfig',
     'grimoire',
     'django_slack_oauth',
 ]
