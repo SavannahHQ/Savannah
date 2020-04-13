@@ -196,7 +196,7 @@ on {{task.conversation.timestamp}}
 {% for connection in user_member.memberconnection_set.all|slice:10 %}
 <li>
   <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{connection.to_member.id}}">{{ connection.to_member.name }}</a>
-  <span class="timestamp">{{connection.via.name}} on {{connection.timestamp}}</span>
+  <span class="timestamp">{{connection.via.name}} on {{connection.first_connected}}</span>
   {% include 'savannah/tags.html' with tags=connection.to_member.tags.all %}
 </li>
 {% endfor %}

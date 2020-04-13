@@ -40,7 +40,7 @@ class ImportedDataModel(models.Model):
 
 class MemberConnection(models.Model):
     class Meta:
-        ordering = ("-last_connected",)
+        ordering = ("-first_connected",)
     from_member = models.ForeignKey('Member', on_delete=models.CASCADE)
     to_member = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='connectors')
     via = models.ForeignKey('Source', on_delete=models.SET_NULL, null=True)
