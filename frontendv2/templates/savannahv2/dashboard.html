@@ -504,6 +504,43 @@
                 </div>
               </div>
 
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged (30 days)</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Connections</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, count in dashboard.most_connected %}
+                <tr>
+                  <td>
+                    <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
+                    {% include 'savannah/tags.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
               <!-- Project Card Example -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
@@ -588,34 +625,6 @@
             </div>
 
             <div class="col-lg-6 mb-4">
-
-              <!-- Most Active Users-->
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged (30 days)</h6>
-                </div>
-                <div class="card-body p-0">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Member</th>
-                    <th scope="col">Connections</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for member, count in dashboard.most_connected %}
-                <tr>
-                  <td>
-                    <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
-                    {% include 'savannah/tags.html' with tags=member.tags.all %}
-                  </td>
-                  <td>{{count}}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                </div>
-              </div>
 
               <!-- Illustrations -->
               <div class="card shadow mb-4">
