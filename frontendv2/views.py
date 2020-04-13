@@ -25,6 +25,8 @@ def home(request):
 class Dashboard:
     def __init__(self, community_id):
         self.community = get_object_or_404(Community, id=community_id)
+        self._membersChart = None
+        self._channelsChart = None
     
     @property 
     def member_count(self):
@@ -74,37 +76,57 @@ class Dashboard:
         most_connected.reverse()
         return most_connected[:10]
 
+    def getMembersChart(self):
+        if not self._membersChart:
+            months = list()
+            counts = dict()
+            total = 0
+            for m in Member.objects.filter(community=self.community).order_by("date_added"):
+                total += 1
+                month = m.date_added.month
+                if month not in months:
+                    months.append(month)
+                counts[month] = total
+            self._membersChart = (months, counts)
+        return self._membersChart
+        
     @property
-    def members_by_month(self):
-        counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        for m in Member.objects.filter(community=self.community).order_by("date_added"):
-            counts[m.date_added.month-1] += 1
-        for i, count in enumerate(counts):
-            if i > 0 and count > 0:
-                counts[i] = counts[i] + counts[i-1]
-        return counts
+    def members_chart_months(self):
+        (months, counts) = self.getMembersChart()
+        names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        return [names[month-1] for month in months[-12:]]
 
     @property
-    def conversations_by_month(self):
-        all_conversations = Conversation.objects.filter(channel__source__community=self.community)
-        counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        for c in all_conversations:
-            counts[c.timestamp.month-1] += 1
-        return counts
+    def members_chart_counts(self):
+        (months, counts) = self.getMembersChart()
+        return [counts[month] for month in months[-12:]]
+
+    def getChannelsChart(self):
+        if not self._channelsChart:
+            channels = list()
+            counts = dict()
+            total = 0
+            for c in Conversation.objects.filter(channel__source__community=self.community).order_by("timestamp"):
+                total += 1
+                channel = c.channel.name
+                if channel not in channels:
+                    channels.append(channel)
+                if channel not in counts:
+                    counts[channel] = 1
+                else:
+                    counts[channel] += 1
+            self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+        return self._channelsChart
 
     @property
     def channel_names(self):
-        channels = [c.name for c in Channel.objects.filter(source__community=self.community)]
-        channels.sort()
-        return channels[:5]
+        chart = self.getChannelsChart()
+        return [channel[0] for channel in chart[:5]]
 
     @property
     def channel_counts(self):
-        channel_percents = list()
-        for c in self.channel_names:
-            channel_count = Conversation.objects.filter(channel__name=c).count()
-            channel_percents.append(channel_count)
-        return channel_percents[:5]
+        chart = self.getChannelsChart()
+        return [channel[1] for channel in chart[:5]]
 
     @property
     def channel_percents(self):
