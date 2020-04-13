@@ -137,7 +137,7 @@ class ContactAdmin(admin.ModelAdmin):
 admin.site.register(Contact, ContactAdmin)
 
 class ConversationAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "channel", "timestamp", "link", "participant_list")
+    list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp", "channel", "tags")
     def link(self, conversation):
         if conversation.location is not None:
@@ -148,6 +148,9 @@ class ConversationAdmin(admin.ModelAdmin):
     def participant_list(self, conversation):
         return ", ".join([participant.name for participant in conversation.participants.all()[:10]])
     participant_list.short_description = "Participants"
+    def tag_list(self, conversation):
+        return ", ".join([tag.name for tag in conversation.tags.all()[:10]])
+    tag_list.short_description = "Tags"
 admin.site.register(Conversation, ConversationAdmin)
 
 class TaskAdmin(admin.ModelAdmin):

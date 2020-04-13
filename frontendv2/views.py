@@ -23,36 +23,43 @@ def home(request):
     return render(request, 'savannah/home.html', context)
 
 class Dashboard:
-    def __init__(self, community_id):
+    def __init__(self, community_id, tag=None):
         self.community = get_object_or_404(Community, id=community_id)
         self._membersChart = None
         self._channelsChart = None
+        if tag:
+            self.tag = get_object_or_404(Tag, name=tag)
+        else:
+            self.tag = None
     
     @property 
     def member_count(self):
-        return self.community.member_set.all().count()
+        return self.community.member_set.filter(tags=self.tag).count()
         
     @property 
     def conversation_count(self):
-        return Conversation.objects.filter(channel__source__community=self.community).count()
+        return Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).count()
         
     @property 
     def activity_count(self):
-        return Activity.objects.filter(community=self.community).count()
+        return Activity.objects.filter(community=self.community, tags=self.tag).count()
         
     @property
     def open_tasks_count(self):
-        return Task.objects.filter(community=self.community, done__isnull=True).count()
+        return Task.objects.filter(community=self.community, done__isnull=True, tags=self.tag).count()
 
     @property
     def tasks_complete_percent(self):
-        all_tasks = Task.objects.filter(community=self.community).count()
+        all_tasks = Task.objects.filter(community=self.community, tags=self.tag).count()
+        if all_tasks == 0:
+            return 0
         return int(100 * (all_tasks - self.open_tasks_count) / all_tasks)
 
     @property
     def most_active(self):
         activity_counts = dict()
-        recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), tags=self.tag)
+
         for c in recent_conversations:
             for p in c.participants.all():
                 if p in activity_counts:
@@ -65,7 +72,8 @@ class Dashboard:
 
     @property
     def most_connected(self):
-        connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), to_member__tags=self.tag)
+
         connection_counts = dict()
         for c in connections:
                 if c.from_member in connection_counts:
@@ -81,7 +89,9 @@ class Dashboard:
             months = list()
             counts = dict()
             total = 0
-            for m in Member.objects.filter(community=self.community).order_by("date_added"):
+            members = Member.objects.filter(community=self.community, tags=self.tag).order_by("date_added")
+
+            for m in members:
                 total += 1
                 month = m.date_added.month
                 if month not in months:
@@ -106,7 +116,9 @@ class Dashboard:
             channels = list()
             counts = dict()
             total = 0
-            for c in Conversation.objects.filter(channel__source__community=self.community).order_by("timestamp"):
+            conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).order_by("timestamp")
+
+            for c in conversations:
                 total += 1
                 channel = c.channel.name
                 if channel not in channels:
@@ -128,20 +140,15 @@ class Dashboard:
         chart = self.getChannelsChart()
         return [channel[1] for channel in chart[:5]]
 
-    @property
-    def channel_percents(self):
-        all_conversations = Conversation.objects.filter(channel__source__community=self.community).count()
-        channel_percents = list()
-        for c in self.channel_names:
-            channel_count = Conversation.objects.filter(channel__name=c).count()
-            channel_percents.append(int(100 * channel_count / all_conversations))
-        return channel_percents
 
 @login_required
 def dashboard(request, community_id):
     communities = Community.objects.filter(owner=request.user)
     request.session['community'] = community_id
-    dashboard = Dashboard(community_id)
+    if 'tag' in request.GET:
+        dashboard = Dashboard(community_id, tag=request.GET.get('tag'))
+    else:
+        dashboard = Dashboard(community_id)
 
     try:
         user_member = Member.objects.get(user=request.user, community=community)

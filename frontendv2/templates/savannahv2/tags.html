@@ -1,3 +1,3 @@
 {% for tag in tags %}
-<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{tag.color}};">#{{tag.name}}</span>
+<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{tag.color}};"><a href="?tag={{tag.name}}">#{{tag.name}}</a></span>
 {% endfor %}
