@@ -23,6 +23,13 @@
     <link rel="icon" href="/static/savannah/Savannah64.png" type="image/png" sizes="64x64">
     <link rel="icon" href="/static/savannah/Savannah128.png" type="image/png" sizes="128x128">
 
+    <style>
+    .short-text { display: none; }
+    @media only screen and (max-width: 800px) {
+      .short-text { display: inline; }
+      .full-text { display: none; }
+    }
+    </style>
 </head>
 
 <body id="page-top">
@@ -486,7 +493,7 @@
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
-                    <th scope="col">Conversations</th>
+                    <th scope="col"><span class="short-text">#</span><span class="full-text">Conversations</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -518,7 +525,7 @@
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
-                    <th scope="col">Connections</th>
+                    <th scope="col"><span class="short-text">#</span><span class="full-text">Connections</span></th>
                   </tr>
                 </thead>
                 <tbody>
