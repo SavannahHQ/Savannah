@@ -34,23 +34,38 @@ class Dashboard:
     
     @property 
     def member_count(self):
-        return self.community.member_set.filter(tags=self.tag).count()
+        if self.tag:
+            return self.community.member_set.filter(tags=self.tag).count()
+        else:
+            return self.community.member_set.all().count()
         
     @property 
     def conversation_count(self):
-        return Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).count()
+        if self.tag:
+            return Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).count()
+        else:
+            return Conversation.objects.filter(channel__source__community=self.community).count()
         
     @property 
     def activity_count(self):
-        return Activity.objects.filter(community=self.community, tags=self.tag).count()
+        if self.tag:
+            return Activity.objects.filter(community=self.community, tags=self.tag).count()
+        else:
+            return Activity.objects.filter(community=self.community).count()
         
     @property
     def open_tasks_count(self):
-        return Task.objects.filter(community=self.community, done__isnull=True, tags=self.tag).count()
+        if self.tag:
+            return Task.objects.filter(community=self.community, done__isnull=True, tags=self.tag).count()
+        else:
+            return Task.objects.filter(community=self.community, done__isnull=True).count()
 
     @property
     def tasks_complete_percent(self):
-        all_tasks = Task.objects.filter(community=self.community, tags=self.tag).count()
+        if self.tag:
+            all_tasks = Task.objects.filter(community=self.community, tags=self.tag).count()
+        else:
+            all_tasks = Task.objects.filter(community=self.community).count()
         if all_tasks == 0:
             return 0
         return int(100 * (all_tasks - self.open_tasks_count) / all_tasks)
@@ -58,8 +73,10 @@ class Dashboard:
     @property
     def most_active(self):
         activity_counts = dict()
-        recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), tags=self.tag)
-
+        if self.tag:
+            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), tags=self.tag)
+        else:
+            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         for c in recent_conversations:
             for p in c.participants.all():
                 if p in activity_counts:
@@ -72,8 +89,10 @@ class Dashboard:
 
     @property
     def most_connected(self):
-        connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), to_member__tags=self.tag)
-
+        if self.tag:
+            connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), to_member__tags=self.tag)
+        else:
+            connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         connection_counts = dict()
         for c in connections:
                 if c.from_member in connection_counts:
@@ -89,8 +108,10 @@ class Dashboard:
             months = list()
             counts = dict()
             total = 0
-            members = Member.objects.filter(community=self.community, tags=self.tag).order_by("date_added")
-
+            if self.tag:
+                members = Member.objects.filter(community=self.community, tags=self.tag).order_by("date_added")
+            else:
+                members = Member.objects.filter(community=self.community).order_by("date_added")
             for m in members:
                 total += 1
                 month = m.date_added.month
@@ -116,8 +137,10 @@ class Dashboard:
             channels = list()
             counts = dict()
             total = 0
-            conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).order_by("timestamp")
-
+            if self.tag:
+                conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).order_by("timestamp")
+            else:
+                conversations = Conversation.objects.filter(channel__source__community=self.community).order_by("timestamp")
             for c in conversations:
                 total += 1
                 channel = c.channel.name
