@@ -179,6 +179,7 @@ def dashboard(request, community_id):
         user_member = None
     context = {
         "communities": communities,
+        "active_community": dashboard.community,
         "dashboard": dashboard,
     }
     return render(request, 'savannahv2/dashboard.html', context)
@@ -338,6 +339,7 @@ def members(request, community_id):
         user_member = None
     context = {
         "communities": communities,
+        "active_community": members.community,
         "view": members,
     }
     return render(request, 'savannahv2/members.html', context)

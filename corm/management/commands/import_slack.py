@@ -23,8 +23,10 @@ def import_slack(channel):
   for slack_id, user in slack._users.items():
       if not user.get('is_bot'):
         slack_user_id = "slack.com/%s" % slack_id
-        member, created = Member.objects.get_or_create(community=community, name=user.get('real_name'))
-        Contact.objects.get_or_create(origin_id=slack_user_id, defaults={'member':member, 'source':source, 'detail':user.get('name')})
+        contact_matches = Contact.objects.filter(origin_id=slack_user_id, source=source)
+        if contact_matches.count() == 0:
+          member = Member.objects.create(community=community, name=user.get('real_name'))
+          Contact.objects.get_or_create(origin_id=slack_user_id, defaults={'member':member, 'source':source, 'detail':user.get('name')})
 
   tag_matcher = re.compile('\<\@([^>]+)\>')
   for item in items:
