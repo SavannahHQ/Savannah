@@ -22,4 +22,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('home/', views.home, name='home'),
     path('dashboard/<int:community_id>/', views.dashboard, name='dashboard'),
+    path('members/<int:community_id>/', views.members, name='members'),
 ]
