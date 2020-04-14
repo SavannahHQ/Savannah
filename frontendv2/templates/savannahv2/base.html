@@ -54,7 +54,7 @@
       <hr class="sidebar-divider my-0">
 
       <!-- Nav Item - Dashboard -->
-      <li class="nav-item active">
+      <li class="nav-item {% if active_tab == "dashboard" %}active{% endif %}">
         <a class="nav-link" href="{% url 'dashboard' request.session.community %}">
           <i class="fas fa-fw fa-th-large"></i>
           <span>Dashboard</span></a>
@@ -69,7 +69,7 @@
       </div>
 
       <!-- Nav Item - Members -->
-      <li class="nav-item">
+      <li class="nav-item {% if active_tab == "members" %}active{% endif %}">
         <a class="nav-link" href="{% url 'members' request.session.community %}">
           <i class="fas fa-fw fa-users"></i>
           <span>Members</span></a>

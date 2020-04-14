@@ -151,17 +151,21 @@ class Dashboard:
                 else:
                     counts[channel] += 1
             self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            if len(self._channelsChart) > 8:
+                other_count = sum([count for tag, count in self._channelsChart[7:]])
+                self._channelsChart = self._channelsChart[:7]
+                self._channelsChart.append(("Other", other_count, "#efefef"))
         return self._channelsChart
 
     @property
     def channel_names(self):
         chart = self.getChannelsChart()
-        return [channel[0] for channel in chart[:5]]
+        return [channel[0] for channel in chart]
 
     @property
     def channel_counts(self):
         chart = self.getChannelsChart()
-        return [channel[1] for channel in chart[:5]]
+        return [channel[1] for channel in chart]
 
 
 @login_required
@@ -180,6 +184,7 @@ def dashboard(request, community_id):
     context = {
         "communities": communities,
         "active_community": dashboard.community,
+        "active_tab": "dashboard",
         "dashboard": dashboard,
     }
     return render(request, 'savannahv2/dashboard.html', context)
@@ -306,22 +311,26 @@ class Members:
                     else:
                         counts[tag] += 1
             self._tagsChart = [('#'+tag.name, count, '#'+tag.color) for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            if len(self._tagsChart) > 8:
+                other_count = sum([count for tag, count, color in self._tagsChart[7:]])
+                self._tagsChart = self._tagsChart[:7]
+                self._tagsChart.append(("Other", other_count, "#efefef"))
         return self._tagsChart
 
     @property
     def tag_names(self):
         chart = self.getTagsChart()
-        return [tag[0] for tag in chart[:5]]
+        return [tag[0] for tag in chart]
 
     @property
     def tag_counts(self):
         chart = self.getTagsChart()
-        return [tag[1] for tag in chart[:5]]
+        return [tag[1] for tag in chart]
 
     @property
     def tag_colors(self):
         chart = self.getTagsChart()
-        return [tag[2] for tag in chart[:5]]
+        return [tag[2] for tag in chart]
 
 
 @login_required
@@ -340,6 +349,7 @@ def members(request, community_id):
     context = {
         "communities": communities,
         "active_community": members.community,
+        "active_tab": "members",
         "view": members,
     }
     return render(request, 'savannahv2/members.html', context)
