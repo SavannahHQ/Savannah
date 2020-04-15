@@ -57,39 +57,39 @@ def import_slack(channel):
         if thread is not None:
           thread.participants.add(contact.member)
 
-        if len(tagged) > 0:
-          convo_text = item.get('data').get('text')
-          for tagged_user in tagged:
-            if slack._users.get(tagged_user):
-                convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
-          convo_text = item.get('data').get('user_data').get('real_name') + ": " + convo_text
-          convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
-          convo.participants.add(contact.member)
+        convo_text = item.get('data').get('text')
+        for tagged_user in tagged:
+          if slack._users.get(tagged_user):
+              convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
+        convo_text = item.get('data').get('user_data').get('real_name') + ": " + convo_text
+        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
+        convo.participants.add(contact.member)
 
-          for tagged_user in tagged:
-            if not slack._users.get(tagged_user):
-              print("Unknown Slack user: %s" % tagged_user)
-              continue
-            #print("Checking for %s" % tagged_user)
-            try:
-              tagged_user_id = "slack.com/%s" % tagged_user
-              tagged_contact = Contact.objects.get(origin_id=tagged_user_id)
-              convo.participants.add(tagged_contact.member)
-              if thread is not None:
-                thread.participants.add(tagged_contact.member)
-            except:
-              print("Failed to find Contact for %s" % slack._users.get(tagged_user).get('name'))
-            try:
-              contact.member.add_connection(tagged_contact.member, source, tstamp)
-            except Exception as e:
-              print("Failed to make connection between %s and %s" % (contact.member, tagged_contact.member))
-              print(e)
+        for tagged_user in tagged:
+          if not slack._users.get(tagged_user):
+            print("Unknown Slack user: %s" % tagged_user)
+            continue
+          #print("Checking for %s" % tagged_user)
+          try:
+            tagged_user_id = "slack.com/%s" % tagged_user
+            tagged_contact = Contact.objects.get(origin_id=tagged_user_id)
+            convo.participants.add(tagged_contact.member)
+            if thread is not None:
+              thread.participants.add(tagged_contact.member)
+          except:
+            print("Failed to find Contact for %s" % slack._users.get(tagged_user).get('name'))
+          try:
+            contact.member.add_connection(tagged_contact.member, source, tstamp)
+          except Exception as e:
+            print("Failed to make connection between %s and %s" % (contact.member, tagged_contact.member))
+            print(e)
 
         # Connect this conversation's speaker to everyone else in this thread
         if thread is not None:
           for thread_member in thread.participants.all():
             try:
               contact.member.add_connection(thread_member, source, tstamp)
+              convo.participants.add(thread_member)
             except Exception as e:
               print("Failed to make connection between %s and %s" % (contact.member, tagged_contact.member))
               print(e)
