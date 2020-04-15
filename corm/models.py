@@ -1,3 +1,4 @@
+import datetime
 from django.db import models
 from django.contrib.auth.models import User, Group
 
@@ -102,6 +103,7 @@ class Source(models.Model):
     auth_id = models.CharField(max_length=256, null=True, blank=True)
     auth_secret = models.CharField(max_length=256, null=True, blank=True)
     icon_name = models.CharField(max_length=256, null=True, blank=True)
+    last_import = models.DateTimeField(null=True, blank=True)
 
     @property
     def activity_set(self):
