@@ -65,6 +65,8 @@ class Member(TaggableModel):
         return MemberConnection.objects.filter(from_member=self, to_member=other).count() > 0
 
     def add_connection(self, other, source, timestamp=None):
+        if self.id == other.id:
+            return
         if self.is_connected(other):
             MemberConnection.objects.filter(from_member=self, to_member=other).update(last_connected=timestamp)
             MemberConnection.objects.filter(from_member=other, to_member=self).update(last_connected=timestamp)
