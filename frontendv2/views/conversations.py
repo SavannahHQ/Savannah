@@ -28,17 +28,19 @@ class Conversations:
         if not self._membersChart:
             months = list()
             counts = dict()
-            total = 0
+
             if self.tag:
                 members = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).order_by("timestamp")
             else:
                 members = Conversation.objects.filter(channel__source__community=self.community).order_by("timestamp")
             for m in members:
-                total += 1
                 month = m.timestamp.month
                 if month not in months:
                     months.append(month)
-                counts[month] = total
+                if month not in counts:
+                    counts[month] = 1
+                else:
+                    counts[month] += 1
             self._membersChart = (months, counts)
         return self._membersChart
         
