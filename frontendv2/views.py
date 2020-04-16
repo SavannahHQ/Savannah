@@ -2,6 +2,7 @@ import operator
 import datetime
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q, Count, Max
 
 from corm.models import *
 
@@ -74,15 +75,11 @@ class Dashboard:
     def most_active(self):
         activity_counts = dict()
         if self.tag:
-            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), tags=self.tag)
+            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__tags=self.tag)))
         else:
-            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
-        for c in recent_conversations:
-            for p in c.participants.all():
-                if p in activity_counts:
-                    activity_counts[p] = activity_counts[p] + 1
-                else:
-                    activity_counts[p] = 1
+            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation'))
+        for m in members:
+            activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
         return most_active[:10]
@@ -90,15 +87,13 @@ class Dashboard:
     @property
     def most_connected(self):
         if self.tag:
-            connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), to_member__tags=self.tag)
+            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(connections__tags=self.tag)))
         else:
-            connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections'))
+
         connection_counts = dict()
-        for c in connections:
-                if c.from_member in connection_counts:
-                    connection_counts[c.from_member] = connection_counts[c.from_member] + 1
-                else:
-                    connection_counts[c.from_member] = 1
+        for m in members:
+            connection_counts[m] = m.connection_count
         most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
         most_connected.reverse()
         return most_connected[:10]
@@ -133,6 +128,7 @@ class Dashboard:
         return [counts[month] for month in months[-12:]]
 
     def getChannelsChart(self):
+        channel_names = dict()
         if not self._channelsChart:
             channels = list()
             counts = dict()
@@ -143,7 +139,9 @@ class Dashboard:
                 conversations = Conversation.objects.filter(channel__source__community=self.community).order_by("timestamp")
             for c in conversations:
                 total += 1
-                channel = c.channel.name
+                if not c.channel_id in channel_names:
+                    channel_names[c.channel_id] = c.channel.name
+                channel = channel_names[c.channel_id]
                 if channel not in channels:
                     channels.append(channel)
                 if channel not in counts:
@@ -219,15 +217,14 @@ class Members:
     @property
     def recently_active(self):
         if self.tag:
-            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).order_by("-timestamp")
+            members = Member.objects.filter(community=self.community).annotate(last_active=Max('conversation__timestamp', filter=Q(conversation__timestamp__isnull=False, conversation__tags=self.tag)))
         else:
-            recent_conversations = Conversation.objects.filter(channel__source__community=self.community).order_by("-timestamp")
-        members = dict()
-        for c in recent_conversations:
-            for m in c.participants.all():
-                if m not in members:
-                    members[m] = c.timestamp
-        recently_active = [(member, tstamp) for member, tstamp in sorted(members.items(), key=operator.itemgetter(1), reverse=True)]
+            members = Member.objects.filter(community=self.community).annotate(last_active=Max('conversation__timestamp', filter=Q(conversation__timestamp__isnull=False)))
+        actives = dict()
+        for m in members:
+            if m.last_active is not None:
+                actives[m] = m.last_active
+        recently_active = [(member, tstamp) for member, tstamp in sorted(actives.items(), key=operator.itemgetter(1), reverse=True)]
         
         return recently_active[:10]
 
@@ -235,15 +232,11 @@ class Members:
     def most_active(self):
         activity_counts = dict()
         if self.tag:
-            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), tags=self.tag)
+            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__tags=self.tag)))
         else:
-            recent_conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
-        for c in recent_conversations:
-            for p in c.participants.all():
-                if p in activity_counts:
-                    activity_counts[p] = activity_counts[p] + 1
-                else:
-                    activity_counts[p] = 1
+            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation'))
+        for m in members:
+            activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
         return most_active[:10]
@@ -251,15 +244,13 @@ class Members:
     @property
     def most_connected(self):
         if self.tag:
-            connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), to_member__tags=self.tag)
+            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(connections__tags=self.tag)))
         else:
-            connections = MemberConnection.objects.filter(from_member__community=self.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections'))
+
         connection_counts = dict()
-        for c in connections:
-                if c.from_member in connection_counts:
-                    connection_counts[c.from_member] = connection_counts[c.from_member] + 1
-                else:
-                    connection_counts[c.from_member] = 1
+        for m in members:
+            connection_counts[m] = m.connection_count
         most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
         most_connected.reverse()
         return most_connected[:10]
@@ -298,18 +289,9 @@ class Members:
             tags = list()
             counts = dict()
             total = 0
-            if self.tag:
-                members = Member.objects.filter(community=self.community, tags=self.tag).order_by("name")
-            else:
-                members = Member.objects.filter(community=self.community).order_by("name")
-            for m in members:
-                for tag in m.tags.all():
-                    if tag not in tags:
-                        tags.append(tag)
-                    if tag not in counts:
-                        counts[tag] = 1
-                    else:
-                        counts[tag] += 1
+            tags = Tag.objects.filter(community=self.community).annotate(member_count=Count('member')).order_by('-member_count')
+            for t in tags:
+                counts[t] = t.member_count
             self._tagsChart = [('#'+tag.name, count, '#'+tag.color) for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._tagsChart) > 8:
                 other_count = sum([count for tag, count, color in self._tagsChart[7:]])
