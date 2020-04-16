@@ -232,9 +232,9 @@ class Members:
     def most_active(self):
         activity_counts = dict()
         if self.tag:
-            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__tags=self.tag)))
+            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), conversation__tags=self.tag)))
         else:
-            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation'))
+            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         for m in members:
             activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
@@ -244,9 +244,9 @@ class Members:
     @property
     def most_connected(self):
         if self.tag:
-            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(connections__tags=self.tag)))
+            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), connections__tags=self.tag)))
         else:
-            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections'))
+            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
 
         connection_counts = dict()
         for m in members:
