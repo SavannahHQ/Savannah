@@ -45,8 +45,8 @@ class MemberConnection(models.Model):
     from_member = models.ForeignKey('Member', on_delete=models.CASCADE)
     to_member = models.ForeignKey('Member', on_delete=models.CASCADE, related_name='connectors')
     via = models.ForeignKey('Source', on_delete=models.SET_NULL, null=True)
-    first_connected = models.DateTimeField()
-    last_connected = models.DateTimeField()
+    first_connected = models.DateTimeField(db_index=True)
+    last_connected = models.DateTimeField(db_index=True)
     
     def __str__(self):
         return "%s -> %s" % (self.from_member, self.to_member)
@@ -57,8 +57,8 @@ class Member(TaggableModel):
         unique_together = [["community", "user"]]
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    name = models.CharField(max_length=256)
-    date_added = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=256, db_index=True)
+    date_added = models.DateTimeField(auto_now_add=True, db_index=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
@@ -145,7 +145,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     participants = models.ManyToManyField(Member)
     content = models.TextField()
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(db_index=True)
     location = models.URLField(null=True, blank=True)
 
     def __str__(self):
@@ -162,11 +162,11 @@ class Task(TaggableModel):
         ordering = ("done", "due",)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     name = models.CharField(max_length=256)
     detail = models.TextField()
     due = models.DateTimeField()
-    done = models.DateTimeField(null=True, blank=True)
+    done = models.DateTimeField(null=True, blank=True, db_index=True)
     stakeholders = models.ManyToManyField(Member)
     conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -196,7 +196,7 @@ class Activity(TaggableModel, ImportedDataModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     activity_type = models.ForeignKey(ActivityType, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(db_index=True)
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
     location = models.URLField(null=True, blank=True)
 
