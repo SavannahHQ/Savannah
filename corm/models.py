@@ -80,7 +80,7 @@ class Member(TaggableModel):
         MemberConnection.objects.filter(from_member=other, to_member=self).delete()
         
     def __str__(self):
-        return "%s (%s)" % (self.name, self.community)
+        return "%s (%s)" % (self.name, self.community_id)
 
 class Project(models.Model):
     class Meta:

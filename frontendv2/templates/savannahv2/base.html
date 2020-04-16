@@ -75,28 +75,28 @@
           <span>Members</span></a>
       </li>
 
-      <!-- Nav Item - Members -->
+      <!-- Nav Item - Conversations -->
+      <li class="nav-item {% if active_tab == "conversations" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'conversations' request.session.community %}">
+          <i class="fas fa-fw fa-comments"></i>
+          <span>Conversations</span></a>
+      </li>
+
+      <!-- Nav Item - Connections -->
       <li class="nav-item">
         <a class="nav-link" href="/admin/corm/memberconnection/">
           <i class="fas fa-fw fa-link"></i>
           <span>Connections</span></a>
       </li>
 
-      <!-- Nav Item - Members -->
+      <!-- Nav Item - Tasks -->
       <li class="nav-item">
         <a class="nav-link" href="/admin/corm/task/">
           <i class="fas fa-fw fa-stopwatch"></i>
           <span>Tasks</span></a>
       </li>
 
-      <!-- Nav Item - Members -->
-      <li class="nav-item">
-        <a class="nav-link" href="/admin/corm/conversation/">
-          <i class="fas fa-fw fa-comments"></i>
-          <span>Conversations</span></a>
-      </li>
-
-      <!-- Nav Item - Members -->
+      <!-- Nav Item - Activity -->
       <li class="nav-item">
         <a class="nav-link" href="/admin/corm/activity/">
           <i class="fas fa-fw fa-mail-bulk"></i>
@@ -111,7 +111,7 @@
         Settings
       </div>
 
-      <!-- Nav Item - Tags -->
+      <!-- Nav Item - Sources -->
       <li class="nav-item">
         <a class="nav-link" href="/admin/corm/source/">
           <i class="fas fa-fw fa-file-import"></i>
