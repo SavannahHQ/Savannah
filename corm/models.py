@@ -24,7 +24,7 @@ class Tag(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
     color = models.CharField(max_length=16)
-    icon = models.CharField(max_length=256, null=True, blank=True)
+    keywords = models.CharField(max_length=256, null=True, blank=True, help_text=_("Comma-separated list of words. If found in a conversation, this tag will be applied."))
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.community)

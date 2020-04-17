@@ -46,7 +46,7 @@ class CommunityAdmin(admin.ModelAdmin):
 admin.site.register(Community, CommunityAdmin)
 
 class TagAdmin(admin.ModelAdmin):
-    list_display = ("name", "color_display", "community", "icon")
+    list_display = ("name", "color_display", "community", "keywords")
     list_filter = ("community",)
     def color_display(self, tag):
         return mark_safe("<span style=\"padding: 3px; background-color: #%s\">%s</span>" % (tag.color, tag.color))
