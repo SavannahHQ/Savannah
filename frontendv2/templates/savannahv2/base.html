@@ -26,8 +26,15 @@
     <style>
     .short-text { display: none; }
     @media only screen and (max-width: 800px) {
-      .short-text { display: inline; }
-      .full-text { display: none; }
+        .short-text { display: inline; }
+        .full-text { display: none; }
+
+        .table { 
+          font-size: 0.8em;
+        }
+        .table td { 
+          padding: 2px 1px 2px 5px;
+        }
     }
     </style>
     {% block page_styles %}{% endblock %}

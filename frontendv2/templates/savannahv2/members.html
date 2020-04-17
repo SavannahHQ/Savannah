@@ -101,36 +101,7 @@
                 </div>
               </div>
 
-              <!-- Most Engaged Users-->
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged (30 days)</h6>
-                </div>
-                <div class="card-body p-0">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Member</th>
-                    <th scope="col"><span class="short-text">#</span><span class="full-text">Connections</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for member, count in view.most_connected %}
-                <tr>
-                  <td>
-                    <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
-                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
-                  </td>
-                  <td>{{count}}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                </div>
-              </div>
-
             </div>
-
             <!-- Content Column -->
             <div class="col-lg-6 mb-4">
 
@@ -162,7 +133,16 @@
                 </div>
               </div>
 
-              <!-- Most Active Users-->
+            </div>
+
+          </div>
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+             <!-- Most Active Users-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Most Active (30 days)</h6>
@@ -172,7 +152,7 @@
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
-                    <th scope="col"><span class="short-text">#</span><span class="full-text">Conversations</span></th>
+                    <th scope="col"><span class="short-text">Conv.</span><span class="full-text">Conversations</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -180,6 +160,38 @@
                 <tr>
                   <td>
                     <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}{% if view.tag %}&tags__id__exact={{view.tag.id}}{% endif %}">{{ member.name }}</a>
+                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Most Engaged Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged (30 days)</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text">Conn.</span><span class="full-text">Connections</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, count in view.most_connected %}
+                <tr>
+                  <td>
+                    <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
