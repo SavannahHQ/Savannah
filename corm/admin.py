@@ -132,13 +132,14 @@ admin.site.register(Member, MemberAdmin)
 class ContactAdmin(admin.ModelAdmin):
     list_display = ("detail", "source", "member")
     list_filter = ("source__connector", "member__community", "source")
-    search_fields = ("name",)
+    search_fields = ("detail",)
 
 admin.site.register(Contact, ContactAdmin)
 
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp", "channel", "tags")
+    search_fields = ("content",)
     def link(self, conversation):
         if conversation.location is not None:
             return mark_safe("<a href=\"%s\">Open</a>" % conversation.location)
