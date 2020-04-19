@@ -163,7 +163,10 @@ class AllMembers:
         except:
             self.page = 1
 
-        self.search = search
+        if search:
+            self.search = search.lower()
+        else:
+            self.search = None
         if tag:
             self.tag = get_object_or_404(Tag, name=tag)
         else:
