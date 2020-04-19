@@ -19,9 +19,9 @@ class Members:
     @property
     def all_members(self):
         if self.tag:
-            members = Member.objects.filter(community=self.community, tags=self.tag)
+            members = Member.objects.filter(community=self.community, tags=self.tag).annotate(note_count=Count('note'), tag_count=Count('tags'))
         else:
-            members = Member.objects.filter(community=self.community)
+            members = Member.objects.filter(community=self.community).annotate(note_count=Count('note'), tag_count=Count('tags'))
         return members
 
     @property
@@ -153,3 +153,66 @@ def members(request, community_id):
         "view": members,
     }
     return render(request, 'savannahv2/members.html', context)
+
+class AllMembers:
+    def __init__(self, community_id, page=1, search=None, tag=None):
+        self.RESULTS_PER_PAGE = 100
+        self.community = get_object_or_404(Community, id=community_id)
+        try:
+            self.page = int(page)
+        except:
+            self.page = 1
+
+        self.search = search
+        if tag:
+            self.tag = get_object_or_404(Tag, name=tag)
+        else:
+            self.tag = None
+        self.result_count = 0
+    
+    @property
+    def all_members(self):
+        members = Member.objects.filter(community=self.community).annotate(note_count=Count('note'), tag_count=Count('tags'))
+        if self.search:
+            members = members.filter(name__contains=self.search)
+
+        if self.tag:
+            members = members.filter(tags=self.tag)
+
+        members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
+        self.result_count = members.count()
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return members[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return pages+1
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return [page+1 for page in range(pages+1)]
+
+@login_required
+def all_members(request, community_id):
+    communities = Community.objects.filter(owner=request.user)
+    request.session['community'] = community_id
+
+    view = AllMembers(community_id, page=request.GET.get('page', 1), search=request.GET.get('search', None), tag=request.GET.get('tag', None))
+
+    try:
+        user_member = Member.objects.get(user=request.user, community=community)
+    except:
+        user_member = None
+    context = {
+        "communities": communities,
+        "active_community": view.community,
+        "active_tab": "members",
+        "view": view,
+    }
+    return render(request, 'savannahv2/all_members.html', context)

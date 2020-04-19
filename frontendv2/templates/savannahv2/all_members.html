@@ -1,0 +1,91 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Members{% if view.tag %} <span style="white-space:nowrap; font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.tag.color}};">#{{view.tag.name}}<a href="?"><i class="p-1 fa fa-times"></i></a></span>{% endif %}</h1>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+          </div>
+
+          <!-- Content Row -->
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- All Members -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">All Members</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Joined</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.all_members %}
+                <tr>
+                  <td>
+                    <a target="_blank" href="/admin/corm/member/{{member.id}}/change">{{ member.name }}</a>
+                    {% if member.tag_count %}{% include 'savannahv2/tags.html' with tags=member.tags.all %}{% endif %}
+                  </td>
+                  <td>{{member.date_added}}</td>
+                  <td style="white-space: nowrap;">
+                    <a title="Edit Member" target="_blank" href="/admin/corm/member/{{member.id}}/change/"><i class="fas fa-user-edit"></i></a>
+                    <a title="Add Note" target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}"><i class="fas fa-sticky-note"> </i></a>
+                    <a title="View Connections" target="_blank" href="/admin/corm/memberconnection/?from_member={{member.id}}"><i class="fas fa-user-friends"> </i></a>
+                    <a title="View Conversations" target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}"><i class="fas fa-comments"> </i></a>
+                  </td>
+                </tr>
+                {% if member.note_count %}
+                <tr><td colspan=3>
+                <ul>
+                {% for note in member.note_set.all %}
+                <li><span class="note">{{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/"><i class="small far fa-edit"></i></a></span></li>
+                {% endfor %}
+                </ul>
+                </td></tr>
+                {% endif %}
+                {% endfor %}
+                </tbody>
+                </table>
+
+                {% if view.has_pages %}
+                <nav aria-label="Member table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?search={{view.search}}&page=1" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?search={{view.search}}&page={{page}}">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?search={{view.search}}&page={{view.last_page}}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
