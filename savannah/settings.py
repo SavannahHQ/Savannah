@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'frontend.apps.FrontendConfig',
     'frontendv2.apps.FrontendConfig',
     'grimoire',
-    'django_slack_oauth',
 ]
 
 MIDDLEWARE = [

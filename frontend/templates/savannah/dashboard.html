@@ -116,7 +116,6 @@ on {{task.conversation.timestamp}}
 <h2>Engagement <span class="actions">
     <a target="_blank" href="/admin/corm/conversation/add/">+Conversation</a> 
     <a target="_blank" href="/admin/corm/activity/add/?community={{community.id}}">+Activity</a>
-    <a href='{% url 'slack_auth' %}'>+Slack</a>
 </span></h2>
 <div class="box">
 {% for source in community.source_set.all %}
