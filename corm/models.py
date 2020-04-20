@@ -82,6 +82,34 @@ class Member(TaggableModel):
     def __str__(self):
         return "%s (%s)" % (self.name, self.community_id)
 
+    def merge_with(self, other_member):
+        if self.user is None and other_member.user is not None :
+            self.user = other_member.user
+        if self.date_added > other_member.date_added:
+            self.date_added = other_member.date_added
+        Contact.objects.filter(member=other_member).update(member=self)
+        Note.objects.filter(member=other_member).update(member=self)
+        MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
+        MemberConnection.objects.filter(to_member=other_member).update(to_member=self)
+
+        for tag in other_member.tags.all():
+            self.tags.add(tag)
+
+        for convo in Conversation.objects.filter(participants=other_member):
+            convo.participants.add(self)
+            convo.participants.remove(other_member)
+
+        for task in Task.objects.filter(stakeholders=other_member):
+            task.stakeholders.add(self)
+            task.stakeholders.remove(other_member)
+
+        for project in Project.objects.filter(collaborators=other_member):
+            project.collaborators.add(self)
+            project.collaborators.remove(other_member)
+
+        self.save()
+        other_member.delete()
+
 class Project(models.Model):
     class Meta:
         ordering = ("name",)
