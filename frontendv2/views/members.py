@@ -84,7 +84,7 @@ class Members:
                 members = Member.objects.filter(community=self.community).order_by("date_added")
             for m in members:
                 total += 1
-                month = m.date_added.month
+                month = str(m.date_added)[:7]
                 if month not in months:
                     months.append(month)
                 counts[month] = total
@@ -94,8 +94,7 @@ class Members:
     @property
     def members_chart_months(self):
         (months, counts) = self.getMembersChart()
-        names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        return [names[month-1] for month in months[-12:]]
+        return [month for month in months[-12:]]
 
     @property
     def members_chart_counts(self):

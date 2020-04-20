@@ -19,9 +19,9 @@ class Conversations:
     @property
     def all_conversations(self):
         if self.tag:
-            conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name')).order_by('-timestamp')
+            conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         else:
-            conversations = Conversation.objects.filter(channel__source__community=self.community).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name')).order_by('-timestamp')
+            conversations = Conversation.objects.filter(channel__source__community=self.community).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return conversations[:100]
 
     def getConversationsChart(self):
@@ -61,9 +61,9 @@ class Conversations:
             counts = dict()
             total = 0
             if self.tag:
-                channels = Channel.objects.filter(source__community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__tags=self.tag)))
+                channels = Channel.objects.filter(source__community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), conversation__tags=self.tag)))
             else:
-                channels = Channel.objects.filter(source__community=self.community).annotate(conversation_count=Count('conversation'))
+                channels = Channel.objects.filter(source__community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
             for c in channels:
                 counts[c.name] = c.conversation_count
             self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]

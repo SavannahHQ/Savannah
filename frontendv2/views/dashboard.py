@@ -2,7 +2,7 @@ import operator
 import datetime
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Count, Max
+from django.db.models import F, Q, Count, Max
 
 from corm.models import *
 
@@ -87,12 +87,14 @@ class Dashboard:
             counts = dict()
             total = 0
             if self.tag:
-                members = Member.objects.filter(community=self.community, tags=self.tag).order_by("date_added")
+                members = Member.objects.filter(community=self.community, date_added__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).order_by("date_added")
+                total = Member.objects.filter(community=self.community, date_added__lt=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).count()
             else:
-                members = Member.objects.filter(community=self.community).order_by("date_added")
+                members = Member.objects.filter(community=self.community, date_added__gte=datetime.datetime.now() - datetime.timedelta(days=180)).order_by("date_added")
+                total = Member.objects.filter(community=self.community, date_added__lt=datetime.datetime.now() - datetime.timedelta(days=180)).count()
             for m in members:
                 total += 1
-                month = m.date_added.month
+                month = str(m.date_added)[:7]
                 if month not in months:
                     months.append(month)
                 counts[month] = total
@@ -102,8 +104,7 @@ class Dashboard:
     @property
     def members_chart_months(self):
         (months, counts) = self.getMembersChart()
-        names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-        return [names[month-1] for month in months[-12:]]
+        return [month for month in months[-12:]]
 
     @property
     def members_chart_counts(self):
@@ -113,24 +114,17 @@ class Dashboard:
     def getChannelsChart(self):
         channel_names = dict()
         if not self._channelsChart:
-            channels = list()
             counts = dict()
             total = 0
             if self.tag:
-                conversations = Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).order_by("timestamp")
+                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).annotate(source_name=F('channel__source__name')).order_by("timestamp")
             else:
-                conversations = Conversation.objects.filter(channel__source__community=self.community).order_by("timestamp")
+                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180)).annotate(source_name=F('channel__source__name')).order_by("timestamp")
             for c in conversations:
-                total += 1
-                if not c.channel_id in channel_names:
-                    channel_names[c.channel_id] = c.channel.name
-                channel = channel_names[c.channel_id]
-                if channel not in channels:
-                    channels.append(channel)
-                if channel not in counts:
-                    counts[channel] = 1
+                if c.source_name not in counts:
+                    counts[c.source_name] = 1
                 else:
-                    counts[channel] += 1
+                    counts[c.source_name] += 1
             self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._channelsChart) > 8:
                 other_count = sum([count for tag, count in self._channelsChart[7:]])

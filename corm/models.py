@@ -58,7 +58,7 @@ class Member(TaggableModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=256, db_index=True)
-    date_added = models.DateTimeField(auto_now_add=True, db_index=True)
+    date_added = models.DateTimeField(auto_now_add=False, db_index=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 

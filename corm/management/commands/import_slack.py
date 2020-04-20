@@ -10,7 +10,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
       print("Importing Slack data")
 
-      for source in Source.objects.filter(connector="corm.plugins.slack"):
+      for source in Source.objects.filter(connector="corm.plugins.slack", auth_secret__isnull=False):
         print("From %s:" % source.name)
         for channel in source.channel_set.all():
           print("  %s" % channel.name)
@@ -29,7 +29,7 @@ def import_slack(channel):
         slack_user_id = "slack.com/%s" % slack_id
         contact_matches = Contact.objects.filter(origin_id=slack_user_id, source=source)
         if contact_matches.count() == 0:
-          member = Member.objects.create(community=community, name=user.get('real_name'))
+          member = Member.objects.create(community=community, name=user.get('real_name'), date_added=datetime.datetime.utcnow())
           Contact.objects.get_or_create(origin_id=slack_user_id, defaults={'member':member, 'source':source, 'detail':user.get('name')})
 
   tag_matcher = re.compile('\<\@([^>]+)\>')
@@ -63,7 +63,7 @@ def import_slack(channel):
         try:
           convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_link, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
         except:
-          import pdb; pdb.set_trace()
+          pass#import pdb; pdb.set_trace()
         convo.participants.add(contact.member)
 
         for tagged_user in tagged:
