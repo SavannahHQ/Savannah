@@ -47,12 +47,19 @@ class Conversations:
     @property
     def conversations_chart_months(self):
         (months, counts) = self.getConversationsChart()
-        return [month for month in months]
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
+        date_list.reverse()
+        return [str(day)[:10] for day in date_list]
 
     @property
     def conversations_chart_counts(self):
         (months, counts) = self.getConversationsChart()
-        return [counts[month] for month in months]
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
+        date_list.reverse()
+        return [counts.get(str(day)[:10], 0) for day in date_list]
+        #return [counts[month] for month in months]
 
     def getChannelsChart(self):
         channel_names = dict()
