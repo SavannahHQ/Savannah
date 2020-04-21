@@ -57,7 +57,7 @@ class Members:
             activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
-        return most_active[:10]
+        return most_active[:20]
 
     @property
     def most_connected(self):
@@ -71,7 +71,7 @@ class Members:
             connection_counts[m] = m.connection_count
         most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
         most_connected.reverse()
-        return most_connected[:10]
+        return most_connected[:20]
 
     def getMembersChart(self):
         if not self._membersChart:
