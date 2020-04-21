@@ -34,7 +34,7 @@
                 {% for member in view.all_members %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/member/{{member.id}}/change">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% if member.tag_count %}{% include 'savannahv2/tags.html' with tags=member.tags.all %}{% endif %}
                   </td>
                   <td>{{member.date_added}}</td>

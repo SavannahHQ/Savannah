@@ -2,7 +2,7 @@ import operator
 import datetime
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Count, Max
+from django.db.models import F, Q, Count, Max
 
 from corm.models import *
 
@@ -218,3 +218,110 @@ def all_members(request, community_id):
         "view": view,
     }
     return render(request, 'savannahv2/all_members.html', context)
+
+class MemberProfile:
+    def __init__(self, member_id, page=1, tag=None):
+        self.RESULTS_PER_PAGE = 100
+        self.member = get_object_or_404(Member, id=member_id)
+        self._membersChart = None
+        self._channelsChart = None
+        try:
+            self.page = int(page)
+        except:
+            self.page = 1
+        if tag:
+            self.tag = get_object_or_404(Tag, name=tag)
+        else:
+            self.tag = None
+
+    @property
+    def all_conversations(self):
+        if self.tag:
+            conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, tags=self.tag).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        else:
+            conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        return conversations[:100]
+
+    def getConversationsChart(self):
+        if not self._membersChart:
+            months = list()
+            counts = dict()
+
+            if self.tag:
+                members = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).order_by("timestamp")
+            else:
+                members = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180)).order_by("timestamp")
+            for m in members:
+                month = str(m.timestamp)[:10]
+                if month not in months:
+                    months.append(month)
+                if month not in counts:
+                    counts[month] = 1
+                else:
+                    counts[month] += 1
+            self._membersChart = (months, counts)
+        return self._membersChart
+        
+    @property
+    def conversations_chart_months(self):
+        (months, counts) = self.getConversationsChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
+        date_list.reverse()
+        return [str(day)[:10] for day in date_list]
+
+    @property
+    def conversations_chart_counts(self):
+        (months, counts) = self.getConversationsChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
+        date_list.reverse()
+        return [counts.get(str(day)[:10], 0) for day in date_list]
+        #return [counts[month] for month in months]
+
+    def getChannelsChart(self):
+        channel_names = dict()
+        if not self._channelsChart:
+            channels = list()
+            counts = dict()
+            total = 0
+            if self.tag:
+                channels = Channel.objects.filter(source__community=self.member.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__participants=self.member, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), conversation__tags=self.tag)))
+            else:
+                channels = Channel.objects.filter(source__community=self.member.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__participants=self.member, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
+            for c in channels:
+                counts[c.name] = c.conversation_count
+            self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            if len(self._channelsChart) > 8:
+                other_count = sum([count for channel, count in self._channelsChart[7:]])
+                self._channelsChart = self._channelsChart[:7]
+                self._channelsChart.append(("Other", other_count))
+        return self._channelsChart
+
+    @property
+    def channel_names(self):
+        chart = self.getChannelsChart()
+        return [channel[0] for channel in chart]
+
+    @property
+    def channel_counts(self):
+        chart = self.getChannelsChart()
+        return [channel[1] for channel in chart]
+
+def member_profile(request, member_id):
+    communities = Community.objects.filter(owner=request.user)
+
+    view = MemberProfile(member_id, page=request.GET.get('page', 1), tag=request.GET.get('tag', None))
+    request.session['community'] = view.member.community.id
+
+    try:
+        user_member = Member.objects.get(user=request.user, community=community)
+    except:
+        user_member = None
+    context = {
+        "communities": communities,
+        "active_community": view.member.community,
+        "active_tab": "members",
+        "view": view,
+    }
+    return render(request, 'savannahv2/member_profile.html', context)

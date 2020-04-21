@@ -53,7 +53,7 @@ class TagAdmin(admin.ModelAdmin):
 admin.site.register(Tag, TagAdmin)
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ("name", "server", "connector", "community", "contact_count", "activity_count", "conversation_count", "last_import")
+    list_display = ("name", "icon_name", "server", "connector", "community", "contact_count", "activity_count", "conversation_count", "last_import")
     list_filter = ("connector", "community",)
 
     def contact_count(self, source):

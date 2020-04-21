@@ -24,5 +24,6 @@ urlpatterns = [
     path('dashboard/<int:community_id>/', views.dashboard, name='dashboard'),
     path('members/<int:community_id>/', views.members, name='members'),
     path('members/<int:community_id>/all', views.all_members, name='all_members'),
+    path('member/<int:member_id>/', views.member_profile, name='member_profile'),
     path('conversations/<int:community_id>/', views.conversations, name='conversations'),
 ]

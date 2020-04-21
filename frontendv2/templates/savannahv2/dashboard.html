@@ -171,7 +171,7 @@
                 {% for member, count in dashboard.most_active %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}{% if dashboard.tag %}&tags__id__exact={{dashboard.tag.id}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if dashboard.tag %}?tag={{dashboard.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -203,7 +203,7 @@
                 {% for member, count in dashboard.most_connected %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if dashboard.tag %}?tag={{dashboard.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>

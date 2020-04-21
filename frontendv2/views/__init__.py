@@ -7,7 +7,7 @@ from django.db.models import Q, Count, Max
 from corm.models import *
 
 from frontendv2.views.dashboard import dashboard
-from frontendv2.views.members import members, all_members
+from frontendv2.views.members import members, all_members, member_profile
 from frontendv2.views.conversations import conversations
 
 # Create your views here.

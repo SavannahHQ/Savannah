@@ -90,7 +90,7 @@
                 {% for member in view.new_members %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}{% if view.tag %}&tags__id__exact={{view.tag.id}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.date_added}}</td>
@@ -122,7 +122,7 @@
                 {% for member, date in view.recently_active %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}{% if view.tag %}&tags__id__exact={{view.tag.id}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
@@ -159,7 +159,7 @@
                 {% for member, count in view.most_active %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}{% if view.tag %}&tags__id__exact={{view.tag.id}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -191,7 +191,7 @@
                 {% for member, count in view.most_connected %}
                 <tr>
                   <td>
-                    <a target="_blank" href="/admin/corm/memberconnection/?from_member__exact={{member.id}}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
