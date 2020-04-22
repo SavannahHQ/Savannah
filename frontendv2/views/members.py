@@ -237,10 +237,10 @@ class MemberProfile:
     @property
     def all_conversations(self):
         if self.tag:
-            conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, tags=self.tag).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+            conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, tags=self.tag).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         else:
-            conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member).annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
-        return conversations[:100]
+            conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        return conversations[:20]
 
     def getConversationsChart(self):
         if not self._membersChart:

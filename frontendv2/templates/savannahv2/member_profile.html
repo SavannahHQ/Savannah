@@ -120,7 +120,7 @@
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Converations</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Converations</h6>
                 </div>
                 <div class="card-body p-0">
                 <table class="table">
@@ -139,7 +139,13 @@
                     <a target="_blank" href="{{conversation.location|default:"#"}}" title="{{conversation.content}}">{{ conversation }}</a>
                     {% if conversation.tag_count > 0 %}{% include 'savannahv2/tags.html' with tags=conversation.tags.all %}{% endif %}
                   </td>
-                  <td>{{conversation.participant_count}}</td>
+                  <td>
+                  {% for participant in conversation.participants.all %}
+                    {% if participant.id != view.member.id %}
+                      <a href="{% url 'member_profile' participant.id %}">{{participant.name}}</a><br/>
+                    {% endif %}
+                  {% endfor %}
+                  </td>
                 </tr>
                 {% endfor %}
                 </tbody>
