@@ -225,7 +225,7 @@ class MemberProfile:
     def __init__(self, member_id, page=1, tag=None):
         self.RESULTS_PER_PAGE = 100
         self.member = get_object_or_404(Member, id=member_id)
-        self._membersChart = None
+        self._engagementChart = None
         self._channelsChart = None
         try:
             self.page = int(page)
@@ -244,42 +244,57 @@ class MemberProfile:
             conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return conversations[:20]
 
-    def getConversationsChart(self):
-        if not self._membersChart:
-            months = list()
-            counts = dict()
+    def getEngagementChart(self):
+        if not self._engagementChart:
+            conversations_counts = dict()
+            activity_counts = dict()
 
             if self.tag:
-                members = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).order_by("timestamp")
+                conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90), tags=self.tag).order_by("timestamp")
             else:
-                members = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180)).order_by("timestamp")
-            for m in members:
-                month = str(m.timestamp)[:10]
-                if month not in months:
-                    months.append(month)
-                if month not in counts:
-                    counts[month] = 1
+                conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90)).order_by("timestamp")
+            for c in conversations:
+                month = str(c.timestamp)[:10]
+                if month not in conversations_counts:
+                    conversations_counts[month] = 1
                 else:
-                    counts[month] += 1
-            self._membersChart = (months, counts)
-        return self._membersChart
+                    conversations_counts[month] += 1
+
+            if self.tag:
+                activity = Activity.objects.filter(community=self.member.community, author=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90), tags=self.tag).order_by("timestamp")
+            else:
+                activity = Activity.objects.filter(community=self.member.community, author=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90)).order_by("timestamp")
+            for a in activity:
+                month = str(a.timestamp)[:10]
+                if month not in activity_counts:
+                    activity_counts[month] = 1
+                else:
+                    activity_counts[month] += 1
+            self._engagementChart = (conversations_counts, activity_counts)
+        return self._engagementChart
         
     @property
-    def conversations_chart_months(self):
-        (months, counts) = self.getConversationsChart()
+    def engagement_chart_months(self):
         base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
         date_list.reverse()
         return [str(day)[:10] for day in date_list]
 
     @property
-    def conversations_chart_counts(self):
-        (months, counts) = self.getConversationsChart()
+    def engagement_chart_conversations(self):
+        (conversations_counts, activity_counts) = self.getEngagementChart()
         base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
         date_list.reverse()
-        return [counts.get(str(day)[:10], 0) for day in date_list]
-        #return [counts[month] for month in months]
+        return [conversations_counts.get(str(day)[:10], 0) for day in date_list]
+
+    @property
+    def engagement_chart_activities(self):
+        (conversations_counts, activity_counts) = self.getEngagementChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
+        date_list.reverse()
+        return [activity_counts.get(str(day)[:10], 0) for day in date_list]
 
     def getChannelsChart(self):
         channel_names = dict()

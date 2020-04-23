@@ -91,10 +91,12 @@ class Member(TaggableModel):
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
         MemberConnection.objects.filter(to_member=other_member).update(to_member=self)
+        Activity.objects.filter(author=other_member).update(author=self)
 
         for tag in other_member.tags.all():
             self.tags.add(tag)
 
+        Conversation.objects.filter(speaker=other_member).update(speaker=self)
         for convo in Conversation.objects.filter(participants=other_member):
             convo.participants.add(self)
             convo.participants.remove(other_member)
