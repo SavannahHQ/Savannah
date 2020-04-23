@@ -73,6 +73,7 @@
                 <thead>
                   <tr>
                     <th scope="col">Channel</th>
+                    <th scope="col">Date</th>
                     <th scope="col">Content</th>
                     <th scope="col"><span class="short-text">#</span><span class="full-text">Participants</span></th>
                   </tr>
@@ -81,6 +82,7 @@
                 {% for conversation in view.all_conversations %}
                 <tr>
                   <td><i class="{{conversation.channel_icon}}"></i> {{conversation.channel_name}}</td>
+                  <td>{{conversation.timestamp}}</td>
                   <td>
                     <a target="_blank" href="/admin/corm/conversation/{{conversation.id}}" title="{{conversation.content}}">{{ conversation }}</a>
                     {% if conversation.tag_count > 0 %}{% include 'savannahv2/tags.html' with tags=conversation.tags.all %}{% endif %}

@@ -5,6 +5,8 @@ import string
 from perceval.backends.core.slack import Slack
 from corm.models import Tag, Conversation, Community
 
+PUNCTUATION = "!\"&'()*+,.:;<=>?@[\]^_`{|}~"
+
 class Command(BaseCommand):
     help = 'Auto-Tag conversations based on Tag keywords'
 
@@ -22,7 +24,7 @@ class Command(BaseCommand):
         #print("Found %s keywords" % len(keywords))
 
         for convo in Conversation.objects.filter(channel__source__community=community):
-          table = str.maketrans(string.punctuation, ' '*len(string.punctuation))
+          table = str.maketrans(PUNCTUATION, ' '*len(PUNCTUATION))
           text = " "+convo.content.lower().translate(table)+" "
           tagged = set()
           for keyword in keywords:

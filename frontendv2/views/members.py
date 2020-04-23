@@ -54,7 +54,8 @@ class Members:
         else:
             members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         for m in members:
-            activity_counts[m] = m.conversation_count
+            if m.conversation_count > 0:
+                activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
         return most_active[:20]
@@ -68,7 +69,8 @@ class Members:
 
         connection_counts = dict()
         for m in members:
-            connection_counts[m] = m.connection_count
+            if m.connection_count > 0:
+                connection_counts[m] = m.connection_count
         most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
         most_connected.reverse()
         return most_connected[:20]

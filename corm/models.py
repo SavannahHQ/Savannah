@@ -171,13 +171,15 @@ class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    speaker = models.ForeignKey(Member, related_name='speaker_in', on_delete=models.SET_NULL, null=True, blank=True)
     participants = models.ManyToManyField(Member)
-    content = models.TextField()
+    content = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
     location = models.URLField(null=True, blank=True)
+    thread_start = models.ForeignKey('Conversation', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        if len(self.content) > 2:
+        if self.content is not None and len(self.content) > 2:
             try:
                 return self.content[:min(self.content.index('\n'), 64)]
             except:
@@ -223,10 +225,12 @@ class Activity(TaggableModel, ImportedDataModel):
         ordering = ('timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     activity_type = models.ForeignKey(ActivityType, on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=256)
     timestamp = models.DateTimeField(db_index=True)
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
     location = models.URLField(null=True, blank=True)
+    conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)

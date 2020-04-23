@@ -180,8 +180,8 @@ class ActivityTypeAdmin(admin.ModelAdmin):
 admin.site.register(ActivityType, ActivityTypeAdmin)
 
 class ActivityAdmin(admin.ModelAdmin):
-    list_display = ("title", "activity_type", "timestamp")
-    list_filter = ("activity_type__source__connector", "activity_type", "tags", "timestamp")
+    list_display = ("title", "activity_type", "channel", "timestamp", "author")
+    list_filter = ("activity_type__source__connector", "channel", "activity_type", "tags", "timestamp")
 admin.site.register(Activity, ActivityAdmin)
 
 class NoteAdmin(admin.ModelAdmin):
