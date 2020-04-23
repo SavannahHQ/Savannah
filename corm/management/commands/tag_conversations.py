@@ -25,6 +25,8 @@ class Command(BaseCommand):
 
         for convo in Conversation.objects.filter(channel__source__community=community):
           table = str.maketrans(PUNCTUATION, ' '*len(PUNCTUATION))
+          if convo.content is None:
+            continue
           text = " "+convo.content.lower().translate(table)+" "
           tagged = set()
           for keyword in keywords:
