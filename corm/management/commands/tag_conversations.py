@@ -5,7 +5,7 @@ import string
 from perceval.backends.core.slack import Slack
 from corm.models import Tag, Conversation, Community
 
-PUNCTUATION = "!\"&'()*+,.:;<=>?@[\]^_`{|}~"
+PUNCTUATION = "!\"&'()*+,.:;<=>?@[\]^_`{|}~/\r\n"
 
 class Command(BaseCommand):
     help = 'Auto-Tag conversations based on Tag keywords'
