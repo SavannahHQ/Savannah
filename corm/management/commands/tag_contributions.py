@@ -25,6 +25,6 @@ class Command(BaseCommand):
 
         for contrib in Contribution.objects.filter(community=community, conversation__isnull=False):
           if contrib.conversation.tags.count() > 0:
-            print("Tagging: %s" % contrib)
+            #print("Tagging: %s" % contrib)
             contrib.tags.set(contrib.conversation.tags.all())
           

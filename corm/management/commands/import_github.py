@@ -25,8 +25,8 @@ class Command(BaseCommand):
           print("  %s" % channel.name)
           if channel.origin_id and source.auth_secret:
             self.import_github(channel)
-          channel.last_import = datetime.datetime.utcnow()
-          channel.save()
+            channel.last_import = datetime.datetime.utcnow()
+            channel.save()
         source.last_import = datetime.datetime.utcnow()
         source.save()
 
