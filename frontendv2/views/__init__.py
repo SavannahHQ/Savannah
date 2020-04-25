@@ -9,6 +9,7 @@ from corm.models import *
 from frontendv2.views.dashboard import dashboard
 from frontendv2.views.members import members, all_members, member_profile
 from frontendv2.views.conversations import conversations
+from frontendv2.views.contributions import contributions
 
 # Create your views here.
 def index(request):

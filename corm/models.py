@@ -155,6 +155,8 @@ class Channel(ImportedDataModel):
         ordering = ("name",)
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
+    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
+    last_import = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return "%s: %s (%s)" % (self.source.name, self.name, self.source.community)

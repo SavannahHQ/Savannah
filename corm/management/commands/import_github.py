@@ -4,7 +4,7 @@ import re
 import subprocess
 import requests
 from perceval.backends.core.github import GitHub, CATEGORY_PULL_REQUEST, CATEGORY_ISSUE
-from corm.models import Community, Source, Member, Contact, Channel, Conversation, Activity, ActivityType
+from corm.models import Community, Source, Member, Contact, Channel, Conversation, Contribution, ContributionType
 
 GITHUB_ISSUES_URL = 'https://api.github.com/repos/%(owner)s/%(repo)s/issues?state=all&since=%(since)s&page=%(page)s'
 GITHUB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
@@ -12,7 +12,7 @@ GITHUB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
 class Command(BaseCommand):
     help = 'Import data from Github sources'
     API_TOKEN = None
-    PR_ACTIVITY = None
+    PR_CONTRIBUTION = None
 
     def handle(self, *args, **options):
       print("Importing Github data")
@@ -20,11 +20,13 @@ class Command(BaseCommand):
       for source in Source.objects.filter(connector="corm.plugins.github", auth_secret__isnull=False):
         print("From %s:" % source.name)
         self.API_TOKEN = source.auth_secret
-        self.PR_ACTIVITY, created = ActivityType.objects.get_or_create(community=source.community, source=source, name="Pull Ruest")
+        self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Ruest")
         for channel in source.channel_set.all():
           print("  %s" % channel.name)
           if channel.origin_id and source.auth_secret:
             self.import_github(channel)
+          channel.last_import = datetime.datetime.utcnow()
+          channel.save()
         source.last_import = datetime.datetime.utcnow()
         source.save()
 
@@ -40,7 +42,7 @@ class Command(BaseCommand):
 
       owner = github_path[3]
       repo = github_path[4]
-      from_date = channel.source.last_import.strftime(GITHUB_TIMESTAMP)
+      from_date = channel.last_import.strftime(GITHUB_TIMESTAMP)
       print("  since %s" % from_date)
 
       tag_matcher = re.compile('\@([a-zA-Z0-9]+)')
@@ -76,7 +78,10 @@ class Command(BaseCommand):
 
                 # Pull Requests are an Activity
                 if 'pull_request' in issue:
-                    activity, created = Activity.objects.update_or_create(origin_id=github_convo_link, defaults={'activity_type':self.PR_ACTIVITY, 'community':source.community, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
+                    activity, created = Contribution.objects.update_or_create(origin_id=github_convo_link, defaults={'contribution_type':self.PR_CONTRIBUTION, 'community':source.community, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
+                    # Not all comments should get the channel tag, but all PRs should
+                    if channel.tag:
+                        activity.tags.add(channel.tag)
                 else:
                     activity = None
 

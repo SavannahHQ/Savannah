@@ -54,7 +54,7 @@ admin.site.register(Tag, TagAdmin)
 
 class SourceAdmin(admin.ModelAdmin):
     list_display = ("name", "icon_name", "server", "connector", "community", "contact_count", "contribution_count", "conversation_count", "last_import")
-    list_filter = ("connector", "community",)
+    list_filter = ("connector", "community", "last_import")
 
     def contact_count(self, source):
         return source.contact_set.all().count()
@@ -71,8 +71,8 @@ class SourceAdmin(admin.ModelAdmin):
 admin.site.register(Source, SourceAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ("name", "source", "conversation_count")
-    list_filter = ("source__community", "source",)
+    list_display = ("name", "source", "conversation_count", "last_import")
+    list_filter = ("source__community", "source", "last_import")
     search_fields = ("name",)
 
     def conversation_count(self, channel):
@@ -180,8 +180,11 @@ class ContributionTypeAdmin(admin.ModelAdmin):
 admin.site.register(ContributionType, ContributionTypeAdmin)
 
 class ContributionAdmin(admin.ModelAdmin):
-    list_display = ("title", "contribution_type", "channel", "timestamp", "author")
+    list_display = ("title", "contribution_type", "channel", "timestamp", "author", "tag_list")
     list_filter = ("contribution_type__source__connector", "channel", "contribution_type", "tags", "timestamp")
+    def tag_list(self, contribution):
+        return ", ".join([tag.name for tag in contribution.tags.all()[:10]])
+    tag_list.short_description = "Tags"
 admin.site.register(Contribution, ContributionAdmin)
 
 class NoteAdmin(admin.ModelAdmin):
