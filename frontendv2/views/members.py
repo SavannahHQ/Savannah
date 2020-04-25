@@ -261,9 +261,9 @@ class MemberProfile:
                     conversations_counts[month] += 1
 
             if self.tag:
-                activity = Activity.objects.filter(community=self.member.community, author=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90), tags=self.tag).order_by("timestamp")
+                activity = Contribution.objects.filter(community=self.member.community, author=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90), tags=self.tag).order_by("timestamp")
             else:
-                activity = Activity.objects.filter(community=self.member.community, author=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90)).order_by("timestamp")
+                activity = Contribution.objects.filter(community=self.member.community, author=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90)).order_by("timestamp")
             for a in activity:
                 month = str(a.timestamp)[:10]
                 if month not in activity_counts:

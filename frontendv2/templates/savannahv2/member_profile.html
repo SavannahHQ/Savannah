@@ -83,7 +83,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Engagement</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Activity</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -135,7 +135,7 @@
                 <tbody>
                 {% for conversation in view.all_conversations %}
                 <tr>
-                  <td><i class="{{conversation.channel_icon}}"></i> {{conversation.channel_name}}</td>
+                  <td class="text-nowrap"><i class="{{conversation.channel_icon}}"></i> {{conversation.channel_name}}</td>
                   <td>{{conversation.timestamp}}</td>
                   <td>
                     <a target="_blank" href="{{conversation.location|default:"#"}}" title="{{conversation.content}}">{{ conversation }}</a>
@@ -186,16 +186,16 @@ var myLineChart = new Chart(ctx, {
       data: {{view.engagement_chart_conversations|safe}},
     },
     {
-      label: "Activities",
+      label: "Contributions",
       lineTension: 0.3,
-      backgroundColor: "rgba(78, 115, 223, 0.05)",
-      borderColor: "rgba(78, 115, 223, 1)",
+      backgroundColor: "#f6c23e22",
+      borderColor: "#f6c23e",
       pointRadius: 1,
-      pointBackgroundColor: "rgba(78, 115, 223, 1)",
-      pointBorderColor: "rgba(78, 115, 223, 1)",
+      pointBackgroundColor: "#f6c23e",
+      pointBorderColor: "#f6c23e",
       pointHoverRadius: 3,
-      pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-      pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+      pointHoverBackgroundColor: "#f6c23e",
+      pointHoverBorderColor: "#f6c23e",
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: {{view.engagement_chart_activities|safe}},

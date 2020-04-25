@@ -81,7 +81,7 @@
                 <tbody>
                 {% for contribution in view.all_contributions %}
                 <tr>
-                  <td>
+                  <td class="text-nowrap">
                   <i class="{{contribution.source_icon}}"></i> 
                   {% if contribution.channel_name %}
                     {{contribution.channel_name}}
@@ -91,10 +91,10 @@
                   </td>
                   <td>{{contribution.timestamp}}</td>
                   <td>
-                    <a target="_blank" href="/admin/corm/contribution/{{contribution.id}}">{{ contribution.title }}</a>
+                    <a target="_blank" href="{{contribution.location|default:"#"}}">{{ contribution.title }}</a>
                     {% if contribution.tag_count > 0 %}{% include 'savannahv2/tags.html' with tags=contribution.tags.all %}{% endif %}
                   </td>
-                  <td>{% if contribution.author %}<a href="{% url 'member_profile' contribution.author.id %}">{{contribution.author.name}}</a>{% endif %}</td>
+                  <td>{% if contribution.author_name %}<a href="{% url 'member_profile' contribution.author_id %}">{{contribution.author_name}}</a>{% endif %}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

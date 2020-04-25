@@ -30,7 +30,7 @@ class Contributions:
         if self.member_tag:
             contributions = contributions.filter(author__tags=self.member_tag)
 
-        contributions = contributions.annotate(tag_count=Count('tags'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).order_by('-timestamp')
+        contributions = contributions.annotate(author_name=F('author__name'), tag_count=Count('tags'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).order_by('-timestamp')
         return contributions[:100]
 
     def getContributionsChart(self):
