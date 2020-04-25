@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'corm.apps.CormConfig',
     'frontend.apps.FrontendConfig',
     'frontendv2.apps.FrontendConfig',

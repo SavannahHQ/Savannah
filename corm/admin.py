@@ -53,16 +53,16 @@ class TagAdmin(admin.ModelAdmin):
 admin.site.register(Tag, TagAdmin)
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ("name", "icon_name", "server", "connector", "community", "contact_count", "activity_count", "conversation_count", "last_import")
+    list_display = ("name", "icon_name", "server", "connector", "community", "contact_count", "contribution_count", "conversation_count", "last_import")
     list_filter = ("connector", "community",)
 
     def contact_count(self, source):
         return source.contact_set.all().count()
     contact_count.short_description = "Contacts"
 
-    def activity_count(self, source):
-        return Activity.objects.filter(activity_type__source=source).count()
-    activity_count.short_description = "Activity"
+    def contribution_count(self, source):
+        return Contribution.objects.filter(contribution_type__source=source).count()
+    contribution_count.short_description = "Contributions"
 
     def conversation_count(self, source):
         return Conversation.objects.filter(channel__source=source).count()
@@ -174,15 +174,15 @@ class TaskAdmin(admin.ModelAdmin):
     mark_notdone.short_description = "Mark as not done"
 admin.site.register(Task, TaskAdmin)
 
-class ActivityTypeAdmin(admin.ModelAdmin):
+class ContributionTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "community", "source", "feed")
     list_filter = ("source__connector", "community", "source")
-admin.site.register(ActivityType, ActivityTypeAdmin)
+admin.site.register(ContributionType, ContributionTypeAdmin)
 
-class ActivityAdmin(admin.ModelAdmin):
-    list_display = ("title", "activity_type", "channel", "timestamp", "author")
-    list_filter = ("activity_type__source__connector", "channel", "activity_type", "tags", "timestamp")
-admin.site.register(Activity, ActivityAdmin)
+class ContributionAdmin(admin.ModelAdmin):
+    list_display = ("title", "contribution_type", "channel", "timestamp", "author")
+    list_filter = ("contribution_type__source__connector", "channel", "contribution_type", "tags", "timestamp")
+admin.site.register(Contribution, ContributionAdmin)
 
 class NoteAdmin(admin.ModelAdmin):
     list_display = ("__str__", "member", "author", "timestamp")

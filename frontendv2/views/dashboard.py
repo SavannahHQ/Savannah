@@ -31,11 +31,11 @@ class Dashboard:
             return Conversation.objects.filter(channel__source__community=self.community).count()
         
     @property 
-    def activity_count(self):
+    def contribution_count(self):
         if self.tag:
-            return Activity.objects.filter(community=self.community, tags=self.tag).count()
+            return Contribution.objects.filter(community=self.community, tags=self.tag).count()
         else:
-            return Activity.objects.filter(community=self.community).count()
+            return Contribution.objects.filter(community=self.community).count()
         
     @property
     def open_tasks_count(self):

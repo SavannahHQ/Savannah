@@ -91,7 +91,7 @@ class Member(TaggableModel):
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
         MemberConnection.objects.filter(to_member=other_member).update(to_member=self)
-        Activity.objects.filter(author=other_member).update(author=self)
+        Contribution.objects.filter(author=other_member).update(author=self)
 
         for tag in other_member.tags.all():
             self.tags.add(tag)
@@ -137,7 +137,7 @@ class Source(models.Model):
 
     @property
     def activity_set(self):
-        return Activity.objects.filter(activity_type__source=self)
+        return Contribution.objects.filter(contribution_type__source=self)
 
     @property
     def conversation_set(self):
@@ -209,10 +209,10 @@ class Task(TaggableModel):
     def __str__(self):
         return self.name
 
-class ActivityType(models.Model):
+class ContributionType(models.Model):
     class Meta:
-        verbose_name = _("Activity Type")
-        verbose_name_plural = _("Activity Types")
+        verbose_name = _("Contribution Type")
+        verbose_name_plural = _("Contribution Types")
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=256)
@@ -221,12 +221,12 @@ class ActivityType(models.Model):
     def __str__(self):
         return "%s (%s)" % (self.name, self.community)
 
-class Activity(TaggableModel, ImportedDataModel):
+class Contribution(TaggableModel, ImportedDataModel):
     class Meta:
-        verbose_name_plural = _("Activity")
-        ordering = ('timestamp',)
+        verbose_name_plural = _("Contributions")
+        ordering = ('-timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    activity_type = models.ForeignKey(ActivityType, on_delete=models.CASCADE)
+    contribution_type = models.ForeignKey(ContributionType, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=256)
     timestamp = models.DateTimeField(db_index=True)
