@@ -33,33 +33,63 @@
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
-                  <div>
-                    {% include 'savannahv2/tags.html' with tags=view.member.tags.all %}
-                  </div>
-                  <ul>
-                  {% for note in view.member.note_set.all %}
-                    <li>{{note.timestamp}} - {{note.content}}</li>
-                  {% endfor %}
-                  </li>
+                <table class="table">
+                  {% if view.member.tags.count %}
+                  <tr>
+                    <th>Tags</th>
+                    <td>{% include 'savannahv2/tags.html' with tags=view.member.tags.all %}</td>
+                  </tr>
+                  {% endif %}                
+                  {% if view.member.email_address %}
+                  <tr>
+                    <th>Email</th>
+                    <td><a href="mailto:{{view.member.email_address}}">{{view.member.email_address}}</a></td>
+                  </tr>
+                  {% endif %}
+                  {% if view.member.phone_number %}
+                  <tr>
+                    <th>Phone</th>
+                    <td>{{view.member.phone_number}}</td>
+                  </tr>
+                  {% endif %}
+                  {% if view.member.mailing_address %}
+                  <tr>
+                    <th>Address</th>
+                    <td>{{view.member.mailing_address}}</td>
+                  </tr>
+                  {% endif %}
+                  {% if view.member.note_set.count %}
+                  <tr>
+                    <th>Notes</th>
+                    <td>
+                      {% for note in view.member.note_set.all %}
+                        <div class="{% if not forloop.last %}mb-3{% endif %}"><span class="small font-weight-bold">{{note.timestamp}} - {{note.author}}</span><br/><span>{{note.content|linebreaksbr}}</span></div>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                  {% endif %}
+                </table>
+
                 </div>
               </div>
             </div>
 
             <!-- Contacts List -->
             <div class="col-xl-4 col-lg-5">
+
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Contacts</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Identities</h6>
                   <div class="dropdown no-arrow">
                     <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                      <div class="dropdown-header">Contact Actions:</div>
-                      <a class="dropdown-item" target="_blank" href="/admin/corm/contact/add/?member={{view.member.id}}"><i class="fas fa-id-card"> </i> Add Contact</a>
+                      <div class="dropdown-header">Identity Actions:</div>
+                      <a class="dropdown-item" target="_blank" href="/admin/corm/contact/add/?member={{view.member.id}}"><i class="fas fa-id-card"> </i> Add Identity</a>
                       <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" target="_blank" href="/admin/corm/contact/?member={{view.member.id}}"><i class="fas fa-address-book"> </i> Edit Contacts</a>
+                      <a class="dropdown-item" target="_blank" href="/admin/corm/contact/?member={{view.member.id}}"><i class="fas fa-address-book"> </i> Edit Identities</a>
                     </div>
                   </div>
                 </div>
@@ -67,11 +97,12 @@
                 <div class="card-body">
                   <div class="ml-3">
                   {% for contact in view.member.contact_set.all %}
-                    <div class="mb-2"><i class="{{contact.source.icon_name}}"></i> {{contact.detail}}</div>
+                    <div class="mb-2">{% if contact.link_url %}<a href="{{contact.link_url}}" target="_blank">{% endif %}<i class="{{contact.source.icon_name}}"></i> {{contact.detail}}{% if contact.link_url %}</a>{% endif %}</div>
                   {% endfor %}
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
 

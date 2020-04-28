@@ -12,3 +12,15 @@ class ConnectionManager(object):
             ("corm.plugins.github", "Github"),
             ("corm.plugins.twitter", "Twitter"),
         ]
+
+    def get_identity_url(contact):
+        connector = contact.source.connector
+        if connector == "corm.plugins.github":
+            return "https://github.com/%s" % contact.detail
+        if connector == "corm.plugins.reddit":
+            return "https://reddit.com/u/%s" % contact.detail
+        if connector == "corm.plugins.twitter":
+            return "https://twitter.com/%s" % contact.detail
+        if connector == "corm.plugins.discourse":
+            return "%s/u/%s" % (contact.source.server, contact.detail)
+        return None

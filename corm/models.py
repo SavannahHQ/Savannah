@@ -60,6 +60,11 @@ class Member(TaggableModel):
     name = models.CharField(max_length=256, db_index=True)
     date_added = models.DateTimeField(auto_now_add=False, db_index=True)
 
+    email_address = models.EmailField(null=True, blank=True)
+    mailing_address = models.CharField(max_length=256, null=True, blank=True)
+    phone_number = models.CharField(max_length=32, null=True, blank=True)
+    avatar_url = models.URLField(null=True, blank=True)
+
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
     def is_connected(self, other):
@@ -167,6 +172,16 @@ class Contact(ImportedDataModel):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     detail = models.CharField(max_length=256)
+    email_address = models.EmailField(null=True, blank=True)
+    avatar_url = models.URLField(null=True, blank=True)
+
+    @property
+    def link_url(self):
+        if hasattr(self, '_identity_url'):
+            return self._identity_url
+        else:
+            self._identity_url = ConnectionManager.get_identity_url(self)
+            return self._identity_url
 
     def __str__(self):
         return "%s (%s)" % (self.detail, self.source.name)
