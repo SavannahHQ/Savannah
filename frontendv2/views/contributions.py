@@ -142,7 +142,7 @@ class Contributions:
 
 @login_required
 def contributions(request, community_id):
-    communities = Community.objects.filter(owner=request.user)
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
     request.session['community'] = community_id
     kwargs = dict()
     if 'tag' in request.GET:

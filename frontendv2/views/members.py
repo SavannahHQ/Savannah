@@ -136,7 +136,7 @@ class Members:
 
 @login_required
 def members(request, community_id):
-    communities = Community.objects.filter(owner=request.user)
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
     request.session['community'] = community_id
     if 'tag' in request.GET:
         members = Members(community_id, tag=request.GET.get('tag'))
@@ -204,7 +204,7 @@ class AllMembers:
 
 @login_required
 def all_members(request, community_id):
-    communities = Community.objects.filter(owner=request.user)
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
     request.session['community'] = community_id
 
     view = AllMembers(community_id, page=request.GET.get('page', 1), search=request.GET.get('search', None), tag=request.GET.get('tag', None))
@@ -326,7 +326,7 @@ class MemberProfile:
         return [channel[1] for channel in chart]
 
 def member_profile(request, member_id):
-    communities = Community.objects.filter(owner=request.user)
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
 
     view = MemberProfile(member_id, page=request.GET.get('page', 1), tag=request.GET.get('tag', None))
     request.session['community'] = view.member.community.id

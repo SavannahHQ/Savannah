@@ -145,7 +145,7 @@ class Dashboard:
 
 @login_required
 def dashboard(request, community_id):
-    communities = Community.objects.filter(owner=request.user)
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
     request.session['community'] = community_id
     if 'tag' in request.GET:
         dashboard = Dashboard(community_id, tag=request.GET.get('tag'))
