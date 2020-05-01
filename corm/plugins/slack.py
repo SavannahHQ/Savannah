@@ -6,6 +6,10 @@ from corm.models import Community, Source, Member, Contact, Channel, Conversatio
 
 class SlackPlugin(BasePlugin):
 
+    def get_identity_url(self, contact):
+        slack_id = contact.origin_id.split("/")[-1]
+        return "%s/team/%s" % (contact.source.server, slack_id)
+
     def get_source_type_name(self):
         return "Slack"
 
