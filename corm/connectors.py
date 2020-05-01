@@ -6,21 +6,34 @@ class ConnectionManager(object):
             ("corm.plugins.null", "Manual Entry"),
             ("corm.plugins.email", "Email"),
             ("corm.plugins.slack", "Slack"),
-            ("corm.plugins.discourse", "Discourse"),
             ("corm.plugins.rss", "RSS"),
             ("corm.plugins.reddit", "Reddit"),
             ("corm.plugins.github", "Github"),
             ("corm.plugins.twitter", "Twitter"),
         ]
 
-    def get_identity_url(contact):
+    CONNECTOR_PLUGINS = dict()
+    CONNECTOR_IMPORTERS = dict()
+
+    @classmethod 
+    def add_plugin(cls, namespace, plugin):
+        cls.CONNECTOR_PLUGINS[namespace] = plugin
+        importer_cmd_name = plugin.get_import_command_name()
+        if importer_cmd_name:
+            cls.CONNECTOR_IMPORTERS[importer_cmd_name] = plugin
+        cls.CONNECTOR_CHOICES.append((namespace, plugin.get_source_type_name()))
+
+    @classmethod
+    def get_identity_url(cls, contact):
         connector = contact.source.connector
+        if connector in cls.CONNECTOR_PLUGINS:
+            plugin  = cls.CONNECTOR_PLUGINS[connector]
+            return plugin.get_identity_url(contact)
+
         if connector == "corm.plugins.github":
             return "https://github.com/%s" % contact.detail
         if connector == "corm.plugins.reddit":
             return "https://reddit.com/u/%s" % contact.detail
         if connector == "corm.plugins.twitter":
             return "https://twitter.com/%s" % contact.detail
-        if connector == "corm.plugins.discourse":
-            return "%s/u/%s" % (contact.source.server, contact.detail)
         return None

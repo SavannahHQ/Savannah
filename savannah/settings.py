@@ -44,6 +44,10 @@ INSTALLED_APPS = [
     'grimoire',
 ]
 
+CORM_PLUGINS = [
+    "corm.plugins.discourse.DiscoursePlugin",
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

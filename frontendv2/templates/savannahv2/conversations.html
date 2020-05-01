@@ -81,7 +81,7 @@
                 <tbody>
                 {% for conversation in view.all_conversations %}
                 <tr>
-                  <td class="text-nowrap"><i class="{{conversation.channel_icon}}"></i> {{conversation.channel_name}}</td>
+                  <td class="text-nowrap"><i class="{{conversation.channel_icon}}" title="{{conversation.source_name}}"></i> {{conversation.channel_name}}</td>
                   <td>{{conversation.timestamp}}</td>
                   <td>
                     <a target="_blank" href="/admin/corm/conversation/{{conversation.id}}" title="{{conversation.content}}">{{ conversation }}</a>

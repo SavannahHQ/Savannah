@@ -30,7 +30,7 @@ class Conversations:
         if self.member_tag:
             conversations = conversations.filter(participants__tags=self.member_tag)
 
-        conversations = conversations.annotate(participant_count=Count('participants'), tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        conversations = conversations.annotate(participant_count=Count('participants'), tag_count=Count('tags'), source_name=F('channel__source__name'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return conversations[:100]
 
     def getConversationsChart(self):
@@ -92,9 +92,9 @@ class Conversations:
                 else:
                     channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
 
-            channels = channels.annotate(source_icon=F('source__icon_name'))
+            channels = channels.annotate(source_name=F('source__name'), source_icon=F('source__icon_name'))
             for c in channels:
-                counts[c.name] = c.conversation_count
+                counts["%s (%s)" % (c.name, c.source_name)] = c.conversation_count
             self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._channelsChart) > 8:
                 other_count = sum([count for channel, count in self._channelsChart[7:]])

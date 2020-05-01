@@ -178,7 +178,7 @@ class AllMembers:
     def all_members(self):
         members = Member.objects.filter(community=self.community).annotate(note_count=Count('note'), tag_count=Count('tags'))
         if self.search:
-            members = members.filter(name__icontains=self.search)
+            members = members.filter(Q(name__icontains=self.search) | Q(contact__detail__icontains=self.search))
 
         if self.tag:
             members = members.filter(tags=self.tag)
