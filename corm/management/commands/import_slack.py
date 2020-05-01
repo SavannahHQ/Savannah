@@ -16,6 +16,8 @@ class Command(BaseCommand):
           print("  %s" % channel.name)
           if channel.origin_id and source.auth_secret:
             import_slack(channel)
+            channel.last_import = datetime.datetime.utcnow()
+            channel.save()
         source.last_import = datetime.datetime.utcnow()
         source.save()
 
@@ -49,19 +51,19 @@ def import_slack(channel):
         thread = None
         if 'thread_ts' in item.get('data'):
           slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
-          slack_thread_link = "https://%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
-          slack_thread_link = slack_thread_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
+          slack_thread_id = "https://%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
+          slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
           thread_tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
-          thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_link, defaults={'channel':channel, 'timestamp':thread_tstamp, 'location': slack_thread_link})
+          thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_id, channel=channel, defaults={'timestamp':thread_tstamp, 'location': slack_thread_link})
           thread.participants.add(contact.member)
 
         convo_text = item.get('data').get('text')
         for tagged_user in tagged:
           if slack._users.get(tagged_user):
               convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
-        convo_text = item.get('data').get('user_data').get('real_name') + ": " + convo_text
+        convo_text = convo_text
         try:
-          convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_link, defaults={'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
+          convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_link, channel=channel, defaults={'speaker':contact.member, 'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link})
         except:
           pass#import pdb; pdb.set_trace()
         convo.participants.add(contact.member)
