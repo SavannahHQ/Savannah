@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 CORM_PLUGINS = [
     "corm.plugins.discourse.DiscoursePlugin",
+    "corm.plugins.slack.SlackPlugin",
 ]
 
 MIDDLEWARE = [

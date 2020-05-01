@@ -49,13 +49,15 @@ class PluginImporter:
         self.API_BACKOFF_SECONDS = 10
 
 
-    def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None):
+    def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None):
         if origin_id in self._member_cache:
             member = self._member_cache[origin_id]
         else:
+            if name is None:
+                name = detail
             contact_matches = Contact.objects.filter(origin_id=origin_id, source=self.source)
             if contact_matches.count() == 0:
-                member = Member.objects.create(community=self.community, name=detail, date_added=tstamp)
+                member = Member.objects.create(community=self.community, name=name, date_added=tstamp)
                 contact, created = Contact.objects.get_or_create(origin_id=origin_id, source=self.source, defaults={'member':member, 'detail':detail})
             else:
                 member = contact_matches[0].member
