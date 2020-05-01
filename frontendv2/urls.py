@@ -25,6 +25,7 @@ urlpatterns = [
     path('members/<int:community_id>/', views.members, name='members'),
     path('members/<int:community_id>/all', views.all_members, name='all_members'),
     path('member/<int:member_id>/', views.member_profile, name='member_profile'),
+    path('member/<int:member_id>/merge', views.member_merge, name='member_merge'),
     path('conversations/<int:community_id>/', views.conversations, name='conversations'),
     path('contributions/<int:community_id>/', views.contributions, name='contributions'),
 ]

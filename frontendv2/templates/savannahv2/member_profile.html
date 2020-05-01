@@ -88,8 +88,9 @@
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
                       <div class="dropdown-header">Identity Actions:</div>
                       <a class="dropdown-item" target="_blank" href="/admin/corm/contact/add/?member={{view.member.id}}"><i class="fas fa-id-card"> </i> Add Identity</a>
-                      <div class="dropdown-divider"></div>
                       <a class="dropdown-item" target="_blank" href="/admin/corm/contact/?member={{view.member.id}}"><i class="fas fa-address-book"> </i> Edit Identities</a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" href="{% url 'member_merge' view.member.id %}"><i class="fas fa-people-arrows"> </i> Merge Members</a>
                     </div>
                   </div>
                 </div>

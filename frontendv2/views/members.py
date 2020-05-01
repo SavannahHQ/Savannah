@@ -1,6 +1,7 @@
 import operator
+from functools import reduce
 import datetime
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 
@@ -11,6 +12,7 @@ class Members:
         self.community = get_object_or_404(Community, id=community_id)
         self._membersChart = None
         self._tagsChart = None
+        self._sourcesChart = None
         if tag:
             self.tag = get_object_or_404(Tag, name=tag)
         else:
@@ -133,6 +135,33 @@ class Members:
         chart = self.getTagsChart()
         return [tag[2] for tag in chart]
 
+    def getSourcesChart(self):
+        if not self._sourcesChart:
+            counts = dict()
+            other_count = 0
+            sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact'))
+            for source in sources:
+                if source.identity_count > 5:
+                    counts[source.name] = source.identity_count
+                else:
+                    other_count += source.identity_count
+            self._sourcesChart = [(source, count) for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            if len(self._sourcesChart) > 8:
+                other_count += sum([count for tag, count in self._sourcesChart[7:]])
+            if other_count > 0:
+                self._sourcesChart = self._sourcesChart[:7]
+                self._sourcesChart.append(("Other", other_count, "#efefef"))
+        return self._sourcesChart
+
+    @property
+    def source_names(self):
+        chart = self.getSourcesChart()
+        return [source[0] for source in chart]
+
+    @property
+    def source_counts(self):
+        chart = self.getSourcesChart()
+        return [source[1] for source in chart]
 
 @login_required
 def members(request, community_id):
@@ -342,3 +371,58 @@ def member_profile(request, member_id):
         "view": view,
     }
     return render(request, 'savannahv2/member_profile.html', context)
+
+class MemberMerge:
+    def __init__(self, member_id, search=None, page=1):
+        self.RESULTS_PER_PAGE = 100
+        self.member = get_object_or_404(Member, id=member_id)
+        try:
+            self.page = int(page)
+        except:
+            self.page = 1
+        if search:
+            self.search =search
+        else:
+            self.search = None
+
+    @property
+    def possible_matches(self):
+        matches = Member.objects.filter(community=self.member.community)
+        if self.search:
+            return matches.filter(Q(name__icontains=self.search)|Q(contact__detail__icontains=self.search))
+        else:
+            same_contact = [contact.detail for contact in self.member.contact_set.all()]
+            contact_matches = matches.filter(Q(contact__detail__in=same_contact))
+
+            similar_contact = [name for name in self.member.name.split(" ") if len(name) > 2]
+            if len(similar_contact) > 1:
+                similar_matches = matches.filter(~Q(contact__detail__in=same_contact) & reduce(operator.or_, (Q(contact__detail__icontains=name) for name in similar_contact)))
+            elif len(similar_contact) == 1:
+                similar_matches = matches.filter(~Q(contact__detail__in=same_contact) & Q(contact__detail__icontains=similar_contact[0]))
+            contact_matches = contact_matches.exclude(id=self.member.id).distinct()
+            similar_matches = similar_matches.exclude(id=self.member.id).distinct()[:20]
+            return list(contact_matches) + list(similar_matches)
+
+
+def member_merge(request, member_id):
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
+
+    view = MemberMerge(member_id, search=request.GET.get('search', 0))
+    request.session['community'] = view.member.community.id
+
+    if request.method == 'POST':
+        merge_with = get_object_or_404(Member, id=request.POST.get('merge_with'))
+        view.member.merge_with(merge_with)
+        return redirect('member_merge', member_id=member_id)
+
+    try:
+        user_member = Member.objects.get(user=request.user, community=community)
+    except:
+        user_member = None
+    context = {
+        "communities": communities,
+        "active_community": view.member.community,
+        "active_tab": "members",
+        "view": view,
+    }
+    return render(request, 'savannahv2/member_merge.html', context)
