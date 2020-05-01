@@ -30,7 +30,7 @@ class Conversations:
         if self.member_tag:
             conversations = conversations.filter(participants__tags=self.member_tag)
 
-        conversations = conversations.annotate(participant_count=Count('participants'), tag_count=Count('tags'), source_name=F('channel__source__name'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        conversations = conversations.annotate(speaker_name=F('speaker__name'), tag_count=Count('tags'), source_name=F('channel__source__name'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return conversations[:100]
 
     def getConversationsChart(self):
