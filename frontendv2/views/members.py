@@ -389,7 +389,7 @@ class MemberMerge:
     def possible_matches(self):
         matches = Member.objects.filter(community=self.member.community)
         if self.search:
-            return matches.filter(Q(name__icontains=self.search)|Q(contact__detail__icontains=self.search)).exclude(id=self.member.id)
+            return matches.filter(Q(name__icontains=self.search)|Q(contact__detail__icontains=self.search)).exclude(id=self.member.id).distinct()
         else:
             same_contact = [contact.detail for contact in self.member.contact_set.all()]
             contact_matches = matches.filter(Q(contact__detail__in=same_contact))

@@ -143,7 +143,7 @@
                   <td>{{match.email_address|default:''}}</td>
                   <td>
                   {% for identity in match.contact_set.all %}
-                  <i class="{{identity.source.icon_name}}"></i> {{identity.detail}}{% if not forloop.last %}<br/>{% endif %}
+                  <a target="_blank" href="{{identity.link_url}}"><i class="{{identity.source.icon_name}}"></i> {{identity.detail}}</a>{% if not forloop.last %}<br/>{% endif %}
                   {% endfor %}
                   </td>
                   <td>{{match.date_added}}</td>
