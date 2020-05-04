@@ -176,7 +176,7 @@
                   </td>
                   <td>
                   {% if contrib.conversation %}
-                  {% for participant in contrib.converation.participants.all %}
+                  {% for participant in contrib.conversation.participants.all %}
                     {% if participant.id != view.member.id %}
                       <a href="{% url 'member_profile' participant.id %}">{{participant.name}}</a><br/>
                     {% endif %}
