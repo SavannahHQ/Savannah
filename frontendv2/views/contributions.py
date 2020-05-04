@@ -33,6 +33,33 @@ class Contributions:
         contributions = contributions.annotate(author_name=F('author__name'), tag_count=Count('tags'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).order_by('-timestamp')
         return contributions[:100]
 
+    @property
+    def recent_contributors(self):
+        if self.tag:
+            members = Member.objects.filter(community=self.community).annotate(last_active=Max('contribution__timestamp', filter=Q(contribution__timestamp__isnull=False, contribution__tags=self.tag)))
+        else:
+            members = Member.objects.filter(community=self.community).annotate(last_active=Max('contribution__timestamp', filter=Q(contribution__timestamp__isnull=False)))
+        actives = dict()
+        for m in members:
+            if m.last_active is not None:
+                actives[m] = m.last_active
+        recently_active = [(member, tstamp) for member, tstamp in sorted(actives.items(), key=operator.itemgetter(1), reverse=True)]
+        
+        return recently_active[:10]
+
+    @property
+    def top_contributors(self):
+        activity_counts = dict()
+        if self.tag:
+            members = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182), contribution__tags=self.tag)))
+        else:
+            members = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182))))
+        for m in members:
+            activity_counts[m] = m.contribution_count
+        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
+        most_active.reverse()
+        return most_active[:10]
+
     def getContributionsChart(self):
         if not self._membersChart:
             months = list()
@@ -153,7 +180,7 @@ def contributions(request, community_id):
 
     contributions = Contributions(community_id, **kwargs)
     try:
-        user_member = Member.objects.get(user=request.user, community=conversations.community)
+        user_member = Member.objects.get(user=request.user, community=contributions.community)
     except:
         user_member = None
     context = {

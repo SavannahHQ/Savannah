@@ -61,6 +61,73 @@
           <div class="row">
 
             <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Recently Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Contributors</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Date</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, date in view.recent_contributors %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{date}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Top Contributors -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors (6 months)</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text">Contrib.</span><span class="full-text">Contributions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, count in view.top_contributors %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
             <div class="col-lg-12 mb-4">
 
               <!-- Most Active Users-->
@@ -103,8 +170,8 @@
               </div>
 
             </div>
-
           </div>
+
         </div>
         <!-- /.container-fluid -->
 {% endblock %}
