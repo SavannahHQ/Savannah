@@ -97,8 +97,10 @@ class Contributions:
                 contributor_ids.add(c.id)
 
         members = Member.objects.filter(community=self.community).annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = members.order_by('-connection_count')
         for m in members:
-            activity_counts[m] = m.connection_count
+            if m.connection_count > 0:
+                activity_counts[m] = m.connection_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
         return most_active[:10]
