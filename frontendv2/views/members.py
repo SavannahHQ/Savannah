@@ -273,6 +273,14 @@ class MemberProfile:
             conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return conversations[:20]
 
+    @property
+    def all_contributions(self):
+        if self.tag:
+            contributions = Contribution.objects.filter(community=self.member.community, author=self.member, tags=self.tag).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        else:
+            contributions = Contribution.objects.filter(community=self.member.community, author=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        return contributions[:10]
+
     def getEngagementChart(self):
         if not self._engagementChart:
             conversations_counts = dict()

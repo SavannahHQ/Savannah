@@ -55,11 +55,54 @@ class Contributions:
         else:
             members = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182))))
         for m in members:
-            activity_counts[m] = m.contribution_count
+            if m.contribution_count > 0:
+                activity_counts[m] = m.contribution_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
         return most_active[:10]
 
+    @property
+    def top_supporters(self):
+        activity_counts = dict()
+        contributor_ids = set()
+        if self.tag:
+            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), contribution__tags=self.tag)))
+        else:
+            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        contributors = contributors.filter(contribution_count__gt=0).order_by('-contribution_count')
+        for c in contributors:
+            if c.contribution_count > 0:
+                contributor_ids.add(c.id)
+
+        members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__participants__in=contributor_ids, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = members.order_by('-conversation_count')
+        for m in members[:10]:
+            if m.conversation_count > 0:
+                activity_counts[m] = m.conversation_count
+        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
+        most_active.reverse()
+        return most_active[:10]
+  
+    @property
+    def top_enablers(self):
+        activity_counts = dict()
+        contributor_ids = set()
+        if self.tag:
+            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), contribution__tags=self.tag)))
+        else:
+            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+
+        for c in contributors:
+            if c.contribution_count > 0:
+                contributor_ids.add(c.id)
+
+        members = Member.objects.filter(community=self.community).annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        for m in members:
+            activity_counts[m] = m.connection_count
+        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
+        most_active.reverse()
+        return most_active[:10]
+  
     def getContributionsChart(self):
         if not self._membersChart:
             months = list()

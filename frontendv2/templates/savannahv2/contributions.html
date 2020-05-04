@@ -128,6 +128,77 @@
           <div class="row">
 
             <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Top Supporters -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Supporters (30 days)</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text">Conv.</span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, convo_count in view.top_supporters %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{convo_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Top Enablers -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Enablers (30 days)</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text">Conn.</span><span class="full-text">Connections</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, convo_count in view.top_enablers %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{convo_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
             <div class="col-lg-12 mb-4">
 
               <!-- Most Active Users-->
