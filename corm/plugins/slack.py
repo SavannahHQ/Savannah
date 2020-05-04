@@ -52,11 +52,11 @@ class SlackImporter(PluginImporter):
                     tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
                     slack_convo_id = "slack.com/conversation/%s" % item.get('data').get('client_msg_id')
                     server = source.server or "slack.com"
-                    slack_convo_link = "https://%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
+                    slack_convo_link = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
                     thread = None
                     if 'thread_ts' in item.get('data'):
                         slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
-                        slack_thread_id = "https://%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
+                        slack_thread_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
                         slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
                         thread_tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
                         thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_id, channel=channel, defaults={'timestamp':thread_tstamp, 'location': slack_thread_link})
