@@ -50,9 +50,9 @@ class SlackImporter(PluginImporter):
                     slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
                     contact = Contact.objects.get(origin_id=slack_user_id)
                     tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
-                    slack_convo_id = "slack.com/conversation/%s" % item.get('data').get('client_msg_id')
                     server = source.server or "slack.com"
-                    slack_convo_link = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
+                    slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
+                    slack_convo_link = slack_convo_id
                     thread = None
                     if 'thread_ts' in item.get('data'):
                         slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
@@ -68,7 +68,7 @@ class SlackImporter(PluginImporter):
                             convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
                     convo_text = convo_text
                     try:
-                        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_link, channel=channel, defaults={'speaker':contact.member, 'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link, 'thread_start':thread})
+                        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, channel=channel, defaults={'speaker':contact.member, 'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link, 'thread_start':thread})
                     except:
                         pass#import pdb; pdb.set_trace()
                     convo.participants.add(contact.member)
