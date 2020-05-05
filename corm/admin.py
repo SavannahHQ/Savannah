@@ -191,3 +191,24 @@ class NoteAdmin(admin.ModelAdmin):
     list_display = ("__str__", "member", "author", "timestamp")
     list_filter = ("author", "tags", "member")
 admin.site.register(Note, NoteAdmin)
+
+class SuggestMemberMergeAdmin(admin.ModelAdmin):
+    list_display = ("destination_member", "source_member", "community", "reason", "created_at", "actioned_at", "status")
+    list_filter = ("community", "status", "actioned_at", "created_at")
+    actions = ("accept", "ignore", "reject")
+    def accept(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.accept(request.user)
+    accept.short_description = "Accept Suggestions"
+
+    def reject(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.reject(request.user)
+    reject.short_description = "Reject Suggestions"
+
+    def ignore(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.ignore(request.user)
+    ignore.short_description = "Ignore Suggestions"
+
+admin.site.register(SuggestMemberMerge, SuggestMemberMergeAdmin)

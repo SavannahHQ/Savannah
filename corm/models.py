@@ -270,3 +270,63 @@ class Note(TaggableModel):
                 return self.content[:min(len(self.content), 32)]
         else:
             return str(self.timestamp)
+
+class Suggestion(models.Model):
+    class Meta:
+        abstract = True
+    REJECTED = -1
+    IGNORED = 0
+    ACCEPTED = 1
+    ACTION_STATUS = [
+        (ACCEPTED, 'Accepted'),
+        (IGNORED, 'Ignored'),
+        (REJECTED, 'Rejected'),
+    ]
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=256, null=True, blank=True)
+    status = models.SmallIntegerField(choices=ACTION_STATUS, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    actioned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    actioned_at = models.DateTimeField(null=True, blank=True)
+
+    def accept_action(self):
+        raise NotImplementedError
+
+    def act_on_suggestion(self, user, action):
+        self.actioned_at = datetime.datetime.utcnow()
+        self.actioned_by = user
+        self.status = action
+        self.save()
+
+    def accept(self, user):
+        update_suggestion = self.accept_action()
+        if update_suggestion is not False:
+            self.act_on_suggestion(user, Suggestion.ACCEPTED)
+
+    def reject(self, user):
+        self.act_on_suggestion(user, Suggestion.REJECTED)
+
+    def ignore(self, user):
+        self.act_on_suggestion(user, Suggestion.IGNORED)
+
+class SuggestMemberMerge(Suggestion):
+    source_member = models.ForeignKey(Member, related_name='merge_to_suggestions', on_delete=models.CASCADE)    
+    destination_member = models.ForeignKey(Member, related_name='merge_with_suggestions', on_delete=models.CASCADE)
+
+    def accept_action(self):
+        self.destination_member.merge_with(self.source_member)
+        return False
+
+class SuggestMemberTag(Suggestion):
+    target_member = models.ForeignKey(MemberConnection, related_name='tag_suggestions', on_delete=models.CASCADE)    
+    suggested_tag = models.ForeignKey(Tag, related_name='member_suggestions', on_delete=models.CASCADE)
+
+    def accept_action(self):
+        self.target_member.tags.add(self.suggested_tag)
+
+class SuggestConversationTag(Suggestion):
+    target_conversation = models.ForeignKey(Conversation, related_name='tag_suggestions', on_delete=models.CASCADE)    
+    suggested_tag = models.ForeignKey(Tag, related_name='conversation_suggestions', on_delete=models.CASCADE)
+
+    def accept_action(self):
+        self.target_conversation.tags.add(self.suggested_tag)
