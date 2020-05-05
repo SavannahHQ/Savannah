@@ -47,32 +47,25 @@ class Conversations:
             conversations = conversations.order_by("timestamp")
 
             for m in conversations:
-                month = str(m.timestamp)[:10]
+                month = str(m.timestamp)[:7]
                 if month not in months:
                     months.append(month)
                 if month not in counts:
                     counts[month] = 1
                 else:
                     counts[month] += 1
-            self._membersChart = (months, counts)
+            self._membersChart = (months[0:-1], counts)
         return self._membersChart
         
     @property
     def conversations_chart_months(self):
         (months, counts) = self.getConversationsChart()
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
-        date_list.reverse()
-        return [str(day)[:10] for day in date_list]
+        return months
 
     @property
     def conversations_chart_counts(self):
         (months, counts) = self.getConversationsChart()
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(180)]
-        date_list.reverse()
-        return [counts.get(str(day)[:10], 0) for day in date_list]
-        #return [counts[month] for month in months]
+        return [counts[month] for month in months]
 
     def getChannelsChart(self):
         channel_names = dict()
