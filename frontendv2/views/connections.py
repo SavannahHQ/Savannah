@@ -36,7 +36,7 @@ def connections(request, community_id):
     context = {
         "communities": communities,
         "active_community": connections.community,
-        "active_tab": "conversations",
+        "active_tab": "connections",
         "view": connections,
     }
     return render(request, 'savannahv2/connections.html', context)
@@ -75,7 +75,7 @@ def connections_json(request, community_id):
 
     for member_id, member_name in member_map.items():
         tag_color = "1f77b4"
-        if connection_counts.get(member_id, 0) > 5:
+        if connection_counts.get(member_id, 0) >= 3:
             tags = Tag.objects.filter(member__id=member_id)
             if len(tags) > 0:
                 tag_color = tags[0].color

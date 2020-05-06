@@ -41,8 +41,11 @@
 <script>
 
 // set the dimensions and margins of the graph
+var chartSpace = d3.select("#connectionsChart")._groups[0][0];
+var availableWidth = chartSpace.offsetWidth;
+
 var margin = {top: 10, right: 30, bottom: 30, left: 40},
-  width = 1040 - margin.left - margin.right,
+  width = availableWidth - margin.left - margin.right,
   height = 600 - margin.top - margin.bottom;
 var radius = 5
 
@@ -123,6 +126,8 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
 
   node.append("title")
       .text(d => d.name);
+
+  node.on("dblclick", d => window.location = "/v2/member/"+d.id+"/")
 
   simulation.on("tick", () => {
     node

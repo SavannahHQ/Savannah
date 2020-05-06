@@ -90,14 +90,14 @@
       </li>
 
       <!-- Nav Item - Contributions -->
-      <li class="nav-item">
+      <li class="nav-item {% if active_tab == "contributions" %}active{% endif %}">
         <a class="nav-link" href="{% url 'contributions' request.session.community %}">
           <i class="fas fa-fw fa-mail-bulk"></i>
           <span>Contributions</span></a>
       </li>
 
       <!-- Nav Item - Connections -->
-      <li class="nav-item">
+      <li class="nav-item {% if active_tab == "connections" %}active{% endif %}">
         <a class="nav-link" href="{% url 'connections' request.session.community %}">
           <i class="fas fa-fw fa-project-diagram"></i>
           <span>Connections</span></a>
