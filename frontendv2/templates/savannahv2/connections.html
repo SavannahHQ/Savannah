@@ -97,7 +97,7 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
 
   const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).id(d => d.id))
-      .force("charge", d3.forceManyBody().strength(Math.min(-10, -(200-nodes.length))))
+      .force("charge", d3.forceManyBody().strength(Math.min(-20, -(200-nodes.length))))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
 //  const svg = d3.select("#my_dataviz").append("svg")
