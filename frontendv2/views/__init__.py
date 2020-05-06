@@ -10,6 +10,7 @@ from frontendv2.views.dashboard import dashboard
 from frontendv2.views.members import members, all_members, member_profile, member_merge
 from frontendv2.views.conversations import conversations
 from frontendv2.views.contributions import contributions
+from frontendv2.views.connections import connections, connections_json
 
 # Create your views here.
 def index(request):

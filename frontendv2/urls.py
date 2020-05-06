@@ -28,4 +28,6 @@ urlpatterns = [
     path('member/<int:member_id>/merge', views.member_merge, name='member_merge'),
     path('conversations/<int:community_id>/', views.conversations, name='conversations'),
     path('contributions/<int:community_id>/', views.contributions, name='contributions'),
+    path('connections/<int:community_id>/', views.connections, name='connections'),
+    path('connections/<int:community_id>/json', views.connections_json, name='connections_json'),
 ]
