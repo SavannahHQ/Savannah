@@ -47,7 +47,7 @@ def connections_json(request, community_id):
     nodes = list()
     links = list()
     member_map = dict()
-    member_ids = set()
+    connection_counts = dict()
     connected = set()
 
     connections = MemberConnection.objects.filter(from_member__community=community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
@@ -63,8 +63,23 @@ def connections_json(request, community_id):
                 connected.add((connection.from_member_id, connection.to_member_id))
                 member_map[connection.from_member_id] = connection.from_member_name
                 member_map[connection.to_member_id] = connection.to_member_name
+                if connection.from_member_id not in connection_counts:
+                    connection_counts[connection.from_member_id] = 1
+                else:
+                    connection_counts[connection.from_member_id] += 1
+
+                if connection.to_member_id not in connection_counts:
+                    connection_counts[connection.to_member_id] = 1
+                else:
+                    connection_counts[connection.to_member_id] += 1
 
     for member_id, member_name in member_map.items():
-        nodes.append({"id":member_id, "name":member_name})
+        tag_color = "1f77b4"
+        if connection_counts.get(member_id, 0) > 5:
+            tags = Tag.objects.filter(member__id=member_id)
+            if len(tags) > 0:
+                tag_color = tags[0].color
+
+        nodes.append({"id":member_id, "name":member_name, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
                 
     return JsonResponse({"nodes":nodes, "links":links})
