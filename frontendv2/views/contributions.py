@@ -6,18 +6,17 @@ from django.db.models import F, Q, Count, Max
 from django.utils.safestring import mark_safe
 
 from corm.models import *
+from frontendv2.views import SavannahView
 
-class Contributions:
-    def __init__(self, community_id, tag=None, member_tag=None):
-        self.community = get_object_or_404(Community, id=community_id)
+class Contributions(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "contributions"
         self._membersChart = None
         self._channelsChart = None
-        if tag:
-            self.tag = get_object_or_404(Tag, name=tag)
-        else:
-            self.tag = None
-        if member_tag:
-            self.member_tag = get_object_or_404(Tag, name=member_tag)
+
+        if 'member_tag' in request.GET:
+            self.member_tag = get_object_or_404(Tag, name=request.GET.get('member_tag'))
         else:
             self.member_tag = None
 
@@ -205,26 +204,7 @@ class Contributions:
 
 
 
-@login_required
-def contributions(request, community_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
-    request.session['community'] = community_id
-    kwargs = dict()
-    if 'tag' in request.GET:
-        kwargs['tag'] = request.GET.get('tag')
-
-    if 'member_tag' in request.GET:
-        kwargs['member_tag'] = request.GET.get('member_tag')
-
-    contributions = Contributions(community_id, **kwargs)
-    try:
-        user_member = Member.objects.get(user=request.user, community=contributions.community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": contributions.community,
-        "active_tab": "contributions",
-        "view": contributions,
-    }
-    return render(request, 'savannahv2/contributions.html', context)
+    @login_required
+    def as_view(request, community_id):
+        view = Contributions(request, community_id)
+        return render(request, 'savannahv2/contributions.html', view.context)

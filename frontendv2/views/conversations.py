@@ -6,18 +6,18 @@ from django.db.models import F, Q, Count, Max
 from django.utils.safestring import mark_safe
 
 from corm.models import *
+from frontendv2.views import SavannahView
 
-class Conversations:
-    def __init__(self, community_id, tag=None, member_tag=None):
-        self.community = get_object_or_404(Community, id=community_id)
+class Conversations(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "conversations"
+        
         self._membersChart = None
         self._channelsChart = None
-        if tag:
-            self.tag = get_object_or_404(Tag, name=tag)
-        else:
-            self.tag = None
-        if member_tag:
-            self.member_tag = get_object_or_404(Tag, name=member_tag)
+
+        if 'member_tag' in request.GET:
+            self.member_tag = get_object_or_404(Tag, name=request.GET.get('member_tag'))
         else:
             self.member_tag = None
 
@@ -106,26 +106,7 @@ class Conversations:
         return [channel[1] for channel in chart]
 
 
-@login_required
-def conversations(request, community_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
-    request.session['community'] = community_id
-    kwargs = dict()
-    if 'tag' in request.GET:
-        kwargs['tag'] = request.GET.get('tag')
-
-    if 'member_tag' in request.GET:
-        kwargs['member_tag'] = request.GET.get('member_tag')
-
-    conversations = Conversations(community_id, **kwargs)
-    try:
-        user_member = Member.objects.get(user=request.user, community=conversations.community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": conversations.community,
-        "active_tab": "conversations",
-        "view": conversations,
-    }
-    return render(request, 'savannahv2/conversations.html', context)
+    @login_required
+    def as_view(request, community_id):
+        view = Conversations(request, community_id)
+        return render(request, 'savannahv2/conversations.html', view.context)

@@ -6,17 +6,15 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 
 from corm.models import *
+from frontendv2.views import SavannahView
 
-class Members:
-    def __init__(self, community_id, tag=None):
-        self.community = get_object_or_404(Community, id=community_id)
+class Members(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "members"
         self._membersChart = None
         self._tagsChart = None
         self._sourcesChart = None
-        if tag:
-            self.tag = get_object_or_404(Tag, name=tag)
-        else:
-            self.tag = None
     
     @property
     def all_members(self):
@@ -163,44 +161,29 @@ class Members:
         chart = self.getSourcesChart()
         return [source[1] for source in chart]
 
-@login_required
-def members(request, community_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
-    request.session['community'] = community_id
-    if 'tag' in request.GET:
-        members = Members(community_id, tag=request.GET.get('tag'))
-    else:
-        members = Members(community_id)
+    @login_required
+    def as_view(request, community_id):
+        members = Members(request, community_id)
 
-    try:
-        user_member = Member.objects.get(user=request.user, community=community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": members.community,
-        "active_tab": "members",
-        "view": members,
-    }
-    return render(request, 'savannahv2/members.html', context)
+        return render(request, 'savannahv2/members.html', members.context)
 
-class AllMembers:
-    def __init__(self, community_id, page=1, search=None, tag=None):
-        self.RESULTS_PER_PAGE = 100
+class AllMembers(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "members"
+
+        self.RESULTS_PER_PAGE = 25
         self.community = get_object_or_404(Community, id=community_id)
+
         try:
-            self.page = int(page)
+            self.page = int(request.GET.get('page', 1))
         except:
             self.page = 1
 
-        if search:
-            self.search = search.lower()
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower()
         else:
             self.search = None
-        if tag:
-            self.tag = get_object_or_404(Tag, name=tag)
-        else:
-            self.tag = None
         self.result_count = 0
     
     @property
@@ -231,39 +214,25 @@ class AllMembers:
         pages = int(self.result_count / self.RESULTS_PER_PAGE)
         return [page+1 for page in range(pages+1)]
 
-@login_required
-def all_members(request, community_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
-    request.session['community'] = community_id
+    @login_required
+    def as_view(request, community_id):
+        view = AllMembers(request, community_id)
 
-    view = AllMembers(community_id, page=request.GET.get('page', 1), search=request.GET.get('search', None), tag=request.GET.get('tag', None))
+        return render(request, 'savannahv2/all_members.html', view.context)
 
-    try:
-        user_member = Member.objects.get(user=request.user, community=community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": view.community,
-        "active_tab": "members",
-        "view": view,
-    }
-    return render(request, 'savannahv2/all_members.html', context)
-
-class MemberProfile:
-    def __init__(self, member_id, page=1, tag=None):
-        self.RESULTS_PER_PAGE = 100
+class MemberProfile(SavannahView):
+    def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+        self.RESULTS_PER_PAGE = 100
         self._engagementChart = None
         self._channelsChart = None
         try:
-            self.page = int(page)
+            self.page = int(request.GET.get('page', 1))
         except:
             self.page = 1
-        if tag:
-            self.tag = get_object_or_404(Tag, name=tag)
-        else:
-            self.tag = None
 
     @property
     def all_conversations(self):
@@ -362,34 +331,27 @@ class MemberProfile:
         chart = self.getChannelsChart()
         return [channel[1] for channel in chart]
 
-def member_profile(request, member_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
+    @login_required
+    def as_view(request, member_id):
+        view = MemberProfile(request, member_id)
 
-    view = MemberProfile(member_id, page=request.GET.get('page', 1), tag=request.GET.get('tag', None))
-    request.session['community'] = view.member.community.id
+        return render(request, 'savannahv2/member_profile.html', view.context)
 
-    try:
-        user_member = Member.objects.get(user=request.user, community=community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": view.member.community,
-        "active_tab": "members",
-        "view": view,
-    }
-    return render(request, 'savannahv2/member_profile.html', context)
+class MemberMerge(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
 
-class MemberMerge:
-    def __init__(self, member_id, search=None, page=1):
-        self.RESULTS_PER_PAGE = 100
+        self.RESULTS_PER_PAGE = 25
         self.member = get_object_or_404(Member, id=member_id)
         try:
-            self.page = int(page)
+            self.page = int(request.GET.get('page', 1))
         except:
             self.page = 1
-        if search:
-            self.search =search
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower()
         else:
             self.search = None
 
@@ -411,26 +373,13 @@ class MemberMerge:
             similar_matches = similar_matches.exclude(id=self.member.id).distinct()[:20]
             return list(contact_matches) + list(similar_matches)
 
+    @login_required
+    def as_view(request, member_id):
+        view = MemberMerge(request, member_id)
+        
+        if request.method == 'POST':
+            merge_with = get_object_or_404(Member, id=request.POST.get('merge_with'))
+            view.member.merge_with(merge_with)
+            return redirect('member_merge', member_id=member_id)
 
-def member_merge(request, member_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
-
-    view = MemberMerge(member_id, search=request.GET.get('search', 0))
-    request.session['community'] = view.member.community.id
-
-    if request.method == 'POST':
-        merge_with = get_object_or_404(Member, id=request.POST.get('merge_with'))
-        view.member.merge_with(merge_with)
-        return redirect('member_merge', member_id=member_id)
-
-    try:
-        user_member = Member.objects.get(user=request.user, community=community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": view.member.community,
-        "active_tab": "members",
-        "view": view,
-    }
-    return render(request, 'savannahv2/member_merge.html', context)
+        return render(request, 'savannahv2/member_merge.html', view.context)

@@ -5,7 +5,7 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Dashboard{% if dashboard.tag %} <span style="white-space:nowrap; font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{dashboard.tag.color}};">#{{dashboard.tag.name}}<a href="?"><i class="p-1 fa fa-times"></i></a></span>{% endif %}</h1>
+            <h1 class="h3 mb-0 text-gray-800">Dashboard{% if view.tag %} <span style="white-space:nowrap; font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.tag.color}};">#{{view.tag.name}}<a href="?"><i class="p-1 fa fa-times"></i></a></span>{% endif %}</h1>
             <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
           </div>
 
@@ -21,11 +21,11 @@
                       <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasks</div>
                       <div class="row no-gutters align-items-center">
                         <div class="col-auto">
-                          <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{dashboard.open_tasks_count|intcomma}}</div>
+                          <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{view.open_tasks_count|intcomma}}</div>
                         </div>
                         <div class="col">
                           <div class="progress progress-sm mr-2">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: {{dashboard.tasks_complete_percent}}%" aria-valuenow="{{dashboard.tasks_complete_percent}}" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{view.tasks_complete_percent}}%" aria-valuenow="{{view.tasks_complete_percent}}" aria-valuemin="0" aria-valuemax="100"></div>
                           </div>
                         </div>
                       </div>
@@ -45,7 +45,7 @@
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Members</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{dashboard.member_count|intcomma}}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.member_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -62,7 +62,7 @@
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Conversations</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{dashboard.conversation_count|intcomma}}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.conversation_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-comments fa-2x text-gray-300"></i>
@@ -79,7 +79,7 @@
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
                       <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Contributions</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{dashboard.contribution_count|intcomma}}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.contribution_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-mail-bulk fa-2x text-gray-300"></i>
@@ -106,8 +106,8 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
                       <div class="dropdown-header">Admin Action:</div>
-                      <a class="dropdown-item" href="/admin/corm/member/add/?community={{dashboard.community.id}}"><i class="fa fa-user-plus"></i> Add Member</a>
-                      <a class="dropdown-item" href="/admin/corm/member/?community={{dashboard.community.id}}"><i class="fa fa-users"></i> Manage Members</a>
+                      <a class="dropdown-item" href="/admin/corm/member/add/?community={{view.community.id}}"><i class="fa fa-user-plus"></i> Add Member</a>
+                      <a class="dropdown-item" href="/admin/corm/member/?community={{view.community.id}}"><i class="fa fa-users"></i> Manage Members</a>
                     </div>
                   </div>
                 </div>
@@ -169,10 +169,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for member, count in dashboard.most_active %}
+                {% for member, count in view.most_active %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if dashboard.tag %}?tag={{dashboard.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -201,10 +201,10 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for member, count in dashboard.most_connected %}
+                {% for member, count in view.most_connected %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if dashboard.tag %}?tag={{dashboard.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -348,7 +348,7 @@ var ctx = document.getElementById("conversationsChart");
 var myLineChart = new Chart(ctx, {
   type: 'line',
   data: {
-    labels: {{dashboard.members_chart_months|safe}},
+    labels: {{view.members_chart_months|safe}},
     datasets: [{
       label: "Members",
       lineTension: 0.3,
@@ -362,7 +362,7 @@ var myLineChart = new Chart(ctx, {
       pointHoverBorderColor: "rgba(78, 115, 223, 1)",
       pointHitRadius: 10,
       pointBorderWidth: 2,
-      data: {{dashboard.members_chart_counts|safe}},
+      data: {{view.members_chart_counts|safe}},
     }],
   },
   options: {
@@ -438,9 +438,9 @@ var ctx = document.getElementById("channelChart");
 var myPieChart = new Chart(ctx, {
   type: 'doughnut',
   data: {
-    labels: {{dashboard.channel_names|safe}},
+    labels: {{view.channel_names|safe}},
     datasets: [{
-      data: {{dashboard.channel_counts|safe}},
+      data: {{view.channel_counts|safe}},
       backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280', '#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280'],
       hoverBorderColor: "rgba(234, 236, 244, 1)",
     }],

@@ -5,16 +5,14 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 
 from corm.models import *
+from frontendv2.views import SavannahView
 
-class Dashboard:
-    def __init__(self, community_id, tag=None):
-        self.community = get_object_or_404(Community, id=community_id)
+class Dashboard(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "dashboard"
         self._membersChart = None
         self._channelsChart = None
-        if tag:
-            self.tag = get_object_or_404(Tag, name=tag)
-        else:
-            self.tag = None
     
     @property 
     def member_count(self):
@@ -143,23 +141,8 @@ class Dashboard:
         return [channel[1] for channel in chart]
 
 
-@login_required
-def dashboard(request, community_id):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all()))
-    request.session['community'] = community_id
-    if 'tag' in request.GET:
-        dashboard = Dashboard(community_id, tag=request.GET.get('tag'))
-    else:
-        dashboard = Dashboard(community_id)
+    @login_required
+    def as_view(request, community_id):
+        dashboard = Dashboard(request, community_id)
 
-    try:
-        user_member = Member.objects.get(user=request.user, community=community)
-    except:
-        user_member = None
-    context = {
-        "communities": communities,
-        "active_community": dashboard.community,
-        "active_tab": "dashboard",
-        "dashboard": dashboard,
-    }
-    return render(request, 'savannahv2/dashboard.html', context)
+        return render(request, 'savannahv2/dashboard.html', dashboard.context)

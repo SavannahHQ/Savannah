@@ -16,18 +16,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from frontendv2.views.dashboard import Dashboard
+from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers
+from frontendv2.views.conversations import Conversations
+from frontendv2.views.contributions import Contributions
+from frontendv2.views.connections import Connections
 from frontendv2 import views
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('home/', views.home, name='home'),
-    path('dashboard/<int:community_id>/', views.dashboard, name='dashboard'),
-    path('members/<int:community_id>/', views.members, name='members'),
-    path('members/<int:community_id>/all', views.all_members, name='all_members'),
-    path('member/<int:member_id>/', views.member_profile, name='member_profile'),
-    path('member/<int:member_id>/merge', views.member_merge, name='member_merge'),
-    path('conversations/<int:community_id>/', views.conversations, name='conversations'),
-    path('contributions/<int:community_id>/', views.contributions, name='contributions'),
-    path('connections/<int:community_id>/', views.connections, name='connections'),
-    path('connections/<int:community_id>/json', views.connections_json, name='connections_json'),
+    path('dashboard/<int:community_id>/', Dashboard.as_view, name='dashboard'),
+    path('members/<int:community_id>/', Members.as_view, name='members'),
+    path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
+    path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
+    path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
+    path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
+    path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
+    path('connections/<int:community_id>/', Connections.as_view, name='connections'),
+    path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
 ]

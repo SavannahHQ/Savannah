@@ -143,7 +143,11 @@
                   <td>{{match.email_address|default:''}}</td>
                   <td>
                   {% for identity in match.contact_set.all %}
-                  <a target="_blank" href="{{identity.link_url}}"><i class="{{identity.source.icon_name}}"></i> {{identity.detail}}</a>{% if not forloop.last %}<br/>{% endif %}
+                  {% if identity.link_url %}
+                    <a target="_blank" href="{{identity.link_url}}"><i class="{{identity.source.icon_name}}"></i> {{identity.detail}}</a>{% if not forloop.last %}<br/>{% endif %}
+                  {% else %}
+                    <i class="{{identity.source.icon_name}}"></i> {{identity.detail}}{% if not forloop.last %}<br/>{% endif %}
+                  {% endif %}
                   {% endfor %}
                   </td>
                   <td>{{match.date_added}}</td>

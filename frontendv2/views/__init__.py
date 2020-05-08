@@ -6,12 +6,6 @@ from django.db.models import Q, Count, Max
 
 from corm.models import *
 
-from frontendv2.views.dashboard import dashboard
-from frontendv2.views.members import members, all_members, member_profile, member_merge
-from frontendv2.views.conversations import conversations
-from frontendv2.views.contributions import contributions
-from frontendv2.views.connections import connections, connections_json
-
 # Create your views here.
 def index(request):
     sayings = [
@@ -28,3 +22,29 @@ def home(request):
         "communities": communities,
     }
     return render(request, 'savannah/home.html', context)
+
+class SavannahView:
+    def __init__(self, request, community_id):
+        self.request = request
+        self.community = get_object_or_404(Community, id=community_id)
+        self.active_tab = ""
+
+        try:
+            self.user_member = Member.objects.get(user=self.request.user, community=self.community)
+        except:
+            self.user_member = None
+
+        if 'tag' in request.GET:
+            self.tag = get_object_or_404(Tag, name=request.GET.get('tag'))
+        else:
+            self.tag = None
+
+    @property
+    def context(self):
+        communities = Community.objects.filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()))
+        return {
+            "communities": communities,
+            "active_community": self.community,
+            "active_tab": self.active_tab,
+            "view": self,
+        }
