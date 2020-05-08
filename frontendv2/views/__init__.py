@@ -13,7 +13,7 @@ def index(request):
         "Build a better community",
         "Manage your community relationships"
     ]
-    return render(request, 'savannah/index.html', {'sayings': sayings})
+    return render(request, 'savannahv2/index.html', {'sayings': sayings})
 
 @login_required
 def home(request):
@@ -21,10 +21,11 @@ def home(request):
     context = {
         "communities": communities,
     }
-    return render(request, 'savannah/home.html', context)
+    return render(request, 'savannahv2/home.html', context)
 
 class SavannahView:
     def __init__(self, request, community_id):
+        request.session['community'] = community_id
         self.request = request
         self.community = get_object_or_404(Community, id=community_id)
         self.active_tab = ""
