@@ -9,7 +9,6 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Connections{% if view.tag %} <span style="white-space:nowrap; font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.tag.color}};">#{{view.tag.name}}<a href="?"><i class="p-1 fa fa-times"></i></a></span>{% endif %}</h1>
-            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
           </div>
 
           <!-- Content Row -->
@@ -127,7 +126,7 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
   node.append("title")
       .text(d => d.name);
 
-  node.on("dblclick", d => window.location = "/v2/member/"+d.id+"/")
+  node.on("dblclick", d => window.location = "/member/"+d.id+"/")
 
   simulation.on("tick", () => {
     node

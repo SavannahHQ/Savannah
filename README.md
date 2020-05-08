@@ -38,7 +38,7 @@ Once logged in you will be in the Django admin, where you can look at the databa
 1. Create a new `Community` for your initial community. You can have more than one, but you need at least one.
 2. Create a new `Member` for yourself, be use to set your `User` that you created with `manage.py createsuperuser` earlier
 
-You can now view the Savannah dashboard at http://localhost:8000/v2/dashboard/1/
+You can now view the Savannah dashboard at http://localhost:8000/dashboard/1/
 
 ## Importing data
 

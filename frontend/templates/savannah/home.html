@@ -1,9 +1,0 @@
-{% extends "savannah/base.html" %}
-
-{% block body %}
-<ul>
-{% for community in communities %}
-    <li><a href="{% url 'dashboard' community.id %}">{{ community.name }}</li>
-{% endfor %}
-<ul>
-{% endblock %}

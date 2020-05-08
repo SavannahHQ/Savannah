@@ -21,8 +21,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
-    path('', include('frontend.urls')),
-    path('v2/', include('frontendv2.urls')),
+    path('', include('frontendv2.urls')),
     #path('slack/', include('django_slack_oauth.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
