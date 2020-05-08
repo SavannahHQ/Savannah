@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
-    'grimoire',
 ]
 
 CORM_PLUGINS = [
