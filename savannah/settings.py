@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'corm.apps.CormConfig',
-    'frontend.apps.FrontendConfig',
     'frontendv2.apps.FrontendConfig',
     'grimoire',
 ]
