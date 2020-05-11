@@ -15,7 +15,7 @@ GITHUB_REPOS_URL = 'https://api.github.com/orgs/%(owner)s/repos?sort=pushed&dire
 GITHUB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
 
 AUTHORIZATION_BASE_URL = 'https://github.com/login/oauth/authorize'
-INSTALL_URL = 'https://github.com/apps/SavannahApp/installations/new'
+INSTALL_URL = 'https://github.com/apps/savannah-integration/installations/new'
 TOKEN_URL = 'https://github.com/login/oauth/access_token'
 INSTALLATIONS_URL = 'https://api.github.com/user/installations'
 
