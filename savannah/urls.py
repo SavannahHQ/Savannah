@@ -23,6 +23,7 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('frontendv2.urls')),
     path('slack/', include('corm.plugins.slack')),
+    path('github/', include('corm.plugins.github')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 

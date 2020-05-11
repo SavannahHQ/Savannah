@@ -141,6 +141,10 @@ SLACK_CLIENT_ID = os.environ.get('SLACK_CLIENT_ID')
 SLACK_CLIENT_SECRET = os.environ.get('SLACK_CLIENT_SECRET')
 SLACK_SCOPE = 'channels:history,channels:read,users:read'
 
+GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
+GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
+GITHUB_SCOPE = "read:org,public_repo"
+
 SLACK_PIPELINES = [
     'savannah.utils.add_slack_source',
 ]
