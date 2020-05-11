@@ -1,0 +1,73 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Sources</h1>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+          </div>
+
+          <!-- Content Row -->
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-12">
+
+              <!-- New Members-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Sources</h6>
+                  <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                      <div class="dropdown-header">Admin Action:</div>
+                      <a class="dropdown-item" href="{% url 'slack_auth' %}"><i class="fab fa-slack"></i> Add Slack</a>
+                      <a class="dropdown-item disabled" href="#"><i class="fab fa-github"></i> Add Github</a>
+                      <a class="dropdown-item disabled" href=""><i class="fab fa-discourse"></i> Add Discourse</a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item disabled" href=""><i class="fas fa-edit"></i> Manual Entry</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Channels</th>
+                    <th scope="col">Members</th>
+                    <th scope="col">Last Import</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for source in view.all_sources %}
+                <tr>
+                  <td>
+                    <a href="{% url 'channels' view.community.id source.id %}"><i class="{{source.icon_name}}"></i> {{ source.name }}</a>
+                  </td>
+                  <td>{{source.channel_count}}</td>
+                  <td>{{source.member_count}}</td>
+                  <td>{{source.last_import|default:"-"}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

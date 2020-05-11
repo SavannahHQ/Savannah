@@ -22,8 +22,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('', include('frontendv2.urls')),
-    #path('slack/', include('django_slack_oauth.urls')),
+    path('slack/', include('corm.plugins.slack')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 
 if settings.DEBUG:
     try:

@@ -1,0 +1,94 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.source.name}}</h1>
+            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+          </div>
+
+          <!-- Content Row -->
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-12">
+
+              <!-- New Members-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Tracked Channels</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Conversations</th>
+                    <th scope="col">Last Import</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for channel in view.all_channels %}
+                <tr>
+                  <td>
+                    <a href="/admin/corm/channel/{{channel.id}}/change">{{ channel.name }}</a>
+                  </td>
+                  <td>{{channel.conversation_count}}</td>
+                  <td>{{channel.last_import|default:"-"}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-12">
+
+              <!-- New Members-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Available Channels</h6>
+                </div>
+                <div class="card-body p-0">
+                <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
+                {% csrf_token %}
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Topic</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for channel in view.available_channels %}
+                <tr>
+                  <td class="text-nowrap">{{ channel.name }}</td>
+                  <td>{{channel.topic}}</td>
+                  <td><button type="submit" name="track_channel_id" value="{{channel.id}}" >Track</button></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

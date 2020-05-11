@@ -5,6 +5,7 @@ from corm.plugins import BasePlugin, PluginImporter
 DISCOURSE_TOPICS_URL = '/c/%(id)s.json?page=%(page)s'
 DISCOURSE_POSTS_URL = '/t/%(id)s.json?print=true'
 DISCOURSE_POST_URL = '/t/%(id)s/posts.json?'
+DISCOURSE_CATEGORIES_URL = '/categories.json'
 
 class DiscoursePlugin(BasePlugin):
 
@@ -19,6 +20,21 @@ class DiscoursePlugin(BasePlugin):
 
     def get_source_importer(self, source):
         return DiscourseImporter(source)
+
+    def get_channels(self, source):
+        importer = DiscourseImporter(source)
+        channels = []
+        resp = importer.api_call(DISCOURSE_CATEGORIES_URL)
+        if resp.status_code == 200:
+            data = resp.json()
+            for category in data.get('category_list').get('categories'):
+                channels.append({
+                    'id': '%s/c/%s/%s' % (source.server, category.get('slug'), category.get('id')),
+                    'name': category.get('name'),
+                    'topic': category.get('description_text'),
+                    'count': category.get('topics_all_time'),
+                })
+        return channels
 
 class DiscourseImporter(PluginImporter):
 

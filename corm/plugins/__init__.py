@@ -36,6 +36,9 @@ class BasePlugin:
     def get_source_importer(self, source):
         raise NotImplementedError
 
+    def get_channels(self, source):
+        return []
+        
 class PluginImporter:
 
     def __init__(self, source):

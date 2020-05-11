@@ -3,6 +3,61 @@ import datetime
 import re
 from perceval.backends.core.slack import Slack
 from corm.models import Community, Source, Member, Contact, Channel, Conversation
+from urllib.parse import urlparse, parse_qs
+from requests_oauthlib import OAuth2Session
+from django.conf import settings
+from django.shortcuts import redirect, get_object_or_404, reverse
+from django.urls import path
+from django.contrib import messages
+import requests
+
+AUTHORIZATION_BASE_URL = 'https://slack.com/oauth/authorize'
+TOKEN_URL = 'https://slack.com/api/oauth.access'
+
+def authenticate(request):
+    community = get_object_or_404(Community, id=request.session['community'])
+    client_id = settings.SLACK_CLIENT_ID
+    slack_auth_scope = [
+        'channels:history',
+        'channels:read',
+        'users:read',
+    ]
+    callback_uri = request.build_absolute_uri(reverse('slack_callback'))
+    client = OAuth2Session(client_id, scope=slack_auth_scope, redirect_uri=callback_uri)
+    authorization_url, state = client.authorization_url(AUTHORIZATION_BASE_URL)
+    url = urlparse(authorization_url)
+
+    # State is used to prevent CSRF, keep this for later.
+    request.session['oauth_state'] = state
+    request.session['oauth_slack_instance'] = url.scheme + '://' + url.netloc
+    return redirect(authorization_url)
+
+
+def callback(request):
+    client_id = settings.SLACK_CLIENT_ID
+    client_secret = settings.SLACK_CLIENT_SECRET
+    callback_uri = request.build_absolute_uri(reverse('slack_callback'))
+    client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
+    community = get_object_or_404(Community, id=request.session['community'])
+
+    try:
+        token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
+        print(token)
+        source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':"Slack", 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
+        if created:
+            messages.success(request, 'Your Slack workspace has been connected!')
+        else:
+            messages.info(request, 'Your Slack source has been updated.')
+
+        return redirect(reverse('channels', kwargs={'community_id':community.id, 'source_id':source.id}))
+    except Exception as e:
+        messages.add_message(request, messages.ERROR, 'Unable to connect your Slack workspace: %s' % e)
+        return redirect(reverse('sources', kwargs={'community_id':community.id}))
+
+urlpatterns = [
+    path('auth', authenticate, name='slack_auth'),
+    path('callback', callback, name='slack_callback'),
+]
 
 class SlackPlugin(BasePlugin):
 
@@ -13,6 +68,9 @@ class SlackPlugin(BasePlugin):
         else:
             return None
 
+    def get_auth_url(self):
+        return reverse('slack_auth')
+
     def get_source_type_name(self):
         return "Slack"
 
@@ -21,6 +79,23 @@ class SlackPlugin(BasePlugin):
 
     def get_source_importer(self, source):
         return SlackImporter(source)
+
+    def get_channels(self, source):
+        channels = []
+        resp = requests.get('https://slack.com/api/channels.list?token=%s' % source.auth_secret)
+        if resp.status_code == 200:
+            data = resp.json()
+            for channel in data['channels']:
+                if not channel['is_archived'] and not channel['is_private']:
+                    channels.append(
+                        {
+                            'id': channel['id'],
+                            'name': channel['name'],
+                            'topic': channel['topic']['value'],
+                            'count':channel['num_members'],
+                        }
+                    )
+        return channels
 
 class SlackImporter(PluginImporter):
 

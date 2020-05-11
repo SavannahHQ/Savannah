@@ -2,3 +2,5 @@ Django==3.0.4
 django-debug-toolbar==2.2
 grimoirelab-toolkit==0.1.10
 perceval==0.12.24
+oauthlib==3.1.0
+requests-oauthlib==1.3.

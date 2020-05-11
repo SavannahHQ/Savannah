@@ -47,7 +47,7 @@
   <div id="wrapper">
 
     <!-- Sidebar -->
-    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion toggled" id="accordionSidebar">
 
       <!-- Sidebar - Brand -->
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
@@ -120,16 +120,9 @@
 
       <!-- Nav Item - Sources -->
       <li class="nav-item">
-        <a class="nav-link" href="/admin/corm/source/" target="_blank">
+        <a class="nav-link" href="{% url 'sources' view.community.id %}">
           <i class="fas fa-fw fa-file-import"></i>
           <span>Sources</span></a>
-      </li>
-
-      <!-- Nav Item - Contributions -->
-      <li class="nav-item">
-        <a class="nav-link" href="/admin/corm/channel/" target="_blank">
-          <i class="fas fa-fw fa-folder"></i>
-          <span>Channels</span></a>
       </li>
 
       <!-- Nav Item - Tags -->
@@ -354,6 +347,14 @@
 
         </nav>
         <!-- End of Topbar -->
+
+        {% if messages %}
+        <div class="alerts">
+            {% for message in messages %}
+            <div class="m-3 alert{% if message.tags %} {{ message.tags }}{% endif %}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <!-- Begin Page Content -->
         <div class="container-fluid">
