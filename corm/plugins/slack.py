@@ -115,7 +115,7 @@ class SlackImporter(PluginImporter):
                 contact_matches = Contact.objects.filter(origin_id=slack_user_id, source=source)
                 if contact_matches.count() == 0:
                     member = Member.objects.create(community=community, name=user.get('real_name'), date_added=datetime.datetime.utcnow())
-                    Contact.objects.get_or_create(origin_id=slack_user_id, defaults={'member':member, 'source':source, 'detail':user.get('name')})
+                    Contact.objects.get_or_create(origin_id=slack_user_id, source=source, defaults={'member':member, detail':user.get('name')})
 
         tag_matcher = re.compile('\<\@([^>]+)\>')
         for item in items:
@@ -126,7 +126,7 @@ class SlackImporter(PluginImporter):
                 if len(tagged) > 0 or 'thread_ts' in item.get('data'):
                     #print("Importing conversation from %s" % item.get('data').get('user_data').get('name'))
                     slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
-                    contact = Contact.objects.get(origin_id=slack_user_id)
+                    contact = Contact.objects.get(origin_id=slack_user_id, source=source)
                     tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
                     server = source.server or "slack.com"
                     slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
@@ -158,7 +158,7 @@ class SlackImporter(PluginImporter):
                         #print("Checking for %s" % tagged_user)
                         try:
                             tagged_user_id = "slack.com/%s" % tagged_user
-                            tagged_contact = Contact.objects.get(origin_id=tagged_user_id)
+                            tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
                             convo.participants.add(tagged_contact.member)
                             if thread is not None:
                                 thread.participants.add(tagged_contact.member)
