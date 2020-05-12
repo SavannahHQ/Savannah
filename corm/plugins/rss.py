@@ -50,7 +50,7 @@ class RssPlugin(BasePlugin):
                     'topic': "",
                     'count': i,
                 })
-                i -= 1
+                i += 1
         else:
             print("Request failed: %s" % resp.content)
         return channels

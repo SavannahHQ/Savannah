@@ -4,8 +4,7 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'member_profile' view.member.id %}"><i class="fas fa-arrow-left"></i></a> {{view.member.name}}{% if view.tag %} <span style="white-space:nowrap; font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.tag.color}};">#{{view.tag.name}}<a href="?"><i class="p-1 fa fa-times"></i></a></span>{% endif %}</h1>
-            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'member_profile' view.member.id %}"><i class="fas fa-arrow-left"></i></a> {{view.member.name}}</h1>
           </div>
 
           <!-- Content Row -->

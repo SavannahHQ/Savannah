@@ -35,6 +35,13 @@ class Dashboard(SavannahView):
         else:
             return Contribution.objects.filter(community=self.community).count()
         
+    @property 
+    def contributor_count(self):
+        if self.tag:
+            return Member.objects.filter(community=self.community, tags=self.tag).annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
+        else:
+            return Member.objects.filter(community=self.community).annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
+        
     @property
     def open_tasks_count(self):
         if self.tag:

@@ -5,38 +5,24 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Dashboard{% if view.tag %} <span style="white-space:nowrap; font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.tag.color}};">#{{view.tag.name}}<a href="?"><i class="p-1 fa fa-times"></i></a></span>{% endif %}</h1>
-            <a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"><i class="fas fa-download fa-sm text-white-50"></i> Generate Report</a>
+            <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+            <div class="dropdown">
+            {% if view.tag %}
+              <button style="white-space:nowrap; color:#5a5c69; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#{{view.tag.name}}</button>
+              {% else %}
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Filter</button>
+              {% endif %}
+              <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
+                  <a class="dropdown-item" href="?">Clear Filter</a>
+                {% for tag in view.community.tag_set.all %}
+                  <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?tag={{tag.name}}">#{{tag.name}}</a>
+                {% endfor %}
+              </div>
+            </div>
           </div>
 
           <!-- Content Row -->
           <div class="row">
-
-            <!-- Tasks Card -->
-            <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Tasks</div>
-                      <div class="row no-gutters align-items-center">
-                        <div class="col-auto">
-                          <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{view.open_tasks_count|intcomma}}</div>
-                        </div>
-                        <div class="col">
-                          <div class="progress progress-sm mr-2">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: {{view.tasks_complete_percent}}%" aria-valuenow="{{view.tasks_complete_percent}}" aria-valuemin="0" aria-valuemax="100"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <!-- Members Card -->
             <div class="col-xl-3 col-md-6 mb-4">
@@ -72,7 +58,25 @@
               </div>
             </div>
 
-            <!-- Activities Card -->
+            <!-- Contributors Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Contributors</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.contributor_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-users-cog fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+           
+          <!-- Contributions Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-warning shadow h-100 py-2">
                 <div class="card-body">
