@@ -203,6 +203,7 @@ class GithubImporter(PluginImporter):
                                     Contact.objects.get_or_create(origin_id=comment_user_id, source=source, defaults={'member':comment_member, 'source':source, 'detail':comment['user']['login']})
                                 else:
                                     comment_member = contact_matches[0].member
+                                found_members[comment['user']['login']] = comment_member
                             comment_convo, created = Conversation.objects.update_or_create(origin_id=comment['url'], defaults={'channel':channel, 'speaker':comment_member, 'content':comment['body'], 'timestamp':comment_tstamp, 'location':comment['html_url'], 'thread_start':convo})
                             participants.add(comment_member)
                             conversations.add(comment_convo)
@@ -214,7 +215,7 @@ class GithubImporter(PluginImporter):
                                     else:
                                         try:
                                             tagged_user_id = "github.com/%s" % tagged_user
-                                            tagged_contact = Contact.objects.get(origin_id=tagged_user_id)
+                                            tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
                                             participants.add(tagged_contact.member)
                                         except:
                                             pass#print("    Failed to find Contact for %s" % tagged_user)
@@ -229,7 +230,7 @@ class GithubImporter(PluginImporter):
                             else:
                                 try:
                                     tagged_user_id = "github.com/%s" % tagged_user
-                                    tagged_contact = Contact.objects.get(origin_id=tagged_user_id)
+                                    tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
                                     participants.add(tagged_contact.member)
                                 except:
                                     pass#print("    Failed to find Contact for %s" % tagged_user)
