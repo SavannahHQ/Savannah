@@ -55,7 +55,7 @@ class TagAdminForm(ModelForm):
             'color': TextInput(attrs={'type': 'color'}),
         }
     def __init__(self, *args, **kwargs):
-        super(TagForm, self).__init__(*args, **kwargs)
+        super(TagAdminForm, self).__init__(*args, **kwargs)
         self.initial['color'] = '#%s'%self.initial['color']
 
     def clean_color(self):
