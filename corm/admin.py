@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.forms import ModelForm
+from django.forms.widgets import TextInput
 
 from .models import *
 
@@ -45,9 +47,25 @@ class CommunityAdmin(admin.ModelAdmin):
 
 admin.site.register(Community, CommunityAdmin)
 
+class TagAdminForm(ModelForm):
+    class Meta:
+        model = Tag
+        fields = '__all__'
+        widgets = {
+            'color': TextInput(attrs={'type': 'color'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super(TagForm, self).__init__(*args, **kwargs)
+        self.initial['color'] = '#%s'%self.initial['color']
+
+    def clean_color(self):
+        data = self.cleaned_data['color']
+        return data.replace('#', '')
+
 class TagAdmin(admin.ModelAdmin):
     list_display = ("name", "color_display", "community", "keywords")
     list_filter = ("community",)
+    form = TagAdminForm
     def color_display(self, tag):
         return mark_safe("<span style=\"padding: 3px; background-color: #%s\">%s</span>" % (tag.color, tag.color))
 admin.site.register(Tag, TagAdmin)
