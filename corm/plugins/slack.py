@@ -115,7 +115,7 @@ class SlackImporter(PluginImporter):
                 contact_matches = Contact.objects.filter(origin_id=slack_user_id, source=source)
                 if contact_matches.count() == 0:
                     member = Member.objects.create(community=community, name=user.get('real_name'), date_added=datetime.datetime.utcnow())
-                    Contact.objects.get_or_create(origin_id=slack_user_id, source=source, defaults={'member':member, detail':user.get('name')})
+                    Contact.objects.get_or_create(origin_id=slack_user_id, source=source, defaults={'member':member, 'detail':user.get('name')})
 
         tag_matcher = re.compile('\<\@([^>]+)\>')
         for item in items:
