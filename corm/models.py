@@ -39,7 +39,7 @@ class TaggableModel(models.Model):
 class ImportedDataModel(models.Model):
     class Meta:
         abstract = True
-    origin_id = models.CharField(max_length=256, null=True, blank=True, unique=True)
+    origin_id = models.CharField(max_length=256, null=True, blank=True, unique=False)
 
 class MemberConnection(models.Model):
     class Meta:
