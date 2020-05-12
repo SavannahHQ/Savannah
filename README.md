@@ -57,8 +57,7 @@ Savannah currently provides importers for Slack and Github. To import data from 
 Once you've created your `Source` and `Channel` records for these you can run the importers with
 
 ```
-./env/bin/python manage.py import_slack
-./env/bin/python manage.py import_github
+./env/bin/python manage.py import (slack|github|discourse)
 ```
 
 ### Tagging data
@@ -67,7 +66,8 @@ You can create `Tags` for your members and conversations from the Django admin i
 
 Some useful tags to consider are `thankful` with keywords `thanks, thank you`, and `greeting` with keywords `welcome, hello, hi`.
 
-To auto-tag conversations, run:
+To auto-tag conversations & contributions, run:
 ```
 ./env/bin/python manage.py tag_conversations
+./env/bin/python manage.py tag_contributions
 ```
