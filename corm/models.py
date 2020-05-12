@@ -21,6 +21,8 @@ class Community(models.Model):
         return self.name
 
 class Tag(models.Model):
+    class Meta:
+        ordering = ("name",)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
     color = models.CharField(max_length=16)
