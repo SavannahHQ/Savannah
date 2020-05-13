@@ -5,19 +5,8 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Members</h1>
-            <div class="dropdown">
-            {% if view.tag %}
-              <button style="white-space:nowrap; color:#5a5c69; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">#{{view.tag.name}}</button>
-              {% else %}
-              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Filter</button>
-              {% endif %}
-              <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
-                  <a class="dropdown-item" href="?">Clear Filter</a>
-                {% for tag in view.community.tag_set.all %}
-                  <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?tag={{tag.name}}">#{{tag.name}}</a>
-                {% endfor %}
-              </div>
-            </div>          </div>
+            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
+          </div>
 
           <!-- Content Row -->
 

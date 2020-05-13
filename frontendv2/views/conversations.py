@@ -54,7 +54,7 @@ class Conversations(SavannahView):
                     counts[month] = 1
                 else:
                     counts[month] += 1
-            self._membersChart = (months[0:-1], counts)
+            self._membersChart = (months, counts)
         return self._membersChart
         
     @property

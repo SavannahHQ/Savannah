@@ -139,10 +139,7 @@ class Members(SavannahView):
             other_count = 0
             sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact'))
             for source in sources:
-                if source.identity_count > 5:
-                    counts[source.name] = source.identity_count
-                else:
-                    other_count += source.identity_count
+                counts[source.name] = source.identity_count
             self._sourcesChart = [(source, count) for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._sourcesChart) > 8:
                 other_count += sum([count for tag, count in self._sourcesChart[7:]])

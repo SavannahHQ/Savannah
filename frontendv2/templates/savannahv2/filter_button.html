@@ -1,0 +1,13 @@
+            <div class="dropdown">
+            {% if current_tag %}
+              <button style="white-space:nowrap; color:#5a5c69; background-color: #{{current_tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-hashtag"></i> {{current_tag.name}}</button>
+            {% else %}
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Filter</button>
+            {% endif %}
+              <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
+                  <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?"><i class="fas fa-times"></i> Clear Filter</a>
+                {% for tag in view.community.tag_set.all %}
+                  <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
+                {% endfor %}
+              </div>
+            </div>
