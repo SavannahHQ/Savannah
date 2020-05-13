@@ -1,6 +1,6 @@
 import operator
 import datetime
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
@@ -21,7 +21,7 @@ def index(request):
 def logout(request):
     if request.user.is_authenticated:
         logout_user(request)
-    return redirect("login")
+    return redirect(reverse("login") + "?next=%s" % request.GET.get('next'))
 
 def login(request):
     if request.method == 'POST':
