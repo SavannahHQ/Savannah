@@ -1,9 +1,53 @@
-{% extends "savannah/base.html" %}
+{% extends "savannahv2/blank.html" %}
+{% load humanize %}
 
-{% block body %}
-<ul>
+{% block page_content %}
+{% if communities %}
+
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+<h1 class="h1 mb-0 text-white">Your Communities</h1>
+</div>
+
+<!-- Content Row -->
+<div class="row">
+
 {% for community in communities %}
-    <li><a href="{% url 'dashboard' community.id %}">{{ community.name }}</li>
+<!-- Members Card -->
+<div class="col-xl-3 col-md-6 mb-4">
+    <div class="card shadow h-100 py-2">
+    <a href="{% url 'dashboard' community.id %}">
+    <div class="card-body">
+        <div class="row no-gutters align-items-center">
+        <div class="col mr-2">
+            <div class="h5 font-weight-bold text-gray-800 text-uppercase mb-1">{{community.name}}</div>
+            <div class="text-sm mb-0 font-weight-bold text-gray-800">{{community.member_set.all.count|intcomma}} Members</div>
+        </div>
+        <div class="col-auto">
+            <img src="{{community.icon_path}}">
+        </div>
+        </div>
+    </div>
+    </a>
+    </div>
+</div>
 {% endfor %}
-<ul>
+
+</div>
+<!-- End row -->
+
+{% else %}
+
+<!-- Content Row -->
+<div class="row">
+
+<div class="align-items-center justify-content-between mb-4">
+<h1 class="h1 mb-0 text-white">You have no Communities</h1>
+</div>
+
+</div>
+<!-- End row -->
+
+{% endif %}
+
 {% endblock %}

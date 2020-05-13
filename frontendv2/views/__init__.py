@@ -1,8 +1,12 @@
 import operator
 import datetime
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate, login as login_user, logout as logout_user
+from django.contrib import messages
+
 from corm.models import *
 
 # Create your views here.
@@ -14,9 +18,46 @@ def index(request):
     ]
     return render(request, 'savannahv2/index.html', {'sayings': sayings})
 
+def logout(request):
+    if request.user.is_authenticated:
+        logout_user(request)
+    return redirect("login")
+
+def login(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request=request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login_user(request, user)
+                if request.POST.get('next'):
+                    return redirect(request.POST.get('next'))
+
+                communities = Community.objects.filter(Q(owner=user) | Q(managers__in=user.groups.all())).order_by('id')
+                if len(communities) == 1:
+                    return redirect('dashboard', community_id=communities[0].id)
+                elif len(communities) > 1:
+                    return redirect('home')
+                else:
+                    # TODO: redirect to community creation screen
+                    return redirect('home')
+            else:
+                messages.error(request, "Invalid username or password.")
+        else:
+            messages.error(request, "Invalid username or password.")
+    else:
+            form = AuthenticationForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'savannahv2/login.html', context)
+
 @login_required
 def home(request):
-    communities = Community.objects.filter(owner=request.user)
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).order_by('id')
     context = {
         "communities": communities,
     }

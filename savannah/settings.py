@@ -124,6 +124,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOGIN_URL = '/login/'
+
 MESSAGE_TAGS = {
     messages.DEBUG: "alert-debug",
     messages.INFO: "alert-info",
