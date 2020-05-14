@@ -5,7 +5,8 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
+    atomic = False
+    
     dependencies = [
         ('corm', '0039_auto_20200423_2219'),
     ]
