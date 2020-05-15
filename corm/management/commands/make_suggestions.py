@@ -14,7 +14,7 @@ class Command(BaseCommand):
             self.make_merge_suggestions(community)
 
     def make_merge_suggestions(self, community):
-        dups = Contact.objects.filter(source__community=community).values('detail').annotate(dup_count=Count('member_id', distinct=True)).order_by('detail').filter(dup_count__gt=1)
+        dups = Contact.objects.filter(member__community=community).values('detail').annotate(dup_count=Count('member_id', distinct=True)).order_by('detail').filter(dup_count__gt=1)
         print("Found %s duplicates" % len(dups))
         i = 0
         merge_count = 0
