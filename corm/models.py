@@ -155,7 +155,7 @@ class Source(models.Model):
         return (self.activity_set.count() + self.conversation_set.count()) > 0
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.community)
+        return self.name
 
 class Channel(ImportedDataModel):
     class Meta:
@@ -166,7 +166,7 @@ class Channel(ImportedDataModel):
     last_import = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return "%s: %s (%s)" % (self.source.name, self.name, self.source.community)
+        return self.name
 
 class Contact(ImportedDataModel):
     class Meta:

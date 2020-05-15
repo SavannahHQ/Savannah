@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'notifications',
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
 ]
@@ -132,6 +133,10 @@ MESSAGE_TAGS = {
     messages.SUCCESS: "alert-success",
     messages.WARNING: "alert-warning",
     messages.ERROR: "alert-danger",
+}
+
+DJANGO_NOTIFICATIONS_CONFIG = { 
+    'USE_JSONFIELD': True
 }
 
 # Static files (CSS, JavaScript, Images)

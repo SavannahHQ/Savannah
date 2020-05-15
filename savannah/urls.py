@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+import notifications.urls
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,6 +25,7 @@ urlpatterns = [
     path('', include('frontendv2.urls')),
     path('slack/', include('corm.plugins.slack')),
     path('github/', include('corm.plugins.github')),
+    path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 

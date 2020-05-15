@@ -50,6 +50,8 @@ class Channels(SavannahView):
             for channel in source_channels:
                 if channel['id'] == origin_id:
                     c, created = Channel.objects.get_or_create(origin_id=origin_id, source=self.source, name=channel['name'])
+                    if created:
+                        messages.success(self.request, "%s has been added to your community tracker, and will appear in the next import")
 
     @login_required
     def as_view(request, community_id, source_id):

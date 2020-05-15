@@ -7,6 +7,8 @@ from time import sleep
 from corm.models import Member, Contact, Conversation, Contribution
 from corm.connectors import ConnectionManager
 from django.conf import settings
+from django.shortcuts import reverse
+from notifications.signals import notify
 
 def install_plugins():
     for plugin in settings.CORM_PLUGINS:
@@ -110,6 +112,15 @@ class PluginImporter:
     def run(self):
         for channel in self.get_channels():
             self.import_channel(channel)
+            if channel.last_import is None:
+                recipients = self.source.community.managers or self.source.community.owner
+                notify.send(channel, 
+                    recipient=recipients, 
+                    verb="has been imported for the first time.",
+                    level='success',
+                    icon_name="fas fa-file-import",
+                    link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
+                )
             channel.last_import = datetime.datetime.utcnow()
             channel.save()
         self.source.last_import = datetime.datetime.utcnow()
