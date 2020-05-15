@@ -498,7 +498,7 @@ function mark_all_as_read() {
   r.send();
 }
   </script>
-  {% register_notify_callbacks callbacks='fill_messages_list,fill_notification_badge' %}
+  {% register_notify_callbacks refresh_period=60 callbacks='fill_messages_list,fill_notification_badge' %}
   <!-- Page level custom scripts -->
   {% block page_scripts %}{% endblock %}
 
