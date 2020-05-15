@@ -85,9 +85,10 @@ class Conversations(SavannahView):
                 else:
                     channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
 
-            channels = channels.annotate(source_name=F('source__name'), source_icon=F('source__icon_name'))
+            channels = channels.annotate(source_name=F('source__name'), source_connector=F('source__connector'), source_icon=F('source__icon_name'))
             for c in channels:
-                counts["%s (%s)" % (c.name, c.source_name)] = c.conversation_count
+                source_name = "%s (%s)" % (c.name, ConnectionManager.display_name(c.source_connector))
+                counts[source_name] = c.conversation_count
             self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._channelsChart) > 8:
                 other_count = sum([count for channel, count in self._channelsChart[7:]])

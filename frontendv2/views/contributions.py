@@ -160,7 +160,7 @@ class Contributions(SavannahView):
                 else:
                     channels = channels.annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
 
-            channels = channels.annotate(source_icon=F('source__icon_name'), color=F('tag__color'))
+            channels = channels.annotate(source_icon=F('source__icon_name'), source_connector=F('source__connector'), color=F('tag__color'))
             for c in channels:
                 if c.contribution_count == 0:
                     continue
@@ -170,7 +170,7 @@ class Contributions(SavannahView):
                     if next_color >= len(from_colors):
                         next_color = 0    
                 counts[c] = c.contribution_count
-            self._channelsChart = [(channel.name, count, channel.color) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            self._channelsChart = [("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._channelsChart) > 7:
                 other_count = sum([count for channel, count, colors in self._channelsChart[7:]])
                 self._channelsChart = self._channelsChart[:6]

@@ -10,6 +10,15 @@ class ConnectionManager(object):
 
     CONNECTOR_PLUGINS = dict()
     CONNECTOR_IMPORTERS = dict()
+    CONNECTOR_MAP_CACHE = None
+
+    @classmethod
+    def display_name(cls, connector_name):
+        if cls.CONNECTOR_MAP_CACHE is None:
+            cls.CONNECTOR_MAP_CACHE = dict()
+            for key, value in cls.CONNECTOR_CHOICES:
+                cls.CONNECTOR_MAP_CACHE[key] = value
+        return cls.CONNECTOR_MAP_CACHE[connector_name]
 
     @classmethod 
     def add_plugin(cls, namespace, plugin):

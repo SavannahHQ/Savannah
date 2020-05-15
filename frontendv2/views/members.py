@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 
 from corm.models import *
+from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView
 
 class Members(SavannahView):
@@ -139,7 +140,7 @@ class Members(SavannahView):
             other_count = 0
             sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact'))
             for source in sources:
-                counts[source.name] = source.identity_count
+                counts["%s (%s)" % (source.name, ConnectionManager.display_name(source.connector))] = source.identity_count
             self._sourcesChart = [(source, count) for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._sourcesChart) > 8:
                 other_count += sum([count for tag, count in self._sourcesChart[7:]])

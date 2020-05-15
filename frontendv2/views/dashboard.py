@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 
 from corm.models import *
+from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView
 
 class Dashboard(SavannahView):
@@ -122,14 +123,15 @@ class Dashboard(SavannahView):
             counts = dict()
             total = 0
             if self.tag:
-                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).annotate(source_name=F('channel__source__name')).order_by("timestamp")
+                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
             else:
-                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180)).annotate(source_name=F('channel__source__name')).order_by("timestamp")
+                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180)).annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
             for c in conversations:
-                if c.source_name not in counts:
-                    counts[c.source_name] = 1
+                source_name = "%s (%s)" % (c.source_name, ConnectionManager.display_name(c.source_connector))
+                if source_name not in counts:
+                    counts[source_name] = 1
                 else:
-                    counts[c.source_name] += 1
+                    counts[source_name] += 1
             self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._channelsChart) > 8:
                 other_count = sum([count for tag, count in self._channelsChart[7:]])
