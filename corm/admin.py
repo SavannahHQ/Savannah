@@ -56,7 +56,8 @@ class TagAdminForm(ModelForm):
         }
     def __init__(self, *args, **kwargs):
         super(TagAdminForm, self).__init__(*args, **kwargs)
-        self.initial['color'] = '#%s'%self.initial['color']
+        if 'color' in self.initial:
+            self.initial['color'] = '#%s'%self.initial['color']
 
     def clean_color(self):
         data = self.cleaned_data['color']
