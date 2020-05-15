@@ -38,5 +38,5 @@ class Command(BaseCommand):
                 recipient=recipients, 
                 verb="%s new merge suggestions" % merge_count,
                 level='info',
-                icon_name="fas fa-person-arrows",
+                icon_name="fas fa-people-arrows",
                 link='/suggestions/%s/' % community.id)
