@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 import datetime
 from django.db.models import Count
 from corm.models import Community, Member, Conversation, Tag, Contact, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag
+from corm.models import pluralize
 from notifications.signals import notify
 
 class Command(BaseCommand):
@@ -34,9 +35,8 @@ class Command(BaseCommand):
         if merge_count > 0:
             recipients = community.managers or community.owner
             notify.send(community, 
-                target=community, 
                 recipient=recipients, 
-                verb="%s new merge suggestions" % merge_count,
+                verb="has %s new merge %s" % (merge_count, pluralize(merge_count, "suggestion")),
                 level='info',
                 icon_name="fas fa-people-arrows",
-                link='/suggestions/%s/' % community.id)
+                link='/admin/corm/suggestmembermerge/?community__id__exact=%s' % community.id)

@@ -332,3 +332,14 @@ class SuggestConversationTag(Suggestion):
 
     def accept_action(self):
         self.target_conversation.tags.add(self.suggested_tag)
+
+def pluralize(count, singular, plural=None):
+    if plural is None:
+        plural = singular + "s"
+    try:
+        count = int(count)
+        if count != 1:
+            return plural
+    except:
+        pass
+    return singular
