@@ -76,7 +76,7 @@ class SavannahView:
             self.user_member = None
 
         if 'tag' in request.GET:
-            self.tag = get_object_or_404(Tag, name=request.GET.get('tag'))
+            self.tag = get_object_or_404(Tag, community=self.community, name=request.GET.get('tag'))
         else:
             self.tag = None
 
