@@ -52,7 +52,7 @@ class DiscourseImporter(PluginImporter):
       category_name = discourse_path[4]
       category_id = discourse_path[5]
       if channel.last_import is None:
-        channel.last_import = datetime.datetime.utcnow() - datetime.timedelta(days=182)
+        channel.last_import = datetime.datetime.utcnow() - datetime.timedelta(days=180)
       from_date = self.strftime(channel.last_import)
       print("From %s since %s" % (category_name, from_date))
 

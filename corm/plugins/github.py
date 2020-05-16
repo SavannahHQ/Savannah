@@ -135,7 +135,7 @@ class GithubImporter(PluginImporter):
       if channel.last_import:
         from_date = channel.last_import.strftime(GITHUB_TIMESTAMP)
       else:
-        from_date = datetime.datetime.utcnow() - datetime.timedelta(days=30)
+        from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
       print("  since %s" % from_date)
 
       tag_matcher = re.compile('\@([a-zA-Z0-9]+)')

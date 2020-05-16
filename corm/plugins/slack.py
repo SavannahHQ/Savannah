@@ -106,9 +106,13 @@ class SlackImporter(PluginImporter):
     def import_channel(self, channel):
         source = channel.source
         community = source.community
-        print("From %s since %s" % (channel.name, channel.source.last_import))
+        if channel.last_import:
+            from_date = channel.last_import
+        else:
+            from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
+        print("From %s since %s" % (channel.name, from_date))
         slack = Slack(channel.origin_id, channel.source.auth_secret)
-        items = [i for i in slack.fetch(from_date=channel.source.last_import)]
+        items = [i for i in slack.fetch(from_date=from_date)]
         for slack_id, user in slack._users.items():
             if not user.get('is_bot'):
                 slack_user_id = "slack.com/%s" % slack_id
