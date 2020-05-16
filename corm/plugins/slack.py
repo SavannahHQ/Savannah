@@ -43,7 +43,7 @@ def callback(request):
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
         print(token)
-        source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':"Slack", 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
+        source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':token['team_name'], 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
         if created:
             messages.success(request, 'Your Slack workspace has been connected!')
         else:
