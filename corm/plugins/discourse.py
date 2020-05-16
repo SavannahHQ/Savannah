@@ -51,10 +51,11 @@ class DiscourseImporter(PluginImporter):
 
       category_name = discourse_path[4]
       category_id = discourse_path[5]
-      if channel.last_import is None:
-        channel.last_import = datetime.datetime.utcnow() - datetime.timedelta(days=180)
-      from_date = self.strftime(channel.last_import)
-      print("From %s since %s" % (category_name, from_date))
+      if channel.last_import:
+          from_date = channel.last_import
+      else:
+          from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
+      print("From %s since %s" % (category_name, self.strftime(from_date)))
 
       page = 0
       while (True):
@@ -74,7 +75,7 @@ class DiscourseImporter(PluginImporter):
                 if topic['posts_count'] < 2:
                     continue
                 last_posted = self.strptime(topic['last_posted_at'])
-                if last_posted < channel.last_import:
+                if last_posted < from_date:
                     #print("Old topic: %s" % last_posted)
                     continue
                 new_topics += 1

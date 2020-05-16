@@ -460,6 +460,9 @@ function fill_messages_list(data) {
             if(typeof item.target !== 'undefined'){
                 message = message + " " + item.target;
             }
+            if(item.level == "error") {
+               item.level = "danger";// Bootstrap
+            }
 
             var timestamp = new Date(Date.parse(item.timestamp))
             html = '<a class="dropdown-item d-flex align-items-center" href="'+item.data.link+'">';
