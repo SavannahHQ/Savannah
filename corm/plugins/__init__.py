@@ -73,7 +73,7 @@ class PluginImporter:
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None):
-        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, defaults={'channel':channel, 'speaker':speaker, 'content':content, 'timestamp':tstamp, 'location':location, 'thread_start':thread})
+        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'speaker':speaker, 'content':content, 'timestamp':tstamp, 'location':location, 'thread_start':thread})
         if content is not None:
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:

@@ -199,7 +199,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     participants = models.ManyToManyField(Member)
     content = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
-    location = models.URLField(null=True, blank=True)
+    location = models.URLField(max_length=512, null=True, blank=True)
     thread_start = models.ForeignKey('Conversation', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
