@@ -37,7 +37,7 @@
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% if member.tag_count %}{% include 'savannahv2/tags.html' with tags=member.tags.all %}{% endif %}
                   </td>
-                  <td>{{member.date_added}}</td>
+                  <td>{{member.first_seen}}</td>
                   <td style="white-space: nowrap;">
                     <a title="Edit Member" target="_blank" href="/admin/corm/member/{{member.id}}/change/"><i class="fas fa-user-edit"></i></a>
                     <a title="Add Note" target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}"><i class="fas fa-sticky-note"> </i></a>

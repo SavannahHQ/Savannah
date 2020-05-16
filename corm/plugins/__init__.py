@@ -57,12 +57,15 @@ class PluginImporter:
     def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None):
         if origin_id in self._member_cache:
             member = self._member_cache[origin_id]
+            if tstamp is not None and (member.last_seen is None or tstamp > member.last_seen):
+                member.last_seen = tstamp
+                member.save()
         else:
             if name is None:
                 name = detail
             contact_matches = Contact.objects.filter(origin_id=origin_id, source=self.source)
             if contact_matches.count() == 0:
-                member = Member.objects.create(community=self.community, name=name, date_added=tstamp)
+                member = Member.objects.create(community=self.community, name=name, first_seen=tstamp, last_seen=tstamp)
                 contact, created = Contact.objects.get_or_create(origin_id=origin_id, source=self.source, defaults={'member':member, 'detail':detail})
             else:
                 member = contact_matches[0].member

@@ -116,10 +116,7 @@ class SlackImporter(PluginImporter):
         for slack_id, user in slack._users.items():
             if not user.get('is_bot'):
                 slack_user_id = "slack.com/%s" % slack_id
-                contact_matches = Contact.objects.filter(origin_id=slack_user_id, source=source)
-                if contact_matches.count() == 0:
-                    member = Member.objects.create(community=community, name=user.get('real_name', user.get('name')), date_added=datetime.datetime.utcnow())
-                    Contact.objects.get_or_create(origin_id=slack_user_id, source=source, defaults={'member':member, 'detail':user.get('name')})
+                member = self.make_member(slack_user_id, detail=user.get('name'), tstamp=datetime.datetime.now(), name=user.get('real_name', user.get('name')))
 
         tag_matcher = re.compile('\<\@([^>]+)\>')
         for item in items:

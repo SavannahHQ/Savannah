@@ -122,7 +122,7 @@ class MemberConnectionAdmin(admin.ModelAdmin):
 admin.site.register(MemberConnection, MemberConnectionAdmin)
 
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("name", "user_email", "community", "date_added", "task_count", "conversation_count", "connection_count")
+    list_display = ("name", "user_email", "community", "first_seen", "last_seen", "task_count", "conversation_count", "connection_count")
     list_filter = ("community", "tags")
     search_fields = ("name",)
     def task_count(self, member):

@@ -60,7 +60,8 @@ class Member(TaggableModel):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=256, db_index=True)
-    date_added = models.DateTimeField(auto_now_add=False, db_index=True)
+    first_seen = models.DateTimeField(auto_now_add=False, db_index=True)
+    last_seen = models.DateTimeField(db_index=True, null=True, blank=True)
 
     email_address = models.EmailField(null=True, blank=True)
     mailing_address = models.CharField(max_length=256, null=True, blank=True)
@@ -92,8 +93,10 @@ class Member(TaggableModel):
     def merge_with(self, other_member):
         if self.user is None and other_member.user is not None :
             self.user = other_member.user
-        if self.date_added > other_member.date_added:
-            self.date_added = other_member.date_added
+        if self.first_seen > other_member.first_seen:
+            self.first_seen = other_member.first_seen
+        if self.last_seen < other_member.last_seen:
+            self.last_seen = other_member.last_seen
         Contact.objects.filter(member=other_member).update(member=self)
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)

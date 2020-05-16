@@ -31,7 +31,7 @@ class Members(SavannahView):
             members = Member.objects.filter(community=self.community, tags=self.tag)
         else:
             members = Member.objects.filter(community=self.community)
-        return members.order_by("-date_added")[:10]
+        return members.order_by("-first_seen")[:10]
 
     @property
     def recently_active(self):
@@ -82,12 +82,12 @@ class Members(SavannahView):
             counts = dict()
             total = 0
             if self.tag:
-                members = Member.objects.filter(community=self.community, tags=self.tag).order_by("date_added")
+                members = Member.objects.filter(community=self.community, tags=self.tag).order_by("first_seen")
             else:
-                members = Member.objects.filter(community=self.community).order_by("date_added")
+                members = Member.objects.filter(community=self.community).order_by("first_seen")
             for m in members:
                 total += 1
-                month = str(m.date_added)[:7]
+                month = str(m.first_seen)[:7]
                 if month not in months:
                     months.append(month)
                 counts[month] = total

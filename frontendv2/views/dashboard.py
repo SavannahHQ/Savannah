@@ -93,14 +93,14 @@ class Dashboard(SavannahView):
             counts = dict()
             total = 0
             if self.tag:
-                members = Member.objects.filter(community=self.community, date_added__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).order_by("date_added")
-                total = Member.objects.filter(community=self.community, date_added__lt=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).count()
+                members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).order_by("first_seen")
+                total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).count()
             else:
-                members = Member.objects.filter(community=self.community, date_added__gte=datetime.datetime.now() - datetime.timedelta(days=180)).order_by("date_added")
-                total = Member.objects.filter(community=self.community, date_added__lt=datetime.datetime.now() - datetime.timedelta(days=180)).count()
+                members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=180)).order_by("first_seen")
+                total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=180)).count()
             for m in members:
                 total += 1
-                month = str(m.date_added)[:7]
+                month = str(m.first_seen)[:7]
                 if month not in months:
                     months.append(month)
                 counts[month] = total

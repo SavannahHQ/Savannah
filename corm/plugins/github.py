@@ -156,18 +156,8 @@ class GithubImporter(PluginImporter):
                 github_convo_link = issue['url']
 
                 # Add Member
-                if issue['user']['login'] in found_members:
-                    member = found_members[issue['user']['login']]
-                else:
-                    github_user_id = 'github.com/%s' % issue['user']['login']
-                    contact_matches = Contact.objects.filter(origin_id=github_user_id, source=source)
-                    if contact_matches.count() == 0:
-                        member = Member.objects.create(community=community, name=issue['user']['login'], date_added=tstamp)
-                        contact, created = Contact.objects.get_or_create(origin_id=github_user_id, defaults={'member':member, 'source':source, 'detail':issue['user']['login']})
-                    else:
-                        contact = contact_matches[0]
-                        member = contact.member
-                    found_members[issue['user']['login']] = member
+                github_user_id = 'github.com/%s' % issue['user']['login']
+                member = self.make_member(github_user_id, detail=issue['user']['login'], tstamp=tstamp, name=issue['user']['login'])
 
                 # Pull Requests are an Activity
                 if 'pull_request' in issue:
@@ -193,17 +183,8 @@ class GithubImporter(PluginImporter):
                         comments = comment_resp.json()
                         for comment in comments:
                             comment_tstamp = datetime.datetime.strptime(comment['created_at'], GITHUB_TIMESTAMP)
-                            if comment['user']['login'] in found_members:
-                                comment_member = found_members[comment['user']['login']]
-                            else:
-                                comment_user_id = 'github.com/%s' % comment['user']['login']
-                                contact_matches = Contact.objects.filter(origin_id=comment_user_id, source=source)
-                                if contact_matches.count() == 0:
-                                    comment_member = Member.objects.create(community=community, name=comment['user']['login'], date_added=comment_tstamp)
-                                    Contact.objects.get_or_create(origin_id=comment_user_id, source=source, defaults={'member':comment_member, 'source':source, 'detail':comment['user']['login']})
-                                else:
-                                    comment_member = contact_matches[0].member
-                                found_members[comment['user']['login']] = comment_member
+                            comment_user_id = 'github.com/%s' % comment['user']['login']
+                            comment_member = self.make_member(comment_user_id, detail=comment['user']['login'], tstamp=comment_tstamp, name=comment['user']['login'])
                             comment_convo, created = Conversation.objects.update_or_create(origin_id=comment['url'], defaults={'channel':channel, 'speaker':comment_member, 'content':comment['body'], 'timestamp':comment_tstamp, 'location':comment['html_url'], 'thread_start':convo})
                             participants.add(comment_member)
                             conversations.add(comment_convo)
@@ -225,11 +206,11 @@ class GithubImporter(PluginImporter):
                     tagged = set(tag_matcher.findall(issue['body']))
                     if tagged:
                         for tagged_user in tagged:
-                            if tagged_user in found_members:
-                                participants.add(found_members[tagged_user])
+                            tagged_user_id = 'github.com/%s' % tagged_user
+                            if tagged_user_id in self._member_cache:
+                                participants.add(self._member_cache[tagged_user_id])
                             else:
                                 try:
-                                    tagged_user_id = "github.com/%s" % tagged_user
                                     tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
                                     participants.add(tagged_contact.member)
                                 except:

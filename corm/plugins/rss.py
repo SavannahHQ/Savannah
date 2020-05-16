@@ -78,13 +78,7 @@ class RssImporter(PluginImporter):
                 article_title = item.find('title').text
                 article_link = item.find('link').text
                 blog_author_id = '%s/%s' % (source.server, author_name)
-                contact_matches = Contact.objects.filter(origin_id=blog_author_id, source=source)
-                if contact_matches.count() == 0:
-                    member = Member.objects.create(community=community, name=author_name, date_added=tstamp)
-                    contact, created = Contact.objects.get_or_create(origin_id=blog_author_id, defaults={'member':member, 'source':source, 'detail':author_name})
-                else:
-                    contact = contact_matches[0]
-                    member = contact.member
+                member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name)
 
                 contrib, created = Contribution.objects.update_or_create(community=community, channel=channel, origin_id=origin_id, defaults={'contribution_type':self.BLOG_CONTRIBUTION, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
                 if channel.tag:

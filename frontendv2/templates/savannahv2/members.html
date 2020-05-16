@@ -81,7 +81,7 @@
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tags.html' with tags=member.tags.all %}
                   </td>
-                  <td>{{member.date_added}}</td>
+                  <td>{{member.first_seen}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
