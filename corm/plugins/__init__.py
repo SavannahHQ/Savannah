@@ -114,18 +114,28 @@ class PluginImporter:
 
     def run(self):
         for channel in self.get_channels():
-            self.import_channel(channel)
-            if channel.last_import is None:
-                recipients = self.source.community.managers or self.source.community.owner
-                notify.send(channel, 
-                    recipient=recipients, 
-                    verb="has been imported for the first time.",
-                    level='success',
-                    icon_name="fas fa-file-import",
-                    link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
-                )
-            channel.last_import = datetime.datetime.utcnow()
-            channel.save()
+            try:
+                self.import_channel(channel)
+                if channel.last_import is None:
+                    recipients = self.source.community.managers or self.source.community.owner
+                    notify.send(channel, 
+                        recipient=recipients, 
+                        verb="has been imported for the first time.",
+                        level='success',
+                        icon_name="fas fa-file-import",
+                        link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
+                    )
+                channel.last_import = datetime.datetime.utcnow()
+                channel.save()
+            except Exception as e:
+                    recipients = self.source.community.managers or self.source.community.owner
+                    notify.send(channel, 
+                        recipient=recipients, 
+                        verb="failed to import",
+                        level='error',
+                        icon_name="fas fa-file-import",
+                        link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
+                    )
         self.source.last_import = datetime.datetime.utcnow()
         self.source.save()
 
