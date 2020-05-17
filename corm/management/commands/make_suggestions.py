@@ -24,7 +24,7 @@ class Command(BaseCommand):
             if dup['dup_count'] > 1:
                 print("%s: %s" % (i, dup))
                 i += 1
-                members = Member.objects.filter(contact__detail=dup['detail']).order_by('id').distinct()
+                members = Member.objects.filter(community=community, contact__detail=dup['detail']).order_by('id').distinct()
                 destination_member = members[0]
                 print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
