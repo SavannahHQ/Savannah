@@ -17,7 +17,7 @@ class MemberMergeSuggestions(SavannahView):
     
     @property
     def all_suggestions(self):
-        suggestions = SuggestMemberMerge.objects.filter(community=self.community, status__isnull=True)
+        suggestions = SuggestMemberMerge.objects.filter(community=self.community, status__isnull=True).order_by("-created_at")
         return suggestions
 
     @login_required
