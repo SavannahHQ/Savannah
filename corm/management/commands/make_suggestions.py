@@ -3,6 +3,7 @@
 from django.core.management.base import BaseCommand, CommandError
 import datetime
 from django.db.models import Count
+from django.shortcuts import reverse
 from corm.models import Community, Member, Conversation, Tag, Contact, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag
 from corm.models import pluralize
 from notifications.signals import notify
@@ -39,4 +40,5 @@ class Command(BaseCommand):
                 verb="has %s new merge %s" % (merge_count, pluralize(merge_count, "suggestion")),
                 level='info',
                 icon_name="fas fa-people-arrows",
-                link='/admin/corm/suggestmembermerge/?community__id__exact=%s' % community.id)
+                link=reverse('member_merge_suggestions', kwargs={'community_id':community.id})
+            )

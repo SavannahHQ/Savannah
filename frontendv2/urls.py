@@ -22,6 +22,7 @@ from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions
 from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels
+from frontendv2.views.suggestions import MemberMergeSuggestions
 from frontendv2 import views
 
 urlpatterns = [
@@ -38,6 +39,7 @@ urlpatterns = [
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
+    path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),
 
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),
