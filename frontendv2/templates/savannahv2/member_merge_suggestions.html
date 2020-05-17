@@ -26,9 +26,10 @@
                 <thead>
                   <tr>
                     <th scope="col"><input class="action-toggle"  type="checkbox" name="select_all" value="1" onChange="toggle_all()"/></th>
-                    <th scope="col">To Member</th>
-                    <th scope="col">From Member</th>
                     <th scope="col">Reason</th>
+                    <th scope="col" class="text-right">From Member</th>
+                    <th scope="col"></th>
+                    <th scope="col">To Member</th>
                     <th scope="col">Date</th>
                   </tr>
                 </thead>
@@ -36,9 +37,10 @@
                 {% for suggestion in view.all_suggestions %}
                 <tr>
                   <td><input class="action-select" type="checkbox" name="selected" value="{{suggestion.id}}" /></td>
-                  <td><a href="{% url 'member_profile' suggestion.destination_member.id %}">{{suggestion.destination_member.name}}</a></td>
-                  <td><a href="{% url 'member_profile' suggestion.source_member.id %}">{{suggestion.source_member.name}}</a></td>
                   <td>{{suggestion.reason}}</td>
+                  <td class="text-right"><a href="{% url 'member_profile' suggestion.source_member.id %}">{{suggestion.source_member.name}}</a></td>
+                  <td class="text-center"><i class="fas fa-arrow-right"> </i></td>
+                  <td class="text-left"><a href="{% url 'member_profile' suggestion.destination_member.id %}">{{suggestion.destination_member.name}}</a></td>
                   <td>{{suggestion.created_at}}</td>
                   <td><button class="btn btn-danger" type="submit" name="reject" value="{{suggestion.id}}" >Reject</button></td>
                 </tr>
