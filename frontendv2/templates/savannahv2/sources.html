@@ -20,16 +20,14 @@
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Sources</h6>
                   <div class="dropdown no-arrow">
-                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                      <div class="dropdown-header">Admin Action:</div>
-                      <a class="dropdown-item" href="{% url 'slack_auth' %}"><i class="fab fa-slack"></i> Add Slack</a>
-                      <a class="dropdown-item" href="{% url 'github_auth' %}"><i class="fab fa-github"></i> Add Github</a>
-                      <a class="dropdown-item disabled" href=""><i class="fab fa-discourse"></i> Add Discourse</a>
-                      <div class="dropdown-divider"></div>
-                      <a class="dropdown-item disabled" href=""><i class="fas fa-edit"></i> Manual Entry</a>
+                    <button class="m-0 btn btn-sm btn-success text-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-plus"></i> Add</button>
+                    <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="{% url 'slack_auth' %}"><i class="fab fa-slack"></i> Slack</a>
+                        <a class="dropdown-item" href="{% url 'github_auth' %}"><i class="fab fa-github"></i> Github</a>
+                        <a class="dropdown-item disabled" href=""><i class="fab fa-discourse"></i> Discourse</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item disabled" href=""><i class="fas fa-edit"></i> Manual Entry</a>
+
                     </div>
                   </div>
                 </div>
