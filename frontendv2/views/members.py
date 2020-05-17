@@ -4,6 +4,7 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
+from django import forms
 
 from corm.models import *
 from corm.connectors import ConnectionManager
@@ -334,6 +335,37 @@ class MemberProfile(SavannahView):
         view = MemberProfile(request, member_id)
 
         return render(request, 'savannahv2/member_profile.html', view.context)
+
+class MemberEditForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = ['name', 'email_address', 'phone_number', 'mailing_address']
+        widgets = {
+            'mailing_address': forms.Textarea(attrs={'cols': 40, 'rows': 6}),
+        }
+
+class MemberEdit(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            return MemberEditForm(instance=self.member, data=self.request.POST)
+        else:
+            return MemberEditForm(instance=self.member)
+
+    @login_required
+    def as_view(request, member_id):
+        view = MemberEdit(request, member_id)
+        
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/member_edit.html', view.context)
 
 class MemberMerge(SavannahView):
     def __init__(self, request, member_id):

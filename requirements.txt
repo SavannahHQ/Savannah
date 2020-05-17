@@ -5,3 +5,4 @@ perceval==0.12.24
 oauthlib==3.1.0
 requests-oauthlib==1.3.
 django-notifications-hq==1.6.0
+django-crispy-forms==1.9.1

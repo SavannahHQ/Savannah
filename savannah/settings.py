@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+
     'notifications',
+    'crispy_forms',
+
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
 ]
@@ -138,6 +141,8 @@ MESSAGE_TAGS = {
 DJANGO_NOTIFICATIONS_CONFIG = { 
     'USE_JSONFIELD': True
 }
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/

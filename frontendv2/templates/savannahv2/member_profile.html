@@ -24,10 +24,7 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
                       <div class="dropdown-header">Member Actions:</div>
-                      <a class="dropdown-item" target="_blank" href="/admin/corm/member/{{view.member.id}}/change/"><i class="fas fa-user-edit"> </i> Edit Member</a>
-                      <a class="dropdown-item" target="_blank" href="/admin/corm/note/add/?member={{view.member.id}}&author={{request.user.id}}"><i class="fas fa-sticky-note"> </i> Add Note<Another action</a>
-                      <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" target="_blank" href="/admin/corm/memberconnection/?from_member={{view.member.id}}"><i class="fas fa-project-diagram"> </i> View Connections</a>
+                      <a class="dropdown-item" href="{% url 'member_edit' view.member.id %}"><i class="fas fa-user-edit"> </i> Edit Member</a>
                     </div>
                   </div>
                 </div>
