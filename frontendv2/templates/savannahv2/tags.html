@@ -3,10 +3,6 @@
 {% load humanize %}
 
 {% block page_content %}
-          <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Tags</h1>
-          </div>
 
           <!-- Content Row -->
 
@@ -14,7 +10,7 @@
           <div class="row">
 
             <!-- Content Column -->
-            <div class="col-lg-12 mb-12">
+            <div class="col-lg-8 mb-8">
 
               <!-- New Members-->
               <div class="card shadow mb-4">
@@ -27,23 +23,21 @@
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col">Name</th>
+                    <th scope="col" width="30%">Name</th>
                     <th scope="col">Members</th>
                     <th scope="col">Channels</th>
-                    <th scope="col">Conversations</th>
-                    <th scope="col">Contributions</th>
+                    <th scope="col">Keywords</th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for tag in view.all_tags %}
                 <tr style="background-color: #{{tag.color}}aa">
-                  <td class="text-gray-800" >
+                  <td class="text-nowrap text-gray-800" >
                     <a href="{% url 'tag_edit' tag.id %}"><i class="fas fa-hashtag"></i> {{ tag.name }}</a>
                   </td>
                   <td>{{tag.member_count|intcomma}}</td>
                   <td>{{tag.channel_count|intcomma}}</td>
-                  <td>{{tag.conversation_count|intcomma}}</td>
-                  <td>{{tag.contribution_count|intcomma}}</td>
+                  <td>{{tag.keywords|default:'-'}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

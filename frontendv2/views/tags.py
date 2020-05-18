@@ -18,7 +18,7 @@ class Tags(SavannahView):
         self.active_tab = "tags"
 
     def all_tags(self):
-        return Tag.objects.filter(community=self.community).annotate(channel_count=Count('channel', distinct=True), member_count=Count('member', distinct=True), conversation_count=Count('conversation', distinct=True), contribution_count=Count('contribution', distinct=True))
+        return Tag.objects.filter(community=self.community).annotate(channel_count=Count('channel', distinct=True), member_count=Count('member', distinct=True))
 
     @login_required
     def as_view(request, community_id):
