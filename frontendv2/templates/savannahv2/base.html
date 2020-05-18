@@ -105,11 +105,13 @@
       </li>
 
       <!-- Nav Item - Tasks -->
+      <!--
       <li class="nav-item">
         <a class="nav-link" href="/admin/corm/task/" target="_blank">
           <i class="fas fa-fw fa-stopwatch"></i>
           <span>Tasks</span></a>
       </li>
+      -->
 
       <!-- Divider -->
       <hr class="sidebar-divider">
@@ -128,7 +130,7 @@
 
       <!-- Nav Item - Tags -->
       <li class="nav-item">
-        <a class="nav-link" href="/admin/corm/tag/" target="_blank">
+        <a class="nav-link" href="{% url 'tags' view.community.id %}">
           <i class="fas fa-fw fa-hashtag"></i>
           <span>Tags</span></a>
       </li>

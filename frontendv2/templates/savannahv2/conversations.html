@@ -73,7 +73,7 @@
                   <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker_id %}">{{conversation.speaker_name}}</a>{% endif %}</td>
                   <td>
                     <a target="_blank" href="{{conversation.location|default:'#'}}" title="{{conversation.content}}">{{ conversation }}</a>
-                    {% if conversation.tag_count > 0 %}{% include 'savannahv2/tags.html' with tags=conversation.tags.all %}{% endif %}
+                    {% if conversation.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}{% endif %}
                   </td>
                   <td class="text-nowrap">{{conversation.timestamp}}</td>
                 </tr>

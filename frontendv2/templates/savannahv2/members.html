@@ -81,7 +81,7 @@
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.first_seen}}</td>
                 </tr>
@@ -113,7 +113,7 @@
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
                 </tr>
@@ -150,7 +150,7 @@
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
                 </tr>
@@ -182,7 +182,7 @@
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tags.html' with tags=member.tags.all %}
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
                 </tr>

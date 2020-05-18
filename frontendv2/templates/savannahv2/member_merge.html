@@ -36,7 +36,7 @@
                   {% if view.member.tags.count %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Tags</div>
-                    <div class="mb-2 col-lg-10">{% include 'savannahv2/tags.html' with tags=view.member.tags.all %}</div>
+                    <div class="mb-2 col-lg-10">{% include 'savannahv2/tag_list.html' with tags=view.member.tags.all %}</div>
                   </div>
                   {% endif %}
                   {% if view.member.email_address %}
