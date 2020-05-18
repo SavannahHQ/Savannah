@@ -336,6 +336,16 @@ class MemberProfile(SavannahView):
 
         return render(request, 'savannahv2/member_profile.html', view.context)
 
+from django.http import JsonResponse
+@login_required
+def tag_member(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    if request.method == "POST":
+        tag_ids = request.POST.getlist('tag_select')
+        tags = Tag.objects.filter(community=member.community, id__in=tag_ids)
+        member.tags.set(tags)
+    return JsonResponse({'success': True, 'errors':None})
+
 class MemberEditForm(forms.ModelForm):
     class Meta:
         model = Member
