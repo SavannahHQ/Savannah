@@ -123,6 +123,11 @@ class DiscourseImporter(PluginImporter):
                     for topic_post in posts_by_id.values():
                         topic_post.participants.set(topic_participants)
 
+                    # Connect all participants
+                    for from_member in topic_participants:
+                        for to_member in topic_participants:
+                            if from_member.id != to_member.id:
+                                from_member.add_connection(to_member, self.source, post_tstamp)
                 else:
                     print("%s: %s" % (posts_resp.status_code, posts_resp.content))
 

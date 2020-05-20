@@ -27,7 +27,7 @@ class Command(BaseCommand):
                     recipient=recipients, 
                     verb="has been inactive since %s" % member.last_seen.date(),
                     level='warning',
-                    icon_name="fas fa-user",
+                    icon_name="fas fa-user-clock",
                     link=reverse('member_profile', kwargs={'member_id':member.id})
                 )
 
@@ -41,6 +41,6 @@ class Command(BaseCommand):
                     recipient=recipients, 
                     verb="has been active for the first time since %s" % member.last_activity.date(),
                     level='success',
-                    icon_name="fas fa-user",
+                    icon_name="fas fa-user-check",
                     link=reverse('member_profile', kwargs={'member_id':member.id})
                 )
