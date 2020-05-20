@@ -37,18 +37,18 @@ class Connections(SavannahView):
     @property
     def connections_chart_months(self):
         (months, counts) = self.getConnectionsChart()
-        return months[-12:]
+        return months[-6:]
 
     @property
     def connections_chart_counts(self):
         (months, counts) = self.getConnectionsChart()
-        return [counts[month] for month in months[-12:]]
+        return [counts[month] for month in months[-6:]]
 
     def getSourcesChart(self):
         channel_names = dict()
         if not self._sourcesChart:
             counts = dict()
-            connections = MemberConnection.objects.filter(via__community=self.community)
+            connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=180))
             if self.tag:
                 connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
 
@@ -90,7 +90,7 @@ class Connections(SavannahView):
         connection_counts = dict()
         connected = set()
 
-        connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        connections = MemberConnection.objects.filter(from_member__community=view.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=180), last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if view.tag:
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
         connections = connections.annotate(from_member_name=F('from_member__name'), to_member_name=F('to_member__name'))
