@@ -13,6 +13,66 @@ class Connections(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "connections"
+        self._connectionsChart = None
+        self._sourcesChart = None
+
+    def getConnectionsChart(self):
+        if not self._connectionsChart:
+            months = list()
+            counts = dict()
+            total = 0
+            if self.tag:
+                connections = MemberConnection.objects.filter(via__community=self.community).filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag)).order_by("first_connected")
+            else:
+                connections = MemberConnection.objects.filter(via__community=self.community).order_by("first_connected")
+            for c in connections:
+                total += 1
+                month = str(c.first_connected)[:7]
+                if month not in months:
+                    months.append(month)
+                counts[month] = total
+            self._connectionsChart = (months, counts)
+        return self._connectionsChart
+        
+    @property
+    def connections_chart_months(self):
+        (months, counts) = self.getConnectionsChart()
+        return months[-12:]
+
+    @property
+    def connections_chart_counts(self):
+        (months, counts) = self.getConnectionsChart()
+        return [counts[month] for month in months[-12:]]
+
+    def getSourcesChart(self):
+        channel_names = dict()
+        if not self._sourcesChart:
+            counts = dict()
+            connections = MemberConnection.objects.filter(via__community=self.community)
+
+            connections = connections.annotate(source_name=F('via__name'), source_connector=F('via__connector'), source_icon=F('via__icon_name'))
+            for c in connections:
+                source_name = "%s (%s)" % (c.source_name, ConnectionManager.display_name(c.source_connector))
+                if source_name not in counts:
+                    counts[source_name] = 1
+                else:
+                    counts[source_name] += 1
+            self._sourcesChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            if len(self._sourcesChart) > 8:
+                other_count = sum([count for channel, count in self._sourcesChart[7:]])
+                self._sourcesChart = self._sourcesChart[:7]
+                self._sourcesChart.append(("Other", other_count))
+        return self._sourcesChart
+
+    @property
+    def source_names(self):
+        chart = self.getSourcesChart()
+        return mark_safe(str([channel[0] for channel in chart]))
+
+    @property
+    def source_counts(self):
+        chart = self.getSourcesChart()
+        return [channel[1] for channel in chart]
 
     @login_required
     def as_view(request, community_id):

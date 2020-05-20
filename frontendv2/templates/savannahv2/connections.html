@@ -13,7 +13,6 @@
           </div>
 
           <!-- Content Row -->
-
           <div class="row">
 
             <!-- Area Chart -->
@@ -33,6 +32,41 @@
             </div>
 
           </div>
+          <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Connections over time</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="historyChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Connections by Source</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="sourcesChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
         <!-- /.container-fluid -->
 {% endblock %}
@@ -146,5 +180,126 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
 });
 
 
-</script>
+
+// Area Chart Example
+var ctx = document.getElementById("historyChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.connections_chart_months|safe}},
+    datasets: [{
+      label: "Member Connections",
+      lineTension: 0.3,
+      backgroundColor: "#1cc88a22",
+      borderColor: "#1cc88a",
+      pointRadius: 3,
+      pointBackgroundColor: "#1cc88a",
+      pointBorderColor: "#1cc88a",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#1cc88a",
+      pointHoverBorderColor: "#1cc88a",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.connections_chart_counts|safe}},
+    }],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: false
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+
+var ctx = document.getElementById("sourcesChart");
+var myPieChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: {{view.source_names|safe}},
+    datasets: [{
+      data: {{view.source_counts|safe}},
+      backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280', '#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280'],
+      hoverBorderColor: "rgba(234, 236, 244, 1)",
+    }],
+  },
+  options: {
+    maintainAspectRatio: false,
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      caretPadding: 10,
+    },
+    legend: {
+      display: true
+    },
+    cutoutPercentage: 0,
+  },
+});
+  </script>
 {% endblock %}
