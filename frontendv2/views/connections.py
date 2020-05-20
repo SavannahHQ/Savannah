@@ -49,6 +49,8 @@ class Connections(SavannahView):
         if not self._sourcesChart:
             counts = dict()
             connections = MemberConnection.objects.filter(via__community=self.community)
+            if self.tag:
+                connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
 
             connections = connections.annotate(source_name=F('via__name'), source_connector=F('via__connector'), source_icon=F('via__icon_name'))
             for c in connections:
