@@ -25,7 +25,7 @@ class Sources(SavannahView):
             if 'remove_source' in request.POST:
                 source = get_object_or_404(Source, id=request.POST.get('remove_source'))
                 context = view.context
-                context.update({'object_name': source.name, 'object_id': source.id})
+                context.update({'object_type':"Source", 'object_name': source.name, 'object_id': source.id})
                 contacts_count = source.contact_set.all().count()
                 channel_count = source.channel_set.all().count()
                 conversation_count = Conversation.objects.filter(channel__source=source).count()
@@ -89,7 +89,7 @@ class Channels(SavannahView):
             elif 'remove_channel' in request.POST:
                 channel = get_object_or_404(Channel, id=request.POST.get('remove_channel'))
                 context = view.context
-                context.update({'object_name': channel.name, 'object_id': channel.id})
+                context.update({'object_type':"Channel", 'object_name': channel.name, 'object_id': channel.id})
                 conversation_count = channel.conversation_set.all().count()
                 context['object_dependencies'] = [
                     (conversation_count, pluralize(conversation_count, "conversation")),
