@@ -491,19 +491,15 @@ function mark_all_as_read() {
   r.addEventListener('readystatechange', function(event){
       if (this.readyState === 4){
           if (this.status === 200){
-              consecutive_misfires = 0;
-              var data = JSON.parse(r.responseText);
-              registered_functions.forEach(function (func) { func(data); });
-          }else{
-              consecutive_misfires++;
+              fetch_api_data()
           }
       }
   })
-  r.open("GET", '{% url 'notifications:live_unread_notification_list' %}?mark_as_read=true', true);
+  r.open("GET", '{% url 'notifications:live_unread_notification_list' %}?max=10&mark_as_read=true', true);
   r.send();
 }
   </script>
-  {% register_notify_callbacks refresh_period=60 callbacks='fill_messages_list,fill_notification_badge' %}
+  {% register_notify_callbacks fetch=10 refresh_period=60 callbacks='fill_messages_list,fill_notification_badge' %}
   <!-- Page level custom scripts -->
   {% block page_scripts %}{% endblock %}
 
