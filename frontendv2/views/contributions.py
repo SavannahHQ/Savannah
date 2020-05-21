@@ -143,11 +143,9 @@ class Contributions(SavannahView):
         if not self._channelsChart:
             channels = list()
             counts = dict()
-            colors = list()
             from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc', 'ffa280']
             next_color = 0
 
-            total = 0
             channels = Channel.objects.filter(source__community=self.community)
             if self.tag:
                 if self.member_tag:

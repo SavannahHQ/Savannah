@@ -72,7 +72,8 @@ class Conversations(SavannahView):
         if not self._channelsChart:
             channels = list()
             counts = dict()
-            total = 0
+            from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
+            next_color = 0
             channels = Channel.objects.filter(source__community=self.community)
             if self.tag:
                 if self.member_tag:
@@ -85,27 +86,38 @@ class Conversations(SavannahView):
                 else:
                     channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
 
-            channels = channels.annotate(source_name=F('source__name'), source_connector=F('source__connector'), source_icon=F('source__icon_name'))
-            for c in channels:
-                source_name = "%s (%s)" % (c.name, ConnectionManager.display_name(c.source_connector))
-                counts[source_name] = c.conversation_count
-            self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+            channels = channels.annotate(source_connector=F('source__connector'), source_icon=F('source__icon_name'), color=F('tag__color'))
+            for c in channels.order_by("-conversation_count"):
+                if c.conversation_count == 0:
+                    continue
+                if not c.color:
+                    c.color = from_colors[next_color]
+                    next_color += 1
+                    if next_color >= len(from_colors):
+                        next_color = 0    
+
+                counts[c] = c.conversation_count
+            self._channelsChart = [("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
             if len(self._channelsChart) > 8:
-                other_count = sum([count for channel, count in self._channelsChart[7:]])
+                other_count = sum([count for channel, count, color in self._channelsChart[7:]])
                 self._channelsChart = self._channelsChart[:7]
-                self._channelsChart.append(("Other", other_count))
+                self._channelsChart.append(("Other", other_count, 'dfdfdf'))
         return self._channelsChart
 
     @property
     def channel_names(self):
         chart = self.getChannelsChart()
-        return mark_safe(str([channel[0] for channel in chart]))
+        return str([channel[0] for channel in chart])
 
     @property
     def channel_counts(self):
         chart = self.getChannelsChart()
         return [channel[1] for channel in chart]
 
+    @property
+    def channel_colors(self):
+        chart = self.getChannelsChart()
+        return ['#'+channel[2] for channel in chart]
 
     @login_required
     def as_view(request, community_id):
