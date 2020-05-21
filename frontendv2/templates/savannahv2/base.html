@@ -345,13 +345,13 @@ function fill_messages_list(data) {
         var messages = data.unread_list.map(function (item) {
             var message = "";
             if(typeof item.actor !== 'undefined'){
-                message = item.actor;
+                message = "<b>" + item.actor + "</b>";
             }
             if(typeof item.verb !== 'undefined'){
                 message = message + " " + item.verb;
             }
             if(typeof item.target !== 'undefined'){
-                message = message + " " + item.target;
+                message = message + " <b>" + item.target + "</b>";
             }
             if(item.level == "error") {
                item.level = "danger";// Bootstrap
@@ -361,7 +361,7 @@ function fill_messages_list(data) {
             html = '<a class="dropdown-item d-flex align-items-center" href="'+item.data.link+'">';
             html += '  <div class="mr-3">';
             html += '    <div class="icon-circle bg-'+item.level+'">';
-            html += '    <i class="'+item.data.icon_name+' text-white"></i>';
+            html += '    <i style="font-size: 1rem;" class="'+item.data.icon_name+' text-white"></i>';
             html += '    </div>';
             html += '  </div>';
             html += '  <div>';
