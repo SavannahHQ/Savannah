@@ -12,16 +12,34 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('importer', type=str)
+        parser.add_argument('--community', dest='community_id', type=int)
+        parser.add_argument('--source', dest='source_id', type=int)
 
     def handle(self, *args, **options):
 
       importer_name = options.get('importer')
+      verbosity = options.get('verbosity')
+      community_id = options.get('community_id')
+      source_id = options.get('source_id')
+
       if importer_name in ConnectionManager.CONNECTOR_IMPORTERS:
-        print("Importing %s data" % importer_name)
+        verbosity and print("Importing %s data" % importer_name)
         plugin = ConnectionManager.CONNECTOR_IMPORTERS[importer_name]
 
-        for source in Source.objects.filter(connector=plugin.__module__, auth_secret__isnull=False):
+        sources = Source.objects.filter(connector=plugin.__module__, auth_secret__isnull=False)
+        if community_id:
+            community = Community.objects.get(id=community_id)
+            print("Using Community: %s" % community.name)
+            sources = sources.filter(community=community)
+
+        if source_id:
+            source = Source.objects.get(id=source_id)
+            print("Using Source: %s" % source.name)
+            sources = sources.filter(id=source.id)
+
+        for source in sources:
           importer = plugin.get_source_importer(source)
+          importer.verbosity = verbosity
           importer.run()
       else:
           print("Unknown importer: %s" % importer_name)

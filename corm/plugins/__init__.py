@@ -46,6 +46,7 @@ class PluginImporter:
     def __init__(self, source):
         self.source = source
         self.community = source.community
+        self.verbosity = 0
         self._member_cache = dict()
         self.API_HEADERS = dict()
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
@@ -95,7 +96,7 @@ class PluginImporter:
         return resp
 
     def api_call(self, path):
-        if settings.DEBUG:
+        if self.verbosity:
             print("API Call: %s" % path)
         return self.api_request(self.source.server+path, headers=self.API_HEADERS)
 
@@ -116,6 +117,8 @@ class PluginImporter:
         for channel in self.get_channels():
             try:
                 self.import_channel(channel)
+                if self.verbosity > 2:
+                    print("Completed import of %s" % channel.name)
                 if channel.last_import is None:
                     recipients = self.source.community.managers or self.source.community.owner
                     notify.send(channel, 
@@ -136,6 +139,8 @@ class PluginImporter:
                         icon_name="fas fa-file-import",
                         link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
                     )
+                    if self.verbosity:
+                        print(e)
         self.source.last_import = datetime.datetime.utcnow()
         self.source.save()
 
