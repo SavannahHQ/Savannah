@@ -21,6 +21,26 @@ class Sources(SavannahView):
     @login_required
     def as_view(request, community_id):
         view = Sources(request, community_id)
+        if request.method == "POST":
+            if 'remove_source' in request.POST:
+                source = get_object_or_404(Source, id=request.POST.get('remove_source'))
+                context = view.context
+                context.update({'object_name': source.name, 'object_id': source.id})
+                contacts_count = source.contact_set.all().count()
+                channel_count = source.channel_set.all().count()
+                conversation_count = Conversation.objects.filter(channel__source=source).count()
+                context['object_dependencies'] = [
+                    (contacts_count, pluralize(contacts_count, "identity", "identities")),
+                    (channel_count, pluralize(channel_count, "channel")),
+                    (conversation_count, pluralize(conversation_count, "conversation")),
+                ]
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                source = get_object_or_404(Source, id=request.POST.get('object_id'))
+                source_name = source.name
+                source.delete()
+                messages.success(request, "Delete source: <b>%s</b>" % source_name)
+                return redirect('sources', community_id=community_id)
         return render(request, "savannahv2/sources.html", view.context)
 
 class Channels(SavannahView):
@@ -62,9 +82,27 @@ class Channels(SavannahView):
         view = Channels(request, community_id, source_id)
 
         if request.method == 'POST':
-            channel_origin_id = request.POST.get('track_channel_id')
-            view.track_channel(channel_origin_id)
-            return redirect('channels', community_id=community_id, source_id=source_id)
+            if 'track_channel_id' in request.POST:
+                channel_origin_id = request.POST.get('track_channel_id')
+                view.track_channel(channel_origin_id)
+                return redirect('channels', community_id=community_id, source_id=source_id)
+            elif 'remove_channel' in request.POST:
+                channel = get_object_or_404(Channel, id=request.POST.get('remove_channel'))
+                context = view.context
+                context.update({'object_name': channel.name, 'object_id': channel.id})
+                conversation_count = channel.conversation_set.all().count()
+                context['object_dependencies'] = [
+                    (conversation_count, pluralize(conversation_count, "conversation")),
+                ]
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                channel = get_object_or_404(Channel, id=request.POST.get('object_id'))
+                channel_name = channel.name
+                channel.delete()
+                messages.success(request, "Delete channel: <b>%s</b>" % channel_name)
+
+                return redirect('channels', community_id=community_id, source_id=source_id)
+
 
         view.fetch_available_channels()
         return render(request, "savannahv2/channels.html", view.context)

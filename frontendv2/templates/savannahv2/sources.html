@@ -29,6 +29,8 @@
                 </div>
                 <div class="card-body p-0">
                 <div class="table-responsive">
+                <form class="inline-form" action="{% url 'sources' view.community.id %}" method="POST">
+                {% csrf_token %}
                 <table class="table">
                 <thead>
                   <tr>
@@ -36,6 +38,7 @@
                     <th scope="col">Channels</th>
                     <th scope="col">Members</th>
                     <th scope="col">Last Import</th>
+                    <th class="text-center" width="100px" scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -47,10 +50,12 @@
                   <td>{{source.channel_count}}</td>
                   <td>{{source.member_count}}</td>
                   <td>{{source.last_import|default:"-"}}</td>
+                  <td class="text-center"><button class="btn btn-danger btn-sm" type="submit" name="remove_source" value="{{source.id}}" >Remove</button></td>
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
+                </form>
                 </div>
                 </div>
               </div>

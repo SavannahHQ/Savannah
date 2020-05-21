@@ -21,12 +21,15 @@
                   <h6 class="m-0 font-weight-bold text-primary">Tracked Channels</h6>
                 </div>
                 <div class="card-body p-0">
+                <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
+                {% csrf_token %}
                 <table class="table">
                 <thead>
                   <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Conversations</th>
                     <th scope="col">Last Import</th>
+                    <th class="text-center" width="100px" scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,10 +40,12 @@
                   </td>
                   <td>{{channel.conversation_count}}</td>
                   <td>{{channel.last_import|default:"-"}}</td>
+                  <td class="text-center"><button class="btn btn-danger btn-sm" type="submit" name="remove_channel" value="{{channel.id}}" >Remove</button></td>
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
+                </form>
                 </div>
               </div>
 
@@ -65,7 +70,7 @@
                   <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Topic</th>
-                    <th scope="col">Action</th>
+                    <th class="text-center" width="100px" scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -73,7 +78,7 @@
                 <tr>
                   <td class="text-nowrap">{{ channel.name }}</td>
                   <td>{{channel.topic}}</td>
-                  <td><button type="submit" name="track_channel_id" value="{{channel.id}}" >Track</button></td>
+                  <td class="text-center"><button class="btn btn-success btn-sm" type="submit" name="track_channel_id" value="{{channel.id}}" >Add</button></td>
                 </tr>
                 {% endfor %}
                 </tbody>
