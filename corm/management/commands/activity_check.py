@@ -39,7 +39,8 @@ class Command(BaseCommand):
                 recipients = community.managers or community.owner
                 notify.send(member, 
                     recipient=recipients, 
-                    verb="has been active for the first time since %s" % member.last_activity.date(),
+                    verb="has been active for the first time since %s in " % member.last_activity.date(),
+                    target=community,
                     level='success',
                     icon_name="fas fa-user-check",
                     link=reverse('member_profile', kwargs={'member_id':member.id})
