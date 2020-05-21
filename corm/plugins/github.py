@@ -108,6 +108,8 @@ class GithubPlugin(BasePlugin):
                 })
         else:
             print("Request failed: %s" % resp.content)
+            data = resp.json()
+            raise RuntimeError(data.get('message'))
         return channels
 
 class GithubImporter(PluginImporter):

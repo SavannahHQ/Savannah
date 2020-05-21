@@ -123,7 +123,8 @@ class PluginImporter:
                     recipients = self.source.community.managers or self.source.community.owner
                     notify.send(channel, 
                         recipient=recipients, 
-                        verb="has been imported for the first time.",
+                        verb="has been imported into",
+                        target=self.community,
                         level='success',
                         icon_name="fas fa-file-import",
                         link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
@@ -134,13 +135,14 @@ class PluginImporter:
                     recipients = self.source.community.managers or self.source.community.owner
                     notify.send(channel, 
                         recipient=recipients, 
-                        verb="failed to import",
+                        verb="failed to import into",
+                        target=self.community,
                         level='error',
                         icon_name="fas fa-file-import",
                         link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
                     )
                     if self.verbosity:
-                        print(e)
+                        print("Failed to import %s: %s" %(channel.name, e))
         self.source.last_import = datetime.datetime.utcnow()
         self.source.save()
 

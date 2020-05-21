@@ -28,20 +28,24 @@ class Channels(SavannahView):
         self.source = get_object_or_404(Source, id=source_id)
         super().__init__(request, community_id)
         self.active_tab = "sources"
+        self.available_channels = []
 
     def all_channels(self):
         return Channel.objects.filter(source=self.source).annotate(conversation_count=Count('conversation', distinct=True))
 
-    def available_channels(self):
+    def fetch_available_channels(self):
         tracked_channel_ids = [channel.origin_id for channel in Channel.objects.filter(source=self.source)]
         channels = []
         if self.source.connector in ConnectionManager.CONNECTOR_PLUGINS:
             plugin  = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
-            source_channels = plugin.get_channels(self.source)
-            for channel in source_channels:
-                if channel['id'] not in tracked_channel_ids:
-                    channels.append(channel)
-        return sorted(channels, key=lambda c: c['count'], reverse=True)
+            try:
+                source_channels = plugin.get_channels(self.source)
+                for channel in source_channels:
+                    if channel['id'] not in tracked_channel_ids:
+                        channels.append(channel)
+            except Exception as e:
+                messages.warning(self.request, "Unable to list available channels: %s" % e)
+        self.available_channels = sorted(channels, key=lambda c: c['count'], reverse=True)
 
     def track_channel(self, origin_id):
         if self.source.connector in ConnectionManager.CONNECTOR_PLUGINS:
@@ -62,4 +66,5 @@ class Channels(SavannahView):
             view.track_channel(channel_origin_id)
             return redirect('channels', community_id=community_id, source_id=source_id)
 
+        view.fetch_available_channels()
         return render(request, "savannahv2/channels.html", view.context)
