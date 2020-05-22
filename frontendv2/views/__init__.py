@@ -67,7 +67,7 @@ class SavannahView:
     def __init__(self, request, community_id):
         request.session['community'] = community_id
         self.request = request
-        self.community = get_object_or_404(Community, id=community_id)
+        self.community = get_object_or_404(Community, Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()), id=community_id)
         self.active_tab = ""
 
         try:
