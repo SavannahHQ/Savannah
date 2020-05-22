@@ -45,8 +45,8 @@ class Sources(SavannahView):
 
 class Channels(SavannahView):
     def __init__(self, request, community_id, source_id):
-        self.source = get_object_or_404(Source, id=source_id)
         super().__init__(request, community_id)
+        self.source = get_object_or_404(Source, id=source_id, community=self.community)
         self.active_tab = "sources"
         self.available_channels = []
 
