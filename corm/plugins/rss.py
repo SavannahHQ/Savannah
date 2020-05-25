@@ -4,6 +4,7 @@ import requests
 from xml.etree import ElementTree as XMLParser
 from html.parser import HTMLParser
 import io
+import pytz
 
 from django.contrib import messages
 from django import forms
@@ -113,7 +114,7 @@ class RssImporter(PluginImporter):
           for feedchannel in tree.findall('channel'):
               for item in feedchannel.findall('item'):
                 origin_id = item.find('guid').text
-                tstamp = self.strptime(item.find('pubDate').text)
+                tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
                 author_name = item.find('{http://purl.org/dc/elements/1.1/}creator').text
                 article_title = item.find('title').text
                 article_link = item.find('link').text
