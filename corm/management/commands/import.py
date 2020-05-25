@@ -26,7 +26,7 @@ class Command(BaseCommand):
         verbosity and print("Importing %s data" % importer_name)
         plugin = ConnectionManager.CONNECTOR_IMPORTERS[importer_name]
 
-        sources = Source.objects.filter(connector=plugin.__module__, auth_secret__isnull=False)
+        sources = Source.objects.filter(connector=plugin.__module__)
         if community_id:
             community = Community.objects.get(id=community_id)
             print("Using Community: %s" % community.name)
