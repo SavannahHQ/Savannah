@@ -1,16 +1,62 @@
 import datetime
 import re
+from django.contrib import messages
+from django import forms
+from django.shortcuts import redirect, get_object_or_404, reverse, render
+from django.urls import path
+
 from corm.plugins import BasePlugin, PluginImporter
+from corm.models import Community, Source
+from frontendv2.views import SavannahView
 
 DISCOURSE_TOPICS_URL = '/c/%(id)s.json?page=%(page)s'
 DISCOURSE_POSTS_URL = '/t/%(id)s.json?print=true'
 DISCOURSE_POST_URL = '/t/%(id)s/posts.json?'
 DISCOURSE_CATEGORIES_URL = '/categories.json'
 
+class DiscourseForm(forms.ModelForm):
+    class Meta:
+        model = Source
+        fields = ['name', 'server', 'auth_id', 'auth_secret']
+        labels = {
+            'server': 'Discourse URL',
+            'auth_id': 'Discourse username',
+            'auth_secret': 'Discourse API key',
+        }
+
+class SourceAdd(SavannahView):
+
+    def as_view(request):
+        view = SourceAdd(request, community_id=request.session['community'])
+        new_source = Source(community=view.community, connector="corm.plugins.discourse", icon_name="fab fa-discourse")
+        if request.method == "POST":
+            form = DiscourseForm(data=request.POST, instance=new_source)
+            if form.is_valid():
+                # TODO: attempt API call to validate
+                source = form.save()
+                return redirect('channels', community_id=view.community.id, source_id=source.id)
+
+        form = DiscourseForm(instance=new_source)
+        context = view.context
+        context.update({
+            'source_form': form,
+            'source_plugin': 'Discourse',
+            'submit_text': 'Add',
+            'submit_class': 'btn btn-success',
+        })
+        return render(request, 'savannahv2/source_add.html', context)
+
+urlpatterns = [
+    path('auth', SourceAdd.as_view, name='discourse_auth'),
+]
+
 class DiscoursePlugin(BasePlugin):
 
     def get_identity_url(self, contact):
         return "%s/u/%s" % (contact.source.server, contact.detail)
+
+    def get_auth_url(self):
+        return reverse('discourse_auth')
 
     def get_source_type_name(self):
         return "Discourse"

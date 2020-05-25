@@ -8,6 +8,16 @@ from corm.connectors import ConnectionManager
 
 # Create your models here.
 
+class UserAuthCredentials(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    connector = models.CharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
+    server = models.CharField(max_length=256, null=True, blank=True)
+    auth_id = models.CharField(max_length=256, null=True, blank=True)
+    auth_secret = models.CharField(max_length=256, null=True, blank=True)
+
+    def __str__(self):
+        return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
+
 class Community(models.Model):
     class Meta:
         verbose_name = _("Community")

@@ -3,21 +3,74 @@ import re
 import requests
 from requests_oauthlib import OAuth2Session
 from django.conf import settings
-from django.shortcuts import redirect, get_object_or_404, reverse
+from django.shortcuts import redirect, get_object_or_404, reverse, render
 from django.urls import path
 from django.contrib import messages
+from django import forms
 
 from corm.plugins import BasePlugin, PluginImporter
 from corm.models import *
+from frontendv2.views import SavannahView
 
+GITHUB_ORGS_URL = 'https://api.github.com/user/orgs'
 GITHUB_ISSUES_URL = 'https://api.github.com/repos/%(owner)s/%(repo)s/issues?state=all&since=%(since)s&page=%(page)s'
 GITHUB_REPOS_URL = 'https://api.github.com/orgs/%(owner)s/repos?sort=pushed&direction=desc'
 GITHUB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
 
 AUTHORIZATION_BASE_URL = 'https://github.com/login/oauth/authorize'
-INSTALL_URL = 'https://github.com/apps/savannah-integration/installations/new'
 TOKEN_URL = 'https://github.com/login/oauth/access_token'
 INSTALLATIONS_URL = 'https://api.github.com/user/installations'
+
+class GithubOrgForm(forms.ModelForm):
+    class Meta:
+        model = Source
+        fields = ['auth_id']
+        labels = {
+            'auth_id': 'Organization',
+        }
+        widgets = {
+            'auth_id': forms.Select(),
+        }
+
+def add(request):
+    try:
+        cred = UserAuthCredentials.objects.get(user=request.user, connector="corm.plugins.github")
+    except UserAuthCredentials.DoesNotExist:
+        return authenticate(request)
+
+
+    view = SavannahView(request, community_id=request.session['community'])
+    new_source = Source(community=view.community, connector="corm.plugins.github", server="https://github.com", auth_id=cred.auth_id, auth_secret=cred.auth_secret, icon_name="fab fa-github")
+
+    if request.method == "POST":
+        form = GithubOrgForm(data=request.POST, instance=new_source)
+        if form.is_valid():
+            source = form.save(commit=False)
+            source.name = source.auth_id
+            source.save()
+            return redirect('channels', community_id=view.community.id, source_id=source.id)
+
+    API_HEADERS =  {
+        'Authorization': 'token %s' % cred.auth_secret,
+    }
+    resp = requests.get(GITHUB_ORGS_URL, headers=API_HEADERS)
+    org_choices = []
+    if resp.status_code == 200:
+        data = resp.json()
+        for org in data:
+            org_choices.append((org['login'], org['login']))
+    else:
+        messages.error(request, "Failed to retrieve Github orgs: %s"%  resp.content)
+    form = GithubOrgForm(instance=new_source)
+    form.fields['auth_id'].widget.choices = org_choices
+    context = view.context
+    context.update({
+        "source_form": form,
+        'source_plugin': 'Github',
+        'submit_text': 'Add',
+        'submit_class': 'btn btn-success',
+    })
+    return render(request, "savannahv2/source_add.html", context)
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -28,7 +81,7 @@ def authenticate(request):
     ]
     callback_uri = request.build_absolute_uri(reverse('github_callback'))
     client = OAuth2Session(client_id, scope=github_auth_scope, redirect_uri=callback_uri)
-    authorization_url, state = client.authorization_url(INSTALL_URL)
+    authorization_url, state = client.authorization_url(AUTHORIZATION_BASE_URL)
 
     # State is used to prevent CSRF, keep this for later.
     request.session['oauth_state'] = state
@@ -41,35 +94,19 @@ def callback(request):
     callback_uri = request.build_absolute_uri(reverse('github_callback'))
     client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
     community = get_object_or_404(Community, id=request.session['community'])
-    installation_id = int(request.GET.get('installation_id', 0))
 
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
+        cred, created = UserAuthCredentials.objects.get_or_create(user=request.user, connector="corm.plugins.github", server="https://github.com", defaults={"auth_secret": token['access_token']})
 
-        resp = requests.get(INSTALLATIONS_URL, headers={'Authorization':'token '+token['access_token'], 'Accept':'application/vnd.github.machine-man-preview+json'})
-        added_sources = []
-        if resp.status_code == 200:
-            data = resp.json()
-            for install in data['installations']:
-                if install['id'] == installation_id:
-                    org_name = install['account']['login']
-                    source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.github", server='https://github.com/', auth_id=org_name, defaults={'name':org_name, 'icon_name': 'fab fa-github', 'auth_secret': token['access_token']})
-                    if created:
-                        messages.success(request, 'Your Github organization <b>%s</b> has been added!' % org_name)
-                        added_sources.append(source.id)
-                    if data['total_count'] == 1:
-                        return redirect(reverse('channels', kwargs={'community_id':community.id, 'source_id':source.id}))
+        return redirect('github_add')
 
-        if len(added_sources) == 1:
-            return redirect(reverse('channels', kwargs={'community_id':community.id, 'source_id':added_sources[0]}))
-        elif len(added_sources) > 1:
-            messages.success(request, "Added new Sources for <b>%s</b> Github organizations" % len(added_sources))
-        return redirect(reverse('sources', kwargs={'community_id':community.id}))
     except Exception as e:
         messages.add_message(request, messages.ERROR, 'Unable to connect Github: %s' % e)
         return redirect(reverse('sources', kwargs={'community_id':community.id}))
 
 urlpatterns = [
+    path('add', add, name='github_add'),
     path('auth', authenticate, name='github_auth'),
     path('callback', callback, name='github_callback'),
 ]

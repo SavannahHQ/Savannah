@@ -19,8 +19,9 @@
                     <button class="m-0 btn btn-sm btn-success text-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-plus"></i> Add</button>
                     <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="{% url 'slack_auth' %}"><i class="fab fa-slack"></i> Slack</a>
-                        <a class="dropdown-item" href="{% url 'github_auth' %}"><i class="fab fa-github"></i> Github</a>
-                        <a class="dropdown-item disabled" href=""><i class="fab fa-discourse"></i> Discourse</a>
+                        <a class="dropdown-item" href="{% url 'github_add' %}"><i class="fab fa-github"></i> Github</a>
+                        <a class="dropdown-item" href="{% url 'discourse_auth' %}"><i class="fab fa-discourse"></i> Discourse</a>
+                        <a class="dropdown-item" href="{% url 'rss_auth' %}"><i class="fas fa-globe"></i> Blog</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item disabled" href=""><i class="fas fa-edit"></i> Manual Entry</a>
 

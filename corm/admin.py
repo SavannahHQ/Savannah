@@ -37,6 +37,12 @@ def isNotNull(parameter_name, title=None):
     return NotNullFilter
 
 # Register your models here.
+
+class UserAuthAdmin(admin.ModelAdmin):
+    list_display = ("user", "connector", "server", "auth_id")
+    list_filter = ("user", "connector")
+admin.site.register(UserAuthCredentials, UserAuthAdmin)
+
 class CommunityAdmin(admin.ModelAdmin):
     list_display = ("name", "member_count", "managers", "owner")
     list_filter = ("owner",)
