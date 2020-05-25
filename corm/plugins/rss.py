@@ -11,7 +11,7 @@ from django.shortcuts import redirect, get_object_or_404, reverse, render
 from django.urls import path
 
 from corm.plugins import BasePlugin, PluginImporter
-from corm.models import Community, Source
+from corm.models import Community, Source, ContributionType, Contribution
 from frontendv2.views import SavannahView
 
 class RssLinkParser(HTMLParser):
