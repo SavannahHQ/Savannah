@@ -23,6 +23,9 @@ class DiscourseForm(forms.ModelForm):
             'auth_id': 'Discourse username',
             'auth_secret': 'Discourse API key',
         }
+    def __init__(self, *args, **kwargs):
+        super(DiscourseForm, self).__init__(*args, **kwargs)
+        self.fields['server'].required = True
 
 class SourceAdd(SavannahView):
     def _add_sources_message(self):

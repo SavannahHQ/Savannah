@@ -36,6 +36,9 @@ class RssForm(forms.ModelForm):
         labels = {
             'server': 'Website URL',
         }
+    def __init__(self, *args, **kwargs):
+        super(RssForm, self).__init__(*args, **kwargs)
+        self.fields['server'].required = True
 
 class SourceAdd(SavannahView):
     def _add_sources_message(self):

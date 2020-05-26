@@ -31,6 +31,9 @@ class GithubOrgForm(forms.ModelForm):
         widgets = {
             'auth_id': forms.Select(),
         }
+    def __init__(self, *args, **kwargs):
+        super(GithubOrgForm, self).__init__(*args, **kwargs)
+        self.fields['auth_id'].required = True
 
 class SourceAdd(SavannahView):
     def _add_sources_message(self):
