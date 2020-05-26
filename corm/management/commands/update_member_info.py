@@ -16,6 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
       identities = Contact.objects.all()
+      verbosity = options.get('verbosity')
 
       community_id = options.get('community_id')
       source_id = options.get('source_id')
@@ -40,11 +41,12 @@ class Command(BaseCommand):
       for ident in identities:
           if ident.source.connector not in ConnectionManager.CONNECTOR_PLUGINS:
             continue
-          
+
           if ident.source.id in importer_cache:
               importer = importer_cache[ident.source.id]
           else:
               plugin = ConnectionManager.CONNECTOR_PLUGINS[ident.source.connector]
               importer = plugin.get_source_importer(ident.source)
+              importer.verbosity = verbosity
               importer_cache[ident.source.id] = importer
           importer.update_identity(ident)

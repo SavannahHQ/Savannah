@@ -9,6 +9,8 @@ from corm.plugins import BasePlugin, PluginImporter
 from corm.models import Community, Source
 from frontendv2.views import SavannahView
 
+DISCOURSE_USER_URL = '/users/%(username)s.json?'
+DISCOURSE_EMAIL_URL = '/users/%(username)s/emails.json?'
 DISCOURSE_TOPICS_URL = '/c/%(id)s.json?page=%(page)s'
 DISCOURSE_POSTS_URL = '/t/%(id)s.json?print=true'
 DISCOURSE_POST_URL = '/t/%(id)s/posts.json?'
@@ -96,6 +98,28 @@ class DiscourseImporter(PluginImporter):
             'Api-Username': source.auth_id,
         }
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+    def update_identity(self, identity):
+        resp = self.api_call(DISCOURSE_USER_URL % {'username':identity.detail})
+        if resp.status_code == 200:
+            data = resp.json()
+            user = data['user']
+            if self.verbosity == 3:
+                print(resp.content)
+            identity.name = user.get('name', None)
+            resp = self.api_call(DISCOURSE_EMAIL_URL % {'username':identity.detail})
+            if resp.status_code == 200:
+                data = resp.json()
+                identity.email_address = data['email']
+            identity.save()
+
+            if identity.member.name == identity.detail and identity.name is not None:
+                identity.member.name = identity.name
+            if identity.member.email_address is None:
+                identity.member.email_address = identity.email_address
+            identity.member.save()
+        else:
+            print("Failed to lookup identity info: %s" % resp.status_code)
 
     def import_channel(self, channel):
       discourse_path = channel.origin_id.split('/')

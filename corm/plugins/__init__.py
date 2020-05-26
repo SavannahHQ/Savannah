@@ -85,6 +85,8 @@ class PluginImporter:
         return convo
 
     def api_request(self, url, headers):
+        if self.verbosity:
+            print("API Call: %s" % url)
         retries = self.API_BACKOFF_ATTEMPTS
         backoff_time = 0
         resp = requests.get(url, headers=headers)
@@ -98,8 +100,6 @@ class PluginImporter:
         return resp
 
     def api_call(self, path):
-        if self.verbosity:
-            print("API Call: %s" % path)
         return self.api_request(self.source.server+path, headers=self.API_HEADERS)
 
     def strftime(self, dtime):
