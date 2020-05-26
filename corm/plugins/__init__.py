@@ -68,6 +68,8 @@ class PluginImporter:
             if contact_matches.count() == 0:
                 member = Member.objects.create(community=self.community, name=name, first_seen=tstamp, last_seen=tstamp)
                 contact, created = Contact.objects.get_or_create(origin_id=origin_id, source=self.source, defaults={'member':member, 'detail':detail})
+                if created:
+                    self.update_identity(contact)
             else:
                 member = contact_matches[0].member
             self._member_cache[origin_id] = member
@@ -148,3 +150,6 @@ class PluginImporter:
 
     def import_channel(self, channel):
         raise NotImplementedError
+
+    def update_identity(self, identity):
+        pass

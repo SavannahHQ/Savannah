@@ -12,7 +12,10 @@ from corm.plugins import BasePlugin, PluginImporter
 from corm.models import *
 from frontendv2.views import SavannahView
 
-GITHUB_ORGS_URL = 'https://api.github.com/user/orgs'
+GITHUB_SELF_URL = 'https://api.github.com/user'
+GITHUB_USER_URL = 'https://api.github.com/users/%(username)s'
+GITHUB_OWNER_ORGS_URL = 'https://api.github.com/user/orgs'
+GITHUB_MEMBER_ORGS_URL = 'https://api.github.com/users/%(username)s/orgs'
 GITHUB_ISSUES_URL = 'https://api.github.com/repos/%(owner)s/%(repo)s/issues?state=all&since=%(since)s&page=%(page)s'
 GITHUB_REPOS_URL = 'https://api.github.com/orgs/%(owner)s/repos?sort=pushed&direction=desc'
 GITHUB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
@@ -44,7 +47,16 @@ class SourceAdd(SavannahView):
             cred = UserAuthCredentials.objects.get(user=request.user, connector="corm.plugins.github")
         except UserAuthCredentials.DoesNotExist:
             return authenticate(request)
+        API_HEADERS =  {
+            'Authorization': 'token %s' % cred.auth_secret,
+        }
 
+        if not cred.auth_id:
+            resp = requests.get(GITHUB_SELF_URL, headers=API_HEADERS)
+            if resp.status_code == 200:
+                data = resp.json()
+                cred.auth_id = data['login']
+                cred.save()
 
         view = SourceAdd(request, community_id=request.session['community'])
         new_source = Source(community=view.community, connector="corm.plugins.github", server="https://github.com", auth_id=cred.auth_id, auth_secret=cred.auth_secret, icon_name="fab fa-github")
@@ -57,11 +69,15 @@ class SourceAdd(SavannahView):
                 source.save()
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
 
-        API_HEADERS =  {
-            'Authorization': 'token %s' % cred.auth_secret,
-        }
-        resp = requests.get(GITHUB_ORGS_URL, headers=API_HEADERS)
         org_choices = []
+        resp = requests.get(GITHUB_OWNER_ORGS_URL, headers=API_HEADERS)
+        if resp.status_code == 200:
+            data = resp.json()
+            for org in data:
+                org_choices.append((org['login'], org['login']))
+        else:
+            messages.error(request, "Failed to retrieve Github orgs: %s"%  resp.content)
+        resp = requests.get(GITHUB_MEMBER_ORGS_URL % {'username': cred.auth_id}, headers=API_HEADERS)
         if resp.status_code == 200:
             data = resp.json()
             for org in data:
@@ -170,6 +186,23 @@ class GithubImporter(PluginImporter):
         if settings.DEBUG:
             print("API Call: %s" % path)
         return self.api_request(path, headers=self.API_HEADERS)
+
+    def update_identity(self, identity):
+        resp = self.api_call(GITHUB_USER_URL%{'username':identity.detail})
+        if resp.status_code == 200:
+            data = resp.json()
+            identity.name = data['name']            
+            identity.email_address = data['email']
+            identity.avatar_url = data['avatar_url']
+            identity.save()
+
+            if identity.member.name == identity.detail and identity.name is not None:
+                identity.member.name = identity.name
+            if identity.member.email_address is None:
+                identity.member.email_address = identity.email_address
+            identity.member.save()
+        else:
+            print("Failed to lookup identity info: %s" % resp.content)
 
     def import_channel(self, channel):
       source = channel.source

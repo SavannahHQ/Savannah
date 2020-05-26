@@ -155,7 +155,7 @@ class MemberAdmin(admin.ModelAdmin):
 admin.site.register(Member, MemberAdmin)
 
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ("detail", "source", "member")
+    list_display = ("detail", "source", "member", "name", "email_address")
     list_filter = ("source__connector", "member__community", "source")
     search_fields = ("detail",)
 

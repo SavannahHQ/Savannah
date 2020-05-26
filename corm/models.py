@@ -200,6 +200,7 @@ class Contact(ImportedDataModel):
     member = models.ForeignKey(Member, on_delete=models.CASCADE)
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     detail = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, null=True, blank=True)
     email_address = models.EmailField(null=True, blank=True)
     avatar_url = models.URLField(null=True, blank=True)
 
