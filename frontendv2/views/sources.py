@@ -18,6 +18,9 @@ class Sources(SavannahView):
     def all_sources(self):
         return Source.objects.filter(community=self.community).annotate(channel_count=Count('channel', distinct=True), member_count=Count('contact', distinct=True))
 
+    def _add_sources_message(self):
+        pass
+
     @login_required
     def as_view(request, community_id):
         view = Sources(request, community_id)
@@ -39,7 +42,7 @@ class Sources(SavannahView):
                 source = get_object_or_404(Source, id=request.POST.get('object_id'))
                 source_name = source.name
                 source.delete()
-                messages.success(request, "Delete source: <b>%s</b>" % source_name)
+                messages.success(request, "Deleted source: <b>%s</b>" % source_name)
                 return redirect('sources', community_id=community_id)
         return render(request, "savannahv2/sources.html", view.context)
 
@@ -49,6 +52,9 @@ class Channels(SavannahView):
         self.source = get_object_or_404(Source, id=source_id, community=self.community)
         self.active_tab = "sources"
         self.available_channels = []
+
+    def _add_sources_message(self):
+        pass
 
     def all_channels(self):
         return Channel.objects.filter(source=self.source).annotate(conversation_count=Count('conversation', distinct=True))
@@ -99,7 +105,7 @@ class Channels(SavannahView):
                 channel = get_object_or_404(Channel, id=request.POST.get('object_id'))
                 channel_name = channel.name
                 channel.delete()
-                messages.success(request, "Delete channel: <b>%s</b>" % channel_name)
+                messages.success(request, "Deleted channel: <b>%s</b>" % channel_name)
 
                 return redirect('channels', community_id=community_id, source_id=source_id)
 

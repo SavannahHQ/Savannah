@@ -32,45 +32,49 @@ class GithubOrgForm(forms.ModelForm):
             'auth_id': forms.Select(),
         }
 
-def add(request):
-    try:
-        cred = UserAuthCredentials.objects.get(user=request.user, connector="corm.plugins.github")
-    except UserAuthCredentials.DoesNotExist:
-        return authenticate(request)
+class SourceAdd(SavannahView):
+    def _add_sources_message(self):
+        pass
+
+    def as_view(request):
+        try:
+            cred = UserAuthCredentials.objects.get(user=request.user, connector="corm.plugins.github")
+        except UserAuthCredentials.DoesNotExist:
+            return authenticate(request)
 
 
-    view = SavannahView(request, community_id=request.session['community'])
-    new_source = Source(community=view.community, connector="corm.plugins.github", server="https://github.com", auth_id=cred.auth_id, auth_secret=cred.auth_secret, icon_name="fab fa-github")
+        view = SavannahView(request, community_id=request.session['community'])
+        new_source = Source(community=view.community, connector="corm.plugins.github", server="https://github.com", auth_id=cred.auth_id, auth_secret=cred.auth_secret, icon_name="fab fa-github")
 
-    if request.method == "POST":
-        form = GithubOrgForm(data=request.POST, instance=new_source)
-        if form.is_valid():
-            source = form.save(commit=False)
-            source.name = source.auth_id
-            source.save()
-            return redirect('channels', community_id=view.community.id, source_id=source.id)
+        if request.method == "POST":
+            form = GithubOrgForm(data=request.POST, instance=new_source)
+            if form.is_valid():
+                source = form.save(commit=False)
+                source.name = source.auth_id
+                source.save()
+                return redirect('channels', community_id=view.community.id, source_id=source.id)
 
-    API_HEADERS =  {
-        'Authorization': 'token %s' % cred.auth_secret,
-    }
-    resp = requests.get(GITHUB_ORGS_URL, headers=API_HEADERS)
-    org_choices = []
-    if resp.status_code == 200:
-        data = resp.json()
-        for org in data:
-            org_choices.append((org['login'], org['login']))
-    else:
-        messages.error(request, "Failed to retrieve Github orgs: %s"%  resp.content)
-    form = GithubOrgForm(instance=new_source)
-    form.fields['auth_id'].widget.choices = org_choices
-    context = view.context
-    context.update({
-        "source_form": form,
-        'source_plugin': 'Github',
-        'submit_text': 'Add',
-        'submit_class': 'btn btn-success',
-    })
-    return render(request, "savannahv2/source_add.html", context)
+        API_HEADERS =  {
+            'Authorization': 'token %s' % cred.auth_secret,
+        }
+        resp = requests.get(GITHUB_ORGS_URL, headers=API_HEADERS)
+        org_choices = []
+        if resp.status_code == 200:
+            data = resp.json()
+            for org in data:
+                org_choices.append((org['login'], org['login']))
+        else:
+            messages.error(request, "Failed to retrieve Github orgs: %s"%  resp.content)
+        form = GithubOrgForm(instance=new_source)
+        form.fields['auth_id'].widget.choices = org_choices
+        context = view.context
+        context.update({
+            "source_form": form,
+            'source_plugin': 'Github',
+            'submit_text': 'Add',
+            'submit_class': 'btn btn-success',
+        })
+        return render(request, "savannahv2/source_add.html", context)
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -106,7 +110,7 @@ def callback(request):
         return redirect(reverse('sources', kwargs={'community_id':community.id}))
 
 urlpatterns = [
-    path('add', add, name='github_add'),
+    path('add', SourceAdd.as_view, name='github_add'),
     path('auth', authenticate, name='github_auth'),
     path('callback', callback, name='github_callback'),
 ]

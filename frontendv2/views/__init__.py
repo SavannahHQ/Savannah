@@ -75,6 +75,11 @@ class SavannahView:
         except:
             self.user_member = None
 
+        self._add_sources_message()
+
+    def _add_sources_message(self):
+        if self.request.method == "GET" and self.community.source_set.all().count() == 0:
+            messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-file-import\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
 
     @property
     def context(self):

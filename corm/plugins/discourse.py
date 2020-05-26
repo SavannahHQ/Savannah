@@ -25,6 +25,8 @@ class DiscourseForm(forms.ModelForm):
         }
 
 class SourceAdd(SavannahView):
+    def _add_sources_message(self):
+        pass
 
     def as_view(request):
         view = SourceAdd(request, community_id=request.session['community'])

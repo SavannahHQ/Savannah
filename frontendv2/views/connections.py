@@ -10,11 +10,18 @@ from corm.models import *
 from frontendv2.views import SavannahFilterView
 
 class Connections(SavannahFilterView):
-    def __init__(self, request, community_id):
+    def __init__(self, request, community_id, json=False):
+        self._is_json = json
         super().__init__(request, community_id)
         self.active_tab = "connections"
         self._connectionsChart = None
         self._sourcesChart = None
+
+    def _add_sources_message(self):
+        if self._is_json:
+            pass
+        else:
+            super()._add_sources_message()
 
     def getConnectionsChart(self):
         if not self._connectionsChart:
@@ -89,7 +96,7 @@ class Connections(SavannahFilterView):
 
     @login_required
     def as_json(request, community_id):
-        view = Connections(request, community_id)
+        view = Connections(request, community_id, json=True)
         nodes = list()
         links = list()
         member_map = dict()
