@@ -7,9 +7,9 @@ from django.utils.safestring import mark_safe
 from django.http import JsonResponse
 
 from corm.models import *
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahFilterView
 
-class Connections(SavannahView):
+class Connections(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "connections"
@@ -21,10 +21,14 @@ class Connections(SavannahView):
             months = list()
             counts = dict()
             total = 0
+            connections = MemberConnection.objects.filter(via__community=self.community)
+            
             if self.tag:
-                connections = MemberConnection.objects.filter(via__community=self.community).filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag)).order_by("first_connected")
-            else:
-                connections = MemberConnection.objects.filter(via__community=self.community).order_by("first_connected")
+                connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
+            if self.role:
+                connections = connections.filter(Q(from_member__role=self.role)&Q(to_member__role=self.role))
+
+            connections = connections.order_by("first_connected")
             for c in connections:
                 total += 1
                 month = str(c.first_connected)[:7]
@@ -51,6 +55,8 @@ class Connections(SavannahView):
             connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=180))
             if self.tag:
                 connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
+            if self.role:
+                connections = connections.filter(Q(from_member__role=self.role)&Q(to_member__role=self.role))
 
             connections = connections.annotate(source_name=F('via__name'), source_connector=F('via__connector'), source_icon=F('via__icon_name'))
             for c in connections:
@@ -93,6 +99,8 @@ class Connections(SavannahView):
         connections = MemberConnection.objects.filter(from_member__community=view.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=180), last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if view.tag:
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
+        if view.role:
+            connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
         connections = connections.annotate(from_member_name=F('from_member__name'), to_member_name=F('to_member__name'))
 
         for connection in connections:

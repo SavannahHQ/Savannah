@@ -6,19 +6,15 @@ from django.db.models import F, Q, Count, Max
 from django.utils.safestring import mark_safe
 
 from corm.models import *
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahFilterView
 
-class Contributions(SavannahView):
+class Contributions(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "contributions"
         self._membersChart = None
         self._channelsChart = None
 
-        if 'member_tag' in request.GET:
-            self.member_tag = get_object_or_404(Tag, name=request.GET.get('member_tag'))
-        else:
-            self.member_tag = None
 
     @property
     def all_contributions(self):
@@ -26,18 +22,22 @@ class Contributions(SavannahView):
         if self.tag:
             contributions = contributions.filter(tags=self.tag)
 
-        if self.member_tag:
-            contributions = contributions.filter(author__tags=self.member_tag)
+        if self.role:
+            contributions = contributions.filter(author__role=self.role)
 
         contributions = contributions.annotate(author_name=F('author__name'), tag_count=Count('tags'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).order_by('-timestamp')
         return contributions[:100]
 
     @property
     def recent_contributors(self):
+        members = Member.objects.filter(community=self.community)
+        contrib_filter = Q(contribution__timestamp__isnull=False)
         if self.tag:
-            members = Member.objects.filter(community=self.community).annotate(last_active=Max('contribution__timestamp', filter=Q(contribution__timestamp__isnull=False, contribution__tags=self.tag)))
-        else:
-            members = Member.objects.filter(community=self.community).annotate(last_active=Max('contribution__timestamp', filter=Q(contribution__timestamp__isnull=False)))
+            contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.role:
+            members = members.filter(role=self.role)
+
+        members = members.annotate(last_active=Max('contribution__timestamp', filter=contrib_filter))
         actives = dict()
         for m in members:
             if m.last_active is not None:
@@ -49,10 +49,14 @@ class Contributions(SavannahView):
     @property
     def top_contributors(self):
         activity_counts = dict()
+        members = Member.objects.filter(community=self.community)
+        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182))
         if self.tag:
-            members = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182), contribution__tags=self.tag)))
-        else:
-            members = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182))))
+            contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.role:
+            members = members.filter(role=self.role)
+
+        members = members.annotate(contribution_count=Count('contribution', filter=contrib_filter))
         for m in members:
             if m.contribution_count > 0:
                 activity_counts[m] = m.contribution_count
@@ -64,16 +68,21 @@ class Contributions(SavannahView):
     def top_supporters(self):
         activity_counts = dict()
         contributor_ids = set()
+        contributors = Member.objects.filter(community=self.community)
+        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if self.tag:
-            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), contribution__tags=self.tag)))
-        else:
-            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+            contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+
+        contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
         contributors = contributors.filter(contribution_count__gt=0).order_by('-contribution_count')
         for c in contributors:
             if c.contribution_count > 0:
                 contributor_ids.add(c.id)
 
-        members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__participants__in=contributor_ids, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = Member.objects.filter(community=self.community)
+        if self.role:
+            members = members.filter(role=self.role)
+        members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__participants__in=contributor_ids, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         members = members.order_by('-conversation_count')
         for m in members[:10]:
             if m.conversation_count > 0:
@@ -86,16 +95,21 @@ class Contributions(SavannahView):
     def top_enablers(self):
         activity_counts = dict()
         contributor_ids = set()
+        contributors = Member.objects.filter(community=self.community)
+        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if self.tag:
-            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), contribution__tags=self.tag)))
-        else:
-            contributors = Member.objects.filter(community=self.community).annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+            contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+
+        contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
 
         for c in contributors:
             if c.contribution_count > 0:
                 contributor_ids.add(c.id)
 
-        members = Member.objects.filter(community=self.community).annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = Member.objects.filter(community=self.community)
+        if self.role:
+            members = members.filter(role=self.role)
+        members = members.annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         members = members.order_by('-connection_count')
         for m in members:
             if m.connection_count > 0:
@@ -113,8 +127,8 @@ class Contributions(SavannahView):
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
 
-            if self.member_tag:
-                contributions = contributions.filter(author__tags=self.member_tag)
+            if self.role:
+                contributions = contributions.filter(author__role=self.role)
             contributions = contributions.order_by("timestamp")
 
             for m in contributions:
@@ -147,17 +161,13 @@ class Contributions(SavannahView):
             next_color = 0
 
             channels = Channel.objects.filter(source__community=self.community)
+            contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
-                if self.member_tag:
-                    channels = channels.annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), contribution__tags=self.tag, contribution__author__tags=self.member_tag)))
-                else:
-                    channels = channels.annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), contribution__tags=self.tag)))
-            else:
-                if self.member_tag:
-                    channels = channels.annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), contribution__author__tags=self.member_tag)))
-                else:
-                    channels = channels.annotate(contribution_count=Count('contribution', filter=Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
+                contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+            if self.role:
+                contrib_filter = contrib_filter & Q(contribution__author__role=self.role)
 
+            channels = channels.annotate(contribution_count=Count('contribution', filter=contrib_filter))
             channels = channels.annotate(source_icon=F('source__icon_name'), source_connector=F('source__connector'), color=F('tag__color'))
             for c in channels:
                 if c.contribution_count == 0:
@@ -173,16 +183,13 @@ class Contributions(SavannahView):
                 other_count = sum([count for channel, count, colors in self._channelsChart[7:]])
                 self._channelsChart = self._channelsChart[:6]
                 self._channelsChart.append(("Other", other_count, 'dfdfdf'))
+            channelless = Contribution.objects.filter(community=self.community, channel__isnull=True)
             if self.tag:
-                if self.member_tag:
-                    self._channelsChart.append(("No Channel", Contribution.objects.filter(community=self.community, channel__isnull=True, tags=self.tag, author__tags=self.tag).count(), 'efefef'))
-                else:
-                    self._channelsChart.append(("No Channel", Contribution.objects.filter(community=self.community, channel__isnull=True, tags=self.tag).count(), 'efefef'))
-            else:
-                if self.member_tag:
-                    self._channelsChart.append(("No Channel", Contribution.objects.filter(community=self.community, channel__isnull=True, author__tags=self.tag).count(), 'efefef'))
-                else:
-                    self._channelsChart.append(("No Channel", Contribution.objects.filter(community=self.community, channel__isnull=True).count(), 'efefef'))
+                channelless = channelless.filter(tags=self.tag)
+            if self.role:
+                channelless = channelless.filter(author__role=self.role)
+
+            self._channelsChart.append(("No Channel", channelless.count(), 'efefef'))
         return self._channelsChart
 
     @property

@@ -32,6 +32,10 @@
                 <div class="card-body">
                 <div class="container-fluid">
                   <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Role:</div>
+                    <div class="mb-2 col-lg-10">{{view.member.get_role_display}}</div>
+                  </div>
+                  <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Tags</div>
                     <div class="mb-2 col-lg-10">
                     <span id="tag_row">{% include 'savannahv2/tag_list.html' with tags=view.member.tags.all %}</span>

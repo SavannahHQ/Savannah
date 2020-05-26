@@ -1,13 +1,28 @@
-            <div class="dropdown">
-            {% if current_tag %}
-              <button style="white-space:nowrap; color:#5a5c69; background-color: #{{current_tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-hashtag"></i> {{current_tag.name}}</button>
+          <span id="filter-bar" class="">
+            <span class="dropdown">
+            {% if view.role %}
+              <button style="white-space:nowrap;" class="btn dropdown-toggle btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {% if view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% else %}Bots{% endif %}</button>
             {% else %}
-              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Filter</button>
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-users"></i> Roles</button>
             {% endif %}
-              <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
-                  <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?"><i class="fas fa-times"></i> Clear Filter</a>
-                {% for tag in view.community.tag_set.all %}
-                  <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
-                {% endfor %}
+              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item p-2" href="?role="><i class="fas fa-users"></i> All Members</a>
+                    <a class="dropdown-item p-2" href="?role=community"><i class="fas fa-user"></i> Community</a>
+                    <a class="dropdown-item p-2" href="?role=staff"><i class="fas fa-user-tie"></i> Staff</a>
+                    <a class="dropdown-item p-2" href="?role=bot"><i class="fas fa-robot"></i> Bots</a>
               </div>
-            </div>
+            </span>
+            <span class="dropdown">
+            {% if view.tag %}
+              <button style="white-space:nowrap; color:#5a5c69; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-hashtag"></i> {{view.tag.name}}</button>
+            {% else %}
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Tags</button>
+            {% endif %}
+              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
+                    <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?tag="><i class="fas fa-times"></i> Clear</a>
+                    {% for tag in view.community.tag_set.all %}
+                    <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
+                    {% endfor %}
+              </div>
+            </span>
+          <span>

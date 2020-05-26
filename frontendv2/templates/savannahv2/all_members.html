@@ -26,8 +26,9 @@
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
+                    <th scope="col">Role</th>
                     <th scope="col">Joined</th>
-                    <th scope="col"><span class="short-text"></span><span class="full-text">Actions</span></th>
+                    <th scope="col">Last Seen</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -37,13 +38,9 @@
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% if member.tag_count %}{% include 'savannahv2/tag_list.html' with tags=member.tags.all %}{% endif %}
                   </td>
+                  <td>{{member.get_role_display}}</td>
                   <td>{{member.first_seen}}</td>
-                  <td style="white-space: nowrap;">
-                    <a title="Edit Member" target="_blank" href="/admin/corm/member/{{member.id}}/change/"><i class="fas fa-user-edit"></i></a>
-                    <a title="Add Note" target="_blank" href="/admin/corm/note/add/?member={{member.id}}&author={{request.user.id}}"><i class="fas fa-sticky-note"> </i></a>
-                    <a title="View Connections" target="_blank" href="/admin/corm/memberconnection/?from_member={{member.id}}"><i class="fas fa-user-friends"> </i></a>
-                    <a title="View Conversations" target="_blank" href="/admin/corm/conversation/?participants__id__exact={{member.id}}"><i class="fas fa-comments"> </i></a>
-                  </td>
+                  <td>{{member.last_seen}}</td>
                 </tr>
                 {% if member.note_count %}
                 <tr><td colspan=3>

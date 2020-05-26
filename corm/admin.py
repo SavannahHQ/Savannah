@@ -128,9 +128,9 @@ class MemberConnectionAdmin(admin.ModelAdmin):
 admin.site.register(MemberConnection, MemberConnectionAdmin)
 
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("name", "user_email", "community", "first_seen", "last_seen", "task_count", "conversation_count", "connection_count")
-    list_filter = ("community", "tags")
-    search_fields = ("name",)
+    list_display = ("name", "role", "community", "first_seen", "last_seen", "task_count", "conversation_count", "connection_count")
+    list_filter = ("community", "role", "last_seen", "tags")
+    search_fields = ("name", "email_address")
     def task_count(self, member):
         count = member.task_set.filter(done__isnull=True).count()
         if count > 0:

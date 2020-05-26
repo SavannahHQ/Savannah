@@ -75,10 +75,6 @@ class SavannahView:
         except:
             self.user_member = None
 
-        if 'tag' in request.GET:
-            self.tag = get_object_or_404(Tag, community=self.community, name=request.GET.get('tag'))
-        else:
-            self.tag = None
 
     @property
     def context(self):
@@ -89,3 +85,39 @@ class SavannahView:
             "active_tab": self.active_tab,
             "view": self,
         }
+
+class SavannahFilterView(SavannahView):
+    def __init__(self, request, community_id):
+        if community_id != request.session.get("community"):
+            request.session['tag'] = None
+            request.session['role'] = None
+        super().__init__(request, community_id)
+
+        self.tag = None
+        try:
+            if 'tag' in request.GET:
+                if request.GET.get('tag') == '':
+                    equest.session['tag'] = None
+                else:
+                    self.tag = Tag.objects.get(community=self.community, name=request.GET.get('tag'))
+                    request.session['tag'] = request.GET.get('tag')
+            elif 'tag' in request.session:
+                self.tag = Tag.objects.get(community=self.community, name=request.session.get('tag'))
+        except:
+            self.tag = None
+            request.session['tag'] = None
+
+        self.role = None
+        try:
+            if 'role' in request.GET:
+                if request.GET.get('role') == '':
+                    request.session['role'] = None
+                else:
+                    self.role = request.GET.get('role')
+                    request.session['role'] = request.GET.get('role')
+            elif 'role' in request.session:
+                self.role = request.session.get('role')
+        except:
+            self.role = None
+            request.session['role'] = None
+

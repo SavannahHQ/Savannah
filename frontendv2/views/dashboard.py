@@ -6,9 +6,9 @@ from django.db.models import F, Q, Count, Max
 
 from corm.models import *
 from corm.connectors import ConnectionManager
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahFilterView
 
-class Dashboard(SavannahView):
+class Dashboard(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "dashboard"
@@ -17,56 +17,50 @@ class Dashboard(SavannahView):
     
     @property 
     def member_count(self):
+        members = self.community.member_set.all()
         if self.tag:
-            return self.community.member_set.filter(tags=self.tag).count()
-        else:
-            return self.community.member_set.all().count()
+            members = members.filter(tags=self.tag)
+        if self.role:
+            members = members.filter(role=self.role)
+        return members.count()
         
     @property 
     def conversation_count(self):
+        conversations = Conversation.objects.filter(channel__source__community=self.community)
         if self.tag:
-            return Conversation.objects.filter(channel__source__community=self.community, tags=self.tag).count()
-        else:
-            return Conversation.objects.filter(channel__source__community=self.community).count()
+            conversations = conversations.filter(tags=self.tag)
+        if self.role:
+            conversations = conversations.filter(speaker__role=self.role)
+        return conversations.count()
         
     @property 
     def contribution_count(self):
+        contributions = Contribution.objects.filter(community=self.community)
         if self.tag:
-            return Contribution.objects.filter(community=self.community, tags=self.tag).count()
-        else:
-            return Contribution.objects.filter(community=self.community).count()
+            contributions = contributions.filter(tags=self.tag)
+        if self.role:
+            contributions = contributions.filter(author__role=self.role)
+        return contributions.count()
         
     @property 
     def contributor_count(self):
+        contributors = Member.objects.filter(community=self.community)
         if self.tag:
-            return Member.objects.filter(community=self.community, tags=self.tag).annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
-        else:
-            return Member.objects.filter(community=self.community).annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
+            contributors = contributors.filter(tags=self.tag)
+        if self.role:
+            contributors = contributors.filter(role=self.role)
+        return contributors.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
         
-    @property
-    def open_tasks_count(self):
-        if self.tag:
-            return Task.objects.filter(community=self.community, done__isnull=True, tags=self.tag).count()
-        else:
-            return Task.objects.filter(community=self.community, done__isnull=True).count()
-
-    @property
-    def tasks_complete_percent(self):
-        if self.tag:
-            all_tasks = Task.objects.filter(community=self.community, tags=self.tag).count()
-        else:
-            all_tasks = Task.objects.filter(community=self.community).count()
-        if all_tasks == 0:
-            return 0
-        return int(100 * (all_tasks - self.open_tasks_count) / all_tasks)
-
     @property
     def most_active(self):
         activity_counts = dict()
+        members = Member.objects.filter(community=self.community)
+        if self.role:
+            members = members.filter(role=self.role)
         if self.tag:
-            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), conversation__tags=self.tag)))
+            members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), conversation__tags=self.tag)))
         else:
-            members = Member.objects.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+            members = members.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         for m in members:
             activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
@@ -75,10 +69,13 @@ class Dashboard(SavannahView):
 
     @property
     def most_connected(self):
+        members = Member.objects.filter(community=self.community)
+        if self.role:
+            members = members.filter(role=self.role)
         if self.tag:
-            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), connections__tags=self.tag)))
+            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), connections__tags=self.tag)))
         else:
-            members = Member.objects.filter(community=self.community).annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
 
         connection_counts = dict()
         for m in members:
@@ -92,12 +89,17 @@ class Dashboard(SavannahView):
             months = list()
             counts = dict()
             total = 0
+            members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
-                members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).order_by("first_seen")
-                total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).count()
-            else:
-                members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=180)).order_by("first_seen")
-                total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=180)).count()
+                members = members.filter(tags=self.tag)
+                total = total.filter(tags=self.tag)
+            if self.role:
+                members = members.filter(role=self.role)
+                total = total.filter(role=self.role)
+
+            total = total.count()
+            members = members.order_by("first_seen")
             for m in members:
                 total += 1
                 month = str(m.first_seen)[:7]
@@ -122,10 +124,13 @@ class Dashboard(SavannahView):
         if not self._channelsChart:
             counts = dict()
             total = 0
+            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
-                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), tags=self.tag).annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
-            else:
-                conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180)).annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
+                conversations = conversations.filter(tags=self.tag)
+            if self.role:
+                conversations = conversations.filter(speaker__role=self.role)
+
+            conversations = conversations.annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
             for c in conversations:
                 source_name = "%s (%s)" % (c.source_name, ConnectionManager.display_name(c.source_connector))
                 if source_name not in counts:

@@ -6,9 +6,9 @@ from django.db.models import F, Q, Count, Max
 from django.utils.safestring import mark_safe
 
 from corm.models import *
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahFilterView
 
-class Conversations(SavannahView):
+class Conversations(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "conversations"
@@ -16,10 +16,6 @@ class Conversations(SavannahView):
         self._membersChart = None
         self._channelsChart = None
 
-        if 'member_tag' in request.GET:
-            self.member_tag = get_object_or_404(Tag, name=request.GET.get('member_tag'))
-        else:
-            self.member_tag = None
 
     @property
     def all_conversations(self):
@@ -27,8 +23,8 @@ class Conversations(SavannahView):
         if self.tag:
             conversations = conversations.filter(tags=self.tag)
 
-        if self.member_tag:
-            conversations = conversations.filter(participants__tags=self.member_tag)
+        if self.role:
+            conversations = conversations.filter(speaker__role=self.role)
 
         conversations = conversations.annotate(speaker_name=F('speaker__name'), tag_count=Count('tags'), source_name=F('channel__source__name'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return conversations[:100]
@@ -42,8 +38,8 @@ class Conversations(SavannahView):
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
 
-            if self.member_tag:
-                conversations = conversations.filter(participants__tags=self.member_tag)
+            if self.role:
+                conversations = conversations.filter(speaker__role=self.role)
             conversations = conversations.order_by("timestamp")
 
             for m in conversations:
@@ -75,16 +71,13 @@ class Conversations(SavannahView):
             from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
             next_color = 0
             channels = Channel.objects.filter(source__community=self.community)
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
-                if self.member_tag:
-                    channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), conversation__tags=self.tag, conversation__participants__tags=self.member_tag)))
-                else:
-                    channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), conversation__tags=self.tag)))
-            else:
-                if self.member_tag:
-                    channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180), conversation__participants__tags=self.member_tag)))
-                else:
-                    channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))))
+                convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            if self.role:
+                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
+            
+            channels = channels.annotate(conversation_count=Count('conversation', filter=convo_filter))
 
             channels = channels.annotate(source_connector=F('source__connector'), source_icon=F('source__icon_name'), color=F('tag__color'))
             for c in channels.order_by("-conversation_count"):

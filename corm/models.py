@@ -64,6 +64,14 @@ class MemberConnection(models.Model):
         return "%s -> %s" % (self.from_member, self.to_member)
 
 class Member(TaggableModel):
+    COMMUNITY = "community"
+    STAFF = "staff"
+    BOT = "bot"
+    MEMBER_ROLE = [
+        (COMMUNITY, 'Community'),
+        (STAFF, 'Staff'),
+        (BOT, 'Bot'),
+    ]
     class Meta:
         ordering = ("name",)
         unique_together = [["community", "user"]]
@@ -77,6 +85,7 @@ class Member(TaggableModel):
     mailing_address = models.CharField(max_length=256, null=True, blank=True)
     phone_number = models.CharField(max_length=32, null=True, blank=True)
     avatar_url = models.URLField(null=True, blank=True)
+    role = models.CharField(max_length=32, choices=MEMBER_ROLE, default=COMMUNITY)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
@@ -107,6 +116,10 @@ class Member(TaggableModel):
             self.first_seen = other_member.first_seen
         if other_member.last_seen is not None and (self.last_seen is None or self.last_seen < other_member.last_seen):
             self.last_seen = other_member.last_seen
+        if other_member.role == Member.BOT:
+            self.role = Member.BOT
+        elif other_member.role == Member.STAFF and self.role != Member.BOT:
+            self.role = Member.STAFF
         Contact.objects.filter(member=other_member).update(member=self)
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
