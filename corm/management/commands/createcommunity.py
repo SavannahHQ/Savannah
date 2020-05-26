@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 import datetime
 import re
 import string
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from corm.models import Community, Tag
 
 class Command(BaseCommand):
@@ -23,8 +23,9 @@ class Command(BaseCommand):
         else:
             owner = User.objects.filter(is_staff=True).order_by('id')[0]
 
-        community = Community.objects.create(name=community_name, owner=owner, icon_path='static/savannahv2/Savannah32.png')
+        managers = Group.objects.create(name="%s Managers" % community_name)
+        owner.groups.add(managers)
+        community = Community.objects.create(name=community_name, owner=owner, managers=managers, icon_path='/static/savannah/Savannah32.png')
 
         thankful = Tag.objects.create(name="thankful", community=community, color="aff5ab", keywords="thanks, thank you, thx, thank yo")
         greeting = Tag.objects.create(name="greeting", community=community, color="abdef5", keywords="welcome, hi, hello")
-        
