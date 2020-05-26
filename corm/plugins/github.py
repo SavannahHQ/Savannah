@@ -46,7 +46,7 @@ class SourceAdd(SavannahView):
             return authenticate(request)
 
 
-        view = SavannahView(request, community_id=request.session['community'])
+        view = SourceAdd(request, community_id=request.session['community'])
         new_source = Source(community=view.community, connector="corm.plugins.github", server="https://github.com", auth_id=cred.auth_id, auth_secret=cred.auth_secret, icon_name="fab fa-github")
 
         if request.method == "POST":
