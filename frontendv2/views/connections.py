@@ -53,7 +53,7 @@ class Connections(SavannahFilterView):
     @property
     def connections_chart_counts(self):
         (months, counts) = self.getConnectionsChart()
-        return [counts[month] for month in months[-6:]]
+        return [counts[month]/2 for month in months[-6:]]
 
     def getSourcesChart(self):
         channel_names = dict()
