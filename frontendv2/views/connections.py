@@ -87,7 +87,7 @@ class Connections(SavannahFilterView):
     @property
     def source_counts(self):
         chart = self.getSourcesChart()
-        return [channel[1] for channel in chart]
+        return [channel[1]/2 for channel in chart]
 
     @login_required
     def as_view(request, community_id):
