@@ -113,7 +113,7 @@ class DiscourseImporter(PluginImporter):
                 identity.email_address = data['email']
             identity.save()
 
-            if identity.member.name == identity.detail and identity.name is not None:
+            if identity.member.name == identity.detail and identity.name is not None and identity.name != '':
                 identity.member.name = identity.name
             if identity.member.email_address is None:
                 identity.member.email_address = identity.email_address

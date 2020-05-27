@@ -103,7 +103,7 @@ class Connections(SavannahFilterView):
         connection_counts = dict()
         connected = set()
 
-        connections = MemberConnection.objects.filter(from_member__community=view.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=180), last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if view.tag:
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
         if view.role:
