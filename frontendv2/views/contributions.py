@@ -82,7 +82,7 @@ class Contributions(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         if self.role:
             members = members.filter(role=self.role)
-        members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__participants__in=contributor_ids, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = members.annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__participants__in=contributor_ids, speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         members = members.order_by('-conversation_count')
         for m in members[:10]:
             if m.conversation_count > 0:

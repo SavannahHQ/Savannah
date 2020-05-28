@@ -127,7 +127,8 @@ class SlackImporter(PluginImporter):
                 if len(tagged) > 0 or 'thread_ts' in item.get('data'):
                     #print("Importing conversation from %s" % item.get('data').get('user_data').get('name'))
                     slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
-                    contact = Contact.objects.get(origin_id=slack_user_id, source=source)
+                    member = self.make_member(slack_user_id, item.get('data').get('user_data').get('name'), speaker=True)
+                    #contact = Contact.objects.get(origin_id=slack_user_id, source=source)
                     tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
                     server = source.server or "slack.com"
                     slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
@@ -139,7 +140,7 @@ class SlackImporter(PluginImporter):
                         slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
                         thread_tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
                         thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_id, channel=channel, defaults={'timestamp':thread_tstamp, 'location': slack_thread_link})
-                        thread.participants.add(contact.member)
+                        thread.participants.add(member)
 
                     convo_text = item.get('data').get('text')
                     for tagged_user in tagged:
@@ -147,10 +148,10 @@ class SlackImporter(PluginImporter):
                             convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
                     convo_text = convo_text
                     try:
-                        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, channel=channel, defaults={'speaker':contact.member, 'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link, 'thread_start':thread})
+                        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, channel=channel, defaults={'speaker':member, 'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link, 'thread_start':thread})
                     except:
                         pass#import pdb; pdb.set_trace()
-                    convo.participants.add(contact.member)
+                    convo.participants.add(member)
 
                     for tagged_user in tagged:
                         #if not slack._users.get(tagged_user):
@@ -159,11 +160,12 @@ class SlackImporter(PluginImporter):
                         #print("Checking for %s" % tagged_user)
                         try:
                             tagged_user_id = "slack.com/%s" % tagged_user
-                            tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
-                            convo.participants.add(tagged_contact.member)
+                            #tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
+                            tagged_member = self.make_member(tagged_user_id, tagged_user)
+                            convo.participants.add(tagged_member)
                             if thread is not None:
-                                thread.participants.add(tagged_contact.member)
-                            contact.member.add_connection(tagged_contact.member, source, tstamp)
+                                thread.participants.add(tagged_member)
+                            member.add_connection(tagged_member, source, tstamp)
                         except:
                             print("    Failed to find Contact for %s" % tagged_user)
 
@@ -171,8 +173,8 @@ class SlackImporter(PluginImporter):
                     if thread is not None:
                         for thread_member in thread.participants.all():
                             try:
-                                contact.member.add_connection(thread_member, source, tstamp)
+                                member.add_connection(thread_member, source, tstamp)
                                 convo.participants.add(thread_member)
                             except Exception as e:
-                                print("    Failed to make connection between %s and %s" % (contact.member, tagged_contact.member))
+                                print("    Failed to make connection between %s and %s" % (member, tagged_contact.member))
                                 print(e)

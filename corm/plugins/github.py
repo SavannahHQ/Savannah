@@ -236,7 +236,7 @@ class GithubImporter(PluginImporter):
 
                 # Add Member
                 github_user_id = 'github.com/%s' % issue['user']['login']
-                member = self.make_member(github_user_id, detail=issue['user']['login'], tstamp=tstamp, name=issue['user']['login'])
+                member = self.make_member(github_user_id, detail=issue['user']['login'], tstamp=tstamp, name=issue['user']['login'], speaker=True)
 
                 # Pull Requests are an Activity
                 if 'pull_request' in issue:
@@ -263,7 +263,7 @@ class GithubImporter(PluginImporter):
                         for comment in comments:
                             comment_tstamp = datetime.datetime.strptime(comment['created_at'], GITHUB_TIMESTAMP)
                             comment_user_id = 'github.com/%s' % comment['user']['login']
-                            comment_member = self.make_member(comment_user_id, detail=comment['user']['login'], tstamp=comment_tstamp, name=comment['user']['login'])
+                            comment_member = self.make_member(comment_user_id, detail=comment['user']['login'], tstamp=comment_tstamp, name=comment['user']['login'], speaker=True)
                             comment_convo, created = Conversation.objects.update_or_create(origin_id=comment['url'], defaults={'channel':channel, 'speaker':comment_member, 'content':comment['body'], 'timestamp':comment_tstamp, 'location':comment['html_url'], 'thread_start':convo})
                             participants.add(comment_member)
                             conversations.add(comment_convo)

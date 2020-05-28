@@ -40,13 +40,13 @@ class Members(SavannahFilterView):
     @property
     def recently_active(self):
         members = Member.objects.filter(community=self.community)
-        convo_filter = Q(conversation__timestamp__isnull=False)
+        convo_filter = Q(speaker_in__timestamp__isnull=False)
         if self.tag:
-            convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.role:
             members = members.filter(role=self.role)
             
-        members = members.annotate(last_active=Max('conversation__timestamp', filter=convo_filter))
+        members = members.annotate(last_active=Max('speaker_in__timestamp', filter=convo_filter))
         actives = dict()
         for m in members:
             if m.last_active is not None:
@@ -59,13 +59,13 @@ class Members(SavannahFilterView):
     def most_active(self):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if self.tag:
-            convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.role:
             members = members.filter(role=self.role)
 
-        members = members.annotate(conversation_count=Count('conversation', filter=convo_filter))
+        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter))
         for m in members:
             if m.conversation_count > 0:
                 activity_counts[m] = m.conversation_count
