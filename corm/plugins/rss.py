@@ -108,6 +108,10 @@ class RssImporter(PluginImporter):
         self.TIMESTAMP_FORMAT = '%a, %d %b %Y %H:%M:%S %z'
         self.BLOG_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Blog Post")
 
+    def get_channels(self):
+        channels = self.source.channel_set.filter(origin_id__isnull=False).order_by('last_import')
+        return channels
+
     def import_channel(self, channel):
       source = channel.source
       community = source.community
