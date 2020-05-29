@@ -220,26 +220,26 @@ class Members(SavannahFilterView):
             contacts = contacts.filter(member__tags=view.tag)
         if view.role:
             contacts = contacts.filter(member__role=view.role)
-        contacts = contacts.annotate(member_name=F('member__name'))
+        contacts = contacts.annotate(member_name=F('member__name'), tag_count=Count('member__tags'))
 
         for contact in contacts:
             links.append({"source":contact.source_id, "target":contact.member_id})
             connected.add((contact.source_id, contact.member_id))
-            member_map[contact.member_id] = contact.member_name
+            member_map[contact.member_id] = contact
             if contact.member_id not in connection_counts:
                 connection_counts[contact.member_id] = 1
             else:
                 connection_counts[contact.member_id] += 1
 
-        for member_id, member_name in member_map.items():
+        for member_id, contact in member_map.items():
             tag_color = "1f77b4"
-            if connection_counts.get(member_id, 0) >= 3:
+            if contact.tag_count > 0:
                 tags = Tag.objects.filter(member__id=member_id)
                 if len(tags) > 0:
                     tag_color = tags[0].color
 
             link = reverse('member_profile', kwargs={'member_id':member_id})
-            nodes.append({"id":member_id, "name":member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
+            nodes.append({"id":member_id, "name":contact.member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
                     
         return JsonResponse({"nodes":nodes, "links":links})
 
