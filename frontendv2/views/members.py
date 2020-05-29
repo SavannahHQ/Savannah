@@ -1,23 +1,31 @@
 import operator
 from functools import reduce
 import datetime
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 from django import forms
+from django.http import JsonResponse
 
 from corm.models import *
 from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView, SavannahFilterView
 
 class Members(SavannahFilterView):
-    def __init__(self, request, community_id):
+    def __init__(self, request, community_id, json=False):
+        self._is_json = json
         super().__init__(request, community_id)
         self.active_tab = "members"
         self._membersChart = None
         self._tagsChart = None
         self._sourcesChart = None
     
+    def _add_sources_message(self):
+        if self._is_json:
+            pass
+        else:
+            super()._add_sources_message()
+
     @property
     def all_members(self):
         members = Member.objects.filter(community=self.community)
@@ -191,6 +199,49 @@ class Members(SavannahFilterView):
         members = Members(request, community_id)
 
         return render(request, 'savannahv2/members.html', members.context)
+
+    @login_required
+    def as_json(request, community_id):
+        view = Members(request, community_id, json=True)
+        nodes = list()
+        links = list()
+        member_map = dict()
+        connection_counts = dict()
+        connected = set()
+
+        sources = Source.objects.filter(community=view.community).annotate(contact_count=Count('contact', distinct=True))
+        source_node_color = "1cc88a"
+        for source in sources:
+            link = reverse('channels', kwargs={'community_id':source.community_id, 'source_id':source.id})
+            nodes.append({"id":source.id, "name":ConnectionManager.display_name(source.connector), "link":link, "color":source_node_color, "connections":source.contact_count})
+            
+        contacts = Contact.objects.filter(member__community=view.community, member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        if view.tag:
+            contacts = contacts.filter(member__tags=view.tag)
+        if view.role:
+            contacts = contacts.filter(member__role=view.role)
+        contacts = contacts.annotate(member_name=F('member__name'))
+
+        for contact in contacts:
+            links.append({"source":contact.source_id, "target":contact.member_id})
+            connected.add((contact.source_id, contact.member_id))
+            member_map[contact.member_id] = contact.member_name
+            if contact.member_id not in connection_counts:
+                connection_counts[contact.member_id] = 1
+            else:
+                connection_counts[contact.member_id] += 1
+
+        for member_id, member_name in member_map.items():
+            tag_color = "1f77b4"
+            if connection_counts.get(member_id, 0) >= 3:
+                tags = Tag.objects.filter(member__id=member_id)
+                if len(tags) > 0:
+                    tag_color = tags[0].color
+
+            link = reverse('member_profile', kwargs={'member_id':member_id})
+            nodes.append({"id":member_id, "name":member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
+                    
+        return JsonResponse({"nodes":nodes, "links":links})
 
 class AllMembers(SavannahFilterView):
     def __init__(self, request, community_id):

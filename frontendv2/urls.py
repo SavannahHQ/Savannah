@@ -34,6 +34,7 @@ urlpatterns = [
     path('dashboard/<int:community_id>/', Dashboard.as_view, name='dashboard'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
+    path('members/<int:community_id>/json', Members.as_json, name='members_json'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
     path('member/<int:member_id>/edit', MemberEdit.as_view, name='member_edit'),
     path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
