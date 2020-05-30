@@ -1,3 +1,7 @@
+# Savannah
+
+![Community Dashboard](./docs/screenshots/Dashboard.png)
+
 ## Create a Development environment
 
 To get started running Savannah in your development environment, first create a Python virtualenv:
