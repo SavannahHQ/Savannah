@@ -106,6 +106,15 @@ class Member(TaggableModel):
         MemberConnection.objects.filter(from_member=self, to_member=other).delete()
         MemberConnection.objects.filter(from_member=other, to_member=self).delete()
         
+    @property
+    def icon_name(self):
+        if self.role == Member.BOT:
+            return "fas fa-robot"
+        elif self.role == Member.STAFF:
+            return "fas fa-user-tie"
+        else:
+            return "fas fa-user"
+
     def __str__(self):
         return self.name
 

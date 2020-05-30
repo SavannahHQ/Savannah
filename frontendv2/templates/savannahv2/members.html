@@ -104,7 +104,7 @@
                 {% for member in view.new_members %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.first_seen}}</td>
@@ -136,7 +136,7 @@
                 {% for member, date in view.recently_active %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
@@ -173,7 +173,7 @@
                 {% for member, count in view.most_active %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -205,7 +205,7 @@
                 {% for member, count in view.most_connected %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -284,8 +284,8 @@ d3.json("{% url 'members_json' view.community.id %}{% if view.tag %}?tag={{view.
 
   const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).distance(50).id(d => d.id))
-      .force("collision", d3.forceCollide().radius(d => Math.max(5, Math.min(50, 10*d.connections/nodes.length))))
-      .force("charge", d3.forceManyBody().strength(Math.max(-100, Math.min(-10, -(100-(nodes.length))))))
+      .force("collision", d3.forceCollide().radius(5))
+      .force("charge", d3.forceManyBody().strength(Math.max(-100, Math.min(-10, -(100-(nodes.length))))-10))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
 //  const svg = d3.select("#my_dataviz").append("svg")
@@ -305,7 +305,7 @@ d3.json("{% url 'members_json' view.community.id %}{% if view.tag %}?tag={{view.
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-      .attr("r", d => Math.max(5, Math.min(50, 10*d.connections/nodes.length)))
+      .attr("r", d => Math.max(5, Math.min(50, 5+(5*d.connections/nodes.length))))
       .attr("fill", d => '#'+d.color)
       .call(drag(simulation));
 

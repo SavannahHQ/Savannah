@@ -220,7 +220,7 @@ class Members(SavannahFilterView):
             contacts = contacts.filter(member__tags=view.tag)
         if view.role:
             contacts = contacts.filter(member__role=view.role)
-        contacts = contacts.annotate(member_name=F('member__name'), tag_count=Count('member__tags'))
+        contacts = contacts.annotate(member_name=F('member__name'), member_role=F('member__role'), tag_count=Count('member__tags'))
 
         for contact in contacts:
             links.append({"source":contact.source_id, "target":contact.member_id})
@@ -237,6 +237,10 @@ class Members(SavannahFilterView):
                 tags = Tag.objects.filter(member__id=member_id)
                 if len(tags) > 0:
                     tag_color = tags[0].color
+            elif contact.member_role == Member.BOT:
+                tag_color = "aeaeae"
+            elif contact.member_role == Member.STAFF:
+                tag_color = "36b9cc"
 
             link = reverse('member_profile', kwargs={'member_id':member_id})
             nodes.append({"id":member_id, "name":contact.member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
