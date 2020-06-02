@@ -129,6 +129,8 @@ class Member(TaggableModel):
             self.role = Member.BOT
         elif other_member.role == Member.STAFF and self.role != Member.BOT:
             self.role = Member.STAFF
+        if self.email_address is None and other_member.email_address is not None:
+            self.email_address = other_member.email_address
         Contact.objects.filter(member=other_member).update(member=self)
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
