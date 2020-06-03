@@ -284,7 +284,7 @@ d3.json("{% url 'members_json' view.community.id %}{% if view.tag %}?tag={{view.
 
   const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links).distance(50).id(d => d.id))
-      .force("collision", d3.forceCollide().radius(5))
+      .force("collision", d3.forceCollide().radius(d => Math.max(5, 50*(d.connections/nodes.length))))
       .force("charge", d3.forceManyBody().strength(Math.max(-100, Math.min(-10, -(100-(nodes.length))))-10))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
@@ -305,7 +305,7 @@ d3.json("{% url 'members_json' view.community.id %}{% if view.tag %}?tag={{view.
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-      .attr("r", d => Math.max(5, Math.min(50, 5+(5*d.connections/nodes.length))))
+      .attr("r", d => Math.max(5, 50*(d.connections/nodes.length)))
       .attr("fill", d => '#'+d.color)
       .call(drag(simulation));
 

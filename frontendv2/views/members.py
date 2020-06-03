@@ -209,7 +209,12 @@ class Members(SavannahFilterView):
         connection_counts = dict()
         connected = set()
 
-        sources = Source.objects.filter(community=view.community).annotate(contact_count=Count('contact', distinct=True))
+        contact_filter = Q(contact__member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        if view.tag:
+            contact_filter = contact_filter & Q(contact__member__tags=view.tag)
+        if view.role:
+            contact_filter = contact_filter & Q(contact__member__role=view.role)
+        sources = Source.objects.filter(community=view.community).annotate(contact_count=Count('contact', filter=contact_filter, distinct=True))
         source_node_color = "1cc88a"
         for source in sources:
             link = reverse('channels', kwargs={'community_id':source.community_id, 'source_id':source.id})
