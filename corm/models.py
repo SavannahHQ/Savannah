@@ -131,6 +131,11 @@ class Member(TaggableModel):
             self.role = Member.STAFF
         if self.email_address is None and other_member.email_address is not None:
             self.email_address = other_member.email_address
+        self_contacts = [c.detail for c in self.contact_set.all()]
+        other_contacts = [c.detail for c in other_member.contact_set.all()]
+        if other_member.name is not None and self.name in self_contacts and other_member.name not in other_contacts:
+            self.name = other_member.name
+
         Contact.objects.filter(member=other_member).update(member=self)
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
