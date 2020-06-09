@@ -1,5 +1,6 @@
 {% load static %}
 {% load notifications_tags %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -260,6 +261,12 @@
 
         </nav>
         <!-- End of Topbar -->
+
+        {% if tip %}
+        <div class="alerts">
+            <div class="m-3 alert {{ tip.tags }}"><strong>{% trans "Tip:" %} </strong>{{ tip.text|safe }}</div>
+        </div>
+        {% endif %}
 
         {% if messages %}
         <div class="alerts">

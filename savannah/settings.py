@@ -39,9 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sites',
 
     'notifications',
     'crispy_forms',
+    'totd',
 
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
@@ -77,6 +79,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "totd.context_processors.tips",
             ],
         },
     },
@@ -161,3 +164,5 @@ GITHUB_SCOPE = "read:org,public_repo"
 SLACK_PIPELINES = [
     'savannah.utils.add_slack_source',
 ]
+
+TOTD_EXCLUDE_NS = ['admin']
