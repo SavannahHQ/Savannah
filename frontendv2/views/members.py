@@ -466,7 +466,9 @@ class MemberMerge(SavannahView):
             contact_matches = matches.filter(Q(contact__detail__in=same_contact))
 
             similar_contact = [name for name in self.member.name.split(" ") if len(name) > 2]
-            if len(similar_contact) > 1:
+            if len(similar_contact) == 0:
+                return []
+            elif len(similar_contact) > 1:
                 similar_matches = matches.filter(~Q(contact__detail__in=same_contact) & reduce(operator.or_, (Q(contact__detail__icontains=name) for name in similar_contact)))
             elif len(similar_contact) == 1:
                 similar_matches = matches.filter(~Q(contact__detail__in=same_contact) & Q(contact__detail__icontains=similar_contact[0]))
