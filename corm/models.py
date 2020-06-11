@@ -311,7 +311,7 @@ class Contribution(TaggableModel, ImportedDataModel):
     title = models.CharField(max_length=256)
     timestamp = models.DateTimeField(db_index=True)
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
-    location = models.URLField(null=True, blank=True)
+    location = models.URLField(max_length=512, null=True, blank=True)
     conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):

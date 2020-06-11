@@ -127,12 +127,16 @@ class RssImporter(PluginImporter):
             self.import_item(item, channel, source, community)
 
     def import_item(self, item, channel, source, community):
-        author_node = item.find('{http://purl.org/dc/elements/1.1/}creator') or item.find('author')
+        author_node = item.find('{http://purl.org/dc/elements/1.1/}creator')
+        if author_node is None:
+            author_node = item.find('author')
         if author_node is None or not hasattr(author_node, 'text'):
             return
         author_name = author_node.text
         tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
         article_title = item.find('title').text
+        if len(article_title) > 198:
+            article_title = article_title[:198]
         article_link = item.find('link').text
         guid_node = item.find('guid')
         if guid_node:
