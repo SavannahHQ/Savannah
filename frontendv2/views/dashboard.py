@@ -28,7 +28,7 @@ class Dashboard(SavannahFilterView):
     def conversation_count(self):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
         if self.tag:
-            conversations = conversations.filter(tags=self.tag)
+            conversations = conversations.filter(Q(tags=self.tag)|Q(speaker__tags=self.tag))
         if self.role:
             conversations = conversations.filter(speaker__role=self.role)
         return conversations.count()
@@ -37,7 +37,7 @@ class Dashboard(SavannahFilterView):
     def contribution_count(self):
         contributions = Contribution.objects.filter(community=self.community)
         if self.tag:
-            contributions = contributions.filter(tags=self.tag)
+            contributions = contributions.filter(Q(tags=self.tag)|Q(author__tags=self.tag))
         if self.role:
             contributions = contributions.filter(author__role=self.role)
         return contributions.count()

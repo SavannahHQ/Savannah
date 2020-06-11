@@ -72,6 +72,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.role:
+            contributors = contributors.filter(role=self.role)
 
         contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
         contributors = contributors.filter(contribution_count__gt=0).order_by('-contribution_count')
@@ -80,8 +82,6 @@ class Contributions(SavannahFilterView):
                 contributor_ids.add(c.id)
 
         members = Member.objects.filter(community=self.community)
-        if self.role:
-            members = members.filter(role=self.role)
         members = members.annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__participants__in=contributor_ids, speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         members = members.order_by('-conversation_count')
         for m in members[:10]:
@@ -99,6 +99,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.role:
+            contributors = contributors.filter(role=self.role)
 
         contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
 
@@ -107,8 +109,6 @@ class Contributions(SavannahFilterView):
                 contributor_ids.add(c.id)
 
         members = Member.objects.filter(community=self.community)
-        if self.role:
-            members = members.filter(role=self.role)
         members = members.annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
         members = members.order_by('-connection_count')
         for m in members:
