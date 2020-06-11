@@ -1,17 +1,20 @@
 import operator
 from functools import reduce
 import datetime
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 from django.contrib import messages
+from django.http import JsonResponse
+
 from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView
 
 class Sources(SavannahView):
-    def __init__(self, request, community_id):
+    def __init__(self, request, community_id, json=False):
+        self._is_json = json
         super().__init__(request, community_id)
         self.active_tab = "sources"
 
@@ -45,6 +48,51 @@ class Sources(SavannahView):
                 messages.success(request, "Deleted source: <b>%s</b>" % source_name)
                 return redirect('sources', community_id=community_id)
         return render(request, "savannahv2/sources.html", view.context)
+
+    @login_required
+    def as_json(request, community_id):
+        view = Sources(request, community_id, json=True)
+        nodes = list()
+        links = list()
+        member_map = dict()
+        connection_counts = dict()
+        connected = set()
+
+        contact_filter = Q(contact__member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        sources = Source.objects.filter(community=view.community).annotate(contact_count=Count('contact', filter=contact_filter, distinct=True))
+        source_node_color = "1cc88a"
+        for source in sources:
+            if source.contact_count > 0:
+                link = reverse('channels', kwargs={'community_id':source.community_id, 'source_id':source.id})
+                nodes.append({"id":source.id, "name":"%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), "link":link, "color":source_node_color, "connections":source.contact_count})
+            
+        contacts = Contact.objects.filter(source__community=view.community, member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        contacts = contacts.annotate(member_name=F('member__name'), member_role=F('member__role'), tag_count=Count('member__tags'))
+
+        for contact in contacts:
+            links.append({"source":contact.source_id, "target":contact.member_id})
+            connected.add((contact.source_id, contact.member_id))
+            member_map[contact.member_id] = contact
+            if contact.member_id not in connection_counts:
+                connection_counts[contact.member_id] = 1
+            else:
+                connection_counts[contact.member_id] += 1
+
+        for member_id, contact in member_map.items():
+            tag_color = "1f77b4"
+            if contact.tag_count > 0:
+                tags = Tag.objects.filter(member__id=member_id)
+                if len(tags) > 0:
+                    tag_color = tags[0].color
+            elif contact.member_role == Member.BOT:
+                tag_color = "aeaeae"
+            elif contact.member_role == Member.STAFF:
+                tag_color = "36b9cc"
+
+            link = reverse('member_profile', kwargs={'member_id':member_id})
+            nodes.append({"id":member_id, "name":contact.member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
+                    
+        return JsonResponse({"nodes":nodes, "links":links})
 
 class Channels(SavannahView):
     def __init__(self, request, community_id, source_id):

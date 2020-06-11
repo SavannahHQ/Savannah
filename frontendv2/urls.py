@@ -34,7 +34,6 @@ urlpatterns = [
     path('dashboard/<int:community_id>/', Dashboard.as_view, name='dashboard'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
-    path('members/<int:community_id>/json', Members.as_json, name='members_json'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
     path('member/<int:member_id>/edit', MemberEdit.as_view, name='member_edit'),
     path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
@@ -46,6 +45,7 @@ urlpatterns = [
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),
 
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
+    path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),
     path('tags/<int:community_id>/', Tags.as_view, name='tags'),
     path('tags/<int:community_id>/add', AddTag.as_view, name='tag_add'),
