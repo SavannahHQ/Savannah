@@ -122,14 +122,26 @@ class RssImporter(PluginImporter):
           tree = XMLParser.parse(rawxml)
           for feedchannel in tree.findall('channel'):
               for item in feedchannel.findall('item'):
-                origin_id = item.find('guid').text
-                tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
-                author_name = item.find('{http://purl.org/dc/elements/1.1/}creator').text
-                article_title = item.find('title').text
-                article_link = item.find('link').text
-                blog_author_id = '%s/%s' % (source.server, author_name)
-                member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name)
+                self.import_item(item, channel, source, community)
+          for item in tree.findall('item'):
+            self.import_item(item, channel, source, community)
 
-                contrib, created = Contribution.objects.update_or_create(community=community, channel=channel, origin_id=origin_id, defaults={'contribution_type':self.BLOG_CONTRIBUTION, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
-                if channel.tag:
-                    contrib.tags.add(channel.tag)
+    def import_item(self, item, channel, source, community):
+        author_node = item.find('{http://purl.org/dc/elements/1.1/}creator') or item.find('author')
+        if author_node is None or not hasattr(author_node, 'text'):
+            return
+        author_name = author_node.text
+        tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
+        article_title = item.find('title').text
+        article_link = item.find('link').text
+        guid_node = item.find('guid')
+        if guid_node:
+            origin_id = guid_node.text
+        else:
+            origin_id = article_link
+        blog_author_id = '%s/%s' % (source.server, author_name)
+        member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name)
+
+        contrib, created = Contribution.objects.update_or_create(community=community, channel=channel, origin_id=origin_id, defaults={'contribution_type':self.BLOG_CONTRIBUTION, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
+        if channel.tag:
+            contrib.tags.add(channel.tag)
