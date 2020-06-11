@@ -1,9 +1,12 @@
-from corm.models import Source, Community
+from storages.backends.s3boto3 import S3Boto3Storage
+from django.conf import settings
 
-def add_slack_source(request, api_data):
-    access_token = api_data.get("access_token")
-    Source.objects.get_or_create(connector="corm.plugins.slack", auth_secret=access_token, defaults={
-        "community": Community.objects.get(id=request.session["community"]),
-        "name": api_data.get("team_name"),
-    })
-    return request, api_data
+class StaticStorage(S3Boto3Storage):
+    location = 'static'
+    default_acl = 'public-read'
+
+
+class PublicMediaStorage(S3Boto3Storage):
+    location = 'media'
+    default_acl = 'public-read'
+    file_overwrite = False

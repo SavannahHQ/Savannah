@@ -44,9 +44,14 @@ class UserAuthAdmin(admin.ModelAdmin):
 admin.site.register(UserAuthCredentials, UserAuthAdmin)
 
 class CommunityAdmin(admin.ModelAdmin):
-    list_display = ("name", "member_count", "managers", "owner")
+    list_display = ("logo_icon", "name", "member_count", "managers", "owner")
+    list_display_links = ("name",)
     list_filter = ("owner",)
     search_fields = ("name", "owner")
+    def logo_icon(self, community):
+        return mark_safe("<img src=\"%s\" />" % community.icon_path)
+    logo_icon.short_description = "Icon"
+
     def member_count(self, community):
         return community.member_set.all().count()
     member_count.short_description = "Members"

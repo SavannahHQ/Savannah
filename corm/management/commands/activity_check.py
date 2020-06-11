@@ -27,7 +27,7 @@ class Command(BaseCommand):
 
     def check_for_inactivity(self, community):
         members = Member.objects.filter(community=community, last_seen__lte=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_DAYS), last_seen__gt=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_DAYS+1))
-        members = members.annotate(past_activity=Count('speaker_in', distint=True, filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_PREVIOUS_DAYS))))
+        members = members.annotate(past_activity=Count('speaker_in', distinct=True, filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_PREVIOUS_DAYS))))
         for member in members:
             if member.past_activity >= INACTIVITY_THRESHOLD_PREVIOUS_ACTIVITY:
                 print("Member has stopped being active: %s (%s conversations in the last 90 days, not seen since %s)" % (member.name, member.past_activity, member.last_seen))

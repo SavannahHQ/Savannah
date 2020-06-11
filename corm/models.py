@@ -1,12 +1,21 @@
 import datetime
 from django.db import models
 from django.contrib.auth.models import User, Group
-
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+
+from imagekit import ImageSpec
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
 
 from corm.connectors import ConnectionManager
 
-# Create your models here.
+class Icon(ImageSpec):
+    processors = [ResizeToFill(32, 32)]
+    format = 'PNG'
+
+    
+    # Create your models here.
 
 class UserAuthCredentials(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -25,7 +34,15 @@ class Community(models.Model):
     name = models.CharField(max_length=256)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
-    icon_path = models.CharField(max_length=256)
+    logo = models.ImageField(upload_to='community_logos', null=True)
+    icon = ImageSpecField(source='logo', spec=Icon)
+
+    @property
+    def icon_path(self):
+        try:
+            return self.icon.url
+        except:
+            return "%ssavannah/Savannah32.png" % settings.STATIC_URL
 
     def __str__(self):
         return self.name

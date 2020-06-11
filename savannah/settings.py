@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.sites',
 
+    "imagekit",
+    "imagekit_cropper",
     'notifications',
     'crispy_forms',
     'totd',
@@ -152,6 +154,8 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = './static/'
+MEDIA_ROOT = "./media/"
+MEDIA_URL = "/media/"
 
 SLACK_CLIENT_ID = os.environ.get('SLACK_CLIENT_ID')
 SLACK_CLIENT_SECRET = os.environ.get('SLACK_CLIENT_SECRET')
@@ -160,9 +164,5 @@ SLACK_SCOPE = 'channels:history,channels:read,users:read'
 GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
 GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
 GITHUB_SCOPE = "read:org,public_repo"
-
-SLACK_PIPELINES = [
-    'savannah.utils.add_slack_source',
-]
 
 TOTD_EXCLUDE_NS = ['admin']

@@ -28,7 +28,9 @@ urlpatterns = [
     path('discourse/', include('corm.plugins.discourse')),
     path('rss/', include('corm.plugins.rss')),
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] 
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 if settings.DEBUG:
