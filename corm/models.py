@@ -31,6 +31,7 @@ class Community(models.Model):
     class Meta:
         verbose_name = _("Community")
         verbose_name_plural = _("Communities")
+        ordering = ("name",)
     name = models.CharField(max_length=256)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)

@@ -57,7 +57,7 @@ def login(request):
 
 @login_required
 def home(request):
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).order_by('id')
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
     context = {
         "communities": communities,
     }
@@ -83,7 +83,7 @@ class SavannahView:
 
     @property
     def context(self):
-        communities = Community.objects.filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()))
+        communities = Community.objects.filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
         return {
             "communities": communities,
             "active_community": self.community,
