@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
         managers = Group.objects.create(name="%s Managers" % community_name)
         owner.groups.add(managers)
-        community = Community.objects.create(name=community_name, owner=owner, managers=managers, icon_path='/static/savannah/Savannah32.png')
+        community = Community.objects.create(name=community_name, owner=owner, managers=managers)
 
         thankful = Tag.objects.create(name="thankful", community=community, color="aff5ab", keywords="thanks, thank you, thx, thank yo")
         greeting = Tag.objects.create(name="greeting", community=community, color="abdef5", keywords="welcome, hi, hello")
