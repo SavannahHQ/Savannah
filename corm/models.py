@@ -114,8 +114,8 @@ class Member(TaggableModel):
         if self.id == other.id:
             return
         if self.is_connected(other):
-            MemberConnection.objects.filter(from_member=self, to_member=other).update(last_connected=timestamp)
-            MemberConnection.objects.filter(from_member=other, to_member=self).update(last_connected=timestamp)
+            MemberConnection.objects.filter(from_member=self, to_member=other, last_connected__lt=timestamp).update(last_connected=timestamp)
+            MemberConnection.objects.filter(from_member=other, to_member=self, last_connected__lt=timestamp).update(last_connected=timestamp)
         else:              
             MemberConnection.objects.create(from_member=self, to_member=other, via=source, first_connected=timestamp, last_connected=timestamp)
             MemberConnection.objects.create(from_member=other, to_member=self, via=source, first_connected=timestamp, last_connected=timestamp)
