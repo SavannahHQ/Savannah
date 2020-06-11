@@ -51,6 +51,23 @@ class Command(BaseCommand):
                     if created:
                         merge_count += 1
 
+        # Check for duplicate display names
+        dups = Member.objects.filter(community=community).values('name').annotate(dup_count=Count('id', distinct=True)).order_by('name').filter(dup_count__gt=1)
+        print("Found %s duplicate names" % len(dups))
+        i = 0
+        for dup in dups:
+            if dup['dup_count'] > 1:
+                print("%s: %s" % (i, dup))
+                i += 1
+                members = Member.objects.filter(community=community, name=dup['name']).order_by('id').distinct()
+                destination_member = members[0]
+                print("Target member: [%s] %s" % (destination_member.id, destination_member))
+                for source_member in members[1:]:
+                    print("    <- [%s] %s" % (source_member.id, source_member))
+                    suggestion, created = SuggestMemberMerge.objects.update_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching name: %s' % dup['name']})
+                    if created:
+                        merge_count += 1
+
         # Notify managers of new suggestions
         print("Suggested %s member merges" % merge_count)
         if merge_count > 0:
