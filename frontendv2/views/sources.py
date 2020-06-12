@@ -160,3 +160,24 @@ class Channels(SavannahView):
 
         view.fetch_available_channels()
         return render(request, "savannahv2/channels.html", view.context)
+
+from django.http import JsonResponse
+@login_required
+def tag_channel(request, community_id, source_id):
+    source = get_object_or_404(Source, id=source_id)
+    if request.method == "POST":
+        try:
+            channel_id = request.POST.get('channel_id')
+            channel = Channel.objects.get(source_id=source_id, id=channel_id)
+            tag_id = request.POST.get('tag_select')
+            if tag_id == '':
+                channel.tag = None
+            else:
+                tag = Tag.objects.get(community_id=community_id, id=tag_id)
+                channel.tag = tag
+            channel.save()
+            return JsonResponse({'success': True, 'errors':None})
+        except Exception as e:
+            return JsonResponse({'success':False, 'errors':str(e)})
+    return JsonResponse({'success':False, 'errors':'Only POST method supported'})
+    

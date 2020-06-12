@@ -27,6 +27,7 @@
                 <thead>
                   <tr>
                     <th scope="col">Name</th>
+                    <th scope="col">Tag</th>
                     <th scope="col">Conversations</th>
                     <th scope="col">Last Import</th>
                     <th class="text-center" width="100px" scope="col">Action</th>
@@ -35,8 +36,28 @@
                 <tbody>
                 {% for channel in view.all_channels %}
                 <tr>
+                  <td>{{ channel.name }}</td>
                   <td>
-                    <a href="/admin/corm/channel/{{channel.id}}/change">{{ channel.name }}</a>
+                      <span class="tag_form_dropdown dropdown no-arrow">
+                        <a class="dropdown-toggle small tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% if channel.tag %}
+                          <span style="margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{channel.tag.color}};">#{{channel.tag.name}}</span>
+                        {% else %}
+                          <i class="fas fa-tag text-gray-500"> </i>
+                        {% endif %}
+                        </a>
+                        <div class="mb-0 dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                          <div class="dropdown-header">Tags:</div>
+                          <form action="#" method="POST" class="form tag_form">
+                          {% csrf_token %}
+                          <input type="hidden" name="channel_id" value="{{channel.id}}"/>
+                          <div class="dropdown-item" style=""><input id="channel_{{channel.id}}_tag_clear" name="tag_select" value="" class="p-2 tag_select form-check-input" type="radio" {% if not channel.tag %}checked="1"{% endif %}><label class="form-check-label" for="channel_{{channel.id}}_tag_clear">None</label></div>
+                          {% for tag in view.community.tag_set.all %}
+                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="channel_{{channel.id}}_tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="radio" {% if tag.id == channel.tag.id %}checked="1"{% endif %}><label class="form-check-label" for="channel_{{channel.id}}_tag_{{tag.id}}">{{tag.name}}</label></div>
+                          {% endfor %}
+                          </form>
+                        </div>
+                      </span>
                   </td>
                   <td>{{channel.conversation_count}}</td>
                   <td>{{channel.last_import|default:"-"}}</td>
@@ -94,5 +115,29 @@
 {% endblock %}
 
 {% block page_scripts %}
+  <script>
+$('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
+    var tags = e.relatedTarget.parentElement.getElementsByClassName("tag_select");
+    var tags_html = "";
+    for (var i = 0; i < tags.length; i++){
+        var tag = tags[i];
+        if (tag.checked) {
+          var tag_name = tag.labels[0].textContent;
+          if (tag.value == '') {
+            tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
+          } else {
+            tags_html = '<span style="margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: '+tag.parentNode.style.backgroundColor+';"><a href="?tag='+tag_name+'">#'+tag_name+'</a></span>'
+          }
 
+        }
+    }
+    var tag_form = e.relatedTarget.parentElement.getElementsByClassName('tag_form')[0];
+    $.post( "{% url 'channel_tag_form' view.community.id view.source.id %}", $(tag_form).serialize(), function(data) {
+        var tag_row = e.relatedTarget.parentElement.getElementsByClassName("tag_row")[0];
+        tag_row.innerHTML = tags_html
+      },
+      'json' // I expect a JSON response
+    );
+});
+  </script>
 {% endblock %}
