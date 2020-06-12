@@ -108,15 +108,15 @@ class Connections(SavannahFilterView):
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
         if view.role:
             connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
-        connections = connections.annotate(from_member_name=F('from_member__name'), to_member_name=F('to_member__name'))
+        connections = connections.select_related('from_member', 'to_member')
 
         for connection in connections:
             if connection.from_member_id != connection.to_member_id:
                 if not (connection.to_member_id, connection.from_member_id) in connected: 
                     links.append({"source":connection.from_member_id, "target":connection.to_member_id})
                     connected.add((connection.from_member_id, connection.to_member_id))
-                    member_map[connection.from_member_id] = connection.from_member_name
-                    member_map[connection.to_member_id] = connection.to_member_name
+                    member_map[connection.from_member_id] = connection.from_member
+                    member_map[connection.to_member_id] = connection.to_member
                     if connection.from_member_id not in connection_counts:
                         connection_counts[connection.from_member_id] = 1
                     else:
@@ -127,13 +127,19 @@ class Connections(SavannahFilterView):
                     else:
                         connection_counts[connection.to_member_id] += 1
 
-        for member_id, member_name in member_map.items():
-            tag_color = "1f77b4"
+        for member_id, member in member_map.items():
+            tag_color = None
             if connection_counts.get(member_id, 0) >= 3:
                 tags = Tag.objects.filter(member__id=member_id)
                 if len(tags) > 0:
                     tag_color = tags[0].color
-
-            nodes.append({"id":member_id, "name":member_name, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
+            elif member.role == Member.BOT:
+                tag_color = "aeaeae"
+            elif member.role == Member.STAFF:
+                tag_color = "36b9cc"
+            if tag_color is None:
+                tag_color = "1f77b4"
+            
+            nodes.append({"id":member_id, "name":member.name, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
                     
         return JsonResponse({"nodes":nodes, "links":links})
