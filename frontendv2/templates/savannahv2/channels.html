@@ -21,8 +21,6 @@
                   <h6 class="m-0 font-weight-bold text-primary">Tracked Channels</h6>
                 </div>
                 <div class="card-body p-0">
-                <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
-                {% csrf_token %}
                 <table class="table">
                 <thead>
                   <tr>
@@ -61,12 +59,16 @@
                   </td>
                   <td>{{channel.conversation_count}}</td>
                   <td>{{channel.last_import|default:"-"}}</td>
-                  <td class="text-center"><button class="btn btn-danger btn-sm" type="submit" name="remove_channel" value="{{channel.id}}" >Remove</button></td>
+                  <td class="text-center">
+                    <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn btn-danger btn-sm" type="submit" name="remove_channel" value="{{channel.id}}" >Remove</button>
+                    </form>
+                  </td>
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
-                </form>
                 </div>
               </div>
 
