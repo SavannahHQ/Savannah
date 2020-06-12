@@ -290,7 +290,7 @@ class MemberProfile(SavannahFilterView):
         if not self._engagementChart:
             conversations_counts = dict()
             activity_counts = dict()
-            conversations = conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90))
+            conversations = conversations = Conversation.objects.filter(channel__source__community=self.member.community, speaker=self.member, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=90))
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
             if self.role:

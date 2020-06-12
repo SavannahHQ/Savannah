@@ -16,6 +16,19 @@ class Conversations(SavannahFilterView):
         self._membersChart = None
         self._channelsChart = None
 
+        self.RESULTS_PER_PAGE = 25
+
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower()
+        else:
+            self.search = None
+        self.result_count = 0
+
 
     @property
     def all_conversations(self):
@@ -26,8 +39,27 @@ class Conversations(SavannahFilterView):
         if self.role:
             conversations = conversations.filter(speaker__role=self.role)
 
+        if self.search:
+            conversations = conversations.filter(content__icontains=self.search)
+
         conversations = conversations.annotate(speaker_name=F('speaker__name'), tag_count=Count('tags'), source_name=F('channel__source__name'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
-        return conversations[:100]
+        self.result_count = conversations.count()
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return conversations[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return min(10, pages+1)
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return [page+1 for page in range(min(10, pages+1))]
 
     def getConversationsChart(self):
         if not self._membersChart:
@@ -40,6 +72,9 @@ class Conversations(SavannahFilterView):
 
             if self.role:
                 conversations = conversations.filter(speaker__role=self.role)
+
+            if self.search:
+                conversations = conversations.filter(content__icontains=self.search)
             conversations = conversations.order_by("timestamp")
 
             for m in conversations:
@@ -76,7 +111,9 @@ class Conversations(SavannahFilterView):
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
                 convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
-            
+            if self.search:
+                convo_filter = convo_filter & Q(conversation__content__icontains=self.search)
+
             channels = channels.annotate(conversation_count=Count('conversation', filter=convo_filter))
 
             channels = channels.annotate(source_connector=F('source__connector'), source_icon=F('source__icon_name'), color=F('tag__color'))
@@ -111,6 +148,45 @@ class Conversations(SavannahFilterView):
     def channel_colors(self):
         chart = self.getChannelsChart()
         return ['#'+channel[2] for channel in chart]
+
+    @property
+    def most_active(self):
+        activity_counts = dict()
+        members = Member.objects.filter(community=self.community)
+        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        if self.tag:
+            convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
+        if self.role:
+            members = members.filter(role=self.role)
+        if self.search:
+            convo_filter = convo_filter & Q(speaker_in__content__icontains=self.search)
+
+        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter))
+        for m in members:
+            if m.conversation_count > 0:
+                activity_counts[m] = m.conversation_count
+        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
+        most_active.reverse()
+        return most_active[:20]
+
+    @property
+    def most_connected(self):
+        if self.search:
+            return []
+        members = Member.objects.filter(community=self.community)
+        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        if self.tag:
+            connection_filter = connection_filter & Q(connections__tags=self.tag)
+        if self.role:
+            members = members.filter(role=self.role)
+        members = members.annotate(connection_count=Count('connections', filter=connection_filter))
+        connection_counts = dict()
+        for m in members:
+            if m.connection_count > 0:
+                connection_counts[m] = m.connection_count
+        most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
+        most_connected.reverse()
+        return most_connected[:20]
 
     @login_required
     def as_view(request, community_id):
