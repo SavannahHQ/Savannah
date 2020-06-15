@@ -146,7 +146,8 @@ class Conversations(SavannahFilterView):
                 counts[t] = t.conversation_count
             self._tagsChart = PieChart("tagsChart", title="Conversations by Tag", limit=12)
             for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
-                self._tagsChart.add("#%s" % tag.name, count, tag.color)
+                if count > 0:
+                    self._tagsChart.add("#%s" % tag.name, count, tag.color)
         self.charts.add(self._tagsChart)
         return self._tagsChart
 
