@@ -46,7 +46,7 @@
                 <tr><td colspan=3>
                 <ul>
                 {% for note in member.note_set.all %}
-                <li><span class="note">{{note}} <a target="_blank" href="/admin/corm/note/{{note.id}}/change/"><i class="small far fa-edit"></i></a></span></li>
+                <li><span class="note">{{note}}</span></li>
                 {% endfor %}
                 </ul>
                 </td></tr>

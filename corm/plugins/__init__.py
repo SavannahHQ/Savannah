@@ -58,9 +58,6 @@ class PluginImporter:
     def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None, speaker=False):
         if origin_id in self._member_cache:
             member = self._member_cache[origin_id]
-            if speaker and tstamp is not None and (member.last_seen is None or tstamp > member.last_seen):
-                member.last_seen = tstamp
-                member.save()
         else:
             if name is None:
                 name = detail
@@ -81,8 +78,11 @@ class PluginImporter:
                         matched_contact.email_address = email_address
                     matched_contact.save()
                 member = matched_contact.member
-                
+
             self._member_cache[origin_id] = member
+        if speaker and tstamp is not None and (member.last_seen is None or tstamp > member.last_seen):
+            member.last_seen = tstamp
+            member.save()
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None):
