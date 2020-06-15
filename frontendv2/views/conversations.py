@@ -144,7 +144,7 @@ class Conversations(SavannahFilterView):
 
             for t in tags:
                 counts[t] = t.conversation_count
-            self._tagsChart = PieChart("tagsChart", title="Conversations by Tag", limit=8)
+            self._tagsChart = PieChart("tagsChart", title="Conversations by Tag", limit=12)
             for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
                 self._tagsChart.add("#%s" % tag.name, count, tag.color)
         self.charts.add(self._tagsChart)
@@ -153,6 +153,11 @@ class Conversations(SavannahFilterView):
     def rolesChart(self):
         if not self._rolesChart:
             counts = dict()
+            colors = {
+                Member.COMMUNITY: '4e73df',
+                Member.STAFF: '36b9cc',
+                Member.BOT: 'dfdfdf'
+            }
             members = Member.objects.filter(community=self.community)
             convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
@@ -171,7 +176,7 @@ class Conversations(SavannahFilterView):
                     counts[m.role] = 1
             self._rolesChart = PieChart("rolesChart", title="Conversations by Role")
             for role, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
-                self._rolesChart.add(Member.ROLE_NAME[role], count)
+                self._rolesChart.add(Member.ROLE_NAME[role], count, colors[role])
         self.charts.add(self._rolesChart)
         return self._rolesChart
 
