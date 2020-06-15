@@ -167,14 +167,14 @@ class Conversations(SavannahFilterView):
                 members = members.filter(role=self.role)
             if self.search:
                 convo_filter = convo_filter & Q(conversation__content__icontains=self.search)
-
-            members = members.annotate(conversation_count=Count('conversation', filter=convo_filter))
+            convo_filter = convo_filter & Q(conversation__speaker_id=F('id'))
+            members = members.annotate(conversation_count=Count('conversation', filter=convo_filter)).filter(conversation_count__gt=0)
 
             for m in members:
                 if m.role in counts:
-                    counts[m.role] += 1
+                    counts[m.role] += m.conversation_count
                 else:
-                    counts[m.role] = 1
+                    counts[m.role] = m.conversation_count
             self._rolesChart = PieChart("rolesChart", title="Conversations by Role")
             for role, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
                 self._rolesChart.add(Member.ROLE_NAME[role], count, colors[role])
