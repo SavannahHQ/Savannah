@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 
 from frontendv2.views.dashboard import Dashboard
-from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberEdit, tag_member
+from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberEdit, tag_member, add_note
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions
 from frontendv2.views.connections import Connections
@@ -38,6 +38,7 @@ urlpatterns = [
     path('member/<int:member_id>/edit', MemberEdit.as_view, name='member_edit'),
     path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
     path('member/<int:member_id>/tag', tag_member, name='member_tag_form'),
+    path('member/<int:member_id>/note', add_note, name='member_note_form'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),

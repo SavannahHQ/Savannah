@@ -250,6 +250,12 @@ class AllMembers(SavannahFilterView):
 
         return render(request, 'savannahv2/all_members.html', view.context)
 
+class MemberNoteForm(forms.ModelForm):
+    class Meta:
+        model = Note
+        fields = ['content', 'tags']
+
+   
 class MemberProfile(SavannahFilterView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
@@ -394,10 +400,20 @@ class MemberProfile(SavannahFilterView):
     @login_required
     def as_view(request, member_id):
         view = MemberProfile(request, member_id)
-
         return render(request, 'savannahv2/member_profile.html', view.context)
 
 from django.http import JsonResponse
+@login_required
+def add_note(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    if request.method == "POST":
+        note_content = request.POST.get('note_content')
+        if note_content is None or note_content == '':
+            return JsonResponse({'success': False, 'errors':'No content provided'}, status=400)
+        new_note = Note.objects.create(member=member, author=request.user, content=note_content)
+        return JsonResponse({'success': True, 'errors':None})
+    return JsonResponse({'success': False, 'errors':'Only POST method supported'}, status=405)
+
 @login_required
 def tag_member(request, member_id):
     member = get_object_or_404(Member, id=member_id)
@@ -405,7 +421,8 @@ def tag_member(request, member_id):
         tag_ids = request.POST.getlist('tag_select')
         tags = Tag.objects.filter(community=member.community, id__in=tag_ids)
         member.tags.set(tags)
-    return JsonResponse({'success': True, 'errors':None})
+        return JsonResponse({'success': True, 'errors':None})
+    return JsonResponse({'success': False, 'errors':'Only POST method supported'}, status=405)
 
 class MemberEditForm(forms.ModelForm):
     class Meta:

@@ -32,11 +32,11 @@
                 <div class="card-body">
                 <div class="container-fluid">
                   <div class="row mb-2">
-                    <div class="mb-2 col-lg-2 font-weight-bold">Active:</div>
+                    <div class="mb-2 col-lg-2 font-weight-bold">Active</div>
                     <div class="mb-2 col-lg-10">{{view.member.first_seen.date}} - {{view.member.last_seen.date}}</div>
                   </div>
                   <div class="row mb-2">
-                    <div class="mb-2 col-lg-2 font-weight-bold">Role:</div>
+                    <div class="mb-2 col-lg-2 font-weight-bold">Role</div>
                     <div class="mb-2 col-lg-10">{{view.member.get_role_display}}</div>
                   </div>
                   <div class="row mb-2">
@@ -77,16 +77,51 @@
                     <div class="mb-2 col-lg-10">{{view.member.mailing_address}}</div>
                   </div>
                   {% endif %}
-                  {% if view.member.note_set.count %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Notes</div>
                     <div class="mb-2 col-lg-10">
+                      <div id="notes_div">
                       {% for note in view.member.note_set.all %}
-                        <div class="{% if not forloop.last %}mb-3{% endif %}"><span class="small font-weight-bold">{{note.timestamp}} - {{note.author}}</span><br/><span>{{note.content|linebreaksbr}}</span></div>
+                        <div class="mb-2"><span class="small font-weight-bold">{{note.timestamp.date}} - {{note.author}}</span><br/><span>{{note.content|linebreaksbr}}</span></div>
                       {% endfor %}
+                      </div>
+                      <a class="small" href="#" title="Add Note" role="button" id="openNoteDialogLink" data-toggle="modal" data-target="#noteDialog">
+                        <i class="fas fa-sticky-note text-gray-500"> </i>
+                      </a>
                     </div>
+                    <!-- Member Note Modal -->
+                    <div class="modal fade" id="noteDialog" role="dialog">
+                      <div class="modal-dialog">
+                      
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title">Member Note</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                            </button>
+                          </div>
+                          <form id="note_form" action="#" method="POST" class="form">
+                          {% csrf_token %}
+                          <div class="modal-body">
+                            <div id="div_id_note_content" class="form-group"> 
+                              <label for="id_note_content" class="">Note</label>
+                              <div class="">
+                                <textarea name="note_content" cols="40" rows="6" maxlength="256" class="textarea form-control" id="id_note_content"></textarea>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="note_cancel">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="note_submit">Save</button>
+                          </div>
+                          </form>
+                        </div>
+                        
+                      </div>
+                    </div>
+
                   </div>
-                  {% endif %}
                 </div>            
 
                 </div>
@@ -280,6 +315,26 @@ $('#tag_form_dropdown').on('hide.bs.dropdown', function () {
     $.post( "{% url 'member_tag_form' view.member.id %}", tag_form.serialize(), function(data) {
         var tag_row = document.getElementById("tag_row");
         tag_row.innerHTML = tags_html
+      },
+      'json' // I expect a JSON response
+    );
+});
+
+$('#note_cancel').on('click', function(event) {
+  $('#note_form').trigger('reset');
+  $('#noteDialog').modal('hide');
+});
+
+$('#note_submit').on('click', function(event) {
+    var note_form = $('form#note_form');
+    var tstamp = new Date();
+    var note_content = document.getElementById('id_note_content').value
+    $.post( "{% url 'member_note_form' view.member.id %}", note_form.serialize(), function(data) {
+      var new_note = `<div class="mb-3"><span class="small font-weight-bold">${tstamp.toDateString()} - {{request.user.username}}</span><br/><span>${note_content}</span></div>`
+      var notes_div = document.getElementById("notes_div")
+      notes_div.innerHTML = new_note + notes_div.innerHTML
+      $('#note_form').trigger('reset');
+      $('#noteDialog').modal('hide');
       },
       'json' // I expect a JSON response
     );
