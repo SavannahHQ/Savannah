@@ -13,7 +13,7 @@
           <div class="row">
 
             <!-- Area Chart -->
-            <div class="col-xl-8 col-lg-7">
+            <div class="col-xl-12 col-lg-6">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -28,23 +28,55 @@
               </div>
             </div>
 
-            <!-- Pie Chart -->
-            <div class="col-xl-4 col-lg-5">
+            <!-- Channels Chart -->
+            <div class="col-xl-4 col-lg-6">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Conversations by Channels</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.channelsChart.title}}</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="chart-pie pt-4 pb-2">
-                    <canvas id="channelChart"></canvas>
+                    <canvas id="{{view.channelsChart.id}}"></canvas>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
+            <!-- Tags Chart -->
+            <div class="col-xl-4 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.tagsChart.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.tagsChart.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Roles Chart -->
+            <div class="col-xl-4 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.rolesChart.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.rolesChart.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
           <!-- Content Row -->
           <div class="row">
 
@@ -287,35 +319,9 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
-  <script>
-var ctx = document.getElementById("channelChart");
-var myPieChart = new Chart(ctx, {
-  type: 'doughnut',
-  data: {
-    labels: {{view.channel_names|safe}},
-    datasets: [{
-      data: {{view.channel_counts|safe}},
-      backgroundColor: {{view.channel_colors|safe}},
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
-    },
-    legend: {
-      display: true
-    },
-    cutoutPercentage: 0,
-  },
-});
-  </script>
+  {% for chart in view.charts %}
+  <!-- {{chart.id}} -->
+  {% include chart.script_template %}
+  {% endfor %}
+
 {% endblock %}

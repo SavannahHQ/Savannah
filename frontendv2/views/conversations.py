@@ -7,14 +7,18 @@ from django.utils.safestring import mark_safe
 
 from corm.models import *
 from frontendv2.views import SavannahFilterView
+from frontendv2.views.charts import PieChart
 
 class Conversations(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "conversations"
-        
+        self.charts = set()
+
         self._membersChart = None
         self._channelsChart = None
+        self._tagsChart = None
+        self._rolesChart = None
 
         self.RESULTS_PER_PAGE = 25
 
@@ -98,13 +102,10 @@ class Conversations(SavannahFilterView):
         (months, counts) = self.getConversationsChart()
         return [counts[month] for month in months]
 
-    def getChannelsChart(self):
-        channel_names = dict()
+    def channelsChart(self):
         if not self._channelsChart:
             channels = list()
             counts = dict()
-            from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
-            next_color = 0
             channels = Channel.objects.filter(source__community=self.community)
             convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
@@ -120,34 +121,59 @@ class Conversations(SavannahFilterView):
             for c in channels.order_by("-conversation_count"):
                 if c.conversation_count == 0:
                     continue
-                if not c.color:
-                    c.color = from_colors[next_color]
-                    next_color += 1
-                    if next_color >= len(from_colors):
-                        next_color = 0    
-
                 counts[c] = c.conversation_count
-            self._channelsChart = [("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._channelsChart) > 8:
-                other_count = sum([count for channel, count, color in self._channelsChart[7:]])
-                self._channelsChart = self._channelsChart[:7]
-                self._channelsChart.append(("Other", other_count, 'dfdfdf'))
+            self._channelsChart = PieChart("channelsChart", title="Conversations by Channel", limit=8)
+            for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._channelsChart.add("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color)
+        self.charts.add(self._channelsChart)
         return self._channelsChart
 
-    @property
-    def channel_names(self):
-        chart = self.getChannelsChart()
-        return str([channel[0] for channel in chart])
+    def tagsChart(self):
+        if not self._tagsChart:
+            counts = dict()
+            tags = Tag.objects.filter(community=self.community)
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            if self.tag:
+                convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            if self.role:
+                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
+            if self.search:
+                convo_filter = convo_filter & Q(conversation__content__icontains=self.search)
 
-    @property
-    def channel_counts(self):
-        chart = self.getChannelsChart()
-        return [channel[1] for channel in chart]
+            tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
 
-    @property
-    def channel_colors(self):
-        chart = self.getChannelsChart()
-        return ['#'+channel[2] for channel in chart]
+            for t in tags:
+                counts[t] = t.conversation_count
+            self._tagsChart = PieChart("tagsChart", title="Conversations by Tag", limit=8)
+            for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._tagsChart.add("#%s" % tag.name, count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
+
+    def rolesChart(self):
+        if not self._rolesChart:
+            counts = dict()
+            members = Member.objects.filter(community=self.community)
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            if self.tag:
+                convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            if self.role:
+                members = members.filter(role=self.role)
+            if self.search:
+                convo_filter = convo_filter & Q(conversation__content__icontains=self.search)
+
+            members = members.annotate(conversation_count=Count('conversation', filter=convo_filter))
+
+            for m in members:
+                if m.role in counts:
+                    counts[m.role] += 1
+                else:
+                    counts[m.role] = 1
+            self._rolesChart = PieChart("rolesChart", title="Conversations by Role")
+            for role, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._rolesChart.add(Member.ROLE_NAME[role], count)
+        self.charts.add(self._rolesChart)
+        return self._rolesChart
 
     @property
     def most_active(self):

@@ -90,6 +90,11 @@ class Member(TaggableModel):
         (STAFF, 'Staff'),
         (BOT, 'Bot'),
     ]
+    ROLE_NAME = {
+        COMMUNITY: "Community",
+        STAFF: "Staff",
+        BOT: "Bot"
+    }
     class Meta:
         ordering = ("name",)
         unique_together = [["community", "user"]]
