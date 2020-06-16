@@ -95,6 +95,7 @@ class Members(SavannahFilterView):
         if not self._membersChart:
             months = list()
             counts = dict()
+            last_seen = dict()
             total = 0
             members = Member.objects.filter(community=self.community)
             if self.tag:
@@ -108,18 +109,31 @@ class Members(SavannahFilterView):
                 if month not in months:
                     months.append(month)
                 counts[month] = total
-            self._membersChart = (months, counts)
+                if m.last_seen is not None:
+                    last_seen_month = str(m.last_seen)[:7]
+                    if last_seen_month not in months:
+                        months.append(last_seen_month)
+                    if last_seen_month not in last_seen:
+                        last_seen[last_seen_month] = 1
+                    else:
+                        last_seen[last_seen_month] += 1
+            self._membersChart = (sorted(months), counts, last_seen)
         return self._membersChart
         
     @property
     def members_chart_months(self):
-        (months, counts) = self.getMembersChart()
+        (months, counts, last_seen) = self.getMembersChart()
         return [month for month in months[-12:]]
 
     @property
     def members_chart_counts(self):
-        (months, counts) = self.getMembersChart()
-        return [counts[month] for month in months[-12:]]
+        (months, counts, last_seen) = self.getMembersChart()
+        return [counts.get(month, 0) for month in months[-12:]]
+
+    @property
+    def members_chart_last_seen(self):
+        (months, counts, last_seen) = self.getMembersChart()
+        return [last_seen.get(month, 0) for month in months[-12:]]
 
     def getTagsChart(self):
         if not self._tagsChart:

@@ -136,7 +136,7 @@ var myLineChart = new Chart(ctx, {
   data: {
     labels: {{view.members_chart_months|safe}},
     datasets: [{
-      label: "Members",
+      label: "Total Members",
       lineTension: 0.3,
       backgroundColor: "rgba(78, 115, 223, 0.05)",
       borderColor: "rgba(78, 115, 223, 1)",
@@ -149,6 +149,21 @@ var myLineChart = new Chart(ctx, {
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: {{view.members_chart_counts|safe}},
+    },
+    {
+      label: "Last Seen",
+      lineTension: 0.3,
+      backgroundColor: "#886fc922",
+      borderColor: "#886fc9",
+      pointRadius: 3,
+      pointBackgroundColor: "#886fc9",
+      pointBorderColor: "#886fc9",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#886fc9",
+      pointHoverBorderColor: "#886fc9",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_last_seen|safe}},
     }],
   },
   options: {
