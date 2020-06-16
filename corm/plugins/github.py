@@ -180,7 +180,7 @@ class GithubImporter(PluginImporter):
             'Authorization': 'token %s' % source.auth_secret,
         }
         self.TIMESTAMP_FORMAT = GITHUB_TIMESTAMP
-        self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Ruest")
+        self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
 
     def api_call(self, path):
         if settings.DEBUG:

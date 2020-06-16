@@ -143,7 +143,7 @@ class Command(BaseCommand):
                     from_member.tags.add(tag)
 
         print("Generating Contributions...")
-        pr, created = ContributionType.objects.get_or_create(community=community, source=github, name="Pull Ruest")
+        pr, created = ContributionType.objects.get_or_create(community=community, source=github, name="Pull Request")
         for contributor in random.sample(members, k=random.randint(int(member_count/11), int(member_count/9))):
             for i in range(random.choices([5, 4, 3, 2, 1], cum_weights=[5, 10, 20, 50, 90], k=1)[0]):
                 contribution_title = lorem.get_sentence(count=1, word_range=(5, 20))
