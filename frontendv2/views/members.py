@@ -103,16 +103,16 @@ class Members(SavannahFilterView):
                 members = members.filter(tags=self.tag)
             if self.role:
                 members = members.filter(role=self.role)
-            members = members.annotate(month=TruncMonth('first_seen')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
-            for m in members:
+            seen = members.annotate(month=TruncMonth('first_seen')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+            for m in seen:
                 total += 1
                 month = str(m['month'])[:7]
                 if month not in months:
                     months.append(month)
                 counts[month] = m['member_count']
 
-            activity = Member.objects.filter(community=self.community).annotate(month=TruncMonth('speaker_in__timestamp')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
-            for a in activity:
+            active = members.annotate(month=TruncMonth('speaker_in__timestamp')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+            for a in active:
                 if a['month'] is not None:
                     month = str(a['month'])[:7]
                     if month not in months:
