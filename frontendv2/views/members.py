@@ -103,20 +103,21 @@ class Members(SavannahFilterView):
                 members = members.filter(tags=self.tag)
             if self.role:
                 members = members.filter(role=self.role)
-            members = members.order_by("first_seen")
+            members = members.annotate(month=TruncMonth('first_seen')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for m in members:
                 total += 1
-                month = str(m.first_seen)[:7]
+                month = str(m['month'])[:7]
                 if month not in months:
                     months.append(month)
-                counts[month] = total
+                counts[month] = m['member_count']
 
-            activity = Conversation.objects.filter(channel__source__community=self.community).annotate(month=TruncMonth('timestamp')).values('month').annotate(member_count=Count('participants', distinct=True)).order_by('month')
+            activity = Member.objects.filter(community=self.community).annotate(month=TruncMonth('speaker_in__timestamp')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for a in activity:
-                month = str(a['month'])[:7]
-                if month not in months:
-                    months.append(month)
-                monthly_active[month] = a['member_count']
+                if a['month'] is not None:
+                    month = str(a['month'])[:7]
+                    if month not in months:
+                        months.append(month)
+                    monthly_active[month] = a['member_count']
             self._membersChart = (sorted(months), counts, monthly_active)
         return self._membersChart
         
@@ -128,7 +129,12 @@ class Members(SavannahFilterView):
     @property
     def members_chart_counts(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        return [counts.get(month, 0) for month in months[-12:]]
+        total = 0
+        cumulative_counts = dict()
+        for month in months:
+            total += counts.get(month, 0)
+            cumulative_counts[month] = total
+        return [cumulative_counts.get(month, 0) for month in months[-12:]]
 
     @property
     def members_chart_monthly_active(self):
