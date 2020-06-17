@@ -132,8 +132,14 @@ class Members(SavannahFilterView):
 
     @property
     def members_chart_last_seen(self):
+        total = 0
+        inactive_counts = dict()
         (months, counts, last_seen) = self.getMembersChart()
-        return [last_seen.get(month, 0) for month in months[-12:]]
+        for i, month in enumerate(months[:-1]):
+            total += last_seen.get(month, 0)
+            next_month = months[i+1]
+            inactive_counts[next_month] = total
+        return [inactive_counts.get(month, 0) for month in months[-12:]]
 
     def getTagsChart(self):
         if not self._tagsChart:
