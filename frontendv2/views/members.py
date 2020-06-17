@@ -4,6 +4,7 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
+from django.db.models.functions import TruncMonth
 from django import forms
 from django.http import JsonResponse
 
@@ -95,7 +96,7 @@ class Members(SavannahFilterView):
         if not self._membersChart:
             months = list()
             counts = dict()
-            last_seen = dict()
+            monthly_active = dict()
             total = 0
             members = Member.objects.filter(community=self.community)
             if self.tag:
@@ -109,37 +110,30 @@ class Members(SavannahFilterView):
                 if month not in months:
                     months.append(month)
                 counts[month] = total
-                if m.last_seen is not None:
-                    last_seen_month = str(m.last_seen)[:7]
-                    if last_seen_month not in months:
-                        months.append(last_seen_month)
-                    if last_seen_month not in last_seen:
-                        last_seen[last_seen_month] = 1
-                    else:
-                        last_seen[last_seen_month] += 1
-            self._membersChart = (sorted(months), counts, last_seen)
+
+            activity = Conversation.objects.filter(channel__source__community=self.community).annotate(month=TruncMonth('timestamp')).values('month').annotate(member_count=Count('participants', distinct=True)).order_by('month')
+            for a in activity:
+                month = str(a['month'])[:7]
+                if month not in months:
+                    months.append(month)
+                monthly_active[month] = a['member_count']
+            self._membersChart = (sorted(months), counts, monthly_active)
         return self._membersChart
         
     @property
     def members_chart_months(self):
-        (months, counts, last_seen) = self.getMembersChart()
+        (months, counts, monthly_active) = self.getMembersChart()
         return [month for month in months[-12:]]
 
     @property
     def members_chart_counts(self):
-        (months, counts, last_seen) = self.getMembersChart()
+        (months, counts, monthly_active) = self.getMembersChart()
         return [counts.get(month, 0) for month in months[-12:]]
 
     @property
-    def members_chart_last_seen(self):
-        total = 0
-        inactive_counts = dict()
-        (months, counts, last_seen) = self.getMembersChart()
-        for i, month in enumerate(months[:-1]):
-            total += last_seen.get(month, 0)
-            next_month = months[i+1]
-            inactive_counts[next_month] = total
-        return [inactive_counts.get(month, 0) for month in months[-12:]]
+    def members_chart_monthly_active(self):
+        (months, counts, monthly_active) = self.getMembersChart()
+        return [monthly_active.get(month, 0) for month in months[-12:]]
 
     def getTagsChart(self):
         if not self._tagsChart:
