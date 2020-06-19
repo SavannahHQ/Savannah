@@ -34,9 +34,13 @@ class GithubOrgForm(forms.ModelForm):
         widgets = {
             'auth_id': forms.Select(),
         }
+    class Media:
+        js = ('js/form_other_field.js',)
+    
     def __init__(self, *args, **kwargs):
         super(GithubOrgForm, self).__init__(*args, **kwargs)
         self.fields['auth_id'].required = True
+        self.fields['other'] = forms.CharField(label="Github URL", required=False)
 
 class SourceAdd(SavannahView):
     def _add_sources_message(self):
@@ -65,6 +69,12 @@ class SourceAdd(SavannahView):
             form = GithubOrgForm(data=request.POST, instance=new_source)
             if form.is_valid():
                 source = form.save(commit=False)
+                if source.auth_id == 'other':
+                    github_url = form.cleaned_data['other']
+                    if github_url.startswith('https://'):
+                        github_url = github_url[8:]
+                    url_parts = github_url.split('/')
+                    source.auth_id = url_parts[1]
                 source.name = source.auth_id
                 source.save()
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
@@ -84,6 +94,7 @@ class SourceAdd(SavannahView):
                 org_choices.append((org['login'], org['login']))
         else:
             messages.error(request, "Failed to retrieve Github orgs: %s"%  resp.content)
+        org_choices.append(("other", "other..."))
         form = GithubOrgForm(instance=new_source)
         form.fields['auth_id'].widget.choices = org_choices
         context = view.context
