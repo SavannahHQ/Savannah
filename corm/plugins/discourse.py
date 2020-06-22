@@ -29,6 +29,8 @@ class DiscourseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(DiscourseForm, self).__init__(*args, **kwargs)
         self.fields['server'].required = True
+        self.fields['auth_id'].required = True
+        self.fields['auth_secret'].required = True
 
 class SourceAdd(SavannahView):
     def _add_sources_message(self):
@@ -134,10 +136,6 @@ class DiscourseImporter(PluginImporter):
             identity.member.save()
         else:
             print("Failed to lookup identity info: %s" % resp.status_code)
-
-    def get_channels(self):
-        channels = self.source.channel_set.filter(origin_id__isnull=False).order_by('last_import')
-        return channels
 
     def import_channel(self, channel):
       discourse_path = channel.origin_id.split('/')
