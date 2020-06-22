@@ -15,6 +15,7 @@ DISCOURSE_TOPICS_URL = '/c/%(id)s.json?page=%(page)s'
 DISCOURSE_POSTS_URL = '/t/%(id)s.json?print=true'
 DISCOURSE_POST_URL = '/t/%(id)s/posts.json?'
 DISCOURSE_CATEGORIES_URL = '/categories.json'
+DISCOURSE_CATEGORY_URL = '/c/%(id)s/show.json'
 
 class DiscourseForm(forms.ModelForm):
     class Meta:
@@ -87,6 +88,19 @@ class DiscoursePlugin(BasePlugin):
                     'topic': category.get('description_text'),
                     'count': category.get('topics_all_time'),
                 })
+                subcategories = category.get('subcategory_ids')
+                if subcategories:
+                    for sub_id in subcategories:
+                        resp = importer.api_call(DISCOURSE_CATEGORY_URL % {'id': sub_id})
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            sub = data.get('category')
+                            channels.append({
+                                'id': '%s/c/%s/%s/%s' % (source.server, category.get('slug'), sub.get('slug'), sub_id),
+                                'name': '%s / %s' % (category.get('name'), sub.get('name')),
+                                'topic': sub.get('description_text'),
+                                'count': sub.get('topic_count'),
+                            })
         return channels
 
 class DiscourseImporter(PluginImporter):
@@ -121,11 +135,16 @@ class DiscourseImporter(PluginImporter):
         else:
             print("Failed to lookup identity info: %s" % resp.status_code)
 
+    def get_channels(self):
+        channels = self.source.channel_set.filter(origin_id__isnull=False).order_by('last_import')
+        return channels
+
     def import_channel(self, channel):
       discourse_path = channel.origin_id.split('/')
 
-      category_name = discourse_path[4]
-      category_id = discourse_path[5]
+      category_name = discourse_path[-2]
+      category_id = int(discourse_path[-1])
+
       if channel.last_import:
           from_date = channel.last_import
       else:
@@ -147,7 +166,11 @@ class DiscourseImporter(PluginImporter):
 
             new_topics = 0
             for topic in data.get('topic_list').get('topics'):
+                if topic['category_id'] != category_id:
+                    # Topic belongs to a sub-category
+                    continue
                 if topic['posts_count'] < 2:
+                    # Topic has no conversation
                     continue
                 last_posted = self.strptime(topic['last_posted_at'])
                 if last_posted < from_date:

@@ -107,18 +107,28 @@ class Channels(SavannahView):
     def all_channels(self):
         return Channel.objects.filter(source=self.source).annotate(conversation_count=Count('conversation', distinct=True))
 
-    def fetch_available_channels(self):
-        tracked_channel_ids = [channel.origin_id for channel in Channel.objects.filter(source=self.source)]
+    def _get_source_channels(self, request):
         channels = []
+        if 'source_channels_cache' in request.session:
+            if int(request.session.get('source_channels_source')) == self.source.id and request.session.get('source_channels_expiration') >= datetime.datetime.timestamp(datetime.datetime.utcnow()):
+                return request.session.get('source_channels_cache')
         if self.source.connector in ConnectionManager.CONNECTOR_PLUGINS:
             plugin  = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
             try:
-                source_channels = plugin.get_channels(self.source)
-                for channel in source_channels:
-                    if channel['id'] not in tracked_channel_ids:
-                        channels.append(channel)
+                channels = plugin.get_channels(self.source)
+                request.session['source_channels_cache'] = channels
+                request.session['source_channels_source'] = self.source.id
+                request.session['source_channels_expiration'] = datetime.datetime.timestamp(datetime.datetime.utcnow() + datetime.timedelta(minutes=10))
             except Exception as e:
                 messages.warning(self.request, "Unable to list available channels: %s" % e)
+        return channels
+
+    def fetch_available_channels(self, request):
+        tracked_channel_ids = [channel.origin_id for channel in Channel.objects.filter(source=self.source)]
+        channels = []
+        for channel in self._get_source_channels(request):
+            if channel['id'] not in tracked_channel_ids:
+                channels.append(channel)
         self.available_channels = sorted(channels, key=lambda c: c['count'], reverse=True)
 
     def track_channel(self, origin_id):
@@ -158,7 +168,7 @@ class Channels(SavannahView):
                 return redirect('channels', community_id=community_id, source_id=source_id)
 
 
-        view.fetch_available_channels()
+        view.fetch_available_channels(request)
         return render(request, "savannahv2/channels.html", view.context)
 
 from django.http import JsonResponse
