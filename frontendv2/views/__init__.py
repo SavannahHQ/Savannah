@@ -173,7 +173,7 @@ class SavannahFilterView(SavannahView):
     def trunc_date(self, date):
         if self.timespan > 30:
             return str(date)[:7]
-        elif self.timespan >= 7:
+        elif self.timespan > 3:
             return str(date)[:10]
         else:
             return "%s %s:00" % (str(date)[:10], date.hour)
@@ -182,10 +182,10 @@ class SavannahFilterView(SavannahView):
     def trunc_span(self):
         if self.timespan > 30:
             return "month"
-        elif self.timespan == 1:
-            return "hour"
-        else:
+        elif self.timespan > 3:
             return "day"
+        else:
+            return "hour"
 
     @property
     def timespan_chart_span(self):
@@ -193,7 +193,7 @@ class SavannahFilterView(SavannahView):
             return 12
         elif self.timespan > 30:
             return 6
-        elif self.timespan == 1:
-            return 24
-        else:
+        elif self.timespan > 3:
             return self.timespan
+        else:
+            return self.timespan * 24
