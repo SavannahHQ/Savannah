@@ -138,7 +138,7 @@ class SavannahFilterView(SavannahView):
                     if self.timespan > self.MAX_TIMESPAN or self.timespan < 1:
                         self.timespan = self.MAX_TIMESPAN
                     request.session['timespan'] = self.timespan
-            elif 'role' in request.session:
+            elif 'timespan' in request.session:
                 self.timespan = request.session.get('timespan')
         except:
             self.timespan = self.MAX_TIMESPAN
