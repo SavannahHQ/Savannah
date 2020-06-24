@@ -1,5 +1,19 @@
           <span id="filter-bar" class="">
             <span class="dropdown">
+            {% if view.timespan == view.MAX_TIMESPAN %}
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-calendar"></i> Past Year</button>
+            {% else %}
+              <button style="white-space:nowrap;" class="btn dropdown-toggle btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{{view.timespan_icon}}"></i> {{view.timespan_display}}</button>
+            {% endif %}
+              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item p-2" href="?timespan={{view.MAX_TIMESPAN}}"><i class="fas fa-calendar"></i> Past Year</a>
+                    <a class="dropdown-item p-2" href="?timespan=180"><i class="fas fa-calendar-plus"></i> 6 Months</a>
+                    <a class="dropdown-item p-2" href="?timespan=30"><i class="fas fa-calendar-alt"></i> 30 Days</a>
+                    <a class="dropdown-item p-2" href="?timespan=7"><i class="fas fa-calendar-week"></i> Last Week</a>
+                    <a class="dropdown-item p-2" href="?timespan=1"><i class="fas fa-calendar-day"></i> Today</a>
+              </div>
+            </span>
+            <span class="dropdown">
             {% if view.role %}
               <button style="white-space:nowrap;" class="btn dropdown-toggle btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {% if view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% else %}Bots{% endif %}</button>
             {% else %}

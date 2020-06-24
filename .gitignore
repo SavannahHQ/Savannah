@@ -3,3 +3,4 @@
 .vscode
 local_settings.py
 /static/
+/env/

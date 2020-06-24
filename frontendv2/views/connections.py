@@ -38,7 +38,7 @@ class Connections(SavannahFilterView):
             connections = connections.order_by("first_connected")
             for c in connections:
                 total += 1
-                month = str(c.first_connected)[:7]
+                month = self.trunc_date(c.first_connected)
                 if month not in months:
                     months.append(month)
                 counts[month] = total
@@ -48,18 +48,18 @@ class Connections(SavannahFilterView):
     @property
     def connections_chart_months(self):
         (months, counts) = self.getConnectionsChart()
-        return months[-6:]
+        return months[-self.timespan_chart_span:]
 
     @property
     def connections_chart_counts(self):
         (months, counts) = self.getConnectionsChart()
-        return [counts[month]/2 for month in months[-6:]]
+        return [counts[month]/2 for month in months[-self.timespan_chart_span:]]
 
     def getSourcesChart(self):
         channel_names = dict()
         if not self._sourcesChart:
             counts = dict()
-            connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=180))
+            connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
             if self.role:
@@ -102,15 +102,19 @@ class Connections(SavannahFilterView):
         member_map = dict()
         connection_counts = dict()
         connected = set()
-
-        connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        if view.timespan <= 30:
+            timespan = view.timespan
+        else:
+            timespan = 30
+        
+        connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=timespan))
         if view.tag:
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
         if view.role:
             connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
-        connections = connections.select_related('from_member', 'to_member')
+        connections = connections.select_related('from_member', 'to_member').order_by('-last_connected')
 
-        for connection in connections:
+        for connection in connections[:10000]:
             if connection.from_member_id != connection.to_member_id:
                 if not (connection.to_member_id, connection.from_member_id) in connected: 
                     links.append({"source":connection.from_member_id, "target":connection.to_member_id})
@@ -133,9 +137,9 @@ class Connections(SavannahFilterView):
                 tags = Tag.objects.filter(member__id=member_id)
                 if len(tags) > 0:
                     tag_color = tags[0].color
-            elif member.role == Member.BOT:
+            if tag_color is None and member.role == Member.BOT:
                 tag_color = "aeaeae"
-            elif member.role == Member.STAFF:
+            elif tag_color is None and member.role == Member.STAFF:
                 tag_color = "36b9cc"
             if tag_color is None:
                 tag_color = "1f77b4"

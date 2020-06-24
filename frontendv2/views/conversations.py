@@ -82,7 +82,7 @@ class Conversations(SavannahFilterView):
             conversations = conversations.order_by("timestamp")
 
             for m in conversations:
-                month = str(m.timestamp)[:7]
+                month = self.trunc_date(m.timestamp)
                 if month not in months:
                     months.append(month)
                 if month not in counts:
@@ -95,19 +95,19 @@ class Conversations(SavannahFilterView):
     @property
     def conversations_chart_months(self):
         (months, counts) = self.getConversationsChart()
-        return months
+        return months[-self.timespan_chart_span:]
 
     @property
     def conversations_chart_counts(self):
         (months, counts) = self.getConversationsChart()
-        return [counts[month] for month in months]
+        return [counts[month] for month in months[-self.timespan_chart_span:]]
 
     def channelsChart(self):
         if not self._channelsChart:
             channels = list()
             counts = dict()
             channels = Channel.objects.filter(source__community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
@@ -132,7 +132,7 @@ class Conversations(SavannahFilterView):
         if not self._tagsChart:
             counts = dict()
             tags = Tag.objects.filter(community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
@@ -160,7 +160,7 @@ class Conversations(SavannahFilterView):
                 Member.BOT: 'dfdfdf'
             }
             members = Member.objects.filter(community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
@@ -185,7 +185,7 @@ class Conversations(SavannahFilterView):
     def most_active(self):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.role:
@@ -206,7 +206,7 @@ class Conversations(SavannahFilterView):
         if self.search:
             return []
         members = Member.objects.filter(community=self.community)
-        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.role:

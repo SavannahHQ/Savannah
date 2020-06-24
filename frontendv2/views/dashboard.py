@@ -58,9 +58,9 @@ class Dashboard(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
         if self.tag:
-            members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30), conversation__tags=self.tag)))
+            members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan), conversation__tags=self.tag)))
         else:
-            members = members.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+            members = members.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))))
         for m in members:
             activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
@@ -73,9 +73,9 @@ class Dashboard(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
         if self.tag:
-            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30), connections__tags=self.tag)))
+            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan), connections__tags=self.tag)))
         else:
-            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))))
 
         connection_counts = dict()
         for m in members:
@@ -89,8 +89,8 @@ class Dashboard(SavannahFilterView):
             months = list()
             counts = dict()
             total = 0
-            members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=180))
-            total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=180))
+            members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 members = members.filter(tags=self.tag)
                 total = total.filter(tags=self.tag)
@@ -102,7 +102,8 @@ class Dashboard(SavannahFilterView):
             members = members.order_by("first_seen")
             for m in members:
                 total += 1
-                month = str(m.first_seen)[:7]
+                month = self.trunc_date(m.first_seen)
+
                 if month not in months:
                     months.append(month)
                 counts[month] = total
@@ -112,19 +113,19 @@ class Dashboard(SavannahFilterView):
     @property
     def members_chart_months(self):
         (months, counts) = self.getMembersChart()
-        return [month for month in months[-12:]]
+        return [month for month in months[-self.timespan_chart_span:]]
 
     @property
     def members_chart_counts(self):
         (months, counts) = self.getMembersChart()
-        return [counts[month] for month in months[-12:]]
+        return [counts[month] for month in months[-self.timespan_chart_span:]]
 
     def getChannelsChart(self):
         channel_names = dict()
         if not self._channelsChart:
             counts = dict()
             total = 0
-            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
             if self.role:

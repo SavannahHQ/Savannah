@@ -80,7 +80,7 @@
                 {% for member, date in view.recent_contributors %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
@@ -97,7 +97,7 @@
               <!-- Top Contributors -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors (6 months)</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors</h6>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <table class="table">
@@ -111,7 +111,7 @@
                 {% for member, count in view.top_contributors %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -133,7 +133,7 @@
               <!-- Top Supporters -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Top Supporters (30 days)</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Top Supporters</h6>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <table class="table">
@@ -147,7 +147,7 @@
                 {% for member, convo_count in view.top_supporters %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{convo_count}}</td>
@@ -166,7 +166,7 @@
               <!-- Top Enablers -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Top Enablers (30 days)</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Top Enablers</h6>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <table class="table">
@@ -180,7 +180,7 @@
                 {% for member, convo_count in view.top_enablers %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{convo_count}}</td>
@@ -201,7 +201,8 @@
             <!-- Content Column -->
             <div class="col-lg-12 mb-4">
 
-              <!-- Most Active Users-->
+              <!-- All Contributions -->
+              <a name="conversations" />
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Contributions</h6>
@@ -237,6 +238,30 @@
                 {% endfor %}
                 </tbody>
                 </table>
+
+                {% if view.has_pages %}
+                <nav aria-label="Contribution table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page=1#conributions" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conributions">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}#conributions" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+
+
                 </div>
               </div>
 

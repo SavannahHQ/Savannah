@@ -77,7 +77,7 @@
                 {% for member in view.new_members %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.first_seen}}</td>
@@ -109,7 +109,7 @@
                 {% for member, date in view.recently_active %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
@@ -136,7 +136,7 @@ var myLineChart = new Chart(ctx, {
   data: {
     labels: {{view.members_chart_months|safe}},
     datasets: [{
-      label: "Total Members",
+      label: "Joined",
       lineTension: 0.3,
       backgroundColor: "rgba(78, 115, 223, 0.05)",
       borderColor: "rgba(78, 115, 223, 1)",
@@ -151,7 +151,7 @@ var myLineChart = new Chart(ctx, {
       data: {{view.members_chart_counts|safe}},
     },
     {
-      label: "Monthly Active",
+      label: "Active",
       lineTension: 0.3,
       backgroundColor: "#1cc88a22",
       borderColor: "#1cc88a",

@@ -15,6 +15,18 @@ class Contributions(SavannahFilterView):
         self._membersChart = None
         self._channelsChart = None
 
+        self.RESULTS_PER_PAGE = 25
+
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower()
+        else:
+            self.search = None
+        self.result_count = 0
 
     @property
     def all_contributions(self):
@@ -26,7 +38,23 @@ class Contributions(SavannahFilterView):
             contributions = contributions.filter(author__role=self.role)
 
         contributions = contributions.annotate(author_name=F('author__name'), tag_count=Count('tags'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).order_by('-timestamp')
-        return contributions[:100]
+        self.result_count = contributions.count()
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return contributions[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return min(10, pages+1)
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return [page+1 for page in range(min(10, pages+1))]
 
     @property
     def recent_contributors(self):
@@ -50,7 +78,7 @@ class Contributions(SavannahFilterView):
     def top_contributors(self):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=182))
+        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -69,7 +97,7 @@ class Contributions(SavannahFilterView):
         activity_counts = dict()
         contributor_ids = set()
         contributors = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -96,7 +124,7 @@ class Contributions(SavannahFilterView):
         activity_counts = dict()
         contributor_ids = set()
         contributors = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -123,7 +151,7 @@ class Contributions(SavannahFilterView):
             months = list()
             counts = dict()
 
-            contributions = Contribution.objects.filter(community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            contributions = Contribution.objects.filter(community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
 
@@ -132,7 +160,7 @@ class Contributions(SavannahFilterView):
             contributions = contributions.order_by("timestamp")
 
             for m in contributions:
-                month = str(m.timestamp)[:7]
+                month = self.trunc_date(m.timestamp)
                 if month not in months:
                     months.append(month)
                 if month not in counts:
@@ -145,12 +173,12 @@ class Contributions(SavannahFilterView):
     @property
     def contributions_chart_months(self):
         (months, counts) = self.getContributionsChart()
-        return months
+        return months[-self.timespan_chart_span:]
 
     @property
     def contributions_chart_counts(self):
         (months, counts) = self.getContributionsChart()
-        return [counts[month] for month in months]
+        return [counts[month] for month in months[-self.timespan_chart_span:]]
 
     def getChannelsChart(self):
         channel_names = dict()
@@ -161,7 +189,7 @@ class Contributions(SavannahFilterView):
             next_color = 0
 
             channels = Channel.objects.filter(source__community=self.community)
-            contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             if self.role:

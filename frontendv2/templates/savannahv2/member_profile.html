@@ -5,7 +5,6 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">{{view.member.name}}</h1>
-            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
           </div>
 
           <!-- Content Row -->
@@ -18,7 +17,7 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Profile</h6>
-                  <a class="text-gray-500" href="{% url 'member_profile' view.member.id %}"><i class="fas fa-edit"> </i>Edit</a>
+                  <a class="text-gray-500" href="{% url 'member_edit' view.member.id %}"><i class="fas fa-edit"> </i>Edit</a>
                     
                 </div>
                 <!-- Card Body -->

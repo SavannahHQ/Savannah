@@ -4,7 +4,7 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import Trunc
 from django import forms
 from django.http import JsonResponse
 
@@ -61,7 +61,7 @@ class Members(SavannahFilterView):
     def most_active(self):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.role:
@@ -78,7 +78,7 @@ class Members(SavannahFilterView):
     @property
     def most_connected(self):
         members = Member.objects.filter(community=self.community)
-        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))
+        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.role:
@@ -103,43 +103,41 @@ class Members(SavannahFilterView):
                 members = members.filter(tags=self.tag)
             if self.role:
                 members = members.filter(role=self.role)
-            seen = members.annotate(month=TruncMonth('first_seen')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+
+            seen = members.annotate(month=Trunc('first_seen', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for m in seen:
                 total += 1
-                month = str(m['month'])[:7]
+                month = self.trunc_date(m['month'])
+
                 if month not in months:
                     months.append(month)
                 counts[month] = m['member_count']
 
-            active = members.annotate(month=TruncMonth('speaker_in__timestamp')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+            active = members.annotate(month=Trunc('speaker_in__timestamp', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for a in active:
                 if a['month'] is not None:
-                    month = str(a['month'])[:7]
+                    month = self.trunc_date(a['month'])
+
                     if month not in months:
                         months.append(month)
                     monthly_active[month] = a['member_count']
             self._membersChart = (sorted(months), counts, monthly_active)
         return self._membersChart
-        
+
     @property
     def members_chart_months(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        return [month for month in months[-12:]]
+        return [month for month in months[-self.timespan_chart_span:]]
 
     @property
     def members_chart_counts(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        total = 0
-        cumulative_counts = dict()
-        for month in months:
-            total += counts.get(month, 0)
-            cumulative_counts[month] = total
-        return [cumulative_counts.get(month, 0) for month in months[-12:]]
+        return [counts.get(month, 0) for month in months[-self.timespan_chart_span:]]
 
     @property
     def members_chart_monthly_active(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        return [monthly_active.get(month, 0) for month in months[-12:]]
+        return [monthly_active.get(month, 0) for month in months[-self.timespan_chart_span:]]
 
     def getTagsChart(self):
         if not self._tagsChart:
@@ -179,7 +177,7 @@ class Members(SavannahFilterView):
         if not self._sourcesChart:
             counts = dict()
             other_count = 0
-            identity_filter = Q()
+            identity_filter = Q(contact__member__first_seen__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 identity_filter = identity_filter & Q(contact__member__tags=self.tag)
             if self.role:
@@ -276,7 +274,7 @@ class MemberNoteForm(forms.ModelForm):
         fields = ['content', 'tags']
 
    
-class MemberProfile(SavannahFilterView):
+class MemberProfile(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
         super().__init__(request, self.member.community_id)
@@ -289,7 +287,9 @@ class MemberProfile(SavannahFilterView):
             self.page = int(request.GET.get('page', 1))
         except:
             self.page = 1
-
+        self.tag = None
+        self.role = None
+        
     @property
     def all_conversations(self):
         conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member)

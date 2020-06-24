@@ -194,8 +194,6 @@ class GithubImporter(PluginImporter):
         self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
 
     def api_call(self, path):
-        if settings.DEBUG:
-            print("API Call: %s" % path)
         return self.api_request(path, headers=self.API_HEADERS)
 
     def update_identity(self, identity):

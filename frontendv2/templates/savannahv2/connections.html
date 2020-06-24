@@ -20,7 +20,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Community Network (30 days)</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Community Network{% if view.timespan > 30 %} (30 Days){% endif %}</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -133,8 +133,8 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
   const nodes = data.nodes.map(d => Object.create(d));
 
   const simulation = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).distance(30).id(d => d.id))
-      .force("collision", d3.forceCollide().radius(d => Math.max(1, d.connections / Math.min(30, nodes.length/5))*5))
+      .force("link", d3.forceLink(links).distance(50).id(d => d.id))
+      .force("collision", d3.forceCollide().radius(d => Math.max(5, 100*(d.connections/nodes.length))))
       .force("charge", d3.forceManyBody().strength(Math.max(-100, Math.min(-10, -(100-(nodes.length))))))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
@@ -155,7 +155,7 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-      .attr("r", d => Math.max(1, d.connections / Math.min(30, nodes.length/5))*5)
+      .attr("r", d => Math.max(5, 100*(d.connections/nodes.length)))
       .attr("fill", d => '#'+d.color)
       .call(drag(simulation));
 
@@ -231,7 +231,7 @@ var myLineChart = new Chart(ctx, {
         ticks: {
           maxTicksLimit: 5,
           padding: 10,
-          beginAtZero: true,
+          beginAtZero: false,
           // Include a dollar sign in the ticks
           callback: function(value, index, values) {
             return value;

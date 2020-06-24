@@ -93,9 +93,11 @@ class SavannahView:
 
 class SavannahFilterView(SavannahView):
     def __init__(self, request, community_id):
+        self.MAX_TIMESPAN = 365
         if community_id != request.session.get("community"):
             request.session['tag'] = None
             request.session['role'] = None
+            request.session['timespan'] = self.MAX_TIMESPAN
         super().__init__(request, community_id)
 
         self.tag = None
@@ -126,3 +128,72 @@ class SavannahFilterView(SavannahView):
             self.role = None
             request.session['role'] = None
 
+        self.timespan = self.MAX_TIMESPAN
+        try:
+            if 'timespan' in request.GET:
+                if request.GET.get('timespan') == '':
+                    request.session['timespan'] = self.MAX_TIMESPAN
+                else:
+                    self.timespan = int(request.GET.get('timespan'))
+                    if self.timespan > self.MAX_TIMESPAN or self.timespan < 1:
+                        self.timespan = self.MAX_TIMESPAN
+                    request.session['timespan'] = self.timespan
+            elif 'role' in request.session:
+                self.timespan = request.session.get('timespan')
+        except:
+            self.timespan = self.MAX_TIMESPAN
+            request.session['timespan'] = self.MAX_TIMESPAN
+
+    @property
+    def timespan_display(self):
+        if self.timespan == 180:
+            return "6 Months"
+        elif self.timespan == 30:
+            return "30 Days"
+        elif self.timespan == 7:
+            return "Last Week"
+        elif self.timespan == 1:
+            return "Today"
+        else:
+            return "%s Days" % self.timespan
+
+    @property
+    def timespan_icon(self):
+        if self.timespan == 180:
+            return "fas fa-calendar"
+        elif self.timespan == 30:
+            return "fas fa-calendar-alt"
+        elif self.timespan == 7:
+            return "fas fa-calendar-week"
+        elif self.timespan == 1:
+            return "fas fa-calendar-day"
+        else:
+            return "fas fa-calendar"
+
+    def trunc_date(self, date):
+        if self.timespan > 30:
+            return str(date)[:7]
+        elif self.timespan >= 7:
+            return str(date)[:10]
+        else:
+            return "%s %s:00" % (str(date)[:10], date.hour)
+
+    @property
+    def trunc_span(self):
+        if self.timespan > 30:
+            return "month"
+        elif self.timespan == 1:
+            return "hour"
+        else:
+            return "day"
+
+    @property
+    def timespan_chart_span(self):
+        if self.timespan > 180:
+            return 12
+        elif self.timespan > 30:
+            return 6
+        elif self.timespan == 1:
+            return 24
+        else:
+            return self.timespan
