@@ -47,6 +47,7 @@ class PluginImporter:
         self.source = source
         self.community = source.community
         self.verbosity = 0
+        self.full_import = False
         self._member_cache = dict()
         self.API_HEADERS = dict()
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
@@ -80,9 +81,13 @@ class PluginImporter:
                 member = matched_contact.member
 
             self._member_cache[origin_id] = member
-        if speaker and tstamp is not None and (member.last_seen is None or tstamp > member.last_seen):
-            member.last_seen = tstamp
-            member.save()
+        if speaker and tstamp is not None:
+            if member.first_seen is None or tstamp < member.first_seen:
+                member.first_seen = tstamp
+                member.save()
+            if member.last_seen is None or tstamp > member.last_seen:
+                member.last_seen = tstamp
+                member.save()
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None):

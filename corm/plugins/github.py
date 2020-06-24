@@ -222,7 +222,7 @@ class GithubImporter(PluginImporter):
 
       owner = github_path[3]
       repo = github_path[4]
-      if channel.last_import:
+      if channel.last_import and not self.full_import:
         from_date = channel.last_import.strftime(GITHUB_TIMESTAMP)
       else:
         from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)

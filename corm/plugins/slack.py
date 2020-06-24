@@ -106,7 +106,7 @@ class SlackImporter(PluginImporter):
     def import_channel(self, channel):
         source = channel.source
         community = source.community
-        if channel.last_import:
+        if channel.last_import and not self.full_import:
             from_date = channel.last_import
         else:
             from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)

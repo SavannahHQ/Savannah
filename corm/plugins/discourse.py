@@ -143,7 +143,7 @@ class DiscourseImporter(PluginImporter):
       category_name = discourse_path[-2]
       category_id = int(discourse_path[-1])
 
-      if channel.last_import:
+      if channel.last_import and not self.full_import:
           from_date = channel.last_import
       else:
           from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)

@@ -14,6 +14,7 @@ class Command(BaseCommand):
         parser.add_argument('importer', type=str)
         parser.add_argument('--community', dest='community_id', type=int)
         parser.add_argument('--source', dest='source_id', type=int)
+        parser.add_argument('--full', dest='full_import', action='store_true', help='Do a full import, not incremental from the previous import')
 
     def handle(self, *args, **options):
 
@@ -21,6 +22,7 @@ class Command(BaseCommand):
       verbosity = options.get('verbosity')
       community_id = options.get('community_id')
       source_id = options.get('source_id')
+      full_import = options.get('full_import')
 
       if importer_name in ConnectionManager.CONNECTOR_IMPORTERS:
         verbosity and print("Importing %s data" % importer_name)
@@ -40,6 +42,7 @@ class Command(BaseCommand):
         for source in sources:
           importer = plugin.get_source_importer(source)
           importer.verbosity = verbosity
+          importer.full_import = full_import
           importer.run()
       else:
           print("Unknown importer: %s" % importer_name)
