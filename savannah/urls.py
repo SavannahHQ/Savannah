@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('frontendv2.urls')),
     path('slack/', include('corm.plugins.slack')),
     path('github/', include('corm.plugins.github')),
+    path('gitlab/', include('corm.plugins.gitlab')),
     path('discourse/', include('corm.plugins.discourse')),
     path('discord/', include('corm.plugins.discord')),
     path('rss/', include('corm.plugins.rss')),
