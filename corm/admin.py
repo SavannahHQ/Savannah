@@ -110,7 +110,7 @@ admin.site.register(Source, SourceAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
     list_display = ("name", "source", "conversation_count", "last_import")
-    list_filter = ("source__community", "source", "last_import")
+    list_filter = ("source__community", "source__connector", "last_import")
     search_fields = ("name",)
 
     def conversation_count(self, channel):
@@ -120,7 +120,7 @@ class ChannelAdmin(admin.ModelAdmin):
 admin.site.register(Channel, ChannelAdmin)
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("name", "community", "member_count", "task_count")
+    list_display = ("name", "community", "owner", "member_count", "task_count")
     list_filter = ("community",)
     search_fields = ("name",)
     def task_count(self, project):
@@ -131,9 +131,17 @@ class ProjectAdmin(admin.ModelAdmin):
     task_count.short_description = "Open Tasks"
 
     def member_count(self, project):
-        return project.collaborators.all().count()
+        count = project.collaborators.all().count()
+        if count > 0:
+            count = mark_safe("<a href=\"/admin/corm/memberlevel/?project__id__exact=%s\">%s</a>" % (project.id, count))
+        return count
     member_count.short_description = "Collaborators"
 admin.site.register(Project, ProjectAdmin)
+
+class LevelAdmin(admin.ModelAdmin):
+    list_display = ("member", "community", "project", "level", "timestamp")
+    list_filter = ("community","level")
+admin.site.register(MemberLevel, LevelAdmin)
 
 class MemberConnectionAdmin(admin.ModelAdmin):
     list_display = ("from_member", "to_member", "via", "first_connected", "last_connected")
@@ -142,8 +150,8 @@ admin.site.register(MemberConnection, MemberConnectionAdmin)
 
 class MemberAdmin(admin.ModelAdmin):
     list_display = ("name", "role", "community", "first_seen", "last_seen", "task_count", "conversation_count", "connection_count")
-    list_filter = ("community", "role", "last_seen", "tags")
-    search_fields = ("name", "email_address")
+    list_filter = ("community", "role", "first_seen", "last_seen", "tags")
+    search_fields = ("name", "email_address", "contact__detail")
     def task_count(self, member):
         count = member.task_set.filter(done__isnull=True).count()
         if count > 0:
@@ -176,7 +184,7 @@ admin.site.register(Contact, ContactAdmin)
 
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
-    list_filter = ("channel__source__community", "channel__source__connector", "timestamp", "channel", "tags")
+    list_filter = ("channel__source__community", "channel__source__connector", "timestamp", "tags")
     search_fields = ("content",)
     def link(self, conversation):
         if conversation.location is not None:
@@ -219,7 +227,7 @@ admin.site.register(ContributionType, ContributionTypeAdmin)
 
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ("title", "contribution_type", "channel", "timestamp", "author", "tag_list")
-    list_filter = ("contribution_type__source__connector", "community", "contribution_type", "timestamp")
+    list_filter = ("contribution_type__source__connector", "community", "contribution_type", "timestamp", "tags")
     raw_id_fields = ('conversation',)
     def tag_list(self, contribution):
         return ", ".join([tag.name for tag in contribution.tags.all()[:10]])
