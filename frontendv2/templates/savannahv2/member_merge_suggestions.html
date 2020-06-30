@@ -40,9 +40,19 @@
                 <tr>
                   <td><input class="action-select" type="checkbox" name="selected" value="{{suggestion.id}}" /></td>
                   <td>{{suggestion.reason}}</td>
-                  <td class="text-right"><a href="{% url 'member_profile' suggestion.source_member.id %}">{{suggestion.source_member.name}}</a></td>
+                  <td class="text-right">
+                    {% for identity in suggestion.source_member.contact_set.all %}
+                      <i class="{{identity.source.icon_name}}" title="{{identity.detail}}"> </i>
+                    {% endfor %}
+                    <a href="{% url 'member_profile' suggestion.source_member.id %}">{{suggestion.source_member.name}}</a>
+                  </td>
                   <td class="text-center"><i class="fas fa-arrow-right"> </i></td>
-                  <td class="text-left"><a href="{% url 'member_profile' suggestion.destination_member.id %}">{{suggestion.destination_member.name}}</a></td>
+                  <td class="text-left">
+                    <a href="{% url 'member_profile' suggestion.destination_member.id %}">{{suggestion.destination_member.name}}</a>
+                    {% for identity in suggestion.destination_member.contact_set.all %}
+                      <i class="{{identity.source.icon_name}}" title="{{identity.detail}}"> </i>
+                    {% endfor %}
+                  </td>
                   <td>{{suggestion.created_at}}</td>
                   <td><button class="btn btn-danger" type="submit" name="reject" value="{{suggestion.id}}" >Reject</button></td>
                 </tr>

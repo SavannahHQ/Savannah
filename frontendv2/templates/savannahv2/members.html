@@ -20,15 +20,7 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Members</h6>
-                  <div class="dropdown no-arrow">
-                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                      <div class="dropdown-header">Admin Action:</div>
-                      <a class="dropdown-item" href="{% url 'member_merge_suggestions' view.community.id %}"><i class="fa fa-people-arrows"></i> Merge Suggestions</a>
-                    </div>
-                  </div>
+                  <a class="text-gray-500" href="{% url 'member_merge_suggestions' view.community.id %}"><i class="fas fa-people-arrows"> </i> Merge</a>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">

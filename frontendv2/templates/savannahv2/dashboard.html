@@ -17,6 +17,7 @@
             <!-- Members Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-primary shadow h-100 py-2">
+                <a href="{% url 'members' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -28,12 +29,14 @@
                     </div>
                   </div>
                 </div>
+                </a>
               </div>
             </div>
 
             <!-- Conversations Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-success shadow h-100 py-2">
+              <a href="{% url 'conversations' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -45,12 +48,14 @@
                     </div>
                   </div>
                 </div>
+                </a>
               </div>
             </div>
 
             <!-- Contributors Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-info shadow h-100 py-2">
+              <a href="{% url 'contributions' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -62,6 +67,7 @@
                     </div>
                   </div>
                 </div>
+                </a>
               </div>
             </div>
 
@@ -69,6 +75,7 @@
           <!-- Contributions Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-warning shadow h-100 py-2">
+              <a href="{% url 'contributions' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -80,6 +87,7 @@
                     </div>
                   </div>
                 </div>
+                </a>
               </div>
             </div>
           </div>
@@ -94,16 +102,6 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Members</h6>
-                  <div class="dropdown no-arrow">
-                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                      <div class="dropdown-header">Admin Action:</div>
-                      <a class="dropdown-item" href="/admin/corm/member/add/?community={{view.community.id}}"><i class="fa fa-user-plus"></i> Add Member</a>
-                      <a class="dropdown-item" href="/admin/corm/member/?community={{view.community.id}}"><i class="fa fa-users"></i> Manage Members</a>
-                    </div>
-                  </div>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -140,7 +138,7 @@
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Most Active (30 days)</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active</h6>
                 </div>
                 <div class="card-body p-0">
                 <table class="table">
@@ -172,7 +170,7 @@
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged (30 days)</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged</h6>
                 </div>
                 <div class="card-body p-0">
                 <table class="table">
