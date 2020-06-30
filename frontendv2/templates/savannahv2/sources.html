@@ -5,6 +5,8 @@
 <script src="https://d3js.org/d3.v5.min.js"></script>
 {% endblock %}
 
+{% block page_title %} | {{view.community.name}} Sources{% endblock %}
+
 {% block page_content %}
 
           {% if view.community.source_set.all.count > 0 %}
