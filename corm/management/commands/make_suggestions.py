@@ -56,7 +56,8 @@ class Command(BaseCommand):
         print("Found %s duplicate names" % len(dups))
         i = 0
         for dup in dups:
-            if dup['dup_count'] > 1:
+            names = dup['name'].split(' ')
+            if dup['dup_count'] > 1 and len(names) > 1:
                 print("%s: %s" % (i, dup))
                 i += 1
                 members = Member.objects.filter(community=community, name=dup['name']).order_by('id').distinct()
