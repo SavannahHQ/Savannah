@@ -95,12 +95,12 @@ class Conversations(SavannahFilterView):
     @property
     def conversations_chart_months(self):
         (months, counts) = self.getConversationsChart()
-        return months[-self.timespan_chart_span:]
+        return self.timespan_chart_keys(months)
 
     @property
     def conversations_chart_counts(self):
         (months, counts) = self.getConversationsChart()
-        return [counts[month] for month in months[-self.timespan_chart_span:]]
+        return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     def channelsChart(self):
         if not self._channelsChart:

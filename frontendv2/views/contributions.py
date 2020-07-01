@@ -173,12 +173,12 @@ class Contributions(SavannahFilterView):
     @property
     def contributions_chart_months(self):
         (months, counts) = self.getContributionsChart()
-        return months[-self.timespan_chart_span:]
+        return self.timespan_chart_keys(months)
 
     @property
     def contributions_chart_counts(self):
         (months, counts) = self.getContributionsChart()
-        return [counts[month] for month in months[-self.timespan_chart_span:]]
+        return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     def getChannelsChart(self):
         channel_names = dict()

@@ -127,17 +127,17 @@ class Members(SavannahFilterView):
     @property
     def members_chart_months(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        return [month for month in months[-self.timespan_chart_span:]]
+        return self.timespan_chart_keys(months)
 
     @property
     def members_chart_counts(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        return [counts.get(month, 0) for month in months[-self.timespan_chart_span:]]
+        return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     @property
     def members_chart_monthly_active(self):
         (months, counts, monthly_active) = self.getMembersChart()
-        return [monthly_active.get(month, 0) for month in months[-self.timespan_chart_span:]]
+        return [monthly_active.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     def getTagsChart(self):
         if not self._tagsChart:

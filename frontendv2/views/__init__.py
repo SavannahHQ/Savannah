@@ -171,9 +171,9 @@ class SavannahFilterView(SavannahView):
             return "fas fa-calendar"
 
     def trunc_date(self, date):
-        if self.timespan > 30:
+        if self.trunc_span == "month":
             return str(date)[:7]
-        elif self.timespan > 3:
+        elif self.trunc_span == "day":
             return str(date)[:10]
         else:
             return "%s %s:00" % (str(date)[:10], date.hour)
@@ -197,3 +197,35 @@ class SavannahFilterView(SavannahView):
             return self.timespan
         else:
             return self.timespan * 24
+
+    def timespan_chart_keys(self, values):
+        span_count = self.timespan_chart_span
+        axis_values = []
+        if self.trunc_span == "month":
+            end = datetime.datetime.utcnow()
+            year = end.year
+            month = end.month
+            for i in range(span_count):
+                print("%04d-%02d" % (year, month))
+                axis_values.insert(0, "%04d-%02d" % (year, month))
+                month -= 1
+                if month <= 1:
+                    month = 12
+                    year -= 1
+            return axis_values
+        elif self.trunc_span == "day":
+            end = datetime.datetime.utcnow()
+            for i in range(span_count):
+                day = self.trunc_date(end - datetime.timedelta(days=i))
+                print(day)
+                axis_values.insert(0, day)
+            return axis_values
+        elif self.trunc_span == "hour":
+            end = datetime.datetime.utcnow()
+            for i in range(span_count):
+                hour = self.trunc_date(end - datetime.timedelta(hours=i))
+                print(hour)
+                axis_values.insert(0, hour)
+            return axis_values
+        else:
+            return values[-span_count:]

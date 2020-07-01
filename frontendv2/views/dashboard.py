@@ -113,12 +113,12 @@ class Dashboard(SavannahFilterView):
     @property
     def members_chart_months(self):
         (months, counts) = self.getMembersChart()
-        return [month for month in months[-self.timespan_chart_span:]]
+        return self.timespan_chart_keys(months)
 
     @property
     def members_chart_counts(self):
         (months, counts) = self.getMembersChart()
-        return [counts[month] for month in months[-self.timespan_chart_span:]]
+        return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     def getChannelsChart(self):
         channel_names = dict()
