@@ -206,7 +206,6 @@ class SavannahFilterView(SavannahView):
             year = end.year
             month = end.month
             for i in range(span_count):
-                print("%04d-%02d" % (year, month))
                 axis_values.insert(0, "%04d-%02d" % (year, month))
                 month -= 1
                 if month <= 1:

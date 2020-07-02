@@ -70,7 +70,7 @@ class Conversations(SavannahFilterView):
             months = list()
             counts = dict()
 
-            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
 
