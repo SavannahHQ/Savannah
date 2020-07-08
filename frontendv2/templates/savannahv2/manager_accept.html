@@ -1,19 +1,23 @@
-{% extends 'savannahv2/blank.html' %}
+{% extends "savannahv2/blank.html"%}
 {% load static %}
-{% load crispy_forms_tags %}
-{% block page_title %} | Login{% endblock %}
 
+
+{% block page_title %} | Accept Invitation{% endblock %}
 
 {% block page_content %}
-<!-- Login Card -->
+
+<!-- Members Card -->
 <div class="row mt-5 justify-content-center">
 <div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
 <center>
     <div class="card shadow h-100 py-2">
     <div class="card-body">
         <div class="align-items-center">
-        <img id="logo" src="{% static 'savannah/Savannah256.png' %}" />
-            <h2>Welcome to Savannah</h2>
+            {% if error %}
+            <h3>{{error}}</h3>
+            {% endif %}
+            {% if request.user.is_authenticated == False %}
+            <h3>You've been invited to manage {{view.community.name}}</h3>
             <div>
             <ul class="nav nav-tabs justify-content-center mb-2" id="localTab" role="tablist">
               <li class="nav-item">
@@ -25,7 +29,7 @@
             </ul>
             <div class="tab-content" id="localFormContent">
               <div class="tab-pane fade {% if action != 'signup' %}show active{% endif %}" id="login" role="tabpanel" aria-labelledby="login-tab">
-                <form action="#" method="POST" class="form">
+                <form action="#" method="POST">
                     {% csrf_token %}
                     <table>
                     {{ login_form }}
@@ -35,7 +39,7 @@
                 <br /><br />
               </div>
               <div class="tab-pane fade {% if action == 'signup' %}show active{% endif %}" id="signup" role="tabpanel" aria-labelledby="signup-tab">
-                <form action="#" method="POST" class="form">
+                <form action="#" method="POST">
                     {% csrf_token %}
                     <table class="table">
                     {{ signup_form }}
@@ -44,6 +48,7 @@
                 </form>
               </div>
             </div>
+            {% endif %}
         </div>
         </div>
     </div>

@@ -122,15 +122,22 @@
         Settings
       </div>
 
+      <!-- Nav Item - Managers -->
+      <li class="nav-item {% if active_tab == "community" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'managers' view.community.id %}">
+          <i class="fas fa-fw fa-user-tie"></i>
+          <span>Managers</span></a>
+      </li>
+
       <!-- Nav Item - Sources -->
-      <li class="nav-item">
+      <li class="nav-item {% if active_tab == "sources" %}active{% endif %}">
         <a class="nav-link" href="{% url 'sources' view.community.id %}">
           <i class="fas fa-fw fa-file-import"></i>
           <span>Sources</span></a>
       </li>
 
       <!-- Nav Item - Tags -->
-      <li class="nav-item">
+      <li class="nav-item {% if active_tab == "tags" %}active{% endif %}">
         <a class="nav-link" href="{% url 'tags' view.community.id %}">
           <i class="fas fa-fw fa-hashtag"></i>
           <span>Tags</span></a>

@@ -27,6 +27,9 @@ SECRET_KEY = '$2f0-ie0xkn__5sy1r*ypak(8v5v8&^@awp#*6^tkub6pyyr7^'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+ALLOWED_EMAILS_PER_DAY = 100
+DEFAULT_FROM_EMAIL = "SavannahHQ <noreply@savannahhq.com>"
+EMAIL_CONFIRMAION_EXPIRATION_DAYS = 10
 
 
 # Application definition
@@ -118,7 +121,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/

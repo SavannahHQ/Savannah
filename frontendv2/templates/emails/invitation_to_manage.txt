@@ -1,0 +1,5 @@
+# Invitation to manage {{community.name}}
+
+You've been invited to manage {{community.name}} on SavannahHQ.com
+
+Click to accept: https://savannahhq.com{% url 'manager_accept' community.id %}?confirmation?confirmation={{confirmation_key}}

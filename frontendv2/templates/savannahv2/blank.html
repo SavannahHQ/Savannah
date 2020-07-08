@@ -46,14 +46,6 @@
   <!-- Page Container -->
   <div class="container">
 
-    {% if messages %}
-    <div class="alerts">
-        {% for message in messages %}
-        <div class="m-3 alert{% if message.tags %} {{ message.tags }}{% endif %}">{{ message|safe }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
   {% block page_content %}{% endblock %}
   </div>
   <!-- End of Page Container -->

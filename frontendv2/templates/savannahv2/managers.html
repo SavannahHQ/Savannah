@@ -1,0 +1,100 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | {{view.community.name}} Managers{% endblock %}
+
+{% block page_content %}
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-10 mb-8">
+
+              <!-- Managers -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.community.name}} Managers</h6>
+                  <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'manager_invite' view.community.id %}"><i class="fas fa-user-plus"></i> Invite</a>
+                </div>
+                <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="25%">Username</th>
+                    <th scope="col" width="25%">Name</th>
+                    <th scope="col" width="25%">Email</th>
+                    <th scope="col" width="25%">Last Login</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for manager in view.all_managers %}
+                <tr>
+                  <td>{{manager.username}}</td>
+                  <td>{{manager.first_name}} {{manager.last_name}}</td>
+                  <td>{{manager.email_address}}</td>
+                  <td>{{manager.last_login}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-10 mb-8">
+
+              <!-- Invitations -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Pending Invitations</h6>
+                </div>
+                <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="30%">Email</th>
+                    <th scope="col" width="20%">Invited By</th>
+                    <th scope="col" width="20%">Invited Date</th>
+                    <th scope="col" width="20%">Expires</th>
+                    <th scope="col" width="10%">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for invite in view.invitations %}
+                <tr>
+                  <td>{{invite.email}}</td>
+                  <td>{{invite.invited_by}}</td>
+                  <td>{{invite.timestamp}}</td>
+                  <td>{{invite.expires}}</td>
+                  <td>
+                    <a class="btn btn-sm btn-primary" href="" title="Resend Invitation"><i class="fas fa-share"></i></a>
+                    <a class="btn btn-sm btn-danger" href="" title="Revoke Invitation"><i class="fas fa-trash"></i></a>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

@@ -24,6 +24,7 @@ from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import MemberMergeSuggestions
+from frontendv2.views.community import Managers, InviteManager, AcceptManager
 from frontendv2 import views
 
 urlpatterns = [
@@ -45,6 +46,9 @@ urlpatterns = [
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),
 
+    path('managers/<int:community_id>/', Managers.as_view, name='managers'),
+    path('managers/<int:community_id>/invite', InviteManager.as_view, name='manager_invite'),
+    path('managers/<int:community_id>/accept', AcceptManager.as_view, name='manager_accept'),
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
     path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),

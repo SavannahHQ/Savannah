@@ -1,5 +1,5 @@
 {% extends "savannahv2/blank.html" %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block page_title %} | Communities{% endblock %}
 
@@ -41,12 +41,24 @@
 {% else %}
 
 <!-- Content Row -->
-<div class="row">
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="align-items-center">
+            <h2>You have no communities</h2>
+            <img id="logo" src="{% static 'savannah/Savannah256.png' %}" />
+            <div>
 
-<div class="align-items-center justify-content-between mb-4">
-<h1 class="h1 mb-0 text-white">You have no Communities</h1>
+            <p>Savannah is currently in a closed-beta program. </p>
+            <p>If you would like to become a beta-tester, <a href="https://join.slack.com/t/savannahcommunity/shared_invite/zt-fi84m113-JhDiFgN7J0h6DPL~FlwT7w" target="_blank">join our Slack</a></p>
+            </div>
+        </div>
+    </div>
+    </div>
+</center>
 </div>
-
 </div>
 <!-- End row -->
 

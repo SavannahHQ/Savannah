@@ -1,68 +1,25 @@
-{% load static %}
-<html>
-    <head>
-    <title>Savannah - Coming Soon</title>
-    <link rel="icon" href="Savannah32.png" type="image/png" sizes="32x32">
-    <link rel="icon" href="Savannah64.png" type="image/png" sizes="64x64">
-    <link rel="icon" href="Savannah128.png" type="image/png" sizes="128x128">
-    <style>
-body {
-    background-color: #03a4e6;
-    background-image: linear-gradient(to bottom, #18afee, #028beb);
-}
-#hero {
-    color: #fefefe;
-    font-weight: bold;
-    font-size: 7em;
-    font-family: sans-serif;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    margin-top: -288px;
-    margin-left: -480px;
-    width: 960px;
-    height: 256px;
-    text-align: center;
-    text-shadow: 2px 2px #00000022;
-}
-#logo {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    margin-top: -128px;
-    margin-left: -128px;
-    width: 256px;
-    height: 256px;
-}
-#content {
-    color: #fefefe;
-    font-size: 1.5em;
-    font-family: sans-serif;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    margin-top: 128px;
-    margin-left: -480px;
-    width: 960px;
-    height: 256px;
-    text-align: center;
-    text-shadow: 1px 1px #00000022;
-    line-height: 2em; 
-}
- #title {
-    font-weight: bold;
-    font-size: 2em; 
-}
-    </style>
-    </head>
-    <body>
-        <div id="hero">
-        Coming Soon
-        </div>
+{% extends "savannahv2/blank.html" %}
+{% load humanize static %}
+
+{% block page_content %}
+
+<!-- Content Row -->
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <h2>Coming Soon...</h2>
         <img id="logo" src="{% static 'savannah/Savannah256.png' %}" />
         <div id="content">
-            <div id="title">Savannah</div>
+            <h1>Savannah</h1>
             {{ sayings|random }}
         </div>
-    </body>
-</html>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+<!-- End row -->
+
+{% endblock %}

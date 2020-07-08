@@ -3,8 +3,9 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
 from django.contrib import messages
 
 from corm.models import *
@@ -24,35 +25,38 @@ def logout(request):
     return redirect(reverse("login") + "?next=%s" % request.GET.get('next'))
 
 def login(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request=request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login_user(request, user)
-                if request.POST.get('next'):
-                    return redirect(request.POST.get('next'))
-
-                communities = Community.objects.filter(Q(owner=user) | Q(managers__in=user.groups.all())).order_by('id')
-                if len(communities) == 1:
-                    return redirect('dashboard', community_id=communities[0].id)
-                elif len(communities) > 1:
-                    return redirect('home')
-                else:
-                    # TODO: redirect to community creation screen
-                    return redirect('home')
-            else:
-                messages.error(request, "Invalid username or password.")
-        else:
-            messages.error(request, "Invalid username or password.")
-    else:
-            form = AuthenticationForm()
+    if request.user.is_authenticated:
+        return redirect('home')
 
     context = {
-        'form': form,
+        "signup_form":  UserCreationForm(),
+        "login_form": AuthenticationForm(),
     }
+    if request.method == "POST":
+        if request.POST.get("action") == "login":
+            login_form = AuthenticationForm(data=request.POST)
+            if login_form.is_valid():
+                username = login_form.cleaned_data.get("username")
+                raw_password = login_form.cleaned_data.get("password")
+                user = authenticate(username=username, password=raw_password)
+                login_user(request, user, backend=user.backend)
+                return redirect('home')
+            else:
+                context["login_form"] = login_form
+                context["action"] = "login"
+        elif request.POST.get("action") == "signup":
+            signup_form = UserCreationForm(data=request.POST)
+            if signup_form.is_valid():
+                signup_form.save()
+                username = signup_form.cleaned_data.get("username")
+                raw_password = signup_form.cleaned_data.get("password1")
+                user = authenticate(username=username, password=raw_password)
+                login_user(request, user, backend=user.backend)
+                return redirect('home')
+            else:
+                context["signup_form"] = signup_form
+                context["action"] = "signup"
+
     return render(request, 'savannahv2/login.html', context)
 
 @login_required
