@@ -11,7 +11,7 @@ from frontendv2.views import SavannahView
 
 DISCOURSE_USER_URL = '/users/%(username)s.json?'
 DISCOURSE_EMAIL_URL = '/users/%(username)s/emails.json?'
-DISCOURSE_TOPICS_URL = '/c/%(id)s.json?page=%(page)s'
+DISCOURSE_TOPICS_URL = '/c/%(name)s/%(id)s.json?page=%(page)s'
 DISCOURSE_POSTS_URL = '/t/%(id)s.json?print=true'
 DISCOURSE_POST_URL = '/t/%(id)s/posts.json?'
 DISCOURSE_CATEGORIES_URL = '/categories.json'
@@ -151,7 +151,7 @@ class DiscourseImporter(PluginImporter):
 
       page = 0
       while (True):
-        topics_url = DISCOURSE_TOPICS_URL % {'id': category_id, 'page': page}
+        topics_url = DISCOURSE_TOPICS_URL % {'id': category_id, 'name': category_name, 'page': page}
             
         resp = self.api_call(topics_url)
         if resp.status_code == 200:
