@@ -1,4 +1,4 @@
-Django==3.0.4
+Django>=3.0.7
 django-debug-toolbar==2.2
 grimoirelab-toolkit==0.1.10
 perceval==0.12.24
@@ -9,4 +9,4 @@ django-crispy-forms==1.9.1
 django-totd==1.0.2
 django-imagekit==4.0.2
 django-imagekit-cropper==1.16
-Pillow==6.2.0
+Pillow>=6.2.2
