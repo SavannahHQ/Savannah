@@ -1,6 +1,6 @@
 # Savannah
 
-Join the beta testing program at [https://savannahhq.com](SavannahHQ.com)
+Join the beta testing program at [SavannahHQ.com](https://savannahhq.com)
 
 ![Community Dashboard](./docs/screenshots/Dashboard.png)
 
