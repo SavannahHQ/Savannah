@@ -218,6 +218,20 @@ class ContributionAdmin(admin.ModelAdmin):
     tag_list.short_description = "Tags"
 admin.site.register(Contribution, ContributionAdmin)
 
+class PromotionAdmin(admin.ModelAdmin):
+    list_display = ("title", "channel", "timestamp", "tag_list")
+    list_filter = ("channel__source__connector", "community", "timestamp")
+    raw_id_fields = ('promoters',)
+    def tag_list(self, promotion):
+        return ", ".join([tag.name for tag in promotion.tags.all()[:10]])
+    tag_list.short_description = "Tags"
+admin.site.register(Promotion, PromotionAdmin)
+
+class EventAdmin(admin.ModelAdmin):
+    list_display = ("title", "channel", "start_timestamp", "end_timestamp", "tag")
+    list_filter = ("source__connector", "community", "start_timestamp")
+admin.site.register(Event, EventAdmin)
+
 class NoteAdmin(admin.ModelAdmin):
     list_display = ("__str__", "member", "author", "timestamp")
     list_filter = ("author", "tags", "member")

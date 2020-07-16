@@ -45,6 +45,14 @@ class Community(models.Model):
         except:
             return "%ssavannah/Savannah32.png" % settings.STATIC_URL
 
+    def bootstrap(self):
+        if self.managers is None:
+            self.managers = Group.objects.create(name="%s Managers (%s)" % (self.name, self.id))
+            self.owner.groups.add(self.managers)
+            self.save()
+        Tag.objects.get_or_create(name="thankful", community=self, defaults={'color':"aff5ab", 'keywords':"thanks, thank you, thx, thank yo"})
+        Tag.objects.get_or_create(name="greeting", community=self, defaults={'color':"abdef5", 'keywords':"welcome, hi, hello"})
+
     def __str__(self):
         return self.name
 
@@ -318,6 +326,41 @@ class Contribution(TaggableModel, ImportedDataModel):
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
     location = models.URLField(max_length=512, null=True, blank=True)
     conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return "%s (%s)" % (self.title, self.community)
+
+class Promotion(TaggableModel, ImportedDataModel):
+    class Meta:
+        verbose_name_plural = _("Promotions")
+        ordering = ('-timestamp',)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
+    channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
+    title = models.CharField(max_length=256)
+    timestamp = models.DateTimeField(db_index=True)
+    location = models.URLField(max_length=512, null=True, blank=True)
+    content = models.TextField(null=True, blank=True)
+    promoters = models.ManyToManyField(Member)
+    conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return "%s (%s)" % (self.title, self.community)
+
+class Event(ImportedDataModel):
+    class Meta:
+        verbose_name_plural = _("Events")
+        ordering = ('start_timestamp',)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
+    channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
+    title = models.CharField(max_length=256)
+    description = models.TextField(null=True, blank=True)
+    start_timestamp = models.DateTimeField(db_index=True)
+    end_timestamp = models.DateTimeField()
+    location = models.URLField(max_length=512, null=True, blank=True)
+    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
+    promotions = models.ManyToManyField(Promotion, blank=True)
 
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)

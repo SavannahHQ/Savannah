@@ -32,6 +32,8 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
+    path('community/new', views.new_community, name='add-community'),
+
     path('dashboard/<int:community_id>/', Dashboard.as_view, name='dashboard'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),

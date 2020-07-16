@@ -25,6 +25,9 @@ SECRET_KEY = '$2f0-ie0xkn__5sy1r*ypak(8v5v8&^@awp#*6^tkub6pyyr7^'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALPHA = False
+BETA = True
+OPEN_BETA = True
 
 ALLOWED_HOSTS = []
 ALLOWED_EMAILS_PER_DAY = 100

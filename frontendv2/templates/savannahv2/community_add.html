@@ -1,0 +1,36 @@
+{% extends "savannahv2/blank.html" %}
+{% load humanize static %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Start your Community{% endblock %}
+
+{% block page_content %}
+
+
+<!-- Content Row -->
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="align-items-center">
+            <h2>Get Started with Savannah</h2>
+
+            <form class="form" action="{% url 'add-community' %}" method="POST" enctype="multipart/form-data">
+            <div class="row justify-content-center">
+            <div class="text-left col-8 mb-3">
+            {% csrf_token %}
+            {{form|crispy}}
+            </div>
+            </div>
+            <button class="btn btn-success" type="submit">Start You Community!</button>
+            </form>
+        </div>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+<!-- End row -->
+
+{% endblock %}

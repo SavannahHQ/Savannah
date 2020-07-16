@@ -7,11 +7,15 @@ from django.contrib.auth import authenticate, login as login_user, logout as log
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
 from django.contrib import messages
+from django import forms
 
 from corm.models import *
 
 # Create your views here.
 def index(request):
+    if not settings.ALPHA:
+        return redirect('home')
+
     sayings = [
         "Herd your cats",
         "Build a better community",
@@ -62,8 +66,16 @@ def login(request):
 @login_required
 def home(request):
     communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+    count = communities.count()
+    if count < 1 and not settings.BETA:
+        return redirect('add-community')
+    elif count == 1:
+        return redirect('dashboard', community_id=communities[0].id)
+
     context = {
         "communities": communities,
+        "BETA": settings.BETA,
+        "OPEN_BETA": settings.OPEN_BETA
     }
     return render(request, 'savannahv2/home.html', context)
 
@@ -232,3 +244,28 @@ class SavannahFilterView(SavannahView):
             return axis_values
         else:
             return values[-span_count:]
+
+class NewCommunityForm(forms.ModelForm):
+    class Meta:
+        model = Community
+        fields = ['name', 'logo']
+    
+@login_required
+def new_community(request):
+    community = Community(owner=request.user)
+    if request.method == "POST":
+        form = NewCommunityForm(request.POST, files=request.FILES, instance=community)
+        if form.is_valid():
+            new_community = form.save()
+            new_community.bootstrap()
+            messages.success(request, "Welcome to your new Communtiy!")
+            return redirect('dashboard', community_id=new_community.id)
+    else:
+        form = NewCommunityForm(instance=community)
+
+    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+    context = {
+        "communities": communities,
+        "form": form,
+    }
+    return render(request, 'savannahv2/community_add.html', context)
