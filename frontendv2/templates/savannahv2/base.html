@@ -175,8 +175,10 @@
             </button>
             <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 {% for c in communities %}
-                    <a class="dropdown-item" href="{% url 'dashboard' c.id %}"><img src="{{c.icon_path}}" /> {{c.name}}</a>
+                  <a class="dropdown-item" href="{% url 'dashboard' c.id %}"><img src="{{c.icon_path}}" /> {{c.name}}</a>
                 {% endfor %}
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item " href="{% url 'add-community' %}"><i class="text-lg text-muted fas fa-plus-square align-top"> </i> New Community</a>
             </div>
             </div>
 
