@@ -82,7 +82,7 @@ class SlackPlugin(BasePlugin):
 
     def get_channels(self, source):
         channels = []
-        resp = requests.get('https://slack.com/api/channels.list?token=%s' % source.auth_secret)
+        resp = requests.get('https://slack.com/api/conversations.list?token=%s' % source.auth_secret)
         if resp.status_code == 200:
             data = resp.json()
             for channel in data['channels']:
