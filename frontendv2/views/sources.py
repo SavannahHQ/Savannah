@@ -131,10 +131,10 @@ class Channels(SavannahView):
                 channels.append(channel)
         self.available_channels = sorted(channels, key=lambda c: c['count'], reverse=True)
 
-    def track_channel(self, origin_id):
+    def track_channel(self, request, origin_id):
         if self.source.connector in ConnectionManager.CONNECTOR_PLUGINS:
             plugin  = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
-            source_channels = plugin.get_channels(self.source)
+            source_channels = self._get_source_channels(request)
             for channel in source_channels:
                 if channel['id'] == origin_id:
                     c, created = Channel.objects.get_or_create(origin_id=origin_id, source=self.source, name=channel['name'])
@@ -148,7 +148,7 @@ class Channels(SavannahView):
         if request.method == 'POST':
             if 'track_channel_id' in request.POST:
                 channel_origin_id = request.POST.get('track_channel_id')
-                view.track_channel(channel_origin_id)
+                view.track_channel(request, channel_origin_id)
                 return redirect('channels', community_id=community_id, source_id=source_id)
             elif 'remove_channel' in request.POST:
                 channel = get_object_or_404(Channel, id=request.POST.get('remove_channel'))
