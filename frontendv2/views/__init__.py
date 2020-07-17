@@ -224,7 +224,7 @@ class SavannahFilterView(SavannahView):
             for i in range(span_count):
                 axis_values.insert(0, "%04d-%02d" % (year, month))
                 month -= 1
-                if month <= 1:
+                if month < 1:
                     month = 12
                     year -= 1
             return axis_values
@@ -232,14 +232,12 @@ class SavannahFilterView(SavannahView):
             end = datetime.datetime.utcnow()
             for i in range(span_count):
                 day = self.trunc_date(end - datetime.timedelta(days=i))
-                print(day)
                 axis_values.insert(0, day)
             return axis_values
         elif self.trunc_span == "hour":
             end = datetime.datetime.utcnow()
             for i in range(span_count):
                 hour = self.trunc_date(end - datetime.timedelta(hours=i))
-                print(hour)
                 axis_values.insert(0, hour)
             return axis_values
         else:

@@ -56,7 +56,7 @@ class PluginImporter:
         self.API_BACKOFF_SECONDS = 10
 
 
-    def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None, speaker=False):
+    def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None, speaker=False, replace_first_seen=False):
         if origin_id in self._member_cache:
             member = self._member_cache[origin_id]
         else:
@@ -64,7 +64,7 @@ class PluginImporter:
                 name = detail
             contact_matches = Contact.objects.filter(origin_id=origin_id, source=self.source)
             if contact_matches.count() == 0:
-                member = Member.objects.create(community=self.community, name=name, first_seen=tstamp, last_seen=tstamp)
+                member = Member.objects.create(community=self.community, name=name, first_seen=tstamp, last_seen=None)
                 contact, created = Contact.objects.get_or_create(origin_id=origin_id, source=self.source, defaults={'member':member, 'detail':detail})
                 if created:
                     self.update_identity(contact)
@@ -81,6 +81,10 @@ class PluginImporter:
                 member = matched_contact.member
 
             self._member_cache[origin_id] = member
+        if member.first_seen == replace_first_seen and tstamp is not None:
+            member.first_seen = tstamp
+            member.save()
+
         if speaker and tstamp is not None:
             if member.first_seen is None or tstamp < member.first_seen:
                 member.first_seen = tstamp

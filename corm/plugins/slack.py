@@ -116,7 +116,7 @@ class SlackImporter(PluginImporter):
         for slack_id, user in slack._users.items():
             if not user.get('is_bot'):
                 slack_user_id = "slack.com/%s" % slack_id
-                member = self.make_member(slack_user_id, detail=user.get('name'), tstamp=datetime.datetime.now(), name=user.get('real_name', user.get('name')))
+                member = self.make_member(slack_user_id, detail=user.get('name'), tstamp=from_date, name=user.get('real_name', user.get('name')))
 
         tag_matcher = re.compile('\<\@([^>]+)\>')
         for item in items:
@@ -127,9 +127,8 @@ class SlackImporter(PluginImporter):
                 if len(tagged) > 0 or 'thread_ts' in item.get('data'):
                     #print("Importing conversation from %s" % item.get('data').get('user_data').get('name'))
                     slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
-                    member = self.make_member(slack_user_id, item.get('data').get('user_data').get('name'), speaker=True)
-                    #contact = Contact.objects.get(origin_id=slack_user_id, source=source)
                     tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
+                    member = self.make_member(slack_user_id, item.get('data').get('user_data').get('name'), tstamp=tstamp, speaker=True, replace_first_seen=from_date)
                     server = source.server or "slack.com"
                     slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
                     slack_convo_link = slack_convo_id
@@ -147,10 +146,8 @@ class SlackImporter(PluginImporter):
                         if slack._users.get(tagged_user):
                             convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
                     convo_text = convo_text
-                    try:
-                        convo, created = Conversation.objects.update_or_create(origin_id=slack_convo_id, channel=channel, defaults={'speaker':member, 'channel':channel, 'content':convo_text, 'timestamp':tstamp, 'location':slack_convo_link, 'thread_start':thread})
-                    except:
-                        pass#import pdb; pdb.set_trace()
+
+                    convo = self.make_conversation(origin_id=slack_convo_id, channel=channel, speaker=member, content=convo_text, tstamp=tstamp, location=slack_convo_link, thread=thread)
                     convo.participants.add(member)
 
                     for tagged_user in tagged:
