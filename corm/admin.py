@@ -44,7 +44,7 @@ class UserAuthAdmin(admin.ModelAdmin):
 admin.site.register(UserAuthCredentials, UserAuthAdmin)
 
 class CommunityAdmin(admin.ModelAdmin):
-    list_display = ("logo_icon", "name", "member_count", "managers", "owner")
+    list_display = ("logo_icon", "name", "member_count", "source_count", "channel_count", "managers", "owner")
     list_display_links = ("name",)
     list_filter = ("owner",)
     search_fields = ("name", "owner")
@@ -55,6 +55,14 @@ class CommunityAdmin(admin.ModelAdmin):
     def member_count(self, community):
         return community.member_set.all().count()
     member_count.short_description = "Members"
+
+    def source_count(self, community):
+        return community.source_set.all().count()
+    source_count.short_description = "Sources"
+
+    def channel_count(self, community):
+        return Channel.objects.filter(source__community=community).count()
+    channel_count.short_description = "Channels"
 
 admin.site.register(Community, CommunityAdmin)
 
