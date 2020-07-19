@@ -293,26 +293,26 @@ class Project(models.Model):
         super(Project, self).save(*args, **kwargs)
         
 class MemberLevel(models.Model):
-    CONSUMER = 0
-    CASUAL = 1
+    USER = 0
+    PARTICIPANT = 1
     CONTRIBUTOR = 2
     CORE = 3
     LEVEL_MAP = {
-        CONSUMER: 'Consumer',
-        CASUAL: 'Casual',
+        USER: 'User',
+        PARTICIPANT: 'Participant',
         CONTRIBUTOR: 'Contributor',
         CORE: 'Core'
     }
     LEVEL_CHOICES = [
-        (CONSUMER, 'Consumer'),
-        (CASUAL, 'Casual'),
+        (USER, 'User'),
+        (PARTICIPANT, 'Participant'),
         (CONTRIBUTOR, 'Contributor'),
         (CORE, 'Core')
     ]
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='collaborations', on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=CONSUMER, null=True, blank=True)
+    level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=USER, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
 class Task(TaggableModel):
