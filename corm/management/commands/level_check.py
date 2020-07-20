@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for community in Community.objects.all():
-            default_project, created = Project.objects.get_or_create(community=community, default_project=True, defaults={'name': community.name, 'owner':None, 'threshold_user':1, 'threshold_participant':10, 'threshold_contributor':1, 'threshold_core':20})
+            default_project, created = Project.objects.get_or_create(community=community, default_project=True, defaults={'name': community.name, 'owner':None, 'threshold_user':1, 'threshold_participant':10, 'threshold_contributor':1, 'threshold_core':10})
             other_projects = Project.objects.filter(community=community, default_project=False)
 
             # Check community-wide levels

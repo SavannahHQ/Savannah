@@ -185,10 +185,16 @@ class Member(TaggableModel):
             task.stakeholders.add(self)
             task.stakeholders.remove(other_member)
 
-        for project in Project.objects.filter(collaborators=other_member):
-            project.collaborators.add(self)
-            project.collaborators.remove(other_member)
-
+        for level in MemberLevel.objects.filter(member=other_member):
+            try:
+                self_level = MemberLevel.objects.get(community=self.community, project=level.project, member=self)
+                if level.level > self_level.level:
+                    self_level.level = level.level
+                    self_level.timestamp = level.timestamp
+                    self_level.save()
+            except MemberLevel.DoesNotExist:
+                level.member = self
+                level.save()
         self.save()
         other_member.delete()
 
