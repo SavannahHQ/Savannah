@@ -192,17 +192,6 @@ class Member(TaggableModel):
         self.save()
         other_member.delete()
 
-class Project(models.Model):
-    class Meta:
-        ordering = ("name",)
-    name = models.CharField(max_length=256)
-    community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    collaborators = models.ManyToManyField(Member)
-    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
-
-    def __str__(self):
-        return "%s (%s)" % (self.name, self.community)
-
 class Source(models.Model):
     class Meta:
         ordering = ("name",)
@@ -282,11 +271,57 @@ class Conversation(TaggableModel, ImportedDataModel):
         else:
             return str(self.timestamp)
 
+class Project(models.Model):
+    class Meta:
+        ordering = ("name",)
+    name = models.CharField(max_length=256)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    owner = models.ForeignKey(Member, related_name='owned_projects', on_delete=models.SET_NULL, null=True, blank=True)
+    default_project = models.BooleanField(default=False)
+    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
+    channels = models.ManyToManyField(Channel, blank=True)
+    threshold_period = models.SmallIntegerField(default=365, help_text="Timerange in days to look at for level activity")
+    threshold_user = models.SmallIntegerField(default=1, help_text="Conversations to become a User")
+    threshold_participant = models.SmallIntegerField(default=3, help_text="Conversations to become a Participant")
+    threshold_contributor = models.SmallIntegerField(default=1, help_text="Contributions to become a Contributor")
+    threshold_core = models.SmallIntegerField(default=5, help_text="Contributions to become a Core Contributor")
+
+    @property
+    def collaborators(self):
+        return MemberLevel.objects.filter(project=self, level__gte=MemberLevel.PARTICIPANT)
+
+    def __str__(self):
+        return "%s (%s)" % (self.name, self.community)
+
+        
+class MemberLevel(models.Model):
+    USER = 0
+    PARTICIPANT = 1
+    CONTRIBUTOR = 2
+    CORE = 3
+    LEVEL_MAP = {
+        USER: 'User',
+        PARTICIPANT: 'Participant',
+        CONTRIBUTOR: 'Contributor',
+        CORE: 'Core'
+    }
+    LEVEL_CHOICES = [
+        (CORE, 'Core'),
+        (CONTRIBUTOR, 'Contributor'),
+        (PARTICIPANT, 'Participant'),
+        (USER, 'User'),
+    ]
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, related_name='collaborations', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=USER, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 class Task(TaggableModel):
     class Meta:
         ordering = ("done", "due",)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=False, blank=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     name = models.CharField(max_length=256)
     detail = models.TextField()

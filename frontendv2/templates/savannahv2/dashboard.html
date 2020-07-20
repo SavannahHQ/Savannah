@@ -112,17 +112,17 @@
               </div>
             </div>
 
-            <!-- Pie Chart -->
+            <!-- Member Levels Pie Chart -->
             <div class="col-xl-4 col-lg-5">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Conversations by Source</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Member Levels</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="chart-pie pt-4 pb-2">
-                    <canvas id="channelChart"></canvas>
+                    <canvas id="levelsChart"></canvas>
                   </div>
                 </div>
               </div>
@@ -294,19 +294,22 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
+
+  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
   <script>
-var ctx = document.getElementById("channelChart");
+var ctx = document.getElementById("levelsChart");
 var myPieChart = new Chart(ctx, {
-  type: 'doughnut',
+  type: 'funnel',
   data: {
-    labels: {{view.channel_names|safe}},
+    labels: {{view.level_names|safe}},
     datasets: [{
-      data: {{view.channel_counts|safe}},
-      backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280', '#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280'],
+      data: {{view.level_counts|safe}},
+      backgroundColor: {{view.level_colors|safe}},
       hoverBorderColor: "rgba(234, 236, 244, 1)",
     }],
   },
   options: {
+    sort: 'asc',
     maintainAspectRatio: false,
     tooltips: {
       backgroundColor: "rgb(255,255,255)",
@@ -321,7 +324,6 @@ var myPieChart = new Chart(ctx, {
     legend: {
       display: true
     },
-    cutoutPercentage: 0,
   },
 });
   </script>
