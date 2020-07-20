@@ -14,6 +14,7 @@ class Dashboard(SavannahFilterView):
         self.active_tab = "dashboard"
         self._membersChart = None
         self._channelsChart = None
+        self._levelsChart = None
     
     @property 
     def member_count(self):
@@ -161,6 +162,46 @@ class Dashboard(SavannahFilterView):
         chart = self.getChannelsChart()
         return [channel[1] for channel in chart]
 
+
+    def getLevelsChart(self):
+        if not self._levelsChart:
+            counts = dict()
+            total = 0
+            levels = MemberLevel.objects.filter(community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            if self.tag:
+                levels = levels.filter(member__tags=self.tag)
+            if self.role:
+                levels = levels.filter(member__role=self.role)
+
+            for l in levels:
+                source_name = l.level
+                if source_name not in counts:
+                    counts[source_name] = 1
+                else:
+                    counts[source_name] += 1
+            self._levelsChart = counts
+
+        return self._levelsChart
+
+    @property
+    def level_names(self):
+        return [name for level, name in MemberLevel.LEVEL_CHOICES]
+
+    @property
+    def level_counts(self):
+        total = 0
+        counts = []
+        chart = self.getLevelsChart()
+        for level, name in MemberLevel.LEVEL_CHOICES:
+            total += chart.get(level, 0)
+            counts.append(total)
+        return counts
+        #return [level[1] for level in chart]
+
+    @property
+    def level_colors(self):
+        colors = ['#4e73df', '#7dc5fe', '#36b9cc', '#1cc88a']
+        return [colors[level] for level, name in  MemberLevel.LEVEL_CHOICES]
 
     @login_required
     def as_view(request, community_id):

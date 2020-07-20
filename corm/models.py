@@ -276,21 +276,23 @@ class Project(models.Model):
         ordering = ("name",)
     name = models.CharField(max_length=256)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    owner = models.ForeignKey(Member, related_name='owned_projects', on_delete=models.SET_NULL, null=True, blank=False)
+    owner = models.ForeignKey(Member, related_name='owned_projects', on_delete=models.SET_NULL, null=True, blank=True)
+    default_project = models.BooleanField(default=False)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     channels = models.ManyToManyField(Channel, blank=True)
+    threshold_period = models.SmallIntegerField(default=365, help_text="Timerange in days to look at for level activity")
+    threshold_user = models.SmallIntegerField(default=1, help_text="Conversations to become a User")
+    threshold_participant = models.SmallIntegerField(default=3, help_text="Conversations to become a Participant")
+    threshold_contributor = models.SmallIntegerField(default=1, help_text="Contributions to become a Contributor")
+    threshold_core = models.SmallIntegerField(default=5, help_text="Contributions to become a Core Contributor")
 
     @property
     def collaborators(self):
-        return MemberLevel.objects.filter(project=self, level__gte=MemberLevel.CASUAL)
+        return MemberLevel.objects.filter(project=self, level__gte=MemberLevel.PARTICIPANT)
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.community)
 
-    def save(self, *args, **kwargs):
-        if self.owner is None:
-            self.owner = self.community.owner
-        super(Project, self).save(*args, **kwargs)
         
 class MemberLevel(models.Model):
     USER = 0
@@ -304,10 +306,10 @@ class MemberLevel(models.Model):
         CORE: 'Core'
     }
     LEVEL_CHOICES = [
-        (USER, 'User'),
-        (PARTICIPANT, 'Participant'),
+        (CORE, 'Core'),
         (CONTRIBUTOR, 'Contributor'),
-        (CORE, 'Core')
+        (PARTICIPANT, 'Participant'),
+        (USER, 'User'),
     ]
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='collaborations', on_delete=models.CASCADE)

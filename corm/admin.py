@@ -120,8 +120,8 @@ class ChannelAdmin(admin.ModelAdmin):
 admin.site.register(Channel, ChannelAdmin)
 
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("name", "community", "owner", "member_count", "task_count")
-    list_filter = ("community",)
+    list_display = ("name", "community", "default_project", "owner", "member_count", "task_count")
+    list_filter = ("community","default_project")
     search_fields = ("name",)
     def task_count(self, project):
         count = project.task_set.filter(done__isnull=True).count()
@@ -140,7 +140,7 @@ admin.site.register(Project, ProjectAdmin)
 
 class LevelAdmin(admin.ModelAdmin):
     list_display = ("member", "community", "project", "level", "timestamp")
-    list_filter = ("community","level")
+    list_filter = ("community", "level", "project")
 admin.site.register(MemberLevel, LevelAdmin)
 
 class MemberConnectionAdmin(admin.ModelAdmin):
