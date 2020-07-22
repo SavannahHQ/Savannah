@@ -292,7 +292,7 @@ class MemberProfile(SavannahView):
         
     @property 
     def member_levels(self):
-        return MemberLevel.objects.filter(member=self.member).order_by('project__default_projet', 'timestamp')
+        return MemberLevel.objects.filter(member=self.member).order_by('-project__default_project', 'timestamp')
 
     @property
     def all_conversations(self):
