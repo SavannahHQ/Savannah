@@ -290,6 +290,10 @@ class MemberProfile(SavannahView):
         self.tag = None
         self.role = None
         
+    @property 
+    def member_levels(self):
+        return MemberLevel.objects.filter(member=self.member).order_by('project__default_projet', 'timestamp')
+
     @property
     def all_conversations(self):
         conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member)

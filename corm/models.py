@@ -323,6 +323,10 @@ class MemberLevel(models.Model):
     level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=USER, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def level_name(self):
+        return MemberLevel.LEVEL_MAP[self.level]
+
 class Task(TaggableModel):
     class Meta:
         ordering = ("done", "due",)

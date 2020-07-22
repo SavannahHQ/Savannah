@@ -140,7 +140,7 @@ admin.site.register(Project, ProjectAdmin)
 
 class LevelAdmin(admin.ModelAdmin):
     list_display = ("member", "community", "project", "level", "timestamp")
-    list_filter = ("community", "level", "member__role", "project")
+    list_filter = ("community", "level", "member__role", "project", "timestamp")
 admin.site.register(MemberLevel, LevelAdmin)
 
 class MemberConnectionAdmin(admin.ModelAdmin):

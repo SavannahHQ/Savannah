@@ -149,6 +149,21 @@
                 </div>
               </div>
 
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Levels</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="ml-3">
+                  {% for level in view.member_levels %}
+                    <div class="mb-2"><i class="fas {% if level.project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{level.project.name}} - {{level.level_name}}<br/><small>{{level.timestamp}}</small></div>
+                  {% endfor %}
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
