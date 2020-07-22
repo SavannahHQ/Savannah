@@ -15,7 +15,7 @@ INACTIVITY_THRESHOLD_DAYS = 30
 
 RESUMING_THRESHOLD_PREVIOUS_ACTIVITY = 5
 RESUMING_THRESHOLD_PREVIOUS_DAYS = 90
-RESUMING_THRESHOLD_DAYS = 14
+RESUMING_THRESHOLD_DAYS = 30
 
 class Command(BaseCommand):
     help = 'Checks member activity and creates notifications for action'
