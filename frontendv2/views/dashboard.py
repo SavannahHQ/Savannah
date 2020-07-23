@@ -167,7 +167,7 @@ class Dashboard(SavannahFilterView):
         if not self._levelsChart:
             counts = dict()
             total = 0
-            levels = MemberLevel.objects.filter(community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            levels = MemberLevel.objects.filter(community=self.community, project__default_project=True, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 levels = levels.filter(member__tags=self.tag)
             if self.role:
