@@ -22,13 +22,14 @@ class Command(BaseCommand):
             # Check community-wide levels
             print("Checking member levels for %s" % community.name)
             MemberLevel.objects.filter(community=community, project=default_project, timestamp__lt=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).delete()
-            for member in Member.objects.filter(community=community).annotate(convo_count=Count('speaker_in__id', filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)), distinct=True), last_convo=Max('speaker_in__timestamp')):
+            speaker_filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period))
+            for member in Member.objects.filter(community=community).annotate(convo_count=Count('speaker_in__id', filter=speaker_filter, distinct=True), last_convo=Max('speaker_in__timestamp', filter=speaker_filter)):
                 if member.convo_count >= default_project.threshold_participant:
                     MemberLevel.objects.update_or_create(community=community, project=default_project, member=member, defaults={'level':MemberLevel.PARTICIPANT, 'timestamp':member.last_convo})
                 elif member.convo_count >= default_project.threshold_user:
                     MemberLevel.objects.update_or_create(community=community, project=default_project, member=member, defaults={'level':MemberLevel.USER, 'timestamp':member.last_convo})
-
-            for member in Member.objects.filter(community=community).annotate(contrib_count=Count('contribution__id', filter=Q(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)), distinct=True), last_contrib=Max('contribution__timestamp')):
+            author_filter = Q(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period))
+            for member in Member.objects.filter(community=community).annotate(contrib_count=Count('contribution__id', filter=author_filter, distinct=True), last_contrib=Max('contribution__timestamp', filter=author_filter)):
                 if member.contrib_count >= default_project.threshold_core:
                     MemberLevel.objects.update_or_create(community=community, project=default_project, member=member, defaults={'level':MemberLevel.CORE, 'timestamp':member.last_contrib})
                 elif member.contrib_count >= default_project.threshold_contributor:
@@ -38,12 +39,18 @@ class Command(BaseCommand):
             for project in other_projects:
                 print("Checking member levels for %s / %s" % (community.name, project.name))
                 MemberLevel.objects.filter(community=community, project=project, timestamp__lt=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).delete()
-                for member in Member.objects.filter(community=community).filter(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).filter(Q(speaker_in__channel__in=project.channels.all()) | Q(speaker_in__tags=project.tag)).annotate(convo_count=Count('speaker_in__id', distinct=True), last_convo=Max('speaker_in__timestamp')):
+                speaker_filter=Q(speaker_in__channel__in=project.channels.all())
+                if project.tag is not None:
+                    speaker_filter = speaker_filter | Q(speaker_in__tags=project.tag)
+                for member in Member.objects.filter(community=community).filter(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(convo_count=Count('speaker_in__id', filter=speaker_filter, distinct=True), last_convo=Max('speaker_in__timestamp', filter=speaker_filter)):
                     if member.convo_count >= project.threshold_participant:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.PARTICIPANT, 'timestamp':member.last_convo})
                     elif member.convo_count >= project.threshold_user:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.USER, 'timestamp':member.last_convo})
-                for member in Member.objects.filter(community=community).filter(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).filter(Q(contribution__channel__in=project.channels.all()) | Q(contribution__tags=project.tag)).annotate(contrib_count=Count('contribution__id', distinct=True), last_contrib=Max('contribution__timestamp')):
+                author_filter = Q(contribution__channel__in=project.channels.all())
+                if project.tag is not None:
+                    author_filter = author_filter | Q(contribution__tags=project.tag)
+                for member in Member.objects.filter(community=community).filter(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(contrib_count=Count('contribution__id', filter=author_filter, distinct=True), last_contrib=Max('contribution__timestamp', filter=author_filter)):
                     if member.contrib_count >= project.threshold_core:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.CORE, 'timestamp':member.last_contrib})
                     elif member.contrib_count >= project.threshold_contributor:
