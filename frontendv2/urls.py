@@ -25,6 +25,7 @@ from frontendv2.views.sources import Sources, Channels, tag_channel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import MemberMergeSuggestions
 from frontendv2.views.community import Managers, InviteManager, AcceptManager
+from frontendv2.views.projects import Projects, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
 from frontendv2 import views
 
 urlpatterns = [
@@ -48,6 +49,14 @@ urlpatterns = [
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),
 
+    path('projects/<int:community_id>/', Projects.as_view, name='projects'),
+    path('projects/<int:community_id>/add', ProjectAdd.as_view, name='project_add'),
+    path('projects/<int:community_id>/overview/<int:project_id>/', ProjectOverview.as_view, name='project_overview'),
+    path('projects/<int:community_id>/overview/<int:project_id>/edit', ProjectEdit.as_view, name='project_edit'),
+    path('projects/<int:community_id>/overview/<int:project_id>/thresholds', ProjectThresholdEdit.as_view, name='project_threshold_edit'),
+    path('projects/<int:community_id>/overview/<int:project_id>/task/add', ProjectTaskAdd.as_view, name='project_task_add'),
+    path('projects/<int:community_id>/overview/<int:project_id>/task/<int:task_id>/', ProjectTaskEdit.as_view, name='project_task_edit'),
+    path('projects/<int:community_id>/overview/<int:project_id>/task/done', ProjectOverview.mark_task_done, name='project_task_done'),
     path('managers/<int:community_id>/', Managers.as_view, name='managers'),
     path('managers/<int:community_id>/invite', InviteManager.as_view, name='manager_invite'),
     path('managers/<int:community_id>/accept', AcceptManager.as_view, name='manager_accept'),

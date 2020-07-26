@@ -4,8 +4,11 @@ from django.db.models import Q, Count, Max
 from django.contrib import messages
 
 class ChartColors(object):
-    def __init__(self):
-        self.from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
+    def __init__(self, colors=None):
+        if colors is None:
+            self.from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
+        else:
+            self.from_colors = colors
         self.next_color = 0
 
     def __iter__(self):
@@ -64,3 +67,34 @@ class PieChart(Chart):
 
     def get_data_colors(self):
         return ['#'+data[2] for data in self.processed_data]
+
+class FunnelChart(Chart):
+    def __init__(self, id, title, stages, colors=None):
+        super(FunnelChart, self).__init__(id, title)
+        self.script_template = 'savannahv2/funnelchart_script.html'
+        self.stages = stages
+        self.colors = ChartColors(['1cc88a', '36b9cc', '7dc5fe', '4e73df'])
+        self._raw_data = dict()
+        self._processed_data = None
+
+    def add(self, data_name, data_value):
+        self._raw_data[data_name] = data_value
+
+    @property
+    def processed_data(self):
+        if self._processed_data is None:
+            total = 0
+            self._processed_data = []
+            for name, label in self.stages:
+                total += self._raw_data.get(name, 0)
+                self._processed_data.append((name, total))
+        return self._processed_data
+
+    def get_data_names(self):
+        return str([label for name, label in self.stages])
+
+    def get_data_values(self):
+        return [data[1] for data in self.processed_data]
+
+    def get_data_colors(self):
+        return ['#'+self.colors.next() for i in range(len(self.stages))]

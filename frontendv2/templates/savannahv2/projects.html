@@ -1,0 +1,80 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | {{view.community.name}} Projects{% endblock %}
+
+{% block page_content %}
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Projects</h1>
+        <a class="btn btn-success" href="{% url 'project_add' community_id=view.community.id %}"><i class="fas fa-plus"></i> Project</a>
+        </div>
+        
+          <!-- Content Row -->
+          <div class="row">
+            {% for project in view.all_projects %}
+
+            <!-- Content Column -->
+            <div id="project{{project.id}}" class="col-lg-6 mb-2">
+
+              <!-- Chart -->
+              <div class="card {% if project.default_project %}border-left-primary{% endif %} shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}"><i class="fas {% if project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{project.name}}</a></h6>
+                  <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{{project.contrib_count}} Contributors</a></h6>
+                </div>
+                <div class="card-body">
+                    {% if project.owner %}<p>Owner: {{project.owner}}</p>{% endif %}
+                    {% if project.tag %}<p>Tag: <span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{project.tag.color}};">#{{project.tag.name}}</span></p>{% endif %}
+                    {% if project.channels.all.count > 0 %}<p>Channels: {% for channel in project.channels.all %}<i class="{{channel.source.icon_name}}"></i> {{channel.name}}{% if not forloop.last %}&nbsp;{% endif %}{% endfor %}</p>{% endif %}
+                    <p>{{project.task_count}} Tasks</p>
+                </div>
+              </div>
+
+            </div>
+            {% endfor %}
+
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
+
+{% for chart in view.all_charts %}
+  <script>
+var ctx = document.getElementById("projectChart{{chart.id}}");
+var myProjectChart = new Chart(ctx, {
+  type: 'funnel',
+  data: {
+    labels: {{chart.get_data_names|safe}},
+    datasets: [{
+      data: {{chart.get_data_values|safe}},
+      backgroundColor: {{chart.get_data_colors|safe}},
+      hoverBorderColor: "rgba(234, 236, 244, 1)",
+    }],
+  },
+  options: {
+    sort: 'asc',
+    maintainAspectRatio: false,
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      caretPadding: 10,
+    },
+    legend: {
+      display: true
+    },
+  },
+});
+  </script>
+{% endfor %}
+{% endblock %}

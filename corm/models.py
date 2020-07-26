@@ -39,6 +39,10 @@ class Community(models.Model):
     icon = ImageSpecField(source='logo', spec=Icon)
 
     @property
+    def default_project(self):
+        return Project.objects.get(community=self, default_project=True)
+
+    @property
     def icon_path(self):
         try:
             return self.icon.url
@@ -233,6 +237,10 @@ class Channel(ImportedDataModel):
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
 
+    @property
+    def connector_name(self):
+        return ConnectionManager.display_name(self.source.connector)
+
     def __str__(self):
         return self.name
 
@@ -286,11 +294,11 @@ class Project(models.Model):
     default_project = models.BooleanField(default=False)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     channels = models.ManyToManyField(Channel, blank=True)
-    threshold_period = models.SmallIntegerField(default=365, help_text="Timerange in days to look at for level activity")
-    threshold_user = models.SmallIntegerField(default=1, help_text="Conversations to become a User")
-    threshold_participant = models.SmallIntegerField(default=3, help_text="Conversations to become a Participant")
-    threshold_contributor = models.SmallIntegerField(default=1, help_text="Contributions to become a Contributor")
-    threshold_core = models.SmallIntegerField(default=5, help_text="Contributions to become a Core Contributor")
+    threshold_period = models.SmallIntegerField(verbose_name="Activity Period", default=365, help_text="Timerange in days to look at for level activity")
+    threshold_user = models.SmallIntegerField(verbose_name="User level", default=1, help_text="Number of conversations needed to become a User")
+    threshold_participant = models.SmallIntegerField(verbose_name="Participant level", default=3, help_text="Number of conversations needed to become a Participant")
+    threshold_contributor = models.SmallIntegerField(verbose_name="Contributor level", default=1, help_text="Number of contributions needed to become a Contributor")
+    threshold_core = models.SmallIntegerField(verbose_name="Core level", default=5, help_text="Number of contributions needed to become a Core Contributor")
 
     @property
     def collaborators(self):

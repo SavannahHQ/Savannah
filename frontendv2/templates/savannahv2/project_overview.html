@@ -1,0 +1,244 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_title %} | {{view.project.name}} Project{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.project.name}} Project</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Details</h6>
+                  {% if view.project.default_project == False %}
+                    <a class="text-gray-500" href="{% url 'project_edit' view.community.id view.project.id %}" title="Edit Project"><i class="fas fa-edit"> </i></a>
+                  {% endif %}
+                    
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+                {% if view.project.default_project == False %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Owner</div>
+                    <div class="mb-2 col-lg-10">{{view.project.owner}}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Tag</div>
+                    <div class="mb-2 col-lg-10">{% if view.project.tag %}<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.project.tag.color}};">#{{view.project.tag.name}}</span>{% endif %}</div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Channels</div>
+                    <div class="mb-2 col-lg-10">
+                      {% for channel in view.project.channels.all %}
+                        <div><i class="{{channel.source.icon_name}}"></i> {{channel.name}}</div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% else %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Community</div>
+                    <div class="mb-2 col-lg-10">{{view.community}}</div>
+                  </div>
+                {% endif %}       
+                </div>     
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Contacts List -->
+            <div class="col-xl-4 col-lg-5">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Member Levels</h6>
+                  <a class="text-gray-500" href="{% url 'project_threshold_edit' view.community.id view.project.id %}" title="Adjust thresholds"><i class="fas fa-edit"> </i></a>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="levelsChart"></canvas>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Tasks</h6>
+                  <a class="btn btn-success" href="{% url 'project_task_add' community_id=view.community.id project_id=view.project.id %}"><i class="fas fa-plus"></i> Task</a>
+                </div>
+                <div class="card-body p-0">
+                <form action="{% url 'project_task_done' community_id=view.community.id project_id=view.project.id %}" method="POST">
+                {% csrf_token %}
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Owner</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Due</th>
+                    <th scope="col">Stakeholders</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for task in view.open_tasks %}
+                <tr>
+                  <td class="text-nowrap">{{task.owner}}</td>
+                  <td><a href="{% url 'project_task_edit' community_id=view.community.id project_id=view.project.id task_id=task.id %}" title="{{task.detail}}">{{task.name}}</a></td>
+                  <td>{{task.due}}</td>
+                  <td>
+                  {% if task.stakeholders.all.count > 0 %}
+                  {% for member in task.stakeholders.all %}
+                      <a href="{% url 'member_profile' member.id %}">{{member.name}}</a><br/>
+                  {% endfor %}
+                  {% endif %}
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-danger" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div id="Core" class="col-lg-6 mb-4">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Core Members</h6>
+                    
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Since</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for level in view.core_levels %}
+                <tr>
+                  <td class="text-nowrap"><a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i> {{level.member}}</a></td>
+                  <td>{{level.timestamp}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                </div>
+              </div>    
+            </div>
+
+            <!-- Content Column -->
+            <div id="Contributor" class="col-lg-6 mb-4">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                    
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Since</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for level in view.contrib_levels %}
+                <tr>
+                  <td class="text-nowrap"><a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i> {{level.member}}</a></td>
+                  <td>{{level.timestamp}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                </div>
+              </div>    
+            </div>
+
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
+  <script>
+var ctx = document.getElementById("levelsChart");
+var myPieChart = new Chart(ctx, {
+  type: 'funnel',
+  data: {
+    labels: {{view.levels_chart.get_data_names|safe}},
+    datasets: [{
+      data: {{view.levels_chart.get_data_values|safe}},
+      backgroundColor: {{view.levels_chart.get_data_colors|safe}},
+      hoverBorderColor: "rgba(234, 236, 244, 1)",
+    }],
+  },
+  options: {
+    sort: 'asc',
+    maintainAspectRatio: false,
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      caretPadding: 10,
+    },
+    legend: {
+      display: true
+    },
+  },
+});
+$("#levelsChart").click( 
+    function(evt){
+        var activePoints = myPieChart.getElementAtEvent(evt);  
+        window.location = "#" + activePoints[0]._model.label;
+    }
+); 
+  </script>
+{% endblock %}

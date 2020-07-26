@@ -158,7 +158,7 @@
                 <div class="card-body">
                   <div class="ml-3">
                   {% for level in view.member_levels %}
-                    <div class="mb-2"><i class="fas {% if level.project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{level.project.name}} - {{level.level_name}}<br/><small>{{level.timestamp}}</small></div>
+                    <div class="mb-2"><a href="{% url 'project_overview' view.community.id level.project.id %}"><i class="fas {% if level.project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{level.project.name}}</a> - {{level.level_name}}<br/><small>{{level.timestamp}}</small></div>
                   {% endfor %}
                   </div>
                 </div>

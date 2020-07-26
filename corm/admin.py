@@ -203,6 +203,7 @@ admin.site.register(Conversation, ConversationAdmin)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "due", "community", "project", "stakeholder_list", "is_done")
     list_filter = (isNotNull("done"), "community", "owner", "project__community", "project", "tags", "stakeholders")
+    raw_id_fields = ('stakeholders',)
     actions = ('mark_done',"mark_notdone")
     def stakeholder_list(self, task):
         return ", ".join([member.name for member in task.stakeholders.all()[:10]])

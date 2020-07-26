@@ -326,5 +326,11 @@ var myPieChart = new Chart(ctx, {
     },
   },
 });
+$("#levelsChart").click( 
+    function(evt){
+        var activePoints = myPieChart.getElementAtEvent(evt);  
+        window.location = "{% url 'project_overview' view.community.id view.community.default_project.id %}";
+    }
+); 
   </script>
 {% endblock %}
