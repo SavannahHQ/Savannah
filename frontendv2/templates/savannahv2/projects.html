@@ -27,7 +27,7 @@
                 <div class="card-body">
                     {% if project.owner %}<p>Owner: {{project.owner}}</p>{% endif %}
                     {% if project.tag %}<p>Tag: <span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{project.tag.color}};">#{{project.tag.name}}</span></p>{% endif %}
-                    {% if project.channels.all.count > 0 %}<p>Channels: {% for channel in project.channels.all %}<i class="{{channel.source.icon_name}}"></i> {{channel.name}}{% if not forloop.last %}&nbsp;{% endif %}{% endfor %}</p>{% endif %}
+                    {% if project.channels.all.count > 0 %}<p>Channels: {{project.channels.all.count}}</p>{% endif %}
                     <p>{{project.task_count}} Tasks</p>
                 </div>
               </div>
