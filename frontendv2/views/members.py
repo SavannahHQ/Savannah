@@ -243,6 +243,9 @@ class AllMembers(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
 
+        if self.timespan < 365:
+            members = members.filter(first_seen__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)).order_by('-first_seen')
+
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
