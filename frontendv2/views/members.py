@@ -295,6 +295,10 @@ class MemberProfile(SavannahView):
         return MemberLevel.objects.filter(community=self.community, member=self.member).order_by('-project__default_project', 'timestamp')
 
     @property
+    def all_gifts(self):
+        return Gift.objects.filter(community=self.community, member=self.member)
+
+    @property
     def all_conversations(self):
         conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member)
         if self.tag:
@@ -527,3 +531,57 @@ class MemberMerge(SavannahView):
             return redirect('member_merge', member_id=member_id)
 
         return render(request, 'savannahv2/member_merge.html', view.context)
+
+class GiftForm(forms.ModelForm):
+    class Meta:
+        model = Gift
+        fields = ['gift_type', 'sent_date', 'reason', 'tracking', 'received_date']
+        widgets = {
+            'sent_date': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+            'received_date': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super(GiftForm, self).__init__(*args, **kwargs)
+        self.fields['sent_date'].input_formats = ["%Y-%m-%dT%H:%M"]
+        self.fields['received_date'].input_formats = ["%Y-%m-%dT%H:%M"]
+
+class GiftManager(SavannahView):
+    def __init__(self, request, member_id, gift_id=None):
+        self.member = get_object_or_404(Member, id=member_id)
+        super(GiftManager, self).__init__(request, self.member.community_id)
+        self.active_tab = "members"
+        if gift_id:
+            self.gift = get_object_or_404(Gift, id=gift_id)
+        else:
+            self.gift = Gift(community=self.community, member=self.member, sent_date=datetime.datetime.utcnow())
+
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            form = GiftForm(instance=self.gift, data=self.request.POST)
+        else:
+            form = GiftForm(instance=self.gift)
+        if self.gift.id:
+            form.fields['gift_type'].widget.choices = [(gift_type.id, gift_type) for gift_type in GiftType.objects.filter(community=self.community)]
+        else:
+            form.fields['gift_type'].widget.choices = [(gift_type.id, gift_type) for gift_type in GiftType.objects.filter(community=self.community, discontinued__isnull=True)]
+        return form
+
+    @login_required
+    def add_view(request, member_id):
+        view = GiftManager(request, member_id)
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/gift_form.html', view.context)
+
+    @login_required
+    def edit_view(request, member_id, gift_id):
+        view = GiftManager(request, member_id, gift_id)
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/gift_form.html', view.context)

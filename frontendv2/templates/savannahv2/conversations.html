@@ -187,7 +187,7 @@
                   <td class="text-nowrap"><i class="{{conversation.channel_icon}}" title="{{conversation.source_name}}"></i> {{conversation.channel_name}}</td>
                   <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker_id %}">{{conversation.speaker_name}}</a>{% endif %}</td>
                   <td>
-                    <a target="_blank" href="{{conversation.location|default:'#'}}" title="{{conversation.content}}">{{ conversation }}</a>
+                    <a target="_blank" href="{{conversation.location|default:'#'}}" data-toggle="tooltip" data-placement="right" title="{{conversation.content}}">{{ conversation }}</a>
                     {% if conversation.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}{% endif %}
                   </td>
                   <td class="text-nowrap">{{conversation.timestamp}}</td>

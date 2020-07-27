@@ -17,14 +17,14 @@ from django.contrib import admin
 from django.urls import path
 
 from frontendv2.views.dashboard import Dashboard
-from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberEdit, tag_member, add_note
+from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberEdit, tag_member, add_note, GiftManager
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions
 from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import MemberMergeSuggestions
-from frontendv2.views.community import Managers, InviteManager, AcceptManager
+from frontendv2.views.community import Managers, InviteManager, AcceptManager, Gifts, GiftTypeManager
 from frontendv2.views.projects import Projects, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
 from frontendv2 import views
 
@@ -43,6 +43,8 @@ urlpatterns = [
     path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
     path('member/<int:member_id>/tag', tag_member, name='member_tag_form'),
     path('member/<int:member_id>/note', add_note, name='member_note_form'),
+    path('member/<int:member_id>/gift', GiftManager.add_view, name='gift_add'),
+    path('member/<int:member_id>/gift/<int:gift_id>/', GiftManager.edit_view, name='gift_edit'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
@@ -57,6 +59,9 @@ urlpatterns = [
     path('projects/<int:community_id>/overview/<int:project_id>/task/add', ProjectTaskAdd.as_view, name='project_task_add'),
     path('projects/<int:community_id>/overview/<int:project_id>/task/<int:task_id>/', ProjectTaskEdit.as_view, name='project_task_edit'),
     path('projects/<int:community_id>/overview/<int:project_id>/task/done', ProjectOverview.mark_task_done, name='project_task_done'),
+    path('gifts/<int:community_id>/', Gifts.as_view, name='gifts'),
+    path('gifts/<int:community_id>/add', GiftTypeManager.add_view, name='gift_type_add'),
+    path('gifts/<int:community_id>/edit/<int:type_id>/', GiftTypeManager.edit_view, name='gift_type_edit'),
     path('managers/<int:community_id>/', Managers.as_view, name='managers'),
     path('managers/<int:community_id>/invite', InviteManager.as_view, name='manager_invite'),
     path('managers/<int:community_id>/accept', AcceptManager.as_view, name='manager_accept'),

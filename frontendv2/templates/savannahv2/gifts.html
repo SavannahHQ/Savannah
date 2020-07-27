@@ -1,0 +1,91 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | {{view.community.name}} Managers{% endblock %}
+
+{% block page_content %}
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-10 mb-8">
+
+              <!-- Available -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Gift Types</h6>
+                  <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'gift_type_add' view.community.id %}"><i class="fas fa-plus"></i> Add</a>
+                </div>
+                <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="25%">Name</th>
+                    <th scope="col" width="25%">Sent</th>
+                    <th scope="col" width="50%">Contents</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for gift in view.available_gift_types %}
+                <tr>
+                  <td><a href="{% url 'gift_type_edit' view.community.id gift.id %}">{{gift.name}}</a></td>
+                  <td>{{gift.sent}}</td>
+                  <td>{{gift.contents}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-10 mb-8">
+
+              <!-- Discontinued -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Discontinued</h6>
+                </div>
+                <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="25%">Name</th>
+                    <th scope="col" width="25%">Sent</th>
+                    <th scope="col" width="50%">Contents</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for gift in view.discontinued_gift_types %}
+                <tr>
+                  <td><a href="{% url 'gift_type_edit' view.community.id gift.id %}">{{gift.name}}</a></td>
+                  <td>{{gift.sent}}</td>
+                  <td>{{gift.contents}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

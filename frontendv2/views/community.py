@@ -117,3 +117,73 @@ class AcceptManager(SavannahView):
                 context['error'] = "Invalid invitation"
 
         return render(request, "savannahv2/manager_accept.html", context)
+
+
+class Gifts(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "gifts"
+
+    def available_gift_types(self):
+        return GiftType.objects.filter(community=self.community, discontinued__isnull=True).annotate(sent=Count('gift'))
+
+    def discontinued_gift_types(self):
+        return GiftType.objects.filter(community=self.community, discontinued__isnull=False).annotate(sent=Count('gift'))
+
+    @login_required
+    def as_view(request, community_id):
+        view = Gifts(request, community_id)
+        if request.method == "POST":
+            pass
+        return render(request, "savannahv2/gifts.html", view.context)
+
+class GiftTypeForm(forms.ModelForm):
+    class Meta:
+        model = GiftType
+        fields = ["name", "contents", "discontinued"]
+        widgets = {
+            'discontinued': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super(GiftTypeForm, self).__init__(*args, **kwargs)
+        self.fields['discontinued'].input_formats = ["%Y-%m-%dT%H:%M"]
+
+
+class GiftTypeManager(SavannahView):
+    def __init__(self, request, community_id, type_id=None):
+        super(GiftTypeManager, self).__init__(request, community_id)
+        self.active_tab = "gifts"
+        if type_id:
+            self.gift = get_object_or_404(GiftType, id=type_id)
+        else:
+            self.gift = GiftType(community=self.community)
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            form = GiftTypeForm(instance=self.gift, data=self.request.POST)
+        else:
+            form = GiftTypeForm(instance=self.gift)
+        return form
+
+    @property
+    def sent_gifts(self):
+        return Gift.objects.filter(community=self.community, gift_type=self.gift).order_by('-sent_date')
+
+    @login_required
+    def add_view(request, community_id):
+        view = GiftTypeManager(request, community_id)
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            return redirect('gifts', community_id=community_id)
+
+        return render(request, 'savannahv2/gift_type_form.html', view.context)
+
+    @login_required
+    def edit_view(request, community_id, type_id):
+        view = GiftTypeManager(request, community_id, type_id)
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            return redirect('gifts', community_id=community_id)
+
+        return render(request, 'savannahv2/gift_type_form.html', view.context)

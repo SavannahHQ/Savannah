@@ -254,6 +254,16 @@ class NoteAdmin(admin.ModelAdmin):
     list_filter = ("author", "tags", "member")
 admin.site.register(Note, NoteAdmin)
 
+class GiftTypeAdmin(admin.ModelAdmin):
+    list_display = ("name", "community", "discontinued")
+    list_filter = ("community", "discontinued")
+admin.site.register(GiftType, GiftTypeAdmin)
+
+class GiftAdmin(admin.ModelAdmin):
+    list_display = ("gift_type", "member", "community", "sent_date")
+    list_filter = ("community", "gift_type", "sent_date")
+admin.site.register(Gift, GiftAdmin)
+
 class SuggestMemberMergeAdmin(admin.ModelAdmin):
     list_display = ("destination_member", "source_member", "community", "reason", "created_at", "actioned_at", "status")
     list_filter = ("community", "status", "actioned_at", "created_at")

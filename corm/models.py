@@ -202,6 +202,37 @@ class Member(TaggableModel):
         self.save()
         other_member.delete()
 
+class GiftType(models.Model):
+    class Meta:
+        ordering = ('discontinued', 'name')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    name = models.CharField(max_length=256)
+    contents = models.TextField()
+    discontinued = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        if self.discontinued is not None:
+            return "%s (discontinued)" % self.name
+        else:
+            return self.name
+
+class Gift(models.Model):
+    class Meta:
+        ordering = ('-sent_date',)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    gift_type = models.ForeignKey(GiftType, on_delete=models.SET_NULL, null=True, blank=False)
+    reason = models.TextField(blank=True)
+    sent_date = models.DateTimeField()
+    received_date = models.DateTimeField(null=True, blank=True)
+    tracking = models.CharField(max_length=512, null=True, blank=True)
+
+    def __str__(self):
+        if self.gift_type is not None:
+            return "%s for %s" % (self.gift_type.name, self.member.name)
+        else:
+            return "Unknown gift for %s" % self.member.name
+
 class Source(models.Model):
     class Meta:
         ordering = ("name",)

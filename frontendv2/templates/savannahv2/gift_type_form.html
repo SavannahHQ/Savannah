@@ -1,0 +1,77 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | {% if view.gift.id %}Edit {{view.gift.name}}{% else %}Add Gift{% endif %}{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{% if view.gift.id %}Edit {{view.gift.name}}{% else %}Add Gift{% endif %}</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Gift Type  -->
+            <div class="col-xl-7 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Gift</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                <form class="form" action="{% if view.gift.id %}{% url 'gift_type_edit' view.community.id view.gift.id %}{% else %}{% url 'gift_type_add' view.community.id %}{% endif %}" method="POST">
+                {% csrf_token %}
+                {{ view.form|crispy }}
+                <button class="btn btn-primary" type="submit">Save</button>
+                <a class="btn btn-secondary" href="{% url 'gifts' view.community.id %}">Cancel</a>
+                </form>
+                </div>            
+
+                </div>
+              </div>
+            </div>
+
+            {% if view.gift.id %}
+            <!-- Gift Type  -->
+            <div class="col-xl-5 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Sent</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="25%">Name</th>
+                    <th scope="col" width="25%">Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for gift in view.sent_gifts %}
+                <tr>
+                  <td><a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
+                  <td>{{gift.sent_date}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

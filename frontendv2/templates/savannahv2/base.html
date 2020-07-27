@@ -150,6 +150,13 @@
           <span>Managers</span></a>
       </li>
 
+      <!-- Nav Item - Managers -->
+      <li class="nav-item {% if active_tab == "gifts" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'gifts' view.community.id %}">
+          <i class="fas fa-fw fa-gifts"></i>
+          <span>Gifts</span></a>
+      </li>
+
       <!-- Divider -->
       <hr class="sidebar-divider d-none d-md-block">
 
@@ -341,7 +348,11 @@
   <!-- Bootstrap core JavaScript-->
   <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
   <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-
+  <script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+  </script>
   <!-- Core plugin JavaScript-->
   <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
 
