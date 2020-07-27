@@ -249,7 +249,7 @@ class GithubImporter(PluginImporter):
 
                 # Pull Requests are an Activity
                 if 'pull_request' in issue:
-                    activity, created = Contribution.objects.update_or_create(origin_id=github_convo_link, defaults={'contribution_type':self.PR_CONTRIBUTION, 'community':source.community, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
+                    activity, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
                     # Not all comments should get the channel tag, but all PRs should
                     if channel.tag:
                         activity.tags.add(channel.tag)
@@ -258,7 +258,7 @@ class GithubImporter(PluginImporter):
 
                 # If there are comments it's a Conversation
                 if issue.get('comments', 0) > 0:
-                    convo, created = Conversation.objects.update_or_create(origin_id=github_convo_link, defaults={'channel':channel, 'speaker':member, 'content':issue['body'], 'timestamp':tstamp, 'location':issue['html_url']})
+                    convo, created = Conversation.objects.update_or_create(origin_id=github_convo_link, channel__source=source, defaults={'channel':channel, 'speaker':member, 'content':issue['body'], 'timestamp':tstamp, 'location':issue['html_url']})
                     conversations.add(convo)
                     if activity:
                         activity.conversation = convo

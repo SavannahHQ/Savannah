@@ -184,8 +184,9 @@ admin.site.register(Contact, ContactAdmin)
 
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
-    list_filter = ("channel__source__community", "channel__source__connector", "timestamp", "tags")
+    list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
     search_fields = ("content",)
+    raw_id_fields = ('speaker', 'participants', 'thread_start')
     def link(self, conversation):
         if conversation.location is not None:
             return mark_safe("<a href=\"%s\">Open</a>" % conversation.location)
@@ -228,8 +229,8 @@ admin.site.register(ContributionType, ContributionTypeAdmin)
 
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ("title", "contribution_type", "channel", "timestamp", "author", "tag_list")
-    list_filter = ("contribution_type__source__connector", "community", "contribution_type", "timestamp", "tags")
-    raw_id_fields = ('conversation',)
+    list_filter = ("contribution_type__source__connector", "community", "contribution_type", "timestamp")
+    raw_id_fields = ('conversation', 'author')
     def tag_list(self, contribution):
         return ", ".join([tag.name for tag in contribution.tags.all()[:10]])
     tag_list.short_description = "Tags"

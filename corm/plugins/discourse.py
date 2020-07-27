@@ -6,7 +6,7 @@ from django.shortcuts import redirect, get_object_or_404, reverse, render
 from django.urls import path
 
 from corm.plugins import BasePlugin, PluginImporter
-from corm.models import Community, Source
+from corm.models import Community, Source, Contribution, ContributionType
 from frontendv2.views import SavannahView
 
 DISCOURSE_USER_URL = '/users/%(username)s.json?'
@@ -114,6 +114,7 @@ class DiscourseImporter(PluginImporter):
             'Api-Username': source.auth_id,
         }
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+        self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Answer")
 
     def update_identity(self, identity):
         resp = self.api_call(DISCOURSE_USER_URL % {'username':identity.detail})
@@ -138,6 +139,8 @@ class DiscourseImporter(PluginImporter):
             print("Failed to lookup identity info: %s" % resp.status_code)
 
     def import_channel(self, channel):
+      source = channel.source
+      community = source.community
       discourse_path = channel.origin_id.split('/')
 
       category_name = discourse_path[-2]
@@ -205,7 +208,11 @@ class DiscourseImporter(PluginImporter):
                         if thread_post is None:
                             thread_post = post_convo
 
-                        
+                        if post['accepted_answer'] == True and thread_post.speaker.id != author.id:
+                            title = "Answered: %s" % topic['title']
+                            activity, created = Contribution.objects.update_or_create(origin_id=discourse_post_id, community=community, defaults={'contribution_type':self.ANSWER_CONTRIBUTION, 'channel':channel, 'author':author, 'timestamp':post_tstamp, 'title':title, 'location':post_url})
+
+
                     # post_ids = "&post_ids[]=".join([str(post_id) for post_id in posts_by_id.keys()])
                     # content_resp = self.api_call(DISCOURSE_POST_URL%{'id':topic['id']} + "post_ids[]="+post_ids)
                     # import pdb; pdb.set_trace()
