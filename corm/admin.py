@@ -251,7 +251,8 @@ admin.site.register(Event, EventAdmin)
 
 class NoteAdmin(admin.ModelAdmin):
     list_display = ("__str__", "member", "author", "timestamp")
-    list_filter = ("author", "tags", "member")
+    list_filter = ("author", "timestamp")
+    search_fields = ("content", "member__name")
 admin.site.register(Note, NoteAdmin)
 
 class GiftTypeAdmin(admin.ModelAdmin):
