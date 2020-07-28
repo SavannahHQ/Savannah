@@ -6,11 +6,11 @@
               <button style="white-space:nowrap;" class="btn dropdown-toggle btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{{view.timespan_icon}}"></i> {{view.timespan_display}}</button>
             {% endif %}
               <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item p-2" href="?timespan={{view.MAX_TIMESPAN}}"><i class="fas fa-calendar"></i> Past Year</a>
-                    <a class="dropdown-item p-2" href="?timespan=180"><i class="fas fa-calendar-plus"></i> 6 Months</a>
-                    <a class="dropdown-item p-2" href="?timespan=30"><i class="fas fa-calendar-alt"></i> 30 Days</a>
-                    <a class="dropdown-item p-2" href="?timespan=7"><i class="fas fa-calendar-week"></i> Last Week</a>
-                    <a class="dropdown-item p-2" href="?timespan=1"><i class="fas fa-calendar-day"></i> Today</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan={{view.MAX_TIMESPAN}}"><i class="fas fa-calendar"></i> Past Year</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=180"><i class="fas fa-calendar-plus"></i> 6 Months</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=30"><i class="fas fa-calendar-alt"></i> 30 Days</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=7"><i class="fas fa-calendar-week"></i> Last Week</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=1"><i class="fas fa-calendar-day"></i> Today</a>
               </div>
             </span>
             <span class="dropdown">
@@ -20,10 +20,10 @@
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-users"></i> Roles</button>
             {% endif %}
               <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item p-2" href="?role="><i class="fas fa-users"></i> All Members</a>
-                    <a class="dropdown-item p-2" href="?role=community"><i class="fas fa-user"></i> Community</a>
-                    <a class="dropdown-item p-2" href="?role=staff"><i class="fas fa-user-tie"></i> Staff</a>
-                    <a class="dropdown-item p-2" href="?role=bot"><i class="fas fa-robot"></i> Bots</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role="><i class="fas fa-users"></i> All Members</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=community"><i class="fas fa-user"></i> Community</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=staff"><i class="fas fa-user-tie"></i> Staff</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=bot"><i class="fas fa-robot"></i> Bots</a>
               </div>
             </span>
             <span class="dropdown">
@@ -33,10 +33,13 @@
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Tags</button>
             {% endif %}
               <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
-                    <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?tag="><i class="fas fa-times"></i> Clear</a>
+                    <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag="><i class="fas fa-times"></i> Clear</a>
                     {% for tag in view.community.tag_set.all %}
-                    <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
+                    <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
                     {% endfor %}
               </div>
             </span>
+            {% if view.tag or view.role or view.timespan != view.MAX_TIMESPAN %}
+            <a class="align-baseline text-secondary" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=&role=&tag=" title="Clear filters"><i class="fas fa-times"> </i></a>
+            {% endif %}
           <span>

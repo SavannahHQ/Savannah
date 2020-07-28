@@ -11,7 +11,7 @@ from django import forms
 from corm.models import *
 from corm.connectors import ConnectionManager
 
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import FunnelChart
 
 class Projects(SavannahView):
@@ -39,7 +39,7 @@ class Projects(SavannahView):
 
         return render(request, "savannahv2/projects.html", view.context)
 
-class ProjectOverview(SavannahView):
+class ProjectOverview(SavannahFilterView):
     def __init__(self, request, community_id, project_id):
         super().__init__(request, community_id)
         self.active_tab = "projects"
@@ -50,17 +50,35 @@ class ProjectOverview(SavannahView):
         return Task.objects.filter(project=self.project, done__isnull=True)
 
     def core_levels(self):
-        return MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CORE).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CORE).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        if self.tag:
+            levels = levels.filter(member__tags=self.tag)
+        if self.role:
+            levels = levels.filter(member__role=self.role)
+        return levels[:100]
         
     def contrib_levels(self):
-        return MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-timestamp').select_related('member').prefetch_related('member__tags')[:100]
+        levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        if self.tag:
+            levels = levels.filter(member__tags=self.tag)
+        if self.role:
+            levels = levels.filter(member__role=self.role)
+        return levels[:200]
         
     @property
     def levels_chart(self):
         if self._levelsChart is None:
             self._levelsChart = FunnelChart(self.project.id, self.project.name, stages=MemberLevel.LEVEL_CHOICES)
             for level, name in MemberLevel.LEVEL_CHOICES:
-                self._levelsChart.add(level, MemberLevel.objects.filter(community=self.community, project=self.project, level=level).count())
+                levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=level)
+                levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+                if self.tag:
+                    levels = levels.filter(member__tags=self.tag)
+                if self.role:
+                    levels = levels.filter(member__role=self.role)
+                self._levelsChart.add(level, levels.count())
         return self._levelsChart
 
     @login_required

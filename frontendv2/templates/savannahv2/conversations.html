@@ -162,7 +162,7 @@
                   <h6 class="m-0 font-weight-bold text-primary">Conversations</h6>
           <form class="d-none d-sm-inline-block form-inline" action="#conversations" method="GET">
             <div class="input-group">
-              <input name="search" type="text" class="form-control small" placeholder="Search..." value="{{view.search|default:''}}" aria-label="Search" aria-describedby="basic-addon2">
+              <input name="conversation_search" type="text" class="form-control small" placeholder="Search..." value="{{view.conversation_search|default:''}}" aria-label="Search" aria-describedby="basic-addon2">
               <div class="input-group-append">
                 <button class="btn btn-primary" type="submit">
                   <i class="fas fa-search fa-sm"></i>
@@ -200,16 +200,16 @@
                 <nav aria-label="Conversations table pages">
                   <ul class="pagination justify-content-center">
                     <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
-                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page=1#conversations" aria-label="First">
+                      <a class="page-link" href="?{% if view.conversation_search %}conversation_search={{view.conversation_search}}&{% endif %}page=1#conversations" aria-label="First">
                         <span aria-hidden="true">&laquo;</span>
                         <span class="sr-only">Previous</span>
                       </a>
                     </li>
                     {% for page in view.page_links %}
-                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conversations">{{page}}</a></li>
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.conversation_search %}conversation_search={{view.conversation_search}}&{% endif %}page={{page}}#conversations">{{page}}</a></li>
                     {% endfor %}
                     <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
-                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}#conversations" aria-label="Last">
+                      <a class="page-link" href="?{% if view.conversation_search %}conversation_search={{view.conversation_search}}&{% endif %}page={{view.last_page}}#conversations" aria-label="Last">
                         <span aria-hidden="true">&raquo;</span>
                         <span class="sr-only">{{Next}}</span>
                       </a>
