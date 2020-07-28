@@ -295,7 +295,7 @@ class MemberProfile(SavannahView):
         
     @property 
     def member_levels(self):
-        return MemberLevel.objects.filter(community=self.community, member=self.member).order_by('-project__default_project', 'timestamp')
+        return MemberLevel.objects.filter(community=self.community, member=self.member).order_by('-project__default_project', '-level', 'timestamp')
 
     @property
     def all_gifts(self):
