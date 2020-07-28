@@ -160,7 +160,8 @@ class PluginImporter:
                         target=self.community,
                         level='error',
                         icon_name="fas fa-file-import",
-                        link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
+                        link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id}),
+                        error=str(e)
                     )
                     if self.verbosity:
                         print("Failed to import %s: %s" %(channel.name, e))
