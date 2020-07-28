@@ -50,10 +50,10 @@ class ProjectOverview(SavannahView):
         return Task.objects.filter(project=self.project, done__isnull=True)
 
     def core_levels(self):
-        return MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CORE).order_by('-timestamp').select_related('member')
+        return MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CORE).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
         
     def contrib_levels(self):
-        return MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-timestamp').select_related('member')[:100]
+        return MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-timestamp').select_related('member').prefetch_related('member__tags')[:100]
         
     @property
     def levels_chart(self):

@@ -37,7 +37,7 @@ class Contributions(SavannahFilterView):
         if self.role:
             contributions = contributions.filter(author__role=self.role)
 
-        contributions = contributions.annotate(author_name=F('author__name'), tag_count=Count('tags'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).order_by('-timestamp')
+        contributions = contributions.annotate(author_name=F('author__name'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).prefetch_related('tags').order_by('-timestamp')
         self.result_count = contributions.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
         return contributions[start:start+self.RESULTS_PER_PAGE]
@@ -65,7 +65,7 @@ class Contributions(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
 
-        members = members.annotate(last_active=Max('contribution__timestamp', filter=contrib_filter))
+        members = members.annotate(last_active=Max('contribution__timestamp', filter=contrib_filter)).filter(last_active__isnull=False).prefetch_related('tags')
         actives = dict()
         for m in members:
             if m.last_active is not None:
@@ -84,7 +84,7 @@ class Contributions(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
 
-        members = members.annotate(contribution_count=Count('contribution', filter=contrib_filter))
+        members = members.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0).prefetch_related('tags')
         for m in members:
             if m.contribution_count > 0:
                 activity_counts[m] = m.contribution_count
@@ -111,7 +111,7 @@ class Contributions(SavannahFilterView):
 
         members = Member.objects.filter(community=self.community)
         members = members.annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__participants__in=contributor_ids, speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
-        members = members.order_by('-conversation_count')
+        members = members.order_by('-conversation_count').filter(conversation_count__gt=0).prefetch_related('tags')
         for m in members[:10]:
             if m.conversation_count > 0:
                 activity_counts[m] = m.conversation_count
@@ -130,7 +130,7 @@ class Contributions(SavannahFilterView):
         if self.role:
             contributors = contributors.filter(role=self.role)
 
-        contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
+        contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0)
 
         for c in contributors:
             if c.contribution_count > 0:
@@ -138,7 +138,7 @@ class Contributions(SavannahFilterView):
 
         members = Member.objects.filter(community=self.community)
         members = members.annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
-        members = members.order_by('-connection_count')
+        members = members.order_by('-connection_count').filter(connection_count__gt=0).prefetch_related('tags')
         for m in members:
             if m.connection_count > 0:
                 activity_counts[m] = m.connection_count

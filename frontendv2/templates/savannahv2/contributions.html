@@ -82,7 +82,7 @@
                 {% for member, date in view.recent_contributors %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
@@ -113,7 +113,7 @@
                 {% for member, count in view.top_contributors %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -149,7 +149,7 @@
                 {% for member, convo_count in view.top_supporters %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{convo_count}}</td>
@@ -182,7 +182,7 @@
                 {% for member, convo_count in view.top_enablers %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{convo_count}}</td>
@@ -233,7 +233,7 @@
                   <td>{{contribution.timestamp}}</td>
                   <td>
                     <a target="_blank" href="{{contribution.location|default:"#"}}">{{ contribution.title }}</a>
-                    {% if contribution.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=contribution.tags.all %}{% endif %}
+                    {% include 'savannahv2/tag_list.html' with tags=contribution.tags.all %}
                   </td>
                   <td>{% if contribution.author_name %}<a href="{% url 'member_profile' contribution.author_id %}">{{contribution.author_name}}</a>{% endif %}</td>
                 </tr>
