@@ -345,7 +345,7 @@ class MemberLevel(models.Model):
     CONTRIBUTOR = 2
     CORE = 3
     LEVEL_MAP = {
-        USER: 'User',
+        USER: 'Visitor',
         PARTICIPANT: 'Participant',
         CONTRIBUTOR: 'Contributor',
         CORE: 'Core'
@@ -354,7 +354,7 @@ class MemberLevel(models.Model):
         (CORE, 'Core'),
         (CONTRIBUTOR, 'Contributor'),
         (PARTICIPANT, 'Participant'),
-        (USER, 'User'),
+        (USER, 'Visitor'),
     ]
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='collaborations', on_delete=models.CASCADE)

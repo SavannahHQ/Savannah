@@ -64,7 +64,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Member Levels</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Engagement Levels</h6>
                   <a class="text-gray-500" href="{% url 'project_threshold_edit' view.community.id view.project.id %}" title="Adjust thresholds"><i class="fas fa-edit"> </i></a>
                 </div>
                 <!-- Card Body -->
@@ -117,7 +117,7 @@
                   {% endif %}
                   </td>
                   <td>
-                    <button class="btn btn-sm btn-danger" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
+                    <button class="btn btn-sm btn-danger text-nowrap" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
                   </td>
                 </tr>
                 {% endfor %}
