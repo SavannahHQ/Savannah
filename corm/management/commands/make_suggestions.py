@@ -30,7 +30,7 @@ class Command(BaseCommand):
                 print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
                     print("    <- [%s] %s" % (source_member.id, source_member))
-                    suggestion, created = SuggestMemberMerge.objects.update_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching contact emails: %s' % dup['email_address']})
+                    suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching contact emails: %s' % dup['email_address']})
                     if created:
                         merge_count += 1
 
@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
                     print("    <- [%s] %s" % (source_member.id, source_member))
-                    suggestion, created = SuggestMemberMerge.objects.update_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching contact: %s' % dup['detail']})
+                    suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching contact: %s' % dup['detail']})
                     if created:
                         merge_count += 1
 
@@ -65,7 +65,7 @@ class Command(BaseCommand):
                 print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
                     print("    <- [%s] %s" % (source_member.id, source_member))
-                    suggestion, created = SuggestMemberMerge.objects.update_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching name: %s' % dup['name']})
+                    suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Matching name: %s' % dup['name']})
                     if created:
                         merge_count += 1
 
