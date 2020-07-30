@@ -123,55 +123,53 @@ class SlackImporter(PluginImporter):
             if item.get('data').get('subtype') is None and item.get('data').get('user_data'):
                 tagged = set(tag_matcher.findall(item.get('data').get('text')))
 
-                # We only want to check comments that tag somebody else, or are part of a thread
-                if len(tagged) > 0 or 'thread_ts' in item.get('data'):
-                    #print("Importing conversation from %s" % item.get('data').get('user_data').get('name'))
-                    slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
-                    tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
-                    member = self.make_member(slack_user_id, item.get('data').get('user_data').get('name'), tstamp=tstamp, speaker=True, replace_first_seen=from_date)
-                    server = source.server or "slack.com"
-                    slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
-                    slack_convo_link = slack_convo_id
-                    thread = None
-                    if 'thread_ts' in item.get('data'):
-                        slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
-                        slack_thread_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
-                        slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
-                        thread_tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
-                        thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_id, channel=channel, defaults={'timestamp':thread_tstamp, 'location': slack_thread_link})
-                        thread.participants.add(member)
+                #print("Importing conversation from %s" % item.get('data').get('user_data').get('name'))
+                slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
+                tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
+                member = self.make_member(slack_user_id, item.get('data').get('user_data').get('name'), tstamp=tstamp, speaker=True, replace_first_seen=from_date)
+                server = source.server or "slack.com"
+                slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
+                slack_convo_link = slack_convo_id
+                thread = None
+                if 'thread_ts' in item.get('data'):
+                    slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
+                    slack_thread_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
+                    slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
+                    thread_tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
+                    thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_id, channel=channel, defaults={'timestamp':thread_tstamp, 'location': slack_thread_link})
+                    thread.participants.add(member)
 
-                    convo_text = item.get('data').get('text')
-                    for tagged_user in tagged:
-                        if slack._users.get(tagged_user):
-                            convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
-                    convo_text = convo_text
+                convo_text = item.get('data').get('text')
+                for tagged_user in tagged:
+                    if slack._users.get(tagged_user):
+                        convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
+                convo_text = convo_text
 
-                    convo = self.make_conversation(origin_id=slack_convo_id, channel=channel, speaker=member, content=convo_text, tstamp=tstamp, location=slack_convo_link, thread=thread)
-                    convo.participants.add(member)
+                convo = self.make_conversation(origin_id=slack_convo_id, channel=channel, speaker=member, content=convo_text, tstamp=tstamp, location=slack_convo_link, thread=thread)
+                convo.participants.add(member)
 
-                    for tagged_user in tagged:
-                        #if not slack._users.get(tagged_user):
-                            #print("Unknown Slack user: %s" % tagged_user)
-                            #continue
-                        #print("Checking for %s" % tagged_user)
+                for tagged_user in tagged:
+                    #if not slack._users.get(tagged_user):
+                        #print("Unknown Slack user: %s" % tagged_user)
+                        #continue
+                    #print("Checking for %s" % tagged_user)
+                    try:
+                        tagged_user_id = "slack.com/%s" % tagged_user
+                        #tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
+                        tagged_member = self.make_member(tagged_user_id, tagged_user)
+                        convo.participants.add(tagged_member)
+                        if thread is not None:
+                            thread.participants.add(tagged_member)
+                        member.add_connection(tagged_member, source, tstamp)
+                    except:
+                        print("    Failed to find Contact for %s" % tagged_user)
+
+                # Connect this conversation's speaker to everyone else in this thread
+                if thread is not None:
+                    for thread_member in thread.participants.all():
                         try:
-                            tagged_user_id = "slack.com/%s" % tagged_user
-                            #tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
-                            tagged_member = self.make_member(tagged_user_id, tagged_user)
-                            convo.participants.add(tagged_member)
-                            if thread is not None:
-                                thread.participants.add(tagged_member)
-                            member.add_connection(tagged_member, source, tstamp)
-                        except:
-                            print("    Failed to find Contact for %s" % tagged_user)
-
-                    # Connect this conversation's speaker to everyone else in this thread
-                    if thread is not None:
-                        for thread_member in thread.participants.all():
-                            try:
-                                member.add_connection(thread_member, source, tstamp)
-                                convo.participants.add(thread_member)
-                            except Exception as e:
-                                print("    Failed to make connection between %s and %s" % (member, tagged_contact.member))
-                                print(e)
+                            member.add_connection(thread_member, source, tstamp)
+                            convo.participants.add(thread_member)
+                        except Exception as e:
+                            print("    Failed to make connection between %s and %s" % (member, tagged_contact.member))
+                            print(e)
