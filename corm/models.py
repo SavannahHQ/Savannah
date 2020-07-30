@@ -56,7 +56,8 @@ class Community(models.Model):
             self.save()
         Tag.objects.get_or_create(name="thankful", community=self, defaults={'color':"aff5ab", 'keywords':"thanks, thank you, thx, thank yo"})
         Tag.objects.get_or_create(name="greeting", community=self, defaults={'color':"abdef5", 'keywords':"welcome, hi, hello"})
-
+        Project.objects.get_or_create(community=self, default_project=True, defaults={'name': self.name, 'owner':None, 'threshold_user':1, 'threshold_participant':10, 'threshold_contributor':1, 'threshold_core':10})
+            
     def __str__(self):
         return self.name
 
