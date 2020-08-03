@@ -256,7 +256,7 @@ def new_community(request):
         if form.is_valid():
             new_community = form.save()
             new_community.bootstrap()
-            messages.success(request, "Welcome to your new Communtiy!")
+            messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
             return redirect('dashboard', community_id=new_community.id)
     else:
         form = NewCommunityForm(instance=community)
