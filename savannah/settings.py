@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'notifications',
     'crispy_forms',
     'totd',
+    'simple_ga',
 
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
@@ -72,6 +73,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "simple_ga.middleware.GAEventMiddleware",
 ]
 
 ROOT_URLCONF = 'savannah.urls'
@@ -88,6 +90,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 "totd.context_processors.tips",
+                "simple_ga.context_processors.events",
             ],
         },
     },

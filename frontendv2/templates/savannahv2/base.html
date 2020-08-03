@@ -39,6 +39,23 @@
         }
     }
     </style>
+    {% if GOOGLE_ANALYTICS_ID %}
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '{{GOOGLE_ANALYTICS_ID}}');
+
+      // GA Events
+      {% for event in ga_events %}
+      {{ event.gtag }}
+      {% endfor %}
+      {% block extra_google_analytics %}{% endblock %}
+      </script>
+    {% endif %}
     {% block page_styles %}{% endblock %}
 
 </head>
