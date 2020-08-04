@@ -103,6 +103,10 @@ class DiscoursePlugin(BasePlugin):
                                 'topic': sub.get('description_text'),
                                 'count': sub.get('topic_count'),
                             })
+        elif resp.status_code == 403:
+            raise RuntimeError("Invalid username or token")
+        else:
+            raise RuntimeError("%s (%s)" % (resp.reason, resp.status_code))
         return channels
 
 class DiscourseImporter(PluginImporter):

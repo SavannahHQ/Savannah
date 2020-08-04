@@ -85,6 +85,8 @@ class SlackPlugin(BasePlugin):
         resp = requests.get('https://slack.com/api/conversations.list?token=%s' % source.auth_secret)
         if resp.status_code == 200:
             data = resp.json()
+            if data['ok'] == False:
+                raise RuntimeError(data['error'])
             for channel in data['channels']:
                 if not channel['is_archived'] and not channel['is_private']:
                     channels.append(
@@ -95,6 +97,11 @@ class SlackPlugin(BasePlugin):
                             'count':channel['num_members'],
                         }
                     )
+        elif resp.status_code == 403:
+            raise RuntimeError("Invalid authentication token")
+        else:
+            raise RuntimeError("%s (%s)" % (resp.reason, resp.status_code))
+
         return channels
 
 class SlackImporter(PluginImporter):
