@@ -176,6 +176,8 @@ class GithubPlugin(BasePlugin):
                     'name': repo.get('name'),
                     'topic': repo.get('description'),
                     'count': repo.get('updated_at'),
+                    'is_private': repo.get('private'),
+                    'is_archived': repo.get('archived'),
                 })
         else:
             print("Request failed: %s" % resp.content)

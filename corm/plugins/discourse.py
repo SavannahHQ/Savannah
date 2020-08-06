@@ -89,6 +89,7 @@ class DiscoursePlugin(BasePlugin):
                     'name': category.get('name'),
                     'topic': category.get('description_text'),
                     'count': category.get('topics_all_time'),
+                    'is_private': category.get('read_restricted')
                 })
                 subcategories = category.get('subcategory_ids')
                 if subcategories:
@@ -102,6 +103,7 @@ class DiscoursePlugin(BasePlugin):
                                 'name': '%s / %s' % (category.get('name'), sub.get('name')),
                                 'topic': sub.get('description_text'),
                                 'count': sub.get('topic_count'),
+                                'is_private': sub.get('read_restricted')
                             })
         elif resp.status_code == 403:
             raise RuntimeError("Invalid username or token")

@@ -100,7 +100,11 @@
                 <tbody>
                 {% for channel in view.available_channels %}
                 <tr>
-                  <td class="text-nowrap">{{ channel.name }}</td>
+                  <td class="text-nowrap">
+                    {% if channel.is_private %}<i class="fas fa-lock" title="Private"></i> {% endif %}
+                    {% if channel.is_archived %}<i class="fas fa-archive" title="Archived"></i> {% endif %}
+                    {{ channel.name }}
+                  </td>
                   <td>{{channel.topic}}</td>
                   <td class="text-center"><button class="btn btn-success btn-sm" type="submit" name="track_channel_id" value="{{channel.id}}" >Add</button></td>
                 </tr>

@@ -88,15 +88,16 @@ class SlackPlugin(BasePlugin):
             if data['ok'] == False:
                 raise RuntimeError(data['error'])
             for channel in data['channels']:
-                if not channel['is_archived'] and not channel['is_private']:
-                    channels.append(
-                        {
-                            'id': channel['id'],
-                            'name': channel['name'],
-                            'topic': channel['topic']['value'],
-                            'count':channel['num_members'],
-                        }
-                    )
+                channels.append(
+                    {
+                        'id': channel['id'],
+                        'name': channel['name'],
+                        'topic': channel['topic']['value'],
+                        'count':channel['num_members'],
+                        'is_private': channel['is_private'],
+                        'is_archived': channel['is_archived'],
+                    }
+                )
         elif resp.status_code == 403:
             raise RuntimeError("Invalid authentication token")
         else:
