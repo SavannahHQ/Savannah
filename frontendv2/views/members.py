@@ -235,7 +235,7 @@ class AllMembers(SavannahFilterView):
     def all_members(self):
         members = Member.objects.filter(community=self.community)
         if self.search:
-            members = members.filter(Q(name__icontains=self.search) | Q(contact__detail__icontains=self.search))
+            members = members.filter(Q(name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search))
 
         if self.tag:
             members = members.filter(tags=self.tag)
