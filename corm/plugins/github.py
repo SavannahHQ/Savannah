@@ -17,7 +17,7 @@ GITHUB_USER_URL = 'https://api.github.com/users/%(username)s'
 GITHUB_OWNER_ORGS_URL = 'https://api.github.com/user/orgs'
 GITHUB_MEMBER_ORGS_URL = 'https://api.github.com/users/%(username)s/orgs'
 GITHUB_ISSUES_URL = 'https://api.github.com/repos/%(owner)s/%(repo)s/issues?state=all&since=%(since)s&page=%(page)s'
-GITHUB_REPOS_URL = 'https://api.github.com/orgs/%(owner)s/repos?sort=pushed&direction=desc'
+GITHUB_REPOS_URL = 'https://api.github.com/orgs/%(owner)s/repos?sort=pushed&direction=desc&page=%(page)s'
 GITHUB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
 
 AUTHORIZATION_BASE_URL = 'https://github.com/login/oauth/authorize'
@@ -165,24 +165,30 @@ class GithubPlugin(BasePlugin):
 
     def get_channels(self, source):
         channels = []
-
+        page = 0
+        has_more = True
         headers = {'Authorization': 'token %s' % source.auth_secret}
-        resp = requests.get(GITHUB_REPOS_URL % {'owner': source.auth_id}, headers=headers)   
-        if resp.status_code == 200:
-            data = resp.json()
-            for repo in data:
-                channels.append({
-                    'id': repo.get('html_url'),
-                    'name': repo.get('name'),
-                    'topic': repo.get('description'),
-                    'count': repo.get('updated_at'),
-                    'is_private': repo.get('private'),
-                    'is_archived': repo.get('archived'),
-                })
-        else:
-            print("Request failed: %s" % resp.content)
-            data = resp.json()
-            raise RuntimeError(data.get('message'))
+        while has_more:
+            page += 1
+            has_more = False
+            resp = requests.get(GITHUB_REPOS_URL % {'owner': source.auth_id, 'page': page}, headers=headers)   
+            if resp.status_code == 200:
+                data = resp.json()
+                for repo in data:
+                    print(repo)
+                    has_more = True
+                    channels.append({
+                        'id': repo.get('html_url'),
+                        'name': repo.get('name'),
+                        'topic': repo.get('description'),
+                        'count': repo.get('updated_at'),
+                        'is_private': repo.get('private'),
+                        'is_archived': repo.get('archived'),
+                    })
+            else:
+                print("Request failed: %s" % resp.content)
+                data = resp.json()
+                raise RuntimeError(data.get('message'))
         return channels
 
 class GithubImporter(PluginImporter):
