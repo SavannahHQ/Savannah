@@ -1,8 +1,7 @@
 from corm.plugins import BasePlugin, PluginImporter
 import datetime
 import re
-from perceval.backends.core.slack import Slack
-from corm.models import Community, Source, Member, Contact, Channel, Conversation
+from corm.models import *
 from urllib.parse import urlparse, parse_qs
 from requests_oauthlib import OAuth2Session
 from django.conf import settings
@@ -13,6 +12,10 @@ import requests
 
 AUTHORIZATION_BASE_URL = 'https://slack.com/oauth/authorize'
 TOKEN_URL = 'https://slack.com/api/oauth.access'
+CONVERSATIONS_URL = 'https://slack.com/api/conversations.history?channel=%(channel)s&cursor=%(cursor)s&oldest=%(oldest)s'
+CONVERSATION_LOOKUP = 'https://slack.com/api/conversations.history?channel=%(channel)s&latest=%(ts)s&limit=1&inclusive=1'
+USER_PROFILE_URL = 'https://slack.com/api/users.info?user=%(user)s'
+USERS_LIST = 'https://slack.com/api/users.list?cursor=%(cursor)s'
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -21,6 +24,9 @@ def authenticate(request):
         'channels:history',
         'channels:read',
         'users:read',
+        'users:read.email',
+        'groups:read',
+        'groups:history',
     ]
     callback_uri = request.build_absolute_uri(reverse('slack_callback'))
     client = OAuth2Session(client_id, scope=slack_auth_scope, redirect_uri=callback_uri)
@@ -42,8 +48,8 @@ def callback(request):
 
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
-        print(token)
-        source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':token['team_name'], 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
+        cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={"auth_id": token['user_id'], "auth_secret": token['access_token']})
+        source, created = Source.objects.update_or_create(community=community, auth_id=token['team_id'], connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':token['team_name'], 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
         if created:
             messages.success(request, 'Your Slack workspace has been connected!')
         else:
@@ -82,10 +88,13 @@ class SlackPlugin(BasePlugin):
 
     def get_channels(self, source):
         channels = []
-        resp = requests.get('https://slack.com/api/conversations.list?token=%s' % source.auth_secret)
+        resp = requests.get('https://slack.com/api/conversations.list?types=public_channel,private_channel&token=%s' % source.auth_secret)
         if resp.status_code == 200:
             data = resp.json()
             if data['ok'] == False:
+                if data['error'] == 'missing_scope':
+                    url = reverse('slack_auth')
+                    raise RuntimeError("You may need to <a href=\"%s\">reauthorize Slack</a>" % url)
                 raise RuntimeError(data['error'])
             for channel in data['channels']:
                 channels.append(
@@ -93,7 +102,7 @@ class SlackPlugin(BasePlugin):
                         'id': channel['id'],
                         'name': channel['name'],
                         'topic': channel['topic']['value'],
-                        'count':channel['num_members'],
+                        'count':channel.get('num_members', 0),
                         'is_private': channel['is_private'],
                         'is_archived': channel['is_archived'],
                     }
@@ -110,74 +119,154 @@ class SlackImporter(PluginImporter):
     def __init__(self, source):
         super().__init__(source)
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
+        self.API_HEADERS =  {
+            'Authorization': 'Bearer %s' % source.auth_secret,
+        }
+        self._users = dict()
+        self.prefetch_users()
+        self._update_threads = dict()
+        self.tag_matcher = re.compile(r'\<\@([^>]+)\>')
+
+    def api_call(self, path):
+        return self.api_request(path, headers=self.API_HEADERS)
+
+    def prefetch_users(self):
+        cursor = ''
+        has_more = True
+        while has_more:
+            has_more = False
+            resp = self.api_call(USERS_LIST % {'cursor': cursor})
+            if resp.status_code == 200:
+                data = resp.json()
+                cursor = data['response_metadata'].get('next_cursor')
+                if cursor:
+                    has_more = True
+                for user in data['members']:
+                    self._users[user.get('id')] = user
+
+    def get_user(self, user_id):
+        if user_id in self._users:
+            return self._users[user_id]
+        resp = self.api_call(USER_PROFILE_URL % {'user': user_id})
+        if resp.status_code == 200:
+            data = resp.json()
+            if data['ok']:
+                self._users[user_id] = data['user']
+                return self._users[user_id]
+        return None
+
+    def update_identity(self, identity):
+        data = self.get_user(identity.origin_id.split('/')[-1])
+        if data is not None:
+            identity.name = data.get('profile').get('real_name')            
+            identity.email_address = data.get('profile').get('email')
+            identity.avatar_url = data.get('profile').get('image_512')
+            identity.save()
+        if identity.member.name == identity.detail and identity.name is not None:
+            identity.member.name = identity.name
+        if identity.member.email_address is None:
+            identity.member.email_address = identity.email_address
+        if identity.member.avatar_url is None:
+            identity.member.avatar_url = identity.avatar_url
+        identity.member.save()
+
+    def get_message(self, channel_id, msg_tstamp):
+        resp = self.api_call(CONVERSATION_LOOKUP % {'channel': channel_id, 'ts': msg_tstamp})
+        if resp.status_code == 200:
+            data = resp.json()
+            if data['ok']:
+                return data['messages'][0]
+        return None
 
     def import_channel(self, channel):
-        source = channel.source
-        community = source.community
         if channel.last_import and not self.full_import:
             from_date = channel.last_import
         else:
             from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
         print("From %s since %s" % (channel.name, from_date))
-        slack = Slack(channel.origin_id, channel.source.auth_secret)
-        items = [i for i in slack.fetch(from_date=from_date)]
-        for slack_id, user in slack._users.items():
-            if not user.get('is_bot'):
-                slack_user_id = "slack.com/%s" % slack_id
-                member = self.make_member(slack_user_id, detail=user.get('name'), tstamp=from_date, name=user.get('real_name', user.get('name')))
 
-        tag_matcher = re.compile('\<\@([^>]+)\>')
-        for item in items:
-            if item.get('data').get('subtype') is None and item.get('data').get('user_data'):
-                tagged = set(tag_matcher.findall(item.get('data').get('text')))
+        self._update_threads = dict()
+        from_timestamp = from_date.timestamp()
+        cursor = ''
+        has_more = True
+        while has_more:
+            has_more = False
+            resp = self.api_call(CONVERSATIONS_URL % {'channel': channel.origin_id, 'oldest': from_timestamp, 'cursor': cursor})
+            if resp.status_code == 200:
+                data = resp.json()
+                if data['ok']:
+                    if data['has_more']:
+                        has_more = True
+                        cursor = data['response_metadata']['next_cursor']
+                    for message in data['messages']:
+                        if message['type'] == 'message' and ('subtype' not in message or message['subtype'] == "bot_message"):
+                            self.import_message(channel, message)
+        for thread_id, thread_ts in self._update_threads.items():
+            data = self.get_message(channel, thread_ts)
+            if data is not None:
+                thread = Conversation.objects.get(channel=channel, id=thread_id)
+                thread.content = data.get('text')
+                thread.save()
+        return
 
-                #print("Importing conversation from %s" % item.get('data').get('user_data').get('name'))
-                slack_user_id = "slack.com/%s" % item.get('data').get('user_data').get('id')
-                tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
-                member = self.make_member(slack_user_id, item.get('data').get('user_data').get('name'), tstamp=tstamp, speaker=True, replace_first_seen=from_date)
-                server = source.server or "slack.com"
-                slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('ts').replace(".", ""))
-                slack_convo_link = slack_convo_id
-                thread = None
-                if 'thread_ts' in item.get('data'):
-                    slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
-                    slack_thread_id = "%s/archives/%s/p%s" % (server, channel.origin_id, item.get('data').get('thread_ts').replace(".", ""))
-                    slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (item.get('data').get('thread_ts'), channel.origin_id)
-                    thread_tstamp = datetime.datetime.fromtimestamp(float(item.get('data').get('ts')))
-                    thread, created = Conversation.objects.get_or_create(origin_id=slack_thread_id, channel=channel, defaults={'timestamp':thread_tstamp, 'location': slack_thread_link})
-                    thread.participants.add(member)
+    def import_message(self, channel, message):
+        source = channel.source
 
-                convo_text = item.get('data').get('text')
-                for tagged_user in tagged:
-                    if slack._users.get(tagged_user):
-                        convo_text = convo_text.replace("<@%s>"%tagged_user, "@%s"%slack._users.get(tagged_user).get('real_name'))
-                convo_text = convo_text
+        tstamp = datetime.datetime.fromtimestamp(float(message.get('ts')))
+        user = self.get_user(message['user'])
+        slack_user_id = "slack.com/%s" % user['id']
+        speaker = self.make_member(slack_user_id, detail=user.get('name'), email_address=user.get('profile').get('email'), tstamp=tstamp, speaker=True, name=user.get('real_name', user.get('name')))
+        if user['is_bot'] and speaker.role != Member.BOT:
+            speaker.role = Member.BOT
+            speaker.save()
 
-                convo = self.make_conversation(origin_id=slack_convo_id, channel=channel, speaker=member, content=convo_text, tstamp=tstamp, location=slack_convo_link, thread=thread)
-                convo.participants.add(member)
+        server = source.server or "slack.com"
+        slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, message.get('ts').replace(".", ""))
+        slack_convo_link = slack_convo_id
+        thread = None
+        if 'thread_ts' in message:
+            slack_convo_link = slack_convo_link + "?thread_ts=%s&cid=%s" % (message.get('thread_ts'), channel.origin_id)
+            slack_thread_id = "%s/archives/%s/p%s" % (server, channel.origin_id, message.get('thread_ts').replace(".", ""))
+            slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (message.get('thread_ts'), channel.origin_id)
+            thread_tstamp = datetime.datetime.fromtimestamp(float(message.get('thread_ts')))
+            thread = self.make_conversation(origin_id=slack_thread_id, channel=channel, speaker=speaker, tstamp=thread_tstamp, location=slack_thread_link)
+            thread.participants.add(speaker)
+            self._update_threads[thread.id] = message.get('thread_ts')
 
-                for tagged_user in tagged:
-                    #if not slack._users.get(tagged_user):
-                        #print("Unknown Slack user: %s" % tagged_user)
-                        #continue
-                    #print("Checking for %s" % tagged_user)
-                    try:
-                        tagged_user_id = "slack.com/%s" % tagged_user
-                        #tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
-                        tagged_member = self.make_member(tagged_user_id, tagged_user)
-                        convo.participants.add(tagged_member)
-                        if thread is not None:
-                            thread.participants.add(tagged_member)
-                        member.add_connection(tagged_member, source, tstamp)
-                    except:
-                        print("    Failed to find Contact for %s" % tagged_user)
+        convo_text = message.get('text')
+        tagged = set(self.tag_matcher.findall(message.get('text')))
+        for tagged_user_id in tagged:
+            tagged_user = self.get_user(tagged_user_id)
+            if tagged_user:
+                convo_text = convo_text.replace("<@%s>"%tagged_user_id, "@%s"%tagged_user.get('real_name'))
 
-                # Connect this conversation's speaker to everyone else in this thread
+        convo = self.make_conversation(origin_id=slack_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=slack_convo_link, thread=thread)
+        convo.participants.add(speaker)
+        if convo.id in self._update_threads:
+            del self._update_threads[convo.id]
+
+        for tagged_user in tagged:
+            #if not slack._users.get(tagged_user):
+                #print("Unknown Slack user: %s" % tagged_user)
+                #continue
+            #print("Checking for %s" % tagged_user)
+            try:
+                tagged_user_id = "slack.com/%s" % tagged_user
+                #tagged_contact = Contact.objects.get(origin_id=tagged_user_id, source=source)
+                tagged_member = self.make_member(tagged_user_id, tagged_user)
+                convo.participants.add(tagged_member)
                 if thread is not None:
-                    for thread_member in thread.participants.all():
-                        try:
-                            member.add_connection(thread_member, source, tstamp)
-                            convo.participants.add(thread_member)
-                        except Exception as e:
-                            print("    Failed to make connection between %s and %s" % (member, tagged_contact.member))
-                            print(e)
+                    thread.participants.add(tagged_member)
+                speaker.add_connection(tagged_member, source, tstamp)
+            except:
+                print("    Failed to find Contact for %s" % tagged_user)
+
+        # Connect this conversation's speaker to everyone else in this thread
+        if thread is not None:
+            for thread_member in thread.participants.all():
+                try:
+                    speaker.add_connection(thread_member, source, tstamp)
+                    convo.participants.add(thread_member)
+                except Exception as e:
+                    print("    Failed to make connection between %s and %s" % (speaker, tagged_contact.member))
+                    print(e)

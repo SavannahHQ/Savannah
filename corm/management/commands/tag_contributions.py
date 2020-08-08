@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand, CommandError
 import datetime
 import re
 import string
-from perceval.backends.core.slack import Slack
 from corm.models import Tag, Contribution, Community
 
 PUNCTUATION = "!\"&'()*+,.:;<=>?@[\]^_`{|}~/\r\n"

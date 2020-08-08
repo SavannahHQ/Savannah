@@ -175,7 +175,6 @@ class GithubPlugin(BasePlugin):
             if resp.status_code == 200:
                 data = resp.json()
                 for repo in data:
-                    print(repo)
                     has_more = True
                     channels.append({
                         'id': repo.get('html_url'),

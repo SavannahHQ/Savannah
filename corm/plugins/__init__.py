@@ -57,6 +57,7 @@ class PluginImporter:
 
 
     def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None, speaker=False, replace_first_seen=False):
+        save_member = False
         if origin_id in self._member_cache:
             member = self._member_cache[origin_id]
         else:
@@ -77,21 +78,35 @@ class PluginImporter:
                         matched_contact.name = name
                     if email_address and not matched_contact.email_address:
                         matched_contact.email_address = email_address
+                    if avatar_url and not matched_contact.avatar_url:
+                        matched_contact.avatar_url = avatar_url
                     matched_contact.save()
                 member = matched_contact.member
+
+                if member.name == matched_contact.detail and matched_contact.name is not None:
+                    member.name = matched_contact.name
+                    save_member = True
+                if member.email_address is None:
+                    member.email_address = matched_contact.email_address
+                    save_member = True
+                if member.avatar_url is None:
+                    member.avatar_url = matched_contact.avatar_url
+                    save_member = True
 
             self._member_cache[origin_id] = member
         if member.first_seen == replace_first_seen and tstamp is not None:
             member.first_seen = tstamp
-            member.save()
+            save_member = True
 
         if speaker and tstamp is not None:
             if member.first_seen is None or tstamp < member.first_seen:
                 member.first_seen = tstamp
-                member.save()
+                save_member = True
             if member.last_seen is None or tstamp > member.last_seen:
                 member.last_seen = tstamp
-                member.save()
+                save_member = True
+        if save_member:
+            member.save()
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None):
