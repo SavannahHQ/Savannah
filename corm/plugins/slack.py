@@ -213,7 +213,10 @@ class SlackImporter(PluginImporter):
         source = channel.source
 
         tstamp = datetime.datetime.fromtimestamp(float(message.get('ts')))
-        user = self.get_user(message['user'])
+        if message.get('subtype', None) == "bot_message":
+            user = self.get_user(message['bot_id'])
+        else:
+            user = self.get_user(message['user'])
         slack_user_id = "slack.com/%s" % user['id']
         speaker = self.make_member(slack_user_id, detail=user.get('name'), email_address=user.get('profile').get('email'), tstamp=tstamp, speaker=True, name=user.get('real_name', user.get('name')))
         if user['is_bot'] and speaker.role != Member.BOT:
