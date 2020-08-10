@@ -138,11 +138,16 @@ class SlackImporter(PluginImporter):
             resp = self.api_call(USERS_LIST % {'cursor': cursor})
             if resp.status_code == 200:
                 data = resp.json()
-                cursor = data['response_metadata'].get('next_cursor')
-                if cursor:
-                    has_more = True
-                for user in data['members']:
-                    self._users[user.get('id')] = user
+                if data['ok']:
+                    cursor = data['response_metadata'].get('next_cursor')
+                    if cursor:
+                        has_more = True
+                    for user in data['members']:
+                        self._users[user.get('id')] = user
+                else:
+                    print("prefetch_users failed: %s" % resp.content)
+            else:
+                print("prefetch_users failed: %s (%s) " % (resp.content, resp.status_code))
 
     def get_user(self, user_id):
         if user_id in self._users:
