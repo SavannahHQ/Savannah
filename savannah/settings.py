@@ -61,6 +61,7 @@ INSTALLED_APPS = [
 CORM_PLUGINS = [
     "corm.plugins.discourse.DiscoursePlugin",
     "corm.plugins.slack.SlackPlugin",
+    "corm.plugins.discord.DiscordPlugin",
     "corm.plugins.github.GithubPlugin",
     "corm.plugins.rss.RssPlugin",
 ]

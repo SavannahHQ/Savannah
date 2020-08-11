@@ -26,6 +26,7 @@ urlpatterns = [
     path('slack/', include('corm.plugins.slack')),
     path('github/', include('corm.plugins.github')),
     path('discourse/', include('corm.plugins.discourse')),
+    path('discord/', include('corm.plugins.discord')),
     path('rss/', include('corm.plugins.rss')),
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
 ] 

@@ -19,7 +19,7 @@
             <div id="project{{project.id}}" class="col-lg-6 mb-2">
 
               <!-- Chart -->
-              <div class="card {% if project.default_project %}border-left-primary{% endif %} shadow mb-4">
+              <div class="card {% if project.default_project %}border-left-primary{% endif %} shadow mb-4" {% if project.tag %}style="border-left: #{{project.tag.color}} 0.25rem solid;}"{% endif %}>
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}"><i class="fas {% if project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{project.name}}</a></h6>
                   <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{{project.contrib_count}} Contributors</a></h6>
