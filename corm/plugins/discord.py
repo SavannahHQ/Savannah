@@ -20,6 +20,7 @@ DISCORD_GUILDS_URL = 'https://discord.com/api/users/@me/guilds'
 DISCORD_GUILD_URL = 'https://discord.com/api/guilds/%(guild)s'
 
 CONVERSATIONS_URL = 'https://discord.com/api/channels/%(channel)s/messages'
+CONVERSATIONS_NEXT_URL = 'https://discord.com/api/channels/%(channel)s/messages?before=%(lastpost)s'
 
 class DiscordOrgForm(forms.ModelForm):
     class Meta:
@@ -202,30 +203,39 @@ class DiscordImporter(PluginImporter):
             from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
         print("From %s since %s" % (channel.name, from_date))
 
-        cursor = ''
+        cursor = None
         has_more = True
+        utc = pytz.timezone('UTC')
         while has_more:
+            if cursor:
+                url = CONVERSATIONS_NEXT_URL % {'channel': channel.origin_id, 'lastpost': cursor}
+            else:
+                url = CONVERSATIONS_URL % {'channel': channel.origin_id}
+
             has_more = False
-            resp = self.api_call(CONVERSATIONS_URL % {'channel': channel.origin_id, 'lastpost': cursor})
+            cursor = None
+            resp = self.api_call(url)
             if resp.status_code == 200:
                 data = resp.json()
 
                 for message in data:
                     if message['type'] == 0:
-                        self.import_message(channel, message)
+                        tstamp_str = message.get('timestamp')
+                        if tstamp_str[29] == ':':
+                            tstamp_str = tstamp_str[:29] + tstamp_str[30:]
+                        tstamp = self.strptime(tstamp_str)
+                        tstamp = tstamp.astimezone(utc).replace(tzinfo=None)
+                        if tstamp >= from_date:
+                            self.import_message(channel, message, tstamp)
+                            has_more = True
+                            cursor = message['id']
             else:
                 print("Failed to get conversations: %s" % resp.content)
         return
 
-    def import_message(self, channel, message):
+    def import_message(self, channel, message, tstamp):
         source = channel.source
 
-        utc = pytz.timezone('UTC')
-        tstamp_str = message.get('timestamp')
-        if tstamp_str[29] == ':':
-            tstamp_str = tstamp_str[:29] + tstamp_str[30:]
-        tstamp = self.strptime(tstamp_str)
-        tstamp = tstamp.astimezone(utc).replace(tzinfo=None)
         user = message['author']
         discord_user_id = user.get('id')
         speaker = self.make_member(discord_user_id, detail=user.get('username'), email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
