@@ -221,7 +221,10 @@ class DiscordImporter(PluginImporter):
         source = channel.source
 
         utc = pytz.timezone('UTC')
-        tstamp = self.strptime(message.get('timestamp'))
+        tstamp_str = message.get('timestamp')
+        if tstamp_str[29] == ':':
+            tstamp_str = tstamp_str[:29] + tstamp_str[30:]
+        tstamp = self.strptime(tstamp_str)
         tstamp = tstamp.astimezone(utc).replace(tzinfo=None)
         user = message['author']
         discord_user_id = user.get('id')
