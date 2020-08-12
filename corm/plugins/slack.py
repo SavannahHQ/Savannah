@@ -221,14 +221,14 @@ class SlackImporter(PluginImporter):
         if message.get('subtype', None) == "bot_message":
             user_isbot = True
             user_id = message.get('bot_id')
-            user_name = message.get('username')
+            user_name = message.get('username', message.get('bot_id'))
             user_email = None
             user_real_name = user_name
         else:
             user = self.get_user(message['user'])
             user_isbot = False
             user_id = user.get('id')
-            user_name = user.get('name')
+            user_name = user.get('name', user.get('id'))
             user_email = user.get('profile').get('email')
             user_real_name = user.get('real_name', user_name)
         slack_user_id = "slack.com/%s" % user_id
