@@ -225,7 +225,6 @@ class DiscordImporter(PluginImporter):
                             # Ignore Discord timestamps after the second, because they don't use a consistent format
                             tstamp_str = message.get('timestamp')[:19]
                             tstamp = self.strptime(tstamp_str)
-                            tstamp = tstamp.astimezone(utc).replace(tzinfo=None)
                             if tstamp >= from_date:
                                 self.import_message(channel, message, tstamp)
                                 has_more = True
