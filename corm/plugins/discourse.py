@@ -158,8 +158,10 @@ class DiscourseImporter(PluginImporter):
           from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
       print("From %s since %s" % (category_name, self.strftime(from_date)))
 
+      has_more = True
       page = 0
-      while (True):
+      while (has_more):
+        has_more = False
         topics_url = DISCOURSE_TOPICS_URL % {'id': category_id, 'name': category_name, 'page': page}
             
         resp = self.api_call(topics_url)
@@ -171,7 +173,6 @@ class DiscourseImporter(PluginImporter):
             else:
                 page += 1
 
-            new_topics = 0
             for topic in data.get('topic_list').get('topics'):
                 if topic['category_id'] != category_id:
                     # Topic belongs to a sub-category
@@ -183,7 +184,9 @@ class DiscourseImporter(PluginImporter):
                 if last_posted < from_date:
                     #print("Old topic: %s" % last_posted)
                     continue
-                new_topics += 1
+
+                # Found a topic to import
+                has_more = True
                 #print("Importing %s" % topic['title'])
                 topic_url = "%s/t/%s/%s" % (self.source.server, topic['slug'], topic['id'])
                 topic_participants = set()
@@ -241,9 +244,6 @@ class DiscourseImporter(PluginImporter):
                 else:
                     print("%s: %s" % (posts_resp.status_code, posts_resp.content))
 
-            # No new topics in the last page, so don't keep checking
-            if new_topics == 0:
-                break
         else:
             print("%s: %s" % (resp.status_code, resp.content))
 
