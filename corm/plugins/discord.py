@@ -188,7 +188,7 @@ class DiscordImporter(PluginImporter):
 
     def __init__(self, source):
         super().__init__(source)
-        self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%f%z'
+        self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S'
         self.API_HEADERS =  {
             'Authorization': 'Bot %s' % source.auth_secret,
         }
@@ -219,16 +219,21 @@ class DiscordImporter(PluginImporter):
                 data = resp.json()
 
                 for message in data:
-                    if message['type'] == 0:
-                        tstamp_str = message.get('timestamp')
-                        if tstamp_str[29] == ':':
-                            tstamp_str = tstamp_str[:29] + tstamp_str[30:]
-                        tstamp = self.strptime(tstamp_str)
-                        tstamp = tstamp.astimezone(utc).replace(tzinfo=None)
-                        if tstamp >= from_date:
-                            self.import_message(channel, message, tstamp)
-                            has_more = True
-                            cursor = message['id']
+
+                    try:
+                        if message['type'] == 0:
+                            # Ignore Discord timestamps after the second, because they don't use a consistent format
+                            tstamp_str = message.get('timestamp')[:19]
+                            tstamp = self.strptime(tstamp_str)
+                            tstamp = tstamp.astimezone(utc).replace(tzinfo=None)
+                            if tstamp >= from_date:
+                                self.import_message(channel, message, tstamp)
+                                has_more = True
+                                cursor = message['id']
+                    except Exception as e:
+                        print("Failed to import message: %s" % e)
+                        print(message)
+                        raise e
             else:
                 print("Failed to get conversations: %s" % resp.content)
         return
