@@ -17,8 +17,9 @@ GITLAB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
 AUTHORIZATION_BASE_URL = 'https://gitlab.com/oauth/authorize'
 TOKEN_URL = 'https://gitlab.com/oauth/token'
 GITLAB_OWNER_GROUPS_URL = 'https://gitlab.com/api/v4/groups?min_access_level=10'
-GITLAB_GROUP_URL = 'https://gitlab.com/api/v4/groups/%(group_id)s'
-GITLAB_GROUP_PROJECTS_URL = 'https://gitlab.com/api/v4/groups/%(group_id)s/projects?include_subgroups=true'
+GITLAB_GROUP_URL = '/api/v4/groups/%(group_id)s'
+GITLAB_GROUP_PROJECTS_URL = '/api/v4/groups/%(group_id)s/projects?include_subgroups=true'
+GITLAB_ISSUES_URL = '/api/v4/projects/%(project_id)s/issues?order_by=updated_at&updated_after=%(updated_after)s'
 
 class GitlabGroupForm(forms.ModelForm):
     class Meta:
@@ -63,9 +64,10 @@ class SourceAdd(SavannahView):
                     if github_url.startswith('https://'):
                         github_url = github_url[8:]
                     url_parts = github_url.split('/')
+                    source.server = "https://%s" % url_parts[0]
                     source.auth_id = url_parts[1]
                     source.name = source.auth_id
-                resp = requests.get(GITLAB_GROUP_URL % {'group_id': source.auth_id})
+                resp = requests.get(source.server + GITLAB_GROUP_URL % {'group_id': source.auth_id})
                 if resp.status_code == 200:
                     group = resp.json()
                     source.name = group['name']
@@ -86,7 +88,7 @@ class SourceAdd(SavannahView):
         context = view.context
         context.update({
             "source_form": form,
-            'source_plugin': 'Github',
+            'source_plugin': 'Gitlab',
             'submit_text': 'Add',
             'submit_class': 'btn btn-success',
         })
@@ -152,20 +154,20 @@ class GitlabPlugin(BasePlugin):
     def get_channels(self, source):
         channels = []
         headers = {'Authorization': 'Bearer %s' % source.auth_secret}
-        resp = requests.get(GITLAB_GROUP_PROJECTS_URL % {'group_id': source.auth_id}, headers=headers)   
+        resp = requests.get(source.server + GITLAB_GROUP_PROJECTS_URL % {'group_id': source.auth_id}, headers=headers)   
         if resp.status_code == 200:
             data = resp.json()
-            for repo in data:
+            for project in data:
                 channels.append({
-                    'id': repo.get('web_url'),
-                    'name': repo.get('name_with_namespace'),
-                    'topic': repo.get('description'),
-                    'count': repo.get('last_activity_at'),
+                    'id': project.get('id'),
+                    'name': project.get('name_with_namespace'),
+                    'topic': project.get('description'),
+                    'count': project.get('last_activity_at'),
                 })
         else:
             print("Request failed: %s" % resp.content)
             data = resp.json()
-            raise RuntimeError(data.get('message'))
+            raise RuntimeError(data)
         return channels
 
 class GitlabImporter(PluginImporter):
@@ -177,11 +179,6 @@ class GitlabImporter(PluginImporter):
         }
         self.TIMESTAMP_FORMAT = GITLAB_TIMESTAMP
         self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
-
-    def api_call(self, path):
-        if settings.DEBUG:
-            print("API Call: %s" % path)
-        return self.api_request(path, headers=self.API_HEADERS)
 
     def update_identity(self, identity):
         pass
