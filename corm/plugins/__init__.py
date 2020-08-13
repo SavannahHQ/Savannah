@@ -134,6 +134,8 @@ class PluginImporter:
         return resp
 
     def api_call(self, path):
+        if self.source.server[-1] == '/' and path[0] == '/':
+            path = path[1:]
         return self.api_request(self.source.server+path, headers=self.API_HEADERS)
 
     def strftime(self, dtime):
