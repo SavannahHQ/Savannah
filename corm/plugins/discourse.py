@@ -229,14 +229,15 @@ class DiscourseImporter(PluginImporter):
                     #             posts_by_id[post['id']].content = post['raw']
                     #             posts_by_id[post['id']].save()
 
-                    for topic_post in posts_by_id.values():
-                        topic_post.participants.set(topic_participants)
+                    if len(topic_participants) < 20:
+                        for topic_post in posts_by_id.values():
+                            topic_post.participants.set(topic_participants)
 
-                    # Connect all participants
-                    for from_member in topic_participants:
-                        for to_member in topic_participants:
-                            if from_member.id != to_member.id:
-                                from_member.add_connection(to_member, self.source, post_tstamp)
+                        # Connect all participants
+                        for from_member in topic_participants:
+                            for to_member in topic_participants:
+                                if from_member.id != to_member.id:
+                                    from_member.add_connection(to_member, self.source, post_tstamp)
                 else:
                     print("%s: %s" % (posts_resp.status_code, posts_resp.content))
 
