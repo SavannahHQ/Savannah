@@ -112,29 +112,24 @@ class Connections(SavannahFilterView):
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
         if view.role:
             connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
-        connections = connections.select_related('from_member', 'to_member').order_by('-last_connected')
+        connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected')
 
-        for connection in connections[:10000]:
+        for connection in connections[:1000]:
             if connection.from_member_id != connection.to_member_id:
-                if not (connection.to_member_id, connection.from_member_id) in connected: 
+                if not connection.from_member_id in connected: 
                     links.append({"source":connection.from_member_id, "target":connection.to_member_id})
                     connected.add((connection.from_member_id, connection.to_member_id))
                     member_map[connection.from_member_id] = connection.from_member
-                    member_map[connection.to_member_id] = connection.to_member
                     if connection.from_member_id not in connection_counts:
                         connection_counts[connection.from_member_id] = 1
                     else:
                         connection_counts[connection.from_member_id] += 1
 
-                    if connection.to_member_id not in connection_counts:
-                        connection_counts[connection.to_member_id] = 1
-                    else:
-                        connection_counts[connection.to_member_id] += 1
 
         for member_id, member in member_map.items():
             tag_color = None
             if connection_counts.get(member_id, 0) >= 3:
-                tags = Tag.objects.filter(member__id=member_id)
+                tags = member.tags.all()
                 if len(tags) > 0:
                     tag_color = tags[0].color
             if tag_color is None and member.role == Member.BOT:

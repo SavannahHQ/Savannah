@@ -182,7 +182,6 @@ class DiscourseImporter(PluginImporter):
                     continue
                 last_posted = self.strptime(topic['last_posted_at'])
                 if last_posted < from_date:
-                    #print("Old topic: %s" % last_posted)
                     continue
 
                 # Found a topic to import
@@ -206,6 +205,8 @@ class DiscourseImporter(PluginImporter):
                     for post in posts:
                         discourse_post_id = post['id']
                         post_tstamp = self.strptime(post['created_at'])
+                        if post_tstamp < from_date:
+                            continue
                         post_user_id = post['user_id']
                         post_url = topic_url + '/' + str(post['post_number'])
                         author = self.make_member(post_user_id, post['username'], post_tstamp, speaker=True)
