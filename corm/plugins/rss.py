@@ -97,7 +97,7 @@ class RssPlugin(BasePlugin):
                 })
                 i += 1
             if len(channels) == 0:
-                raise Exception("No RSS feeds found at %s" % source.server)
+                raise Exception("No RSS links found at %s" % source.server)
         else:
             print("Request failed: %s" % resp.content)
             raise Exception("Request failed: %s" % resp.content)
