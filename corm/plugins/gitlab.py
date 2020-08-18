@@ -12,7 +12,7 @@ from corm.plugins import BasePlugin, PluginImporter
 from corm.models import *
 from frontendv2.views import SavannahView
 
-GITLAB_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
+GITLAB_TIMESTAMP = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 AUTHORIZATION_BASE_URL = 'https://gitlab.com/oauth/authorize'
 TOKEN_URL = 'https://gitlab.com/oauth/token'
@@ -20,6 +20,9 @@ GITLAB_OWNER_GROUPS_URL = 'https://gitlab.com/api/v4/groups?min_access_level=10'
 GITLAB_GROUP_URL = '/api/v4/groups/%(group_id)s'
 GITLAB_GROUP_PROJECTS_URL = '/api/v4/groups/%(group_id)s/projects?include_subgroups=true'
 GITLAB_ISSUES_URL = '/api/v4/projects/%(project_id)s/issues?order_by=updated_at&updated_after=%(updated_after)s'
+GITLAB_ISSUE_COMMENTS = '/api/v4/projects/%(project_id)s/issues/%(iid)s/discussions'
+GITLAB_MR_COMMENTS = '/api/v4/projects/%(project_id)s/merge_requests/%(iid)s/discussions'
+
 
 class GitlabGroupForm(forms.ModelForm):
     class Meta:
@@ -136,7 +139,7 @@ urlpatterns = [
 class GitlabPlugin(BasePlugin):
 
     def get_identity_url(self, contact):
-        pass#return "https://github.com/%s" % contact.detail
+        return contact.origin_id
 
     def get_auth_url(self):
         return reverse('gitlab_auth')
@@ -159,8 +162,8 @@ class GitlabPlugin(BasePlugin):
             data = resp.json()
             for project in data:
                 channels.append({
-                    'id': project.get('id'),
-                    'name': project.get('name_with_namespace'),
+                    'id': str(project.get('id')),
+                    'name': project.get('name'),
                     'topic': project.get('description'),
                     'count': project.get('last_activity_at'),
                 })
@@ -178,7 +181,7 @@ class GitlabImporter(PluginImporter):
             'Authorization': 'Bearer %s' % source.auth_secret,
         }
         self.TIMESTAMP_FORMAT = GITLAB_TIMESTAMP
-        self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
+        self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Merge Request")
 
     def update_identity(self, identity):
         pass
@@ -186,4 +189,67 @@ class GitlabImporter(PluginImporter):
     def import_channel(self, channel):
         source = channel.source
         community = source.community
-        pass
+        if channel.last_import and not self.full_import:
+            from_date = channel.last_import
+        else:
+            from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
+        print("From %s since %s" % (channel.name, from_date))
+        
+        updated_after = self.strftime(from_date)
+        resp = self.api_call(GITLAB_ISSUES_URL % {'project_id': channel.origin_id, 'updated_after': updated_after})
+        if resp.status_code == 200:
+            data = resp.json()
+            for issue in data:
+                self.import_issue(source, channel, issue)
+
+    def import_issue(self, source, channel, issue):
+        issue_iid = issue.get('iid')
+        project_id = issue.get('project_id')
+        issue_tstamp = self.strptime(issue.get('created_at'))
+        connection_tstamp = self.strptime(issue.get('updated_at'))
+
+        participants = set()
+        conversations = set()
+        comments = issue.get('user_notes_count')
+        if comments > 0:
+            resp = self.api_call(GITLAB_ISSUE_COMMENTS % {'project_id': project_id, 'iid': issue_iid})
+            if resp.status_code == 200:
+                data = resp.json()
+                for notes in data:
+                    is_thread = not notes.get('individual_note')
+                    thread = None
+                    for note in notes.get('notes'):
+                        convo_tstamp = self.strptime(note.get('created_at'))
+                        author = note.get('author')
+                        gitlab_user_id = author.get('web_url')
+                        speaker = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=issue_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
+                        participants.add(speaker)
+
+                        convo_text = note.get('body')
+                        tagged = self.get_user_tags(convo_text)
+                        for tagged_user in tagged:
+                            tagged_origin_id = "%s/%s" % (source.server, tagged_user)
+                            if tagged_origin_id in self._member_cache:
+                                participants.add(self._member_cache[tagged_origin_id])
+                            else:
+                                try:
+                                    tagged_contact = Contact.objects.get(origin_id=tagged_origin_id, source=source)
+                                    participants.add(tagged_contact.member)
+                                except:
+                                    pass
+                                    #Matched tag doesn't correspond to a known user                       
+                        convo_url = "%s#note_%s" % (issue.get('web_url'), note.get('id'))
+                        convo = self.make_conversation(note.get('id'), channel=channel, speaker=speaker, content=convo_text, tstamp=convo_tstamp, location=convo_url, thread=thread)
+                        conversations.add(convo)
+                        if is_thread and thread is None:
+                            thread = convo
+
+        # Add everybody involved as a participant in every conversation
+        for convo in conversations:
+            convo.participants.set(participants)
+
+        # Connect all participants
+        for from_member in participants:
+            for to_member in participants:
+                if from_member.id != to_member.id:
+                    from_member.add_connection(to_member, source, connection_tstamp)

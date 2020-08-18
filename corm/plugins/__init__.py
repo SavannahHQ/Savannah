@@ -144,6 +144,9 @@ class PluginImporter:
     def strptime(self, dtimestamp):
         return datetime.datetime.strptime(dtimestamp, self.TIMESTAMP_FORMAT)
 
+    def get_user_tags(self, content):
+        return set(self.TAGGED_USER_MATCHER.findall(content))
+
     def get_tagged_users(self, content):
         return []
 
