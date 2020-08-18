@@ -212,38 +212,59 @@ class GitlabImporter(PluginImporter):
     def import_comments(self, source, channel, issue, comments_url):
         issue_iid = issue.get('iid')
         project_id = issue.get('project_id')
-        issue_tstamp = self.strptime(issue.get('created_at'))
+        thread_tstamp = self.strptime(issue.get('created_at'))
         connection_tstamp = self.strptime(issue.get('updated_at'))
         gitlab_convo_link = issue.get('web_url')
+
+        participants = set()
+        conversations = set()
+
+        thread_author = issue.get('author')
+        thread_user_id = thread_author.get('web_url')
+        thread_speaker = self.make_member(origin_id=thread_user_id, detail=thread_author.get('username'), tstamp=thread_tstamp, avatar_url=thread_author.get('avatar_url'), name=thread_author.get('name'), speaker=True)
+        participants.add(thread_speaker)
+
+        thread_text = issue.get('description')
+        tagged = self.get_user_tags(thread_text)
+        for tagged_user in tagged:
+            tagged_origin_id = "%s/%s" % (source.server, tagged_user)
+            if tagged_origin_id in self._member_cache:
+                participants.add(self._member_cache[tagged_origin_id])
+            else:
+                try:
+                    tagged_contact = Contact.objects.get(origin_id=tagged_origin_id, source=source)
+                    participants.add(tagged_contact.member)
+                except:
+                    pass
+                    #Matched tag doesn't correspond to a known user                       
+        thread_url = gitlab_convo_link
+        thread = self.make_conversation(issue.get('id'), channel=channel, speaker=thread_speaker, content=thread_text, tstamp=thread_tstamp, location=thread_url, thread=None)
+        conversations.add(thread)
 
         # Merge Requests are a Contribution
         if comments_url == GITLAB_MR_COMMENTS:
             author = issue.get('author')
             gitlab_user_id = author.get('web_url')
-            submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=issue_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
+            submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=thread_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
             
-            activity, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':issue_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link})
+            activity, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':thread_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link, 'conversation':thread})
             # Not all comments should get the channel tag, but all PRs should
             if channel.tag:
                 activity.tags.add(channel.tag)
         else:
             activity = None
 
-        participants = set()
-        conversations = set()
         comments = issue.get('user_notes_count')
         if comments > 0:
             resp = self.api_call(comments_url % {'project_id': project_id, 'iid': issue_iid})
             if resp.status_code == 200:
                 data = resp.json()
                 for notes in data:
-                    is_thread = not notes.get('individual_note')
-                    thread = None
                     for note in notes.get('notes'):
                         convo_tstamp = self.strptime(note.get('created_at'))
                         author = note.get('author')
                         gitlab_user_id = author.get('web_url')
-                        speaker = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=issue_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
+                        speaker = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=convo_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
                         participants.add(speaker)
 
                         convo_text = note.get('body')
@@ -262,8 +283,7 @@ class GitlabImporter(PluginImporter):
                         convo_url = "%s#note_%s" % (gitlab_convo_link, note.get('id'))
                         convo = self.make_conversation(note.get('id'), channel=channel, speaker=speaker, content=convo_text, tstamp=convo_tstamp, location=convo_url, thread=thread)
                         conversations.add(convo)
-                        if is_thread and thread is None:
-                            thread = convo
+
 
 
         # Add everybody involved as a participant in every conversation
