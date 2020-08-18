@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand, CommandError
 import datetime
 from django.shortcuts import reverse
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, Min
 
 from corm.models import Community, Member, Conversation, Tag, Contact, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag
 from corm.models import pluralize
@@ -13,7 +13,7 @@ INACTIVITY_THRESHOLD_PREVIOUS_ACTIVITY = 50
 INACTIVITY_THRESHOLD_PREVIOUS_DAYS = 90
 INACTIVITY_THRESHOLD_DAYS = 30
 
-RESUMING_THRESHOLD_PREVIOUS_ACTIVITY = 5
+RESUMING_THRESHOLD_PREVIOUS_ACTIVITY = 20
 RESUMING_THRESHOLD_PREVIOUS_DAYS = 90
 RESUMING_THRESHOLD_DAYS = 30
 
@@ -24,6 +24,22 @@ class Command(BaseCommand):
         for community in Community.objects.all():
             self.check_for_inactivity(community)
             self.check_for_resuming_activity(community)
+            self.check_for_first_contrib(community)
+
+    def check_for_first_contrib(self, community):
+        members = Member.objects.filter(community=community)
+        members = members.annotate(first_contrib=Min('contribution__timestamp'))
+        members = members.filter(first_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=1))
+        for member in members:
+            print("%s made their first contribution on %s" % (member.name, member.first_contrib))
+            recipients = community.managers or community.owner
+            notify.send(member, 
+                recipient=recipients, 
+                verb="made their first contribution!",
+                level='success',
+                icon_name="fas fa-mail-bulk",
+                link=reverse('member_profile', kwargs={'member_id':member.id})
+            )
 
     def check_for_inactivity(self, community):
         members = Member.objects.filter(community=community, last_seen__lte=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_DAYS), last_seen__gt=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_DAYS+1))
