@@ -21,6 +21,7 @@ GITLAB_GROUP_URL = '/api/v4/groups/%(group_id)s'
 GITLAB_GROUP_PROJECTS_URL = '/api/v4/groups/%(group_id)s/projects?include_subgroups=true'
 GITLAB_ISSUES_URL = '/api/v4/projects/%(project_id)s/issues?order_by=updated_at&updated_after=%(updated_after)s'
 GITLAB_ISSUE_COMMENTS = '/api/v4/projects/%(project_id)s/issues/%(iid)s/discussions'
+GITLAB_MR_URL = '/api/v4/projects/%(project_id)s/merge_requests?order_by=updated_at&updated_after=%(updated_after)s'
 GITLAB_MR_COMMENTS = '/api/v4/projects/%(project_id)s/merge_requests/%(iid)s/discussions'
 
 
@@ -200,19 +201,39 @@ class GitlabImporter(PluginImporter):
         if resp.status_code == 200:
             data = resp.json()
             for issue in data:
-                self.import_issue(source, channel, issue)
+                self.import_comments(source, channel, issue, GITLAB_ISSUE_COMMENTS)
 
-    def import_issue(self, source, channel, issue):
+        resp = self.api_call(GITLAB_MR_URL % {'project_id': channel.origin_id, 'updated_after': updated_after})
+        if resp.status_code == 200:
+            data = resp.json()
+            for mr in data:
+                self.import_comments(source, channel, mr, GITLAB_MR_COMMENTS)
+
+    def import_comments(self, source, channel, issue, comments_url):
         issue_iid = issue.get('iid')
         project_id = issue.get('project_id')
         issue_tstamp = self.strptime(issue.get('created_at'))
         connection_tstamp = self.strptime(issue.get('updated_at'))
+        gitlab_convo_link = issue.get('web_url')
+
+        # Merge Requests are a Contribution
+        if comments_url == GITLAB_MR_COMMENTS:
+            author = issue.get('author')
+            gitlab_user_id = author.get('web_url')
+            submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=issue_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
+            
+            activity, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':issue_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link})
+            # Not all comments should get the channel tag, but all PRs should
+            if channel.tag:
+                activity.tags.add(channel.tag)
+        else:
+            activity = None
 
         participants = set()
         conversations = set()
         comments = issue.get('user_notes_count')
         if comments > 0:
-            resp = self.api_call(GITLAB_ISSUE_COMMENTS % {'project_id': project_id, 'iid': issue_iid})
+            resp = self.api_call(comments_url % {'project_id': project_id, 'iid': issue_iid})
             if resp.status_code == 200:
                 data = resp.json()
                 for notes in data:
@@ -238,11 +259,12 @@ class GitlabImporter(PluginImporter):
                                 except:
                                     pass
                                     #Matched tag doesn't correspond to a known user                       
-                        convo_url = "%s#note_%s" % (issue.get('web_url'), note.get('id'))
+                        convo_url = "%s#note_%s" % (gitlab_convo_link, note.get('id'))
                         convo = self.make_conversation(note.get('id'), channel=channel, speaker=speaker, content=convo_text, tstamp=convo_tstamp, location=convo_url, thread=thread)
                         conversations.add(convo)
                         if is_thread and thread is None:
                             thread = convo
+
 
         # Add everybody involved as a participant in every conversation
         for convo in conversations:
