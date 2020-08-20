@@ -136,18 +136,30 @@ class RssImporter(PluginImporter):
             return
         author_name = author_node.text
         tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
-        article_title = item.find('title').text
+        article_title = item.find('title').text.strip()
         if len(article_title) > 198:
             article_title = article_title[:198]
         article_link = item.find('link').text
         guid_node = item.find('guid')
-        if guid_node:
-            origin_id = guid_node.text
-        else:
-            origin_id = article_link
+        origin_id = article_link
         blog_author_id = '%s/%s' % (source.server, author_name)
         member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name)
 
-        contrib, created = Contribution.objects.update_or_create(community=community, channel=channel, origin_id=origin_id, defaults={'contribution_type':self.BLOG_CONTRIBUTION, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
-        if channel.tag:
-            contrib.tags.add(channel.tag)
+        blog_content = item.find('description').text
+        origin_parts = origin_id.split("#")
+
+        if len(origin_parts) == 2:
+            if self.verbosity >= 2:
+                print("Found comment: %s" % origin_id)
+            if article_title.startswith("Comment on "):
+                # Wordpress comments prefix this to the article title
+                article_title = article_title[11:]
+            contrib, created = Contribution.objects.get_or_create(community=community, origin_id=origin_parts[0], contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':None, 'timestamp':tstamp, 'location':origin_parts[0]})
+            convo = self.make_conversation(origin_id=origin_id, channel=channel, speaker=member, content=blog_content, tstamp=tstamp, location=origin_id, thread=contrib.conversation)
+        else:
+            if self.verbosity >= 2:
+                print("Found article: %s" % origin_id)
+            convo = self.make_conversation(origin_id=origin_id, channel=channel, speaker=member, content=blog_content, tstamp=tstamp, location=origin_id)
+            contrib, created = Contribution.objects.update_or_create(community=community, origin_id=origin_id, contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link, 'conversation':convo})
+            if channel.tag:
+                contrib.tags.add(channel.tag)
