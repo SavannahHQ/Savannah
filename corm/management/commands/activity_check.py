@@ -35,7 +35,8 @@ class Command(BaseCommand):
             recipients = community.managers or community.owner
             notify.send(member, 
                 recipient=recipients, 
-                verb="made their first contribution!",
+                verb="made their first contribution to ",
+                target=community,
                 level='success',
                 icon_name="fas fa-mail-bulk",
                 link=reverse('member_profile', kwargs={'member_id':member.id})
@@ -50,7 +51,8 @@ class Command(BaseCommand):
                 recipients = community.managers or community.owner
                 notify.send(member, 
                     recipient=recipients, 
-                    verb="has been inactive since %s" % member.last_seen.date(),
+                    verb="has been inactive since %s in " % member.last_seen.date(),
+                    target=community,
                     level='warning',
                     icon_name="fas fa-user-clock",
                     link=reverse('member_profile', kwargs={'member_id':member.id})
