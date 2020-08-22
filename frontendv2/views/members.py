@@ -7,6 +7,7 @@ from django.db.models import F, Q, Count, Max
 from django.db.models.functions import Trunc
 from django import forms
 from django.http import JsonResponse
+from django.contrib import messages
 
 from corm.models import *
 from corm.connectors import ConnectionManager
@@ -293,6 +294,10 @@ class MemberProfile(SavannahView):
         self.tag = None
         self.role = None
         
+    @property
+    def is_watched(self):
+        return MemberWatch.objects.filter(manager=self.request.user, member=self.member).count() > 0
+        
     @property 
     def member_levels(self):
         return MemberLevel.objects.filter(community=self.community, member=self.member).order_by('-project__default_project', '-level', 'timestamp')
@@ -454,6 +459,19 @@ def tag_member(request, member_id):
         member.tags.set(tags)
         return JsonResponse({'success': True, 'errors':None})
     return JsonResponse({'success': False, 'errors':'Only POST method supported'}, status=405)
+
+@login_required
+def watch_member(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    if request.method == "POST":
+        action = request.POST.get('action')
+        if action == 'watch':
+            MemberWatch.objects.get_or_create(manager=request.user, member=member)
+            messages.success(request, "You will be notified whenever %s is active in your community" % member.name)
+        else:
+            MemberWatch.objects.filter(manager=request.user, member=member).delete()
+            messages.warn(request, "You will not longer be notified if %s is active in your community" % member.name)
+    return redirect('member_profile', member_id=member_id)
 
 class MemberEditForm(forms.ModelForm):
     class Meta:

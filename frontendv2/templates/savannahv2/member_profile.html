@@ -7,6 +7,16 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">{{view.member.name}}</h1>
+            <form action="{% url 'member_watch_form' view.member.id %}" method="POST">
+            {% csrf_token %}
+            {% if view.is_watched %}
+              <input type="hidden" name="action" value="unwatch">
+              <button type="submit" class="btn btn-danger" ><i class="fas fa-eye-slash"></i> Unwatch</button>
+          {% else %}
+              <input type="hidden" name="action" value="watch">
+              <button type="submit" class="btn btn-default" ><i class="fas fa-eye"></i> Watch</button>
+            {% endif %}
+            </form>
           </div>
 
           <!-- Content Row -->

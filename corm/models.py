@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.messages.constants import DEFAULT_TAGS, WARNING
 
 from imagekit import ImageSpec
 from imagekit.models import ImageSpecField
@@ -99,7 +100,7 @@ class Member(TaggableModel):
     STAFF = "staff"
     BOT = "bot"
     MEMBER_ROLE = [
-        (COMMUNITY, 'Community'),
+        # (COMMUNITY, 'Community'),
         (STAFF, 'Staff'),
         (BOT, 'Bot'),
     ]
@@ -202,6 +203,13 @@ class Member(TaggableModel):
                 level.save()
         self.save()
         other_member.delete()
+
+class MemberWatch(models.Model):
+    manager = models.ForeignKey(User, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    start = models.DateTimeField(auto_now_add=True)
+    end = models.DateTimeField(null=True, blank=True)
+    level = models.SmallIntegerField(choices=DEFAULT_TAGS.items(), default=WARNING)
 
 class GiftType(models.Model):
     class Meta:

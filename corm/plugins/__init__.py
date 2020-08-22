@@ -4,11 +4,13 @@ import subprocess
 import requests
 from importlib import import_module
 from time import sleep
-from corm.models import Member, Contact, Conversation, Contribution
+from corm.models import Member, MemberWatch, Contact, Conversation, Contribution
 from corm.connectors import ConnectionManager
 from django.conf import settings
 from django.shortcuts import reverse
+from django.contrib.contenttypes.models import ContentType
 from notifications.signals import notify
+from notifications.models import Notification
 
 def install_plugins():
     for plugin in settings.CORM_PLUGINS:
@@ -107,6 +109,19 @@ class PluginImporter:
                 save_member = True
         if save_member:
             member.save()
+
+        if speaker and tstamp is not None:
+            for watch in MemberWatch.objects.filter(member=member):
+                has_recent_notification = Notification.objects.filter(recipient=watch.manager, actor_object_id=member.id, actor_content_type=ContentType.objects.get_for_model(member), verb="has been active in", unread=True, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(hours=1)).count()
+                if not has_recent_notification:
+                    notify.send(member, 
+                        recipient=watch.manager, 
+                        verb="has been active in",
+                        target=member.community,
+                        level='error',
+                        icon_name="fas fa-exclamation",
+                        link=reverse('member_profile', kwargs={'member_id':member.id})
+                    )
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None):

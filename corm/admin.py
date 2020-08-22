@@ -175,6 +175,11 @@ class MemberAdmin(admin.ModelAdmin):
 
 admin.site.register(Member, MemberAdmin)
 
+class MemberWatchAdmin(admin.ModelAdmin):
+    list_display = ('manager', 'member', 'start', 'end', 'level')
+    list_filter = ('manager', 'member__community', 'level', 'start', 'end')
+admin.site.register(MemberWatch, MemberWatchAdmin)
+
 class ContactAdmin(admin.ModelAdmin):
     list_display = ("detail", "source", "member", "name", "email_address")
     list_filter = ("source__connector", "member__community", "source")
