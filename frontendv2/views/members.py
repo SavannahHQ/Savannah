@@ -470,7 +470,7 @@ def watch_member(request, member_id):
             messages.success(request, "You will be notified whenever %s is active in your community" % member.name)
         else:
             MemberWatch.objects.filter(manager=request.user, member=member).delete()
-            messages.warn(request, "You will not longer be notified if %s is active in your community" % member.name)
+            messages.warning(request, "You will not longer be notified if %s is active in your community" % member.name)
     return redirect('member_profile', member_id=member_id)
 
 class MemberEditForm(forms.ModelForm):
