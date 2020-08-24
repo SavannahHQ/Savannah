@@ -114,7 +114,7 @@ class Connections(SavannahFilterView):
             connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
         connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected')
 
-        for connection in connections[:1000]:
+        for connection in connections[:10000]:
             if connection.from_member_id != connection.to_member_id:
                 if not connection.from_member_id in connected: 
                     links.append({"source":connection.from_member_id, "target":connection.to_member_id})
