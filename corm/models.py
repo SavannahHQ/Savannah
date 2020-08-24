@@ -100,7 +100,7 @@ class Member(TaggableModel):
     STAFF = "staff"
     BOT = "bot"
     MEMBER_ROLE = [
-        # (COMMUNITY, 'Community'),
+        (COMMUNITY, 'Community'),
         (STAFF, 'Staff'),
         (BOT, 'Bot'),
     ]
