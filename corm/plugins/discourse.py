@@ -177,8 +177,8 @@ class DiscourseImporter(PluginImporter):
                 if topic['category_id'] != category_id:
                     # Topic belongs to a sub-category
                     continue
-                if topic['posts_count'] < 2:
-                    # Topic has no conversation
+                if topic['posts_count'] < 1:
+                    # Topic has no posts
                     continue
                 last_posted = self.strptime(topic['last_posted_at'])
                 if last_posted < from_date:
@@ -205,8 +205,6 @@ class DiscourseImporter(PluginImporter):
                     for post in posts:
                         discourse_post_id = post['id']
                         post_tstamp = self.strptime(post['created_at'])
-                        if post_tstamp < from_date:
-                            continue
                         post_user_id = post['user_id']
                         post_url = topic_url + '/' + str(post['post_number'])
                         author = self.make_member(post_user_id, post['username'], post_tstamp, speaker=True)
