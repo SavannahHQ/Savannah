@@ -180,7 +180,10 @@ class DiscourseImporter(PluginImporter):
                 if topic['posts_count'] < 1:
                     # Topic has no posts
                     continue
-                last_posted = self.strptime(topic['last_posted_at'])
+                if topic['posts_count'] == 1:
+                    last_posted = self.strptime(topic['created_at'])
+                else:
+                    last_posted = self.strptime(topic['last_posted_at'])
                 if last_posted < from_date:
                     continue
 
