@@ -244,7 +244,7 @@ admin.site.register(Contribution, ContributionAdmin)
 class PromotionAdmin(admin.ModelAdmin):
     list_display = ("title", "channel", "timestamp", "tag_list")
     list_filter = ("channel__source__connector", "community", "timestamp")
-    raw_id_fields = ('promoters',)
+    raw_id_fields = ('promoters','conversation')
     def tag_list(self, promotion):
         return ", ".join([tag.name for tag in promotion.tags.all()[:10]])
     tag_list.short_description = "Tags"
