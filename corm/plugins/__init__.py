@@ -121,7 +121,7 @@ class PluginImporter:
                         level='error',
                         icon_name="fas fa-eye",
                         link=reverse('member_profile', kwargs={'member_id':member.id}),
-                        source=self.source,
+                        source=self.source.id,
                     )
         return member
 
