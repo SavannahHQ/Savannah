@@ -253,6 +253,7 @@ class Source(models.Model):
     auth_secret = models.CharField(max_length=256, null=True, blank=True)
     icon_name = models.CharField(max_length=256, null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
+    enabled = models.BooleanField(default=True)
 
     @property
     def activity_set(self):
