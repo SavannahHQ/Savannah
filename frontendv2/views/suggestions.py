@@ -31,12 +31,17 @@ class MemberMergeSuggestions(SavannahView):
                 suggestion.reject(request.user)
                 messages.info(request, "Suggested rejected, you won't see it again")
             elif 'accept' in request.POST:
+                success_count = 0
                 selected = request.POST.getlist('selected')
                 for suggestion_id in selected:
-                    suggestion = SuggestMemberMerge.objects.get(id=suggestion_id)
-                    suggestion.accept(request.user)
+                    try:
+                        suggestion = SuggestMemberMerge.objects.get(id=suggestion_id)
+                        suggestion.accept(request.user)
+                        success_count += 1
+                    except:
+                        pass
                 if len(selected) > 0:
-                    messages.success(request, "<b>%s</b> %s been merged" % (len(selected), pluralize(len(selected), "Member has", "Members have")))
+                    messages.success(request, "<b>%s</b> %s been merged" % (success_count, pluralize(len(selected), "Member has", "Members have")))
                 else:
                     messages.warning(request, "You haven't selected any merge suggestions")
 
