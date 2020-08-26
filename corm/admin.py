@@ -291,3 +291,8 @@ class SuggestMemberMergeAdmin(admin.ModelAdmin):
     ignore.short_description = "Ignore Suggestions"
 
 admin.site.register(SuggestMemberMerge, SuggestMemberMergeAdmin)
+
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ("title", "report_type", "community", "generated")
+    list_filter = ("community", "report_type", "generated")
+admin.site.register(Report, ReportAdmin)

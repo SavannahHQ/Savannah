@@ -129,6 +129,13 @@
           <span>Connections</span></a>
       </li>
 
+      <!-- Nav Item - Reports -->
+      <li class="nav-item {% if active_tab == "reports" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'reports' request.session.community %}">
+          <i class="fas fa-fw fa-file-invoice"></i>
+          <span>Reports</span></a>
+      </li>
+
       <!-- Nav Item - Tasks -->
       <!--
       <li class="nav-item">

@@ -536,6 +536,24 @@ class SuggestConversationTag(Suggestion):
     def accept_action(self):
         self.target_conversation.tags.add(self.suggested_tag)
 
+class Report(models.Model):
+    GROWTH = 0
+    IMPACT = 1
+    MEMBER = 2
+    TYPES = {
+        GROWTH: 'Growth',
+        IMPACT: 'Impact',
+        MEMBER: 'Member',
+    }
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    title = models.CharField(max_length=256)
+    report_type = models.SmallIntegerField(choices=TYPES.items())
+    generated = models.DateTimeField(default=datetime.datetime.utcnow)
+    data = models.TextField(null=True, blank=False)
+
+    def __str__(self):
+        return self.title
+
 def pluralize(count, singular, plural=None):
     if plural is None:
         plural = singular + "s"

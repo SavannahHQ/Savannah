@@ -26,6 +26,7 @@ from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import MemberMergeSuggestions
 from frontendv2.views.community import Managers, InviteManager, AcceptManager, Gifts, GiftTypeManager
 from frontendv2.views.projects import Projects, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
+from frontendv2.views.reports import Reports, view_report
 from frontendv2 import views
 
 urlpatterns = [
@@ -51,6 +52,9 @@ urlpatterns = [
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),
+
+    path('reports/<int:community_id>/', Reports.as_view, name='reports'),
+    path('reports/<int:community_id>/view/<int:report_id>/', view_report, name='report_view'),
 
     path('projects/<int:community_id>/', Projects.as_view, name='projects'),
     path('projects/<int:community_id>/add', ProjectAdd.as_view, name='project_add'),

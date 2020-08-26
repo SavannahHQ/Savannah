@@ -9,3 +9,7 @@ def add(value, arg):
 @register.filter
 def subtract(value, arg):
     return value - arg
+
+@register.filter(name='abs')
+def abs_filter(value):
+    return abs(value)

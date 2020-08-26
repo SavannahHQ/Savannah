@@ -1,0 +1,438 @@
+{% extends "savannahv2/base.html"%}
+{% load static simple_math %}
+
+{% block page_title %} | {{view.community.name}} {{view.report.title}}{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.report.title}}</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-xl-6 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">New Members</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="joinedChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Area Chart -->
+            <div class="col-xl-6 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Active Members</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="activeChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+         <!-- Content Row -->
+          <div class="row">
+
+                        <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Most Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for supporter in view.top_supporters %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' supporter.member_id %}">{{ supporter.member_name }}</a>
+                  </td>
+                  <td>{{supporter.conversations}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.top_contributors %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
+                  </td>
+                  <td>{{member.contributions}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- New Members -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.new_member_count}} New Members {% if view.new_member_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_member_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Joined</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.new_members %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
+                  </td>
+                  <td>{{member.joined}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- New Contributors -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.new_contributor_count}} New Contributors {% if view.new_contributor_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_contributor_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.new_contributors %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
+                  </td>
+                  <td>{{member.first_contrib}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+       </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("activeChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.members_chart_keys|safe}},
+    datasets: [
+    {
+      label: "{{view.month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#1cc88a22",
+      borderColor: "#1cc88a",
+      pointRadius: 3,
+      pointBackgroundColor: "#1cc88a",
+      pointBorderColor: "#1cc88a",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#1cc88a",
+      pointHoverBorderColor: "#1cc88a",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_active|safe}},
+    },
+    {
+      label: "{{view.previous_month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#AFE5D222",
+      borderColor: "#AFE5D2",
+      pointRadius: 3,
+      pointBackgroundColor: "#AFE5D2",
+      pointBorderColor: "#AFE5D2",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#AFE5D2",
+      pointHoverBorderColor: "#AFE5D2",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_previous_active|safe}},
+    }
+    ],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("joinedChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.members_chart_keys|safe}},
+    datasets: [
+    {
+      label: "{{view.month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#2B48CF22",
+      borderColor: "#2B48CF",
+      pointRadius: 3,
+      pointBackgroundColor: "#2B48CF",
+      pointBorderColor: "#2B48CF",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#2B48CF",
+      pointHoverBorderColor: "#2B48CF",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_counts|safe}},
+    },
+    {
+      label: "{{view.previous_month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#A5AFDE22",
+      borderColor: "#A5AFDE",
+      pointRadius: 3,
+      pointBackgroundColor: "#A5AFDE",
+      pointBorderColor: "#A5AFDE",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#A5AFDE",
+      pointHoverBorderColor: "#A5AFDE",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_previous_counts|safe}},
+    }
+    ],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+  <script>
+var ctx = document.getElementById("sourceChart");
+var myPieChart = new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: {{view.source_names|safe}},
+    datasets: [{
+      data: {{view.source_counts|safe}},
+      backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280', '#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280'],
+      hoverBorderColor: "rgba(234, 236, 244, 1)",
+    }],
+  },
+  options: {
+    maintainAspectRatio: false,
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      caretPadding: 10,
+    },
+    legend: {
+      display: true
+    },
+    cutoutPercentage: 0,
+  },
+});
+  </script>
+{% endblock %}

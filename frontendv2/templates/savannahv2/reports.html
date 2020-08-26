@@ -1,0 +1,51 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | {{view.community.name}} Reports{% endblock %}
+
+{% block page_content %}
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-10 mb-8">
+
+              <!-- Managers -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.community.name}} Reports</h6>
+                </div>
+                <div class="card-body p-0">
+                <div class="table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="25%">Report Title</th>
+                    <th scope="col" width="25%">Generated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for report in view.all_reports %}
+                <tr>
+                  <td><a href="{% url 'report_view' view.community.id report.id %}">{{report.title}}</a></td>
+                  <td>{{report.generated}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}
