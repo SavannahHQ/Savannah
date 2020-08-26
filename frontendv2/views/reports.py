@@ -74,6 +74,8 @@ class GrowthReport(SavannahView):
     def new_member_diff(self):
         if self.previous is None:
             return 0
+        if len(self.previous_data['new_members']) == 0:
+            return 0
         diff = len(self.data['new_members']) - len(self.previous_data['new_members'])
         return 100 * diff / len(self.previous_data['new_members'])
 
@@ -84,6 +86,8 @@ class GrowthReport(SavannahView):
     @property 
     def new_contributor_diff(self):
         if self.previous is None:
+            return 0
+        if len(self.previous_data['new_contributors']) == 0:
             return 0
         diff = len(self.data['new_contributors']) - len(self.previous_data['new_contributors'])
         return 100 * diff / len(self.previous_data['new_contributors'])
