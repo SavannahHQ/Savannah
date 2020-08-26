@@ -112,13 +112,14 @@ class PluginImporter:
 
         if speaker and tstamp is not None:
             for watch in MemberWatch.objects.filter(member=member, start__lte=tstamp):
-                has_recent_notification = Notification.objects.filter(recipient=watch.manager, actor_object_id=member.id, actor_content_type=ContentType.objects.get_for_model(member), verb="has been active in", unread=True, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(hours=1)).count()
+                has_recent_notification = Notification.objects.filter(recipient=watch.manager, actor_object_id=member.id, actor_content_type=ContentType.objects.get_for_model(member), verb="has been active in", unread=True, timestamp__gte=tstamp - datetime.timedelta(hours=1)).count()
                 if not has_recent_notification:
                     notify.send(member, 
                         recipient=watch.manager, 
                         verb="has been active in",
                         target=member.community,
                         level='error',
+                        timestamp=tstamp,
                         icon_name="fas fa-eye",
                         link=reverse('member_profile', kwargs={'member_id':member.id}),
                         source=self.source.id,

@@ -308,7 +308,7 @@ class MemberProfile(SavannahView):
 
     @property
     def all_conversations(self):
-        conversations = Conversation.objects.filter(channel__source__community=self.member.community, participants=self.member)
+        conversations = Conversation.objects.filter(channel__source__community=self.member.community, speaker=self.member)
         if self.tag:
             conversations = conversations.filter(tags=self.tag)
         if self.role:
