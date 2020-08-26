@@ -14,6 +14,7 @@ AUTHORIZATION_BASE_URL = 'https://slack.com/oauth/authorize'
 TOKEN_URL = 'https://slack.com/api/oauth.access'
 CONVERSATIONS_URL = 'https://slack.com/api/conversations.history?channel=%(channel)s&cursor=%(cursor)s&oldest=%(oldest)s'
 CONVERSATION_LOOKUP = 'https://slack.com/api/conversations.history?channel=%(channel)s&latest=%(ts)s&limit=1&inclusive=1'
+THREAD_URL = 'https://slack.com/api/conversations.replies?channel=%(channel)s&ts=%(thread_ts)s&cursor=%(cursor)s&oldest=%(oldest)s'
 USER_PROFILE_URL = 'https://slack.com/api/users.info?user=%(user)s'
 USERS_LIST = 'https://slack.com/api/users.list?cursor=%(cursor)s'
 
@@ -205,15 +206,43 @@ class SlackImporter(PluginImporter):
                         cursor = data['response_metadata']['next_cursor']
                     for message in data['messages']:
                         if message['type'] == 'message' and ('subtype' not in message or message['subtype'] == "bot_message"):
-                            self.import_message(channel, message)
+                            if 'thread_ts' in message:
+                                self.import_thread(channel, message.get('thread_ts'), from_timestamp)
+                            else:
+                                self.import_message(channel, message)
+                else:
+                    print("Data Error: %s" % resp.data)
+            else:
+                print("HTTP %s Error: %s" % (resp.status_code, resp.content))
         for thread_id, thread_ts in self._update_threads.items():
-            data = self.get_message(channel, thread_ts)
-            if data is not None:
-                thread = Conversation.objects.get(channel=channel, id=thread_id)
-                thread.content = data.get('text')
-                thread.save()
+            self.import_thread(channel, thread_ts, from_timestamp)
+            # data = self.get_message(channel, thread_ts)
+            # if data is not None:
+            #     thread = Conversation.objects.get(channel=channel, id=thread_id)
+            #     thread.content = data.get('text')
+            #     thread.save()
         return
 
+    def import_thread(self, channel, thread_ts, from_timestamp):
+        cursor = ''
+        has_more = True
+        while has_more:
+            has_more = False
+            resp = self.api_call(THREAD_URL % {'channel': channel.origin_id, 'thread_ts': thread_ts, 'oldest': from_timestamp, 'cursor': cursor})
+            if resp.status_code == 200:
+                data = resp.json()
+                if data['ok']:
+                    if data['has_more']:
+                        has_more = True
+                        cursor = data['response_metadata']['next_cursor']
+                    for message in data['messages']:
+                        if message['type'] == 'message' and ('subtype' not in message or message['subtype'] == "bot_message"):
+                            self.import_message(channel, message)
+                else:
+                    print("Data Error: %s" % data)
+            else:
+                print("HTTP %s Error: %s" % (resp.status_code, resp.content))
+         
     def import_message(self, channel, message):
         source = channel.source
 
