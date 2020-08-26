@@ -28,6 +28,16 @@ class Sources(SavannahView):
     def as_view(request, community_id):
         view = Sources(request, community_id)
         if request.method == "POST":
+            if 'disable_source' in request.POST:
+                source = get_object_or_404(Source, id=request.POST.get('disable_source'))
+                source.enabled = False
+                source.save()
+                return redirect('sources', community_id=community_id)
+            if 'enable_source' in request.POST:
+                source = get_object_or_404(Source, id=request.POST.get('enable_source'))
+                source.enabled = True
+                source.save()
+                return redirect('sources', community_id=community_id)
             if 'remove_source' in request.POST:
                 source = get_object_or_404(Source, id=request.POST.get('remove_source'))
                 context = view.context

@@ -79,7 +79,15 @@
                   <td>{{source.channel_count}}</td>
                   <td>{{source.member_count}}</td>
                   <td>{{source.last_import|default:"-"}}</td>
-                  <td class="text-center"><button class="btn btn-danger btn-sm" type="submit" name="remove_source" value="{{source.id}}" >Remove</button></td>
+                  <td class="text-center text-nowrap">
+                    {% if source.enabled %}
+                    <button class="btn btn-secondary btn-sm" type="submit" name="disable_source" value="{{source.id}}" title="Disable"><i class="fas fa-ban"> </i></button>
+                    {% else %}
+                    <button class="btn btn-success btn-sm" type="submit" name="enable_source" value="{{source.id}}" title="Enable"><i class="fas fa-check"> </i></button>
+                    {% endif %}
+                    &nbsp;
+                    <button class="btn btn-danger btn-sm" type="submit" name="remove_source" value="{{source.id}}" title="Remove"><i class="fas fa-trash"> </i></button>
+                  </td>
                 </tr>
                 {% endfor %}
                 </tbody>
