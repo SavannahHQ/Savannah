@@ -7,6 +7,7 @@ from django.utils.safestring import mark_safe
 
 from corm.models import *
 from frontendv2.views import SavannahFilterView
+from frontendv2.views.charts import PieChart
 
 class Contributions(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -180,7 +181,7 @@ class Contributions(SavannahFilterView):
         (months, counts) = self.getContributionsChart()
         return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
-    def getChannelsChart(self):
+    def channels_chart(self):
         channel_names = dict()
         if not self._channelsChart:
             channels = list()
@@ -200,42 +201,12 @@ class Contributions(SavannahFilterView):
             for c in channels:
                 if c.contribution_count == 0:
                     continue
-                if not c.color:
-                    c.color = from_colors[next_color]
-                    next_color += 1
-                    if next_color >= len(from_colors):
-                        next_color = 0    
                 counts[c] = c.contribution_count
-            self._channelsChart = [("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._channelsChart) > 7:
-                other_count = sum([count for channel, count, colors in self._channelsChart[7:]])
-                self._channelsChart = self._channelsChart[:6]
-                self._channelsChart.append(("Other", other_count, 'dfdfdf'))
-            channelless = Contribution.objects.filter(community=self.community, channel__isnull=True)
-            if self.tag:
-                channelless = channelless.filter(tags=self.tag)
-            if self.role:
-                channelless = channelless.filter(author__role=self.role)
-
-            self._channelsChart.append(("No Channel", channelless.count(), 'efefef'))
+            self._channelsChart = PieChart("channelsChart", title="Contributions by Channel", limit=8)
+            for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._channelsChart.add("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color)
+        self.charts.add(self._channelsChart)
         return self._channelsChart
-
-    @property
-    def channel_names(self):
-        chart = self.getChannelsChart()
-        return mark_safe(str([channel[0] for channel in chart]))
-
-    @property
-    def channel_counts(self):
-        chart = self.getChannelsChart()
-        return [channel[1] for channel in chart]
-
-    @property
-    def channel_colors(self):
-        chart = self.getChannelsChart()
-        return ['#'+channel[2] for channel in chart]
-
-
 
     @login_required
     def as_view(request, community_id):

@@ -8,6 +8,7 @@ from django.utils.safestring import mark_safe
 from corm.models import *
 from frontendv2.views import SavannahFilterView
 from frontendv2.views.charts import PieChart
+from frontendv2 import colors as savannah_colors
 
 class Conversations(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -155,9 +156,9 @@ class Conversations(SavannahFilterView):
         if not self._rolesChart:
             counts = dict()
             colors = {
-                Member.COMMUNITY: '4e73df',
-                Member.STAFF: '36b9cc',
-                Member.BOT: 'dfdfdf'
+                Member.COMMUNITY: savannah_colors.MEMBER.COMMUNITY,
+                Member.STAFF: savannah_colors.MEMBER.STAFF,
+                Member.BOT: savannah_colors.MEMBER.BOT
             }
             members = Member.objects.filter(community=self.community)
             convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))

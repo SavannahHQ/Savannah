@@ -239,14 +239,14 @@ var myLineChart = new Chart(ctx, {
     datasets: [{
       label: "Conversations",
       lineTension: 0.3,
-      backgroundColor: "#{{view.tag.color|default:'1cc88a'}}22",
-      borderColor: "#{{view.tag.color|default:'1cc88a'}}",
+      backgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}22",
+      borderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
       pointRadius: 3,
-      pointBackgroundColor: "#{{view.tag.color|default:'1cc88a'}}",
-      pointBorderColor: "#{{view.tag.color|default:'1cc88a'}}",
+      pointBackgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
+      pointBorderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
       pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#{{view.tag.color|default:'1cc88a'}}",
-      pointHoverBorderColor: "#{{view.tag.color|default:'1cc88a'}}",
+      pointHoverBackgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
+      pointHoverBorderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: {{view.conversations_chart_counts|safe}},
@@ -321,9 +321,5 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
-  {% for chart in view.charts %}
-  <!-- {{chart.id}} -->
-  {% include chart.script_template %}
-  {% endfor %}
 
 {% endblock %}

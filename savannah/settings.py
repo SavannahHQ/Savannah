@@ -93,6 +93,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "totd.context_processors.tips",
                 "simple_ga.context_processors.events",
+                "frontendv2.context_processors.colors",
             ],
         },
     },

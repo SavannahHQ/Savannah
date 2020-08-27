@@ -36,12 +36,12 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Member Sources</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.sources_chart.title}}</h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="chart-pie pt-4 pb-2">
-                    <canvas id="sourceChart"></canvas>
+                    <canvas id="{{view.sources_chart.id}}"></canvas>
                   </div>
                 </div>
               </div>
@@ -130,35 +130,36 @@ var myLineChart = new Chart(ctx, {
   data: {
     labels: {{view.members_chart_months|safe}},
     datasets: [{
-      label: "Joined",
-      lineTension: 0.3,
-      backgroundColor: "rgba(78, 115, 223, 0.05)",
-      borderColor: "rgba(78, 115, 223, 1)",
-      pointRadius: 3,
-      pointBackgroundColor: "rgba(78, 115, 223, 1)",
-      pointBorderColor: "rgba(78, 115, 223, 1)",
-      pointHoverRadius: 3,
-      pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-      pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-      pointHitRadius: 10,
-      pointBorderWidth: 2,
-      data: {{view.members_chart_counts|safe}},
-    },
-    {
       label: "Active",
       lineTension: 0.3,
-      backgroundColor: "#1cc88a22",
-      borderColor: "#1cc88a",
+      backgroundColor: "#{{colors.ACTIVITY}}22",
+      borderColor: "#{{colors.ACTIVITY}}",
       pointRadius: 3,
-      pointBackgroundColor: "#1cc88a",
-      pointBorderColor: "#1cc88a",
+      pointBackgroundColor: "#{{colors.ACTIVITY}}",
+      pointBorderColor: "#{{colors.ACTIVITY}}",
       pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#1cc88a",
-      pointHoverBorderColor: "#1cc88a",
+      pointHoverBackgroundColor: "#{{colors.ACTIVITY}}",
+      pointHoverBorderColor: "#{{colors.ACTIVITY}}",
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: {{view.members_chart_monthly_active|safe}},
-    }],
+    },
+    {
+      label: "Joined",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.MEMBER}}22",
+      borderColor: "#{{colors.MEMBER}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.MEMBER}}",
+      pointBorderColor: "#{{colors.MEMBER}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.MEMBER}}",
+      pointHoverBorderColor: "#{{colors.MEMBER}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_counts|safe}},
+    }
+    ],
   },
   options: {
     maintainAspectRatio: false,
@@ -229,35 +230,5 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
-  <script>
-var ctx = document.getElementById("sourceChart");
-var myPieChart = new Chart(ctx, {
-  type: 'doughnut',
-  data: {
-    labels: {{view.source_names|safe}},
-    datasets: [{
-      data: {{view.source_counts|safe}},
-      backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280', '#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280'],
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
-    },
-    legend: {
-      display: true
-    },
-    cutoutPercentage: 0,
-  },
-});
-  </script>
+
 {% endblock %}

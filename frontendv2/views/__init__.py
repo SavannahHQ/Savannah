@@ -85,6 +85,7 @@ class SavannahView:
         self.request = request
         self.community = get_object_or_404(Community, Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()), id=community_id)
         self.active_tab = ""
+        self.charts = set()
 
         try:
             self.user_member = Member.objects.get(user=self.request.user, community=self.community)

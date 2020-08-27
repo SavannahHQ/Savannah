@@ -8,6 +8,7 @@ from django.http import JsonResponse
 
 from corm.models import *
 from frontendv2.views import SavannahFilterView
+from frontendv2.views.charts import PieChart
 
 class Connections(SavannahFilterView):
     def __init__(self, request, community_id, json=False):
@@ -55,7 +56,7 @@ class Connections(SavannahFilterView):
         (months, counts) = self.getConnectionsChart()
         return [counts[month]/2 for month in months[-self.timespan_chart_span:]]
 
-    def getSourcesChart(self):
+    def sources_chart(self):
         channel_names = dict()
         if not self._sourcesChart:
             counts = dict()
@@ -72,22 +73,12 @@ class Connections(SavannahFilterView):
                     counts[source_name] = 1
                 else:
                     counts[source_name] += 1
-            self._sourcesChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._sourcesChart) > 8:
-                other_count = sum([count for channel, count in self._sourcesChart[7:]])
-                self._sourcesChart = self._sourcesChart[:7]
-                self._sourcesChart.append(("Other", other_count))
+
+            self._sourcesChart = PieChart("sourcesChart", title="Connections by Source", limit=8)
+            for source_name, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._sourcesChart.add(source_name, count)
+        self.charts.add(self._sourcesChart)
         return self._sourcesChart
-
-    @property
-    def source_names(self):
-        chart = self.getSourcesChart()
-        return mark_safe(str([channel[0] for channel in chart]))
-
-    @property
-    def source_counts(self):
-        chart = self.getSourcesChart()
-        return [channel[1]/2 for channel in chart]
 
     @login_required
     def as_view(request, community_id):

@@ -35,7 +35,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Contributions by Channels</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.channels_chart.title}}</h6>
                   <div class="dropdown no-arrow">
                     <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
@@ -52,7 +52,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="chart-pie pt-4 pb-2">
-                    <canvas id="channelChart"></canvas>
+                    <canvas id="{{view.channels_chart.id}}"></canvas>
                   </div>
                 </div>
               </div>
@@ -285,14 +285,14 @@ var myLineChart = new Chart(ctx, {
     datasets: [{
       label: "Contributions",
       lineTension: 0.3,
-      backgroundColor: "#f6c23e22",
-      borderColor: "#f6c23e",
+      backgroundColor: "#{{colors.CONTRIBUTION}}22",
+      borderColor: "#{{colors.CONTRIBUTION}}",
       pointRadius: 3,
-      pointBackgroundColor: "#f6c23e",
-      pointBorderColor: "#f6c23e",
+      pointBackgroundColor: "#{{colors.CONTRIBUTION}}",
+      pointBorderColor: "#{{colors.CONTRIBUTION}}",
       pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#f6c23e",
-      pointHoverBorderColor: "#f6c23e",
+      pointHoverBackgroundColor: "#{{colors.CONTRIBUTION}}",
+      pointHoverBorderColor: "#{{colors.CONTRIBUTION}}",
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: {{view.contributions_chart_counts|safe}},
@@ -367,35 +367,5 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
-  <script>
-var ctx = document.getElementById("channelChart");
-var myPieChart = new Chart(ctx, {
-  type: 'doughnut',
-  data: {
-    labels: {{view.channel_names|safe}},
-    datasets: [{
-      data: {{view.channel_counts|safe}},
-      backgroundColor: {{view.channel_colors|safe}},
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
-    },
-    legend: {
-      display: true
-    },
-    cutoutPercentage: 0,
-  },
-});
-  </script>
+
 {% endblock %}
