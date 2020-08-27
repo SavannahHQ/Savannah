@@ -2,11 +2,12 @@ import operator
 import datetime
 from django.db.models import Q, Count, Max
 from django.contrib import messages
+from frontendv2 import colors as savannah_colors
 
 class ChartColors(object):
     def __init__(self, colors=None):
         if colors is None:
-            self.from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
+            self.from_colors = savannah_colors.CHART_COLORS
         else:
             self.from_colors = colors
         self.next_color = 0
@@ -56,7 +57,7 @@ class PieChart(Chart):
             if self.limit is not None and self.limit > 0 and len(self._processed_data) > self.limit:
                 other_count = sum([count for channel, count, color in self._processed_data[self.limit-1:]])
                 self._processed_data = self._processed_data[:self.limit-1]
-                self._processed_data.append(("Other", other_count, 'dfdfdf'))
+                self._processed_data.append(("Other", other_count, savannah_colors.OTHER))
         return self._processed_data
 
     def get_data_names(self):
@@ -73,7 +74,7 @@ class FunnelChart(Chart):
         super(FunnelChart, self).__init__(id, title)
         self.script_template = 'savannahv2/funnelchart_script.html'
         self.stages = stages
-        self.colors = ChartColors(['1cc88a', '36b9cc', '7dc5fe', '4e73df'])
+        self.colors = ChartColors([savannah_colors.LEVEL.CORE, savannah_colors.LEVEL.CONTRIBUTOR, savannah_colors.LEVEL.PARTICIPANT, savannah_colors.LEVEL.VISITOR])
         self._raw_data = dict()
         self._processed_data = None
 
