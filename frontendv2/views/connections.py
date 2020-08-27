@@ -128,10 +128,9 @@ class Connections(SavannahFilterView):
 
         for member_id, member in member_map.items():
             tag_color = None
-            if connection_counts.get(member_id, 0) >= 3:
-                tags = member.tags.all()
-                if len(tags) > 0:
-                    tag_color = tags[0].color
+            tags = member.tags.all()
+            if len(tags) > 0:
+                tag_color = tags[0].color
             if tag_color is None and member.role == Member.BOT:
                 tag_color = "aeaeae"
             elif tag_color is None and member.role == Member.STAFF:
