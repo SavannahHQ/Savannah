@@ -321,9 +321,5 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
-  {% for chart in view.charts %}
-  <!-- {{chart.id}} -->
-  {% include chart.script_template %}
-  {% endfor %}
 
 {% endblock %}

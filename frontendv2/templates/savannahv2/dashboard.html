@@ -122,7 +122,7 @@
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="chart-pie pt-4 pb-2">
-                    <canvas id="levelsChart"></canvas>
+                    <canvas id="{{view.levels_chart.id}}"></canvas>
                   </div>
                 </div>
               </div>
@@ -295,42 +295,12 @@ var myLineChart = new Chart(ctx, {
 });
   </script>
 
-  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
   <script>
-var ctx = document.getElementById("levelsChart");
-var myPieChart = new Chart(ctx, {
-  type: 'funnel',
-  data: {
-    labels: {{view.level_names|safe}},
-    datasets: [{
-      data: {{view.level_counts|safe}},
-      backgroundColor: {{view.level_colors|safe}},
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    sort: 'asc',
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
-    },
-    legend: {
-      display: true
-    },
-  },
-});
-$("#levelsChart").click( 
+$("#{{view.levels_chart.id}}").click( 
     function(evt){
         var activePoints = myPieChart.getElementAtEvent(evt);  
         window.location = "{% url 'project_overview' view.community.id view.community.default_project.id %}";
     }
 ); 
   </script>
-{% endblock %}
+  {% endblock %}

@@ -404,35 +404,5 @@ var myLineChart = new Chart(ctx, {
   }
 });
   </script>
-  <script>
-var ctx = document.getElementById("sourceChart");
-var myPieChart = new Chart(ctx, {
-  type: 'doughnut',
-  data: {
-    labels: {{view.source_names|safe}},
-    datasets: [{
-      data: {{view.source_counts|safe}},
-      backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280', '#4e73df', '#1cc88a', '#36b9cc', '#7dc5fe', '#cceecc', '#ffa280'],
-      hoverBorderColor: "rgba(234, 236, 244, 1)",
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      caretPadding: 10,
-    },
-    legend: {
-      display: true
-    },
-    cutoutPercentage: 0,
-  },
-});
-  </script>
+
 {% endblock %}

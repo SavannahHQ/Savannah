@@ -1,6 +1,7 @@
 #OLD CHART_COLORS = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
 # http://paletton.com/#uid=73y2l0kq7Bhf0HFkUCM-7CFGssV
-CHART_COLORS = ['4987BB', '43C28C', 'FF8859', 'FFB959']
+# http://paletton.com/#uid=72z2l0kq7Bhf0HFkUCM-7CFGssV
+CHART_COLORS = ['4987BB', '43C28C', '9DEB52', 'E3FA57', 'FF8859', 'FFB959', 'E85184', 'B143BC']
 OTHER = 'dfdfdf'
 
 # http://paletton.com/#uid=53D0i0ktVI-9wPvl2IuLjvVQznh
@@ -38,12 +39,12 @@ class CONTRIBUTION(object):
     def __str__(self):
         return self.BASE
 
-# https://paletton.com/#uid=c2Z4k3m3O0kTbN+o7REvVSJSytzRzm5
+# https://paletton.com/#uid=c383R3j3A0kEaI4i9JdpVH0KcswNNlD
 class LEVEL(object):
-    CORE = '3AEA86'
-    CONTRIBUTOR = '3CC8E2'
-    PARTICIPANT = '4C73E7'
-    VISITOR = '7C4BE7'
+    CORE = '00C287'
+    CONTRIBUTOR = '01B0B8'
+    PARTICIPANT = '3579BF'
+    VISITOR = '3D58C4'
 
     def __str__(self):
         return self.VISITOR

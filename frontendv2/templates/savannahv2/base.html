@@ -389,6 +389,7 @@ $(function () {
 
   <!-- Page level plugins -->
   <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
 
   <!-- Notifications functions -->
   <script src="{% static 'notifications/notify.js' %}" type="text/javascript"></script>
@@ -453,8 +454,17 @@ function mark_all_as_read() {
 }
   </script>
   {% register_notify_callbacks fetch=5 refresh_period=60 callbacks='fill_messages_list,fill_notification_badge' %}
+
+<!-- Chart scripts -->
+{% block chart_scripts %}
+{% for chart in view.charts %}
+  <!-- {{chart.id}} -->
+  {% include chart.script_template %}
+{% endfor %}
+{% endblock %}
+
   <!-- Page level custom scripts -->
-  {% block page_scripts %}{% endblock %}
+{% block page_scripts %}{% endblock %}
 
 </body>
 

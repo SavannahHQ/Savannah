@@ -12,6 +12,7 @@ from django.contrib import messages
 from corm.models import *
 from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView, SavannahFilterView
+from frontendv2.views.charts import PieChart
 
 class Members(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -174,7 +175,7 @@ class Members(SavannahFilterView):
         chart = self.getTagsChart()
         return [tag[2] for tag in chart]
 
-    def getSourcesChart(self):
+    def sources_chart(self):
         if not self._sourcesChart:
             counts = dict()
             other_count = 0
@@ -187,24 +188,13 @@ class Members(SavannahFilterView):
             for source in sources:
                 if source.identity_count == 0:
                     continue
-                counts["%s (%s)" % (source.name, ConnectionManager.display_name(source.connector))] = source.identity_count
-            self._sourcesChart = [(source, count) for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._sourcesChart) > 8:
-                other_count += sum([count for tag, count in self._sourcesChart[7:]])
-            if other_count > 0:
-                self._sourcesChart = self._sourcesChart[:7]
-                self._sourcesChart.append(("Other", other_count, "#efefef"))
+                counts[source] = source.identity_count
+
+            self._sourcesChart = PieChart("sourcesChart", title="Member Sources", limit=8)
+            for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), count)
+        self.charts.add(self._sourcesChart)
         return self._sourcesChart
-
-    @property
-    def source_names(self):
-        chart = self.getSourcesChart()
-        return [source[0] for source in chart]
-
-    @property
-    def source_counts(self):
-        chart = self.getSourcesChart()
-        return [source[1] for source in chart]
 
     @login_required
     def as_view(request, community_id):
@@ -386,7 +376,7 @@ class MemberProfile(SavannahView):
         date_list.reverse()
         return [activity_counts.get(str(day)[:10], 0) for day in date_list]
 
-    def getChannelsChart(self):
+    def channels_chart(self):
         channel_names = dict()
         if not self._channelsChart:
             channels = list()
@@ -405,17 +395,12 @@ class MemberProfile(SavannahView):
             for c in channels:
                 if c.conversation_count == 0:
                     continue
-                if not c.color:
-                    c.color = from_colors[next_color]
-                    next_color += 1
-                    if next_color >= len(from_colors):
-                        next_color = 0    
                 counts[c] = c.conversation_count 
-            self._channelsChart = [("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._channelsChart) > 8:
-                other_count = sum([count for channel, count, color in self._channelsChart[7:]])
-                self._channelsChart = self._channelsChart[:7]
-                self._channelsChart.append(("Other", other_count, 'dfdfdf'))
+
+            self._channelsChart = PieChart("channelsChart", title="Conversations by Channel", limit=8)
+            for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._channelsChart.add("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color)
+        self.charts.add(self._channelsChart)
         return self._channelsChart
 
     @property
