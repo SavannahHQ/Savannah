@@ -1,4 +1,4 @@
-import datetime
+import datetime, pytz
 from django.db import models
 from django.contrib.auth.models import User, Group
 from django.conf import settings
@@ -553,6 +553,66 @@ class Report(models.Model):
 
     def __str__(self):
         return self.title
+
+class TimezoneChoices:
+    def __iter__(self):
+        for tz in pytz.all_timezones:
+            yield (tz, tz)
+
+class ManagerProfile(models.Model):
+    " Store profile information about a manager of a community"
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, on_delete=models.SET_NULL, blank=True, null=True)
+    realname = models.CharField(verbose_name=_("Real Name"), max_length=150, blank=True)
+    tz = models.CharField(
+        max_length=32,
+        verbose_name=_("Timezone"),
+        default="UTC",
+        choices=TimezoneChoices(),
+        blank=False,
+        null=False,
+    )
+    last_seen = models.DateTimeField()
+    avatar = models.ImageField(upload_to='manager_avatars', null=True, blank=True)
+    icon = ImageSpecField(source='avatar', spec=Icon)
+    send_notifications = models.BooleanField(
+        verbose_name=_("Send notification emails"), default=True
+    )
+
+    class Meta:
+        ordering = ("user__username",)
+
+    def __str__(self):
+        try:
+            if self.realname:
+                return self.realname
+            return "%s" % self.user.username
+        except:
+            return _("Unknown Profile")
+
+    @property
+    def icon_path(self):
+        try:
+            return self.icon.url
+        except:
+            return "%ssavannah/manager_default.png" % settings.STATIC_URL
+
+    @property
+    def timezone(self):
+        try:
+            return pytz.timezone(self.tz)
+        except:
+            return pytz.utc
+
+    def tolocaltime(self, dt):
+        as_utc = pytz.utc.localize(dt)
+        return as_utc.astimezone(self.timezone)
+
+    def fromlocaltime(self, dt):
+        local = self.timezone.localize(dt)
+        return local.astimezone(pytz.utc)
+
 
 def pluralize(count, singular, plural=None):
     if plural is None:

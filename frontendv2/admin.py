@@ -29,3 +29,4 @@ class ManagerInviteAdmin(admin.ModelAdmin):
     list_display = ("community", "email", "invited_by", "timestamp", "expires")
     list_filter = ("community", "invited_by", "timestamp", "expires")
 admin.site.register(ManagerInvite, ManagerInviteAdmin)
+

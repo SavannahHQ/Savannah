@@ -84,13 +84,14 @@ class SavannahView:
         request.session['community'] = community_id
         self.request = request
         self.community = get_object_or_404(Community, Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()), id=community_id)
+        if request.user.is_authenticated:
+            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow()})
+            self.user_member = self.manager_profile.member
+        else:
+            self.manager_profile = None
+            self.user_member = None
         self.active_tab = ""
         self.charts = set()
-
-        try:
-            self.user_member = Member.objects.get(user=self.request.user, community=self.community)
-        except:
-            self.user_member = None
 
         self._add_sources_message()
 
