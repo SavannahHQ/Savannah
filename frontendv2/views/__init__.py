@@ -144,6 +144,15 @@ def home(request):
     }
     return render(request, 'savannahv2/home.html', context)
 
+def get_session_community(request):
+    community_id = request.session.get('community')
+    if community_id is not None:
+        try:
+            return Community.objects.get(id=community_id)
+        except:
+            pass
+    return None
+
 class SavannahView:
     def __init__(self, request, community_id):
         request.session['community'] = community_id
