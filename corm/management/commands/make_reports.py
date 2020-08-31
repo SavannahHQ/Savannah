@@ -40,7 +40,16 @@ class Command(BaseCommand):
         data = json.dumps(reporter.data(), cls=DjangoJSONEncoder)
 
         report, created = Report.objects.update_or_create(community=community, report_type=Report.GROWTH, generated=end, defaults={'title':"Monthly Report for %s %s" % (calendar.month_name[start.month], start.year), 'data':data})
-
+        if created:
+            recipients = community.managers or community.owner
+            notify.send(report, 
+                recipient=recipients, 
+                verb="is ready in ",
+                target=community,
+                level='success',
+                icon_name="fas fa-file-invoice",
+                link=reverse('report_view', kwargs={'community_id': community.id, 'report_id':report.id})
+            )
 
 class Reporter():
 
