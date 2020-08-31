@@ -76,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "simple_ga.middleware.GAEventMiddleware",
+    "frontendv2.middleware.ReadNotificationMiddleware",
 ]
 
 ROOT_URLCONF = 'savannah.urls'
