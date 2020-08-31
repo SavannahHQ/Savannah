@@ -1,0 +1,194 @@
+{% extends "savannahv2/blank.html" %}
+{% load humanize static %}
+
+
+{% block page_title %} | Start your Community{% endblock %}
+
+{% block page_styles %}
+  <script src="https://js.stripe.com/v3/"></script>
+  <link rel="stylesheet" href="StripeElements.css">
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+var stripe = Stripe('{{STRIPE_KEY}}');
+var customerId = '{{company.customer.id}}';
+var priceId = '{{STRIPE_PLAN}}';
+var elements = stripe.elements();
+
+var style = {
+  base: {
+    color: "#32325d",
+    fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+    fontSmoothing: "antialiased",
+    fontSize: "16px",
+    "::placeholder": {
+      color: "#aab7c4"
+    }
+  },
+  invalid: {
+    color: "#fa755a",
+    iconColor: "#fa755a"
+  }
+};
+
+var card = elements.create("card", { style: style });
+card.mount("#card-element");
+card.on('change', showCardError);
+
+function showCardError(event) {
+  let displayError = document.getElementById('card-errors');
+  if (event.error) {
+    displayError.textContent = event.error.message;
+  } else {
+    displayError.textContent = '';
+  }
+}
+
+var form = document.getElementById('subscription-form');
+
+form.addEventListener('submit', function (ev) {
+  ev.preventDefault();
+
+  // If a previous payment was attempted, get the latest invoice
+  const latestInvoicePaymentIntentStatus = localStorage.getItem(
+    'latestInvoicePaymentIntentStatus'
+  );
+
+  if (latestInvoicePaymentIntentStatus === 'requires_payment_method') {
+    const invoiceId = localStorage.getItem('latestInvoiceId');
+    const isPaymentRetry = true;
+    // create new payment method & retry payment on invoice with new payment method
+    createPaymentMethod({
+      card,
+      isPaymentRetry,
+      invoiceId,
+    });
+  } else {
+    // create new payment method & create subscription
+    createPaymentMethod({ card });
+  }
+});
+
+function createPaymentMethod({ card, isPaymentRetry, invoiceId }) {
+  // Set up payment method for recurring usage
+
+  stripe
+    .createPaymentMethod({
+      type: 'card',
+      card: card,
+      billing_details: {
+        name: "{{company.name}}",
+        email: "{{company.email}}"
+      },
+    })
+    .then((result) => {
+      if (result.error) {
+        displayError(result);
+      } else {
+        if (isPaymentRetry) {
+          // Update the payment method and retry invoice payment
+          retryInvoiceWithNewPaymentMethod({
+            customerId: customerId,
+            paymentMethodId: result.paymentMethod.id,
+            invoiceId: invoiceId,
+            priceId: priceId,
+          });
+        } else {
+          // Create the subscription
+          createSubscription({
+            customerId: customerId,
+            paymentMethodId: result.paymentMethod.id,
+            priceId: priceId,
+          });
+        }
+      }
+    });
+}
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+function createSubscription({ customerId, paymentMethodId, priceId }) {
+  return (
+    fetch('{% url 'billing:subscribe' community.id %}', {
+      method: 'post',
+      headers: {
+        'Content-type': 'application/json',
+      },
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),  // 4. CSRF validation support
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        customerId: customerId,
+        paymentMethodId: paymentMethodId,
+        priceId: priceId,
+      }),
+    })
+      .then((response) => {
+        return response.json();
+      })
+      // If the card is declined, display an error to the user.
+      .then((result) => {
+        if (result.error) {
+          // The card had an error when trying to attach it to a customer.
+          throw result;
+        }
+        return result;
+      })
+      // Normalize the result to contain the object returned by Stripe.
+      // Add the additional details we need.
+      .then((result) => {
+        return {
+          paymentMethodId: paymentMethodId,
+          priceId: priceId,
+          subscription: result,
+        };
+      })
+      .catch((error) => {
+        // An error has happened. Display the failure to the user here.
+        // We utilize the HTML element we created.
+        showCardError(error);
+      })
+  );
+}
+</script>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Content Row -->
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="align-items-center">
+            <h2>Get Started with Savannah</h2>
+
+            <form id="subscription-form" class="form" method="POST" >
+            {% csrf_token %}
+            <div class="row justify-content-center">
+            <div class="text-left col-8 mb-3">
+                <div id="card-element" class="MyCardElement">
+                <!-- Elements will create input elements here -->
+                </div>
+
+                <!-- We'll put the error messages in this element -->
+                <div id="card-errors" role="alert"></div>
+            </div>
+            </div>
+            <button class="btn btn-success" type="submit">Start You Community!</button>
+            </form>
+        </div>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+<!-- End row -->
+
+{% endblock %}

@@ -31,6 +31,7 @@ urlpatterns = [
     path('discord/', include('corm.plugins.discord')),
     path('rss/', include('corm.plugins.rss')),
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
+    path('billing/', include('billing.urls')),
 ] 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

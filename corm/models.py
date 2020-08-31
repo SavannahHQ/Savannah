@@ -41,6 +41,13 @@ class Community(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     @property
+    def email(self):
+        if self.owner and self.owner.email:
+            return self.owner.email
+        else:
+            return "support@savannahhq.com"
+
+    @property
     def default_project(self):
         return Project.objects.get(community=self, default_project=True)
 
