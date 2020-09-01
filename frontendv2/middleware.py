@@ -11,6 +11,7 @@ class ReadNotificationMiddleware(MiddlewareMixin):
     """
 
     def process_response(self, request, response):
-        unread = Notification.objects.filter(unread=True, recipient=request.user, data__contains=request.path)
-        unread.update(unread=False)
+        if request.user.is_authenticated:
+            unread = Notification.objects.filter(unread=True, recipient=request.user, data__contains=request.path)
+            unread.update(unread=False)
         return response
