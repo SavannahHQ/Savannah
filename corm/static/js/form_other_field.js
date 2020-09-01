@@ -6,4 +6,7 @@ jQuery('#id_auth_id').on('change', function() {
         jQuery('#div_id_other').hide();
     }
 });
-jQuery('#div_id_other').hide();
+
+if (document.getElementById('id_auth_id').value != 'other') {
+    jQuery('#div_id_other').hide();
+}
