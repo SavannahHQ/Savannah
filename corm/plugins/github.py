@@ -265,7 +265,9 @@ class GithubImporter(PluginImporter):
 
                 # If there are comments it's a Conversation
                 if issue.get('comments', 0) > 0:
-                    issue_body = issue['body'].replace("\x00", "\uFFFD")
+                    issue_body = issue['body']
+                    if issue_body is not None:
+                        issue_body = issue_body.replace("\x00", "\uFFFD")
                     convo, created = Conversation.objects.update_or_create(origin_id=github_convo_link, channel__source=source, defaults={'channel':channel, 'speaker':member, 'content':issue_body, 'timestamp':tstamp, 'location':issue['html_url']})
                     conversations.add(convo)
                     if activity:
@@ -281,7 +283,9 @@ class GithubImporter(PluginImporter):
                             comment_tstamp = datetime.datetime.strptime(comment['created_at'], GITHUB_TIMESTAMP)
                             comment_user_id = 'github.com/%s' % comment['user']['login']
                             comment_member = self.make_member(comment_user_id, detail=comment['user']['login'], tstamp=comment_tstamp, name=comment['user']['login'], speaker=True)
-                            comment_body = comment['body'].replace("\x00", "\uFFFD")
+                            comment_body = comment['body']
+                            if comment_body is not None:
+                                comment_body = comment_body.replace("\x00", "\uFFFD")
                             comment_convo, created = Conversation.objects.update_or_create(origin_id=comment['url'], defaults={'channel':channel, 'speaker':comment_member, 'content':comment_body, 'timestamp':comment_tstamp, 'location':comment['html_url'], 'thread_start':convo})
                             participants.add(comment_member)
                             conversations.add(comment_convo)
