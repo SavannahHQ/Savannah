@@ -2,7 +2,7 @@ import operator
 import datetime
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, Min
 from django.utils.safestring import mark_safe
 
 from corm.models import *
@@ -56,6 +56,26 @@ class Contributions(SavannahFilterView):
     def page_links(self):
         pages = int(self.result_count / self.RESULTS_PER_PAGE)
         return [page+1 for page in range(min(10, pages+1))]
+
+    @property
+    def new_contributors(self):
+        members = Member.objects.filter(community=self.community)
+        contrib_filter = None
+        if self.tag:
+            contrib_filter = Q(contribution__tags=self.tag)
+        if self.role:
+            members = members.filter(role=self.role)
+
+        members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
+        members = members.filter(first_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+        members = members.prefetch_related('tags')
+        actives = dict()
+        for m in members:
+            if m.first_contrib is not None:
+                actives[m] = m.first_contrib
+        recently_active = [(member, tstamp) for member, tstamp in sorted(actives.items(), key=operator.itemgetter(1), reverse=True)]
+        
+        return recently_active[:10]
 
     @property
     def recent_contributors(self):
