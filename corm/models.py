@@ -38,6 +38,7 @@ class Community(models.Model):
     managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
     logo = models.ImageField(upload_to='community_logos', null=True)
     icon = ImageSpecField(source='logo', spec=Icon)
+    created = models.DateTimeField(auto_now_add=True)
 
     @property
     def default_project(self):
@@ -581,7 +582,7 @@ class ManagerProfile(models.Model):
     )
 
     class Meta:
-        ordering = ("user__username",)
+        ordering = ("-last_seen",)
 
     def __str__(self):
         try:
