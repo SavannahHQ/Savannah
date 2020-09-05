@@ -37,14 +37,14 @@ class EmailMessage(object):
                 self.category,
                 email,
                 self.subject,
-                self.text_body,
-                self.html_body,
+                self.render_text(self.text_body),
+                self.render_text(self.html_body),
                 self.member
             )
 
-    def render_to_string(self, *args, **kwargs):
-        return render_to_string(*args, **kwargs)
-        
+    def render_text(self, template):
+        return render_to_string(template, self.context)
+
 class EmailRecord(models.Model):
     """
     Model to store all the outgoing emails.
@@ -115,8 +115,8 @@ class ManagerInviteEmail(EmailMessage):
             'expiration': invite.expires
         })
 
-        self.text_body = render_to_string("emails/invitation_to_manage.txt", self.context)
-        self.html_body = render_to_string("emails/invitation_to_manage.html", self.context)
+        self.text_body = "emails/invitation_to_manage.txt"
+        self.html_body = "emails/invitation_to_manage.html"
 
 
 class ManagerInvite(models.Model):

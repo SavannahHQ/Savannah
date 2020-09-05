@@ -1,0 +1,25 @@
+# You last looked at {{community.name}} in Savannah on {{last_seen}}
+
+{% if new_contributors.count > 0 and new_members.count > 0 %}
+Since then you have gained {{new_contributors.count}} new Contributors and {{new_members.count}} new Members.
+{% elif new_contributors.count > 0 %}
+Since then you have gained {{new_contributors.count}} new Contributors.
+{% elif new_members.count > 0 %}
+Since then you have gained {{new_members.count}} new Members.
+{% endif %}
+
+{% if new_contributors.count > 0 %}
+## New Contributors
+{% for contributor in new_contributors %}
+ * {{contributor.name}} (https://savannahhq.com{% url 'member_profile' contributor.id %})
+{% endfor %}
+{% endif %}
+
+{% if new_members.count > 0 %}
+## New Members
+{% for member in new_members %}
+ * {{member.name}} (https://savannahhq.com{% url 'member_profile' member.id %})
+{% endfor %}
+{% endif %}
+
+View you Community: https://savannahhq.com{% url 'dashboard' community.id %}

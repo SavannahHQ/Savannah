@@ -257,8 +257,8 @@ class CommunityCreationEmail(EmailMessage):
         self.subject = "A new community had been created: %s" % self.community.name
         self.category = "community_creation"
 
-        self.text_body = self.render_to_string("emails/new_community_created.txt", self.context)
-        self.html_body = self.render_to_string("emails/new_community_created.html", self.context)
+        self.text_body = "emails/new_community_created.txt"
+        self.html_body = "emails/new_community_created.html"
 
 @login_required
 def new_community(request):
