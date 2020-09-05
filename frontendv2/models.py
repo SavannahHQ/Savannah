@@ -30,6 +30,8 @@ class EmailMessage(object):
             raise NotImplementedError
 
         for email in to:
+            if isinstance(email, tuple) and len(email) > 1:
+                email = email[1]
             send_message(
                 self.sender,
                 self.category,
@@ -40,6 +42,9 @@ class EmailMessage(object):
                 self.member
             )
 
+    def render_to_string(self, *args, **kwargs):
+        return render_to_string(*args, **kwargs)
+        
 class EmailRecord(models.Model):
     """
     Model to store all the outgoing emails.

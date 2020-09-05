@@ -10,6 +10,7 @@ from django.contrib import messages
 from django import forms
 
 from corm.models import *
+from frontendv2.models import EmailMessage
 
 # Create your views here.
 def index(request):
@@ -250,6 +251,15 @@ class NewCommunityForm(forms.ModelForm):
         model = Community
         fields = ['name', 'logo']
     
+class CommunityCreationEmail(EmailMessage):
+    def __init__(self, community):
+        super(CommunityCreationEmail, self).__init__(community.owner, community)
+        self.subject = "A new community had been created: %s" % self.community.name
+        self.category = "community_creation"
+
+        self.text_body = self.render_to_string("emails/new_community_created.txt", self.context)
+        self.html_body = self.render_to_string("emails/new_community_created.html", self.context)
+
 @login_required
 def new_community(request):
     community = Community(owner=request.user)
@@ -258,6 +268,8 @@ def new_community(request):
         if form.is_valid():
             new_community = form.save()
             new_community.bootstrap()
+            msg = CommunityCreationEmail(new_community)
+            msg.send(settings.ADMINS)
             messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
             return redirect('dashboard', community_id=new_community.id)
     else:
