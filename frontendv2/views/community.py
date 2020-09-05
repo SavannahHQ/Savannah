@@ -182,6 +182,7 @@ class GiftTypeManager(SavannahView):
 
         return render(request, 'savannahv2/gift_type_form.html', view.context)
 
+
     @login_required
     def edit_view(request, community_id, type_id):
         view = GiftTypeManager(request, community_id, type_id)
@@ -190,3 +191,34 @@ class GiftTypeManager(SavannahView):
             return redirect('gifts', community_id=community_id)
 
         return render(request, 'savannahv2/gift_type_form.html', view.context)
+
+class ManagerPreferencesForm(forms.ModelForm):
+    class Meta:
+        model = ManagerProfile
+        fields = ["realname", "contact_email", "send_notifications"]
+
+
+class ManagerPreferences(SavannahView):
+    def __init__(self, request, community_id):
+        self.request = request
+        self.community = get_object_or_404(Community, id=community_id)
+        self.manager = get_object_or_404(ManagerProfile, community=self.community, user=request.user)
+        self.active_tab = "community"
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            form = ManagerPreferencesForm(instance=self.manager, data=self.request.POST)
+        else:
+            form = ManagerPreferencesForm(instance=self.manager)
+        return form
+
+    @login_required
+    def as_view(request, community_id):
+        view = ManagerPreferences(request, community_id)
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            messages.success(request, "Your preferences have been updated")
+            return redirect('dashboard', community_id=community_id)
+
+        return render(request, 'savannahv2/manager_edit.html', view.context)

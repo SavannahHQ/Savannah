@@ -23,3 +23,5 @@ Since then you have gained {{new_members.count}} new Members.
 {% endif %}
 
 View your Community: https://savannahhq.com{% url 'dashboard' community.id %}
+
+Change your email settings: https://savannahhq.com{% url 'manager_preferences' community.id %}
