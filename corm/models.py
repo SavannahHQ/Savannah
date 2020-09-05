@@ -566,6 +566,7 @@ class ManagerProfile(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, on_delete=models.SET_NULL, blank=True, null=True)
     realname = models.CharField(verbose_name=_("Real Name"), max_length=150, blank=True)
+    contact_email = models.EmailField(null=True, blank=True)
     tz = models.CharField(
         max_length=32,
         verbose_name=_("Timezone"),
@@ -598,6 +599,13 @@ class ManagerProfile(models.Model):
             return self.icon.url
         except:
             return "%ssavannah/manager_default.png" % settings.STATIC_URL
+
+    @property
+    def email(self):
+        if self.contact_email:
+            return self.contact_email
+        else:
+            return self.user.email
 
     @property
     def timezone(self):

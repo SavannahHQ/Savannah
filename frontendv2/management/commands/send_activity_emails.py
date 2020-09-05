@@ -29,8 +29,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.email_count = 0
-        for manager in ManagerProfile.objects.filter(send_notifications=True, user__email__isnull=False).order_by('-last_seen'):
-            self.send_missed_activity_report(manager)
+        for manager in ManagerProfile.objects.filter(send_notifications=True).order_by('-last_seen'):
+            if manager.email:
+                self.send_missed_activity_report(manager)
 
         print("Sent %s emails" % self.email_count)
 
@@ -49,7 +50,7 @@ class Command(BaseCommand):
                 'new_members': new_members,
                 'new_contributors': new_contributors
             })
-            msg.send(manager.user.email)
+            msg.send(manager.email)
             self.email_count += 1
 
 

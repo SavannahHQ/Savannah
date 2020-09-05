@@ -298,6 +298,6 @@ class ReportAdmin(admin.ModelAdmin):
 admin.site.register(Report, ReportAdmin)
 
 class ManagersAdmin(admin.ModelAdmin):
-    list_display = ('user', 'community', 'member', 'realname', 'last_seen', 'send_notifications')
+    list_display = ('user', 'community', 'member', 'realname', 'contact_email', 'last_seen', 'send_notifications')
     list_filter = ('community', 'last_seen', 'send_notifications')
 admin.site.register(ManagerProfile, ManagersAdmin)
