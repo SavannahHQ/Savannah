@@ -108,6 +108,9 @@ class AcceptManager(SavannahView):
                 invite = ManagerInvite.objects.get(community=view.community, key=confirmation_key)
                 if invite.expires >= datetime.datetime.utcnow():
                     view.community.managers.user_set.add(request.user)
+                    if not request.user.email:
+                        request.user.email = invite.email
+                        request.user.save()
                     messages.success(request, "You've been added to %s as a new Manager!" % view.community.name)
                     invite.delete()
                     return redirect('dashboard', community_id=community_id)
