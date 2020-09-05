@@ -300,4 +300,5 @@ admin.site.register(Report, ReportAdmin)
 class ManagersAdmin(admin.ModelAdmin):
     list_display = ('user', 'community', 'member', 'realname', 'contact_email', 'last_seen', 'send_notifications')
     list_filter = ('community', 'last_seen', 'send_notifications')
+    raw_id_fields = ('member',)
 admin.site.register(ManagerProfile, ManagersAdmin)
