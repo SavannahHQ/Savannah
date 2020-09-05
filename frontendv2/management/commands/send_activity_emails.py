@@ -30,13 +30,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.email_count = 0
         for manager in ManagerProfile.objects.filter(send_notifications=True, user__email__isnull=False).order_by('-last_seen'):
-            # If the user was sent this email in the last 12 hours, don't send it again
-            try:
-                last_email = EmailRecord.objects.filter(email=manager.user.email, category="missed_activity").order_by('-when')[0]
-                if last_email.when > datetime.datetime.utcnow() - datetime.timedelta(hours=12):
-                    continue
-            except Exception as e:
-                pass
             self.send_missed_activity_report(manager)
 
         print("Sent %s emails" % self.email_count)
