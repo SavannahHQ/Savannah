@@ -22,4 +22,4 @@ Since then you have gained {{new_members.count}} new Members.
 {% endfor %}
 {% endif %}
 
-View you Community: https://savannahhq.com{% url 'dashboard' community.id %}
+View your Community: https://savannahhq.com{% url 'dashboard' community.id %}
