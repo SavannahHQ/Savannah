@@ -2,7 +2,7 @@ import operator
 import datetime
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Min, Max, Avg, ExpressionWrapper, fields
 from django.utils.safestring import mark_safe
 
 from corm.models import *
@@ -20,6 +20,7 @@ class Conversations(SavannahFilterView):
         self._channelsChart = None
         self._tagsChart = None
         self._rolesChart = None
+        self._responseTimes = None
 
         self.RESULTS_PER_PAGE = 25
 
@@ -65,6 +66,47 @@ class Conversations(SavannahFilterView):
     def page_links(self):
         pages = int(self.result_count / self.RESULTS_PER_PAGE)
         return [page+1 for page in range(min(10, pages+1))]
+
+    def getResponseTimes(self):
+        if not self._responseTimes:
+            range_span = datetime.timedelta(days=self.timespan)
+            range_1_end = datetime.datetime.utcnow()
+            range_1_start = range_1_end - range_span
+
+            replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=range_1_start, timestamp__lte=range_1_end)
+            if self.tag:
+                replies = replies.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
+
+            if self.role:
+                replies = replies.filter(replies__speaker__role=self.role)
+
+            if self.conversation_search:
+                replies = replies.filter(Q(content__icontains=self.conversation_search) | Q(replies__content__icontains=self.conversation_search))
+
+            replies = replies.annotate(first_response=Min('replies__timestamp'))
+            replies = replies.filter(first_response__isnull=False, first_response__gt=F('timestamp'))
+            response_time = ExpressionWrapper(F('first_response') - F('timestamp'), output_field=fields.DurationField())
+            replies = replies.annotate(response_time=response_time)
+            self._responseTimes = replies.aggregate(avg=Avg('response_time'), min=Min('response_time'), max=Max('response_time'))
+        return self._responseTimes
+
+    @property
+    def min_response_time(self):
+        response_times = self.getResponseTimes()
+        print("Response times: %s" % response_times['min'])
+        return response_times['min'] - datetime.timedelta(microseconds=response_times['min'].microseconds)
+
+    @property
+    def max_response_time(self):
+        response_times = self.getResponseTimes()
+        print("Response times: %s" % response_times['max'])
+        return response_times['max'] - datetime.timedelta(microseconds=response_times['max'].microseconds)
+
+    @property
+    def avg_response_time(self):
+        response_times = self.getResponseTimes()
+        print("Response times: %s" % response_times['avg'])
+        return response_times['avg'] - datetime.timedelta(microseconds=response_times['avg'].microseconds)
 
     def getConversationsChart(self):
         if not self._membersChart:

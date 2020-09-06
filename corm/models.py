@@ -316,7 +316,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     content = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
     location = models.URLField(max_length=512, null=True, blank=True)
-    thread_start = models.ForeignKey('Conversation', on_delete=models.CASCADE, null=True, blank=True)
+    thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         if self.content is not None and len(self.content) > 2:
