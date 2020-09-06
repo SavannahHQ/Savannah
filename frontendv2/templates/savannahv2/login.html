@@ -3,19 +3,32 @@
 {% load crispy_forms_tags %}
 {% block page_title %} | Login{% endblock %}
 
-
+{% block page_styles %}
+<style>
+ul.errorlist {
+    color: red;
+    background: #FF000033;
+    border: #ff0000 1px solid;
+    list-style: none;
+    padding-inline-start: 1rem;
+}
+ul.errorlist li {
+  display: block;
+}
+</style>
+{% endblock %}
 {% block page_content %}
 <!-- Login Card -->
 <div class="row mt-5 justify-content-center">
-<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
+<div class="col-xl-7 col-md-7 mb-8 mt-8 align-items-center">
 <center>
     <div class="card shadow h-100 py-2">
     <div class="card-body">
-        <div class="align-items-center">
+        <div class="align-items-center mb-3">
         <img id="logo" src="{% static 'savannah/Savannah256.png' %}" />
             <h2>Welcome to Savannah</h2>
             <div>
-            <ul class="nav nav-tabs justify-content-center mb-2" id="localTab" role="tablist">
+            <ul class="nav nav-pills justify-content-center mb-2" id="localTab" role="tablist">
               <li class="nav-item">
                 <a class="nav-link {% if action != 'signup' %}active{% endif %}" id="login-tab" data-toggle="tab" href="#login" role="tab" aria-controls="login" aria-selected="true">Login</a>
               </li>
@@ -27,12 +40,11 @@
               <div class="tab-pane fade {% if action != 'signup' %}show active{% endif %}" id="login" role="tabpanel" aria-labelledby="login-tab">
                 <form action="#" method="POST" class="form">
                     {% csrf_token %}
-                    <table>
+                    <table class="table">
                     {{ login_form }}
                     </table>
-                    <button class="btn btn-primary" type="submit" name="action" value="login">Login</button>
+                    <button class="btn btn-success" type="submit" name="action" value="login">Login</button>
                 </form>
-                <br /><br />
               </div>
               <div class="tab-pane fade {% if action == 'signup' %}show active{% endif %}" id="signup" role="tabpanel" aria-labelledby="signup-tab">
                 <form action="#" method="POST" class="form">
@@ -40,13 +52,13 @@
                     <table class="table">
                     {{ signup_form }}
                     </table>
-                    <button class="btn btn-primary" type="submit" name="action" value="signup">Signup</button>
+                    <button class="btn btn-success" type="submit" name="action" value="signup">Signup</button>
                 </form>
               </div>
             </div>
         </div>
         </div>
-        <a href="https://docs.savannahhq.com" target="docs">Learn More</a
+        <a href="https://docs.savannahhq.com" target="docs"><i class="fas fa-question-circle text-400"></i> Learn More</a
     </div>
     </div>
 </center>

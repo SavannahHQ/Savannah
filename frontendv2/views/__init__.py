@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UsernameField
 from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
 from django.contrib import messages
 from django import forms
@@ -29,12 +29,22 @@ def logout(request):
         logout_user(request)
     return redirect(reverse("login") + "?next=%s" % request.GET.get('next'))
 
+class NewUserForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ("username", "email")
+        field_classes = {'username': UsernameField}
+
+    def __init__(self, *args, **kwargs):
+        super(UserCreationForm, self).__init__(*args, **kwargs)
+        self.fields['email'].required = True
+
 def login(request):
     if request.user.is_authenticated:
         return redirect('home')
 
     context = {
-        "signup_form":  UserCreationForm(),
+        "signup_form":  NewUserForm(),
         "login_form": AuthenticationForm(),
     }
     if request.method == "POST":
@@ -50,7 +60,7 @@ def login(request):
                 context["login_form"] = login_form
                 context["action"] = "login"
         elif request.POST.get("action") == "signup":
-            signup_form = UserCreationForm(data=request.POST)
+            signup_form = NewUserForm(data=request.POST)
             if signup_form.is_valid():
                 signup_form.save()
                 username = signup_form.cleaned_data.get("username")
