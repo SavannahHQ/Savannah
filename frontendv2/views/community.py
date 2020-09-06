@@ -195,7 +195,7 @@ class GiftTypeManager(SavannahView):
 class ManagerPreferencesForm(forms.ModelForm):
     class Meta:
         model = ManagerProfile
-        fields = ["realname", "contact_email", "send_notifications"]
+        fields = ["realname", "contact_email", "tz", "send_notifications"]
 
 
 class ManagerPreferences(SavannahView):

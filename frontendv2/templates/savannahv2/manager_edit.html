@@ -26,8 +26,8 @@
                 <div class="card-body">
                 <div class="container-fluid">
 
-                <p><b>Username:</b> {{view.manager.user.username}}</p>
-                <p><b>Default email:</b> {{view.manager.user.email}}</p>
+                <p><b>Name: </b>{% if view.manager.user.first_name %}{{view.manager.user.first_name}} {{view.manager.user.last_name}}{% else %}{{view.manager.user.username}}{% endif %}</p>
+                <p><b>Email: </b>{{view.manager.user.email}}</p>
 
                 <form class="form" action="{% url 'manager_preferences' view.community.id %}" method="POST">
                 {% csrf_token %}

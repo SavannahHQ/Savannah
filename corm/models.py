@@ -565,8 +565,8 @@ class ManagerProfile(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, on_delete=models.SET_NULL, blank=True, null=True)
-    realname = models.CharField(verbose_name=_("Real Name"), max_length=150, blank=True)
-    contact_email = models.EmailField(null=True, blank=True)
+    realname = models.CharField(verbose_name=_("Preferred Name"), max_length=150, blank=True)
+    contact_email = models.EmailField(verbose_name=_("Preferred Email"), null=True, blank=True)
     tz = models.CharField(
         max_length=32,
         verbose_name=_("Timezone"),
@@ -579,7 +579,7 @@ class ManagerProfile(models.Model):
     avatar = models.ImageField(upload_to='manager_avatars', null=True, blank=True)
     icon = ImageSpecField(source='avatar', spec=Icon)
     send_notifications = models.BooleanField(
-        verbose_name=_("Send notification emails"), default=True
+        verbose_name=_("Send emails"), default=True
     )
 
     class Meta:
