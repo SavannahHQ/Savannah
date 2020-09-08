@@ -93,19 +93,22 @@ class Conversations(SavannahFilterView):
     @property
     def min_response_time(self):
         response_times = self.getResponseTimes()
-        print("Response times: %s" % response_times['min'])
+        if response_times['min'] is None:
+            return None
         return response_times['min'] - datetime.timedelta(microseconds=response_times['min'].microseconds)
 
     @property
     def max_response_time(self):
         response_times = self.getResponseTimes()
-        print("Response times: %s" % response_times['max'])
+        if response_times['max'] is None:
+            return None
         return response_times['max'] - datetime.timedelta(microseconds=response_times['max'].microseconds)
 
     @property
     def avg_response_time(self):
         response_times = self.getResponseTimes()
-        print("Response times: %s" % response_times['avg'])
+        if response_times['avg'] is None:
+            return None
         return response_times['avg'] - datetime.timedelta(microseconds=response_times['avg'].microseconds)
 
     def getConversationsChart(self):
