@@ -1,0 +1,82 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_title %} | {{view.community.name}} Contribution Suggestions{% endblock %}
+
+{% block page_styles %}
+<style>
+.tooltip-inner {
+    min-width: 8rem;
+    max-width: 32rem;
+    max-height: 80%;
+}</style>
+{% endblock %}
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Contribution Suggestions</h1>
+          </div>
+
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <form class="inline-form" action="{% url 'conversation_as_contribution_suggestions' view.community.id %}" method="POST">
+                {% csrf_token %}
+                <div class="card-header d-sm-flex align-items-center justify-content-between py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Suggestions</h6>
+                  <button class="btn btn-success" type="submit" name="accept" value="1">Accept</button>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col"><input class="action-toggle"  type="checkbox" name="select_all" value="1" onChange="toggle_all()"/></th>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Conversation</th>
+                    <th scope="col">Source</th>
+                    <th scope="col">Date</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for suggestion in view.all_suggestions %}
+                <tr>
+                  <td><input class="action-select" type="checkbox" name="selected" value="{{suggestion.id}}" /></td>
+                  <td>{{suggestion.reason}}</td>
+                  <td>
+                    <a href="{{suggestion.conversation.location}}" target="_blank" data-toggle="tooltip" data-placement="auto" data-html="true" title="{{suggestion.conversation.content|linebreaksbr|truncatewords_html:"128"}}">{{suggestion.conversation}}</a>
+                  </td>
+                  <td class="text-nowrap"><i class="{{suggestion.source.icon_name}}"></i> {{suggestion.conversation.channel}}</td>
+                  <td>{{suggestion.conversation.timestamp}}</td>
+                  <td><button class="btn btn-danger" type="submit" name="reject" value="{{suggestion.id}}" >Reject</button></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </form>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+function toggle_all() {
+    var toggle = document.getElementsByClassName('action-toggle');
+    var checkboxes = document.getElementsByClassName('action-select');
+    for (var i = 0; i < checkboxes.length; i++){
+        checkboxes[i].checked = toggle[0].checked;
+    }
+}
+</script>
+{% endblock %}

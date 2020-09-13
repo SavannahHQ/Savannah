@@ -292,6 +292,32 @@ class SuggestMemberMergeAdmin(admin.ModelAdmin):
 
 admin.site.register(SuggestMemberMerge, SuggestMemberMergeAdmin)
 
+class SuggestContributionAdmin(admin.ModelAdmin):
+    list_display = ("reason", "contribution_type", "community", "timestamp", "actioned_at", "status")
+    list_filter = ("community", "source", "status", "actioned_at", "created_at")
+    raw_id_fields = ("conversation",)
+    actions = ("accept", "ignore", "reject")
+    def accept(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.accept(request.user)
+    accept.short_description = "Accept Suggestions"
+
+    def reject(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.reject(request.user)
+    reject.short_description = "Reject Suggestions"
+
+    def ignore(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.ignore(request.user)
+    ignore.short_description = "Ignore Suggestions"
+
+    def timestamp(self, suggestion):
+        return suggestion.conversation.timestamp
+    timestamp.short_description = "Convo Timestamp"
+
+admin.site.register(SuggestConversationAsContribution, SuggestContributionAdmin)
+
 class ReportAdmin(admin.ModelAdmin):
     list_display = ("title", "report_type", "community", "generated")
     list_filter = ("community", "report_type", "generated")

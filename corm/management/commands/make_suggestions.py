@@ -4,16 +4,29 @@ from django.core.management.base import BaseCommand, CommandError
 import datetime
 from django.db.models import Count
 from django.shortcuts import reverse
-from corm.models import Community, Member, Conversation, Tag, Contact, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag
+from corm.models import Community, Member, Conversation, Tag, Contact, Source, ContributionType, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag, SuggestConversationAsContribution
 from corm.models import pluralize
 from notifications.signals import notify
 
 class Command(BaseCommand):
     help = 'Create suggested maintenance actions'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--community', dest='community_id', type=int)
+
     def handle(self, *args, **options):
-        for community in Community.objects.all():
+        community_id = options.get('community_id')
+
+        if community_id:
+            community = Community.objects.get(id=community_id)
+            print("Using Community: %s" % community.name)
+            communities = [community]
+        else:
+            communities = Community.objects.all()
+
+        for community in communities:
             self.make_merge_suggestions(community)
+            self.make_conversation_helped_suggestions(community)
 
     def make_merge_suggestions(self, community):
         merge_count = 0
@@ -79,4 +92,101 @@ class Command(BaseCommand):
                 level='info',
                 icon_name="fas fa-people-arrows",
                 link=reverse('member_merge_suggestions', kwargs={'community_id':community.id})
+            )
+
+    def make_conversation_helped_suggestions(self, community):
+        suggestion_count = 0
+        try:
+            thankful = Tag.objects.get(community=community, name="thankful")
+        except:
+            print("%s has no #thankful tag" % community)
+            return
+
+        # Only look at thankful converstions
+        convos = Conversation.objects.filter(speaker__community=community, tags=thankful, contribution=None, contribution_suggestions=None)
+
+        # Exclude greetings as they are usually the start of a conversation
+        try:
+            greeting = Tag.objects.get(community=community, name="greeting")
+            convos = convos.exclude(tags=greeting)
+        except:
+            print("%s has no #greeting tag" % community)
+
+        # From Chat-style sources
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord'))
+        convos = convos.filter(channel__source__in=chat_sources)
+
+        # Involving only the speaker and one other participant
+        convos = convos.annotate(participant_count=Count('participants')).filter(participant_count=2)
+        convos = convos.select_related('channel').order_by('channel', '-timestamp')
+
+        print("%s potential support contributions in %s" % (convos.count(), community))
+        positive_words = ('!', ':)', 'smile', 'smiling', 'fixed', 'solved', 'helped', 'wasn\'t working', 'answer')
+        negative_words = ('?', ':(', 'sad', 'frown', 'broken', 'fail', 'help me', 'helpful', 'error', 'not working', 'isn\t working', 'question', 'please', 'welcome', 'but')
+        last_helped = None
+        last_channel = None
+        for convo in convos:
+            if last_channel != convo.channel:
+                last_helped = None
+            last_channel = convo.channel
+
+            # Attempt to see if this was for something helpful
+            content = convo.content.lower()
+            content_words = content.split(" ")
+            score = 0
+            if len(content_words) < 20:
+                score += 1
+            if len(content_words) > 50:
+                score -= 1
+            for word in positive_words:
+                if word in content:
+                    score += 1
+            for word in negative_words:
+                if word in content:
+                    score -= 1
+
+            # Support is more likely to be given to community than to staff or bots
+            if score >= 1 and convo.speaker.role != Member.COMMUNITY:
+                score -= 1
+
+            # Only suggest for high positive scores
+            if score < 2:
+                continue
+
+            # Exclude conversations that are part or another contribution's thread
+            if convo.thread_start:
+                if convo.thread_start.contribution_set.all().count() > 0:
+                    continue
+
+            # Don't count multiple instances in a row helping the same person
+            if last_helped == convo.speaker:
+                continue
+            last_helped = convo.speaker
+
+            helped, created = ContributionType.objects.get_or_create(
+                community=community,
+                source_id=convo.channel.source_id,
+                name="Support",
+            )
+            suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
+                community=community,
+                reason="Thanks from %s" % convo.speaker,
+                conversation=convo,
+                contribution_type=helped,
+                source_id=convo.channel.source_id,
+                score=score,
+                title="Helped %s in %s" % (convo.speaker, convo.channel),
+            )
+            if created:
+                suggestion_count += 1
+
+        print("Suggested %s contributions" % suggestion_count)
+        if suggestion_count > 0:
+            recipients = community.managers or community.owner
+            notify.send(community, 
+                recipient=recipients, 
+                verb="has %s new contribution %s" % (suggestion_count, pluralize(suggestion_count, "suggestion")),
+                level='info',
+                icon_name="fas fa-mail-bulk",
+                link=reverse('conversation_as_contribution_suggestions', kwargs={'community_id':community.id})
             )

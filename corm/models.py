@@ -268,6 +268,10 @@ class Source(models.Model):
     def has_engagement(self):
         return (self.activity_set.count() + self.conversation_set.count()) > 0
 
+    @property
+    def connector_name(self):
+        return ConnectionManager.display_name(self.connector)
+
     def __str__(self):
         return self.name
 
@@ -319,13 +323,14 @@ class Conversation(TaggableModel, ImportedDataModel):
     thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        if self.content is not None and len(self.content) > 2:
-            try:
-                return self.content[:min(self.content.index('\n'), 64)]
-            except:
-                return self.content[:min(len(self.content), 64)]
-        else:
-            return str(self.timestamp)
+        if self.content is not None:
+            content = self.content.strip()
+            if len(content) > 2:
+                try:
+                    return content[:min(content.strip().index('\n'), 64)]
+                except:
+                    return content[:min(len(content), 64)]
+        return str(self.timestamp)
 
 class Project(models.Model):
     class Meta:
@@ -407,7 +412,10 @@ class ContributionType(models.Model):
     feed = models.URLField(null=True, blank=True)
 
     def __str__(self):
-        return "%s (%s)" % (self.name, self.community)
+        if self.source is not None:
+            return "%s %s (%s)" % (self.source.connector_name, self.name, self.community)
+        else:
+            return "%s (%s)" % (self.name, self.community)
 
 class Contribution(TaggableModel, ImportedDataModel):
     class Meta:
@@ -536,6 +544,33 @@ class SuggestConversationTag(Suggestion):
 
     def accept_action(self):
         self.target_conversation.tags.add(self.suggested_tag)
+
+class SuggestConversationAsContribution(Suggestion):
+    class Meta:
+        ordering = ('-conversation__timestamp',)
+    conversation = models.ForeignKey(Conversation, related_name='contribution_suggestions', on_delete=models.CASCADE)    
+    contribution_type = models.ForeignKey(ContributionType, related_name='contribution_suggestions', on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, related_name='contribution_suggestions', on_delete=models.CASCADE)
+    title = models.CharField(max_length=256, null=False, blank=False)
+    score = models.SmallIntegerField(default=0)
+
+
+    def accept_action(self):
+        # Anybody in the conversation other than the speaker made this contribution
+        supporters = self.conversation.participants.exclude(id=self.conversation.speaker.id)
+        for supporter in supporters:
+            contrib, created = Contribution.objects.get_or_create(
+                community=self.contribution_type.community,
+                contribution_type=self.contribution_type,
+                channel=self.conversation.channel,
+                title=self.title,
+                timestamp=self.conversation.timestamp,
+                author=supporter,
+                location=self.conversation.location,
+                conversation=self.conversation
+            )
+        self.delete()
+        return False
 
 class Report(models.Model):
     GROWTH = 0
