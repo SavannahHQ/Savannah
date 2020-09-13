@@ -126,6 +126,8 @@ class Command(BaseCommand):
         last_helped = None
         last_channel = None
         for convo in convos:
+            if convo.content is None:
+                continue
             if last_channel != convo.channel:
                 last_helped = None
             last_channel = convo.channel
