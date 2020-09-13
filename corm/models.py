@@ -569,6 +569,8 @@ class SuggestConversationAsContribution(Suggestion):
                 location=self.conversation.location,
                 conversation=self.conversation
             )
+            if self.conversation.channel.tag is not None:
+                contrib.tags.add(self.conversation.channel.tag)
         self.delete()
         return False
 
