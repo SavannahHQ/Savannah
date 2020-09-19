@@ -76,6 +76,13 @@
                   </td>
                   <td>{{date}}</td>
                 </tr>
+                {% if forloop.last and forloop.counter == 10 %}
+                <tr>
+                  <td colspan="2" align="center">
+                    <a href ="{% url 'contributors' view.community.id %}?sort=-first_contrib"><b>More...</b></a>
+                  </td>
+                </tr>
+                {% endif %}
                 {% endfor %}
                 </tbody>
                 </table>
@@ -107,6 +114,13 @@
                   </td>
                   <td>{{count}}</td>
                 </tr>
+                {% if forloop.last and forloop.counter == 10 %}
+                <tr>
+                  <td colspan="2" align="center">
+                    <a href ="{% url 'contributors' view.community.id %}?sort=-contrib_count"><b>More...</b></a>
+                  </td>
+                </tr>
+                {% endif %}
                 {% endfor %}
                 </tbody>
                 </table>

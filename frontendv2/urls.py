@@ -19,7 +19,7 @@ from django.urls import path
 from frontendv2.views.dashboard import Dashboard
 from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberEdit, tag_member, add_note, watch_member, GiftManager
 from frontendv2.views.conversations import Conversations
-from frontendv2.views.contributions import Contributions
+from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel
 from frontendv2.views.tags import Tags, AddTag, EditTag
@@ -49,6 +49,7 @@ urlpatterns = [
     path('member/<int:member_id>/gift/<int:gift_id>/', GiftManager.edit_view, name='gift_edit'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
+    path('contributions/<int:community_id>/contributors', Contributors.as_view, name='contributors'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),

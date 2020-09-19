@@ -1,0 +1,94 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_title %} | {{view.community.name}} Contributors{% endblock %}
+
+{% block page_styles %}
+<style>
+th[scope="col"] > a {
+  color: #858796;
+}
+th[scope="col"] > a:hover {
+  text-decoration: none;
+}
+</style>
+{% endblock %}
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Contributors</h1>
+            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
+          </div>
+
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- All Contributions -->
+              <a name="contributors" />
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col"><a href="?sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?sort={% if view.sort_by != "-first_contrib" %}-{% endif %}first_contrib">First Contribution&nbsp;<i class="{% if view.sort_by == "first_contrib" %}fas fa-sort-down{% elif view.sort_by == "-first_contrib" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?sort={% if view.sort_by != "-last_contrib" %}-{% endif %}last_contrib">Last Contribution&nbsp;<i class="{% if view.sort_by == "last_contrib" %}fas fa-sort-down{% elif view.sort_by == "-last_contrib" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?sort={% if view.sort_by != "-contrib_count" %}-{% endif %}contrib_count">Contributions&nbsp;<i class="{% if view.sort_by == "contrib_count" %}fas fa-sort-down{% elif view.sort_by == "-contrib_count" %}fas fa-sort-up{% endif %}"></i></a></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for contributor in view.all_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                  <a href="{% url 'member_profile' contributor.id %}">
+                  <i class="{{contributor.icon_name}}"></i> {{contributor.name}}
+                  </a>
+                  {% include 'savannahv2/tag_list.html' with tags=contributor.tags.all %}
+                  </td>
+                  <td>{{contributor.first_contrib}}</td>
+                  <td>{{contributor.last_contrib}}</td>
+                  <td>{{contributor.contrib_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                {% if view.has_pages %}
+                <nav aria-label="Contribution table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page=1" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conributions">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

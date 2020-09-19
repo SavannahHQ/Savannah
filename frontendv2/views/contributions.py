@@ -232,3 +232,67 @@ class Contributions(SavannahFilterView):
     def as_view(request, community_id):
         view = Contributions(request, community_id)
         return render(request, 'savannahv2/contributions.html', view.context)
+
+
+class Contributors(SavannahFilterView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "contributions"
+        self.sort_by = request.session.get("sort_contributors", "name")
+
+        self.RESULTS_PER_PAGE = 25
+
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'first_contrib', '-first_contrib', 'last_contrib', '-last_contrib', 'contrib_count', '-contrib_count'):
+            self.sort_by = request.GET.get('sort') 
+            request.session['sort_contributors'] = self.sort_by
+
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower()
+        else:
+            self.search = None
+        self.result_count = 0
+
+    @property
+    def all_contributors(self):
+        members = Member.objects.filter(community=self.community)
+        contrib_filter = None
+        contrib_range_filter = Q(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+        if self.tag:
+            contrib_filter = Q(contribution__tags=self.tag)
+            contrib_range_filter = contrib_range_filter & contrib_filter
+        if self.role:
+            members = members.filter(role=self.role)
+
+        members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
+        members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))
+        members = members.annotate(contrib_count=Count('contribution', filter=contrib_range_filter))
+        members = members.filter(last_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+        members = members.prefetch_related('tags').order_by(self.sort_by)
+        
+        self.result_count = members.count()
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return members[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return min(10, pages+1)
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)
+        return [page+1 for page in range(min(10, pages+1))]
+
+    @login_required
+    def as_view(request, community_id):
+        view = Contributors(request, community_id)
+        return render(request, 'savannahv2/contributors.html', view.context)
