@@ -59,13 +59,20 @@ class Conversations(SavannahFilterView):
 
     @property
     def last_page(self):
-        pages = int(self.result_count / self.RESULTS_PER_PAGE)
-        return min(10, pages+1)
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        return pages
 
     @property
     def page_links(self):
-        pages = int(self.result_count / self.RESULTS_PER_PAGE)
-        return [page+1 for page in range(min(10, pages+1))]
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        offset=1
+        if self.page > 5:
+            offset = self.page - 5
+        if offset + 9 > pages:
+            offset = pages - 9
+        if offset < 1:
+            offset = 1
+        return [page+offset for page in range(min(10, pages))]
 
     def getResponseTimes(self):
         if not self._responseTimes:
