@@ -290,7 +290,7 @@ class Contributors(SavannahFilterView):
     @property
     def page_links(self):
         pages = int(self.result_count / self.RESULTS_PER_PAGE)
-        return [page+1 for page in range(min(10, pages+1))]
+        return [page+1 for page in range(min(25, pages+1))]
 
     @login_required
     def as_view(request, community_id):
