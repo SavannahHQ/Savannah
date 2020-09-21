@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.sites',
 
+    'rest_framework',
     "imagekit",
     "imagekit_cropper",
     'notifications',
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
 
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
+    'apiv1.apps.Apiv1Config',
 ]
 
 CORM_PLUGINS = [

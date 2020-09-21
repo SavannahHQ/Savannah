@@ -9,3 +9,4 @@ django-totd==1.0.2
 django-imagekit==4.0.2
 django-imagekit-cropper==1.16
 Pillow>=6.2.2
+djangorestframework==3.11.1

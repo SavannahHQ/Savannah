@@ -22,6 +22,7 @@ import notifications.urls
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('api/v1/', include('apiv1.urls')),
     path('', include('frontendv2.urls')),
     path('slack/', include('corm.plugins.slack')),
     path('github/', include('corm.plugins.github')),

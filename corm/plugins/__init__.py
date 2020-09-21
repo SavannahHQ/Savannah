@@ -73,16 +73,15 @@ class PluginImporter:
                     self.update_identity(contact)
             else:
                 matched_contact = contact_matches[0]
-                if speaker:
-                    if detail:
-                        matched_contact.detail = detail
-                    if name and not matched_contact.name or matched_contact.name == matched_contact.detail:
-                        matched_contact.name = name
-                    if email_address and not matched_contact.email_address:
-                        matched_contact.email_address = email_address
-                    if avatar_url and not matched_contact.avatar_url:
-                        matched_contact.avatar_url = avatar_url
-                    matched_contact.save()
+                if detail:
+                    matched_contact.detail = detail
+                if name and not matched_contact.name or matched_contact.name == matched_contact.detail:
+                    matched_contact.name = name
+                if email_address and not matched_contact.email_address:
+                    matched_contact.email_address = email_address
+                if avatar_url and not matched_contact.avatar_url:
+                    matched_contact.avatar_url = avatar_url
+                matched_contact.save()
                 member = matched_contact.member
 
                 if member.name == matched_contact.detail and matched_contact.name is not None:
