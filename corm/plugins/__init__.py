@@ -67,7 +67,10 @@ class PluginImporter:
                 name = detail
             contact_matches = Contact.objects.filter(origin_id=origin_id, source=self.source)
             if contact_matches.count() == 0:
-                member = Member.objects.create(community=self.community, name=name, first_seen=tstamp, last_seen=None)
+                first_seen = tstamp
+                if first_seen is None:
+                    first_seen = datetime.datetime.utcnow()
+                member = Member.objects.create(community=self.community, name=name, first_seen=first_seen, last_seen=None)
                 contact, created = Contact.objects.get_or_create(origin_id=origin_id, source=self.source, defaults={'member':member, 'detail':detail})
                 if created:
                     self.update_identity(contact)
