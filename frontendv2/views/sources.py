@@ -149,7 +149,10 @@ class Channels(SavannahView):
                 if channel['id'] == origin_id:
                     c, created = Channel.objects.get_or_create(origin_id=origin_id, source=self.source, name=channel['name'])
                     if created:
-                        messages.success(self.request, "<b>%s</b> has been added to your community tracker, and will appear in the next import" % c.name)
+                        if channel['is_private']:
+                            messages.warning(self.request, "<h5><b>WARNING!</b></h5><b>%s</b> is a private channel, but imported conversations will be visible to all of your managers in Savannah.<br/><br/>Delete this channel if it may contain sensitive information you don't want other managers to see." % c.name)
+                        else:
+                            messages.success(self.request, "<b>%s</b> has been added to your community tracker, and will appear in the next import" % c.name)
 
     @login_required
     def as_view(request, community_id, source_id):
