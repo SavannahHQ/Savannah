@@ -142,13 +142,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for member, count in view.most_active %}
+                {% for member in view.most_active %}
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td>{{count}}</td>
+                  <td>{{member.conversation_count}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -174,13 +174,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for member, count in view.most_connected %}
+                {% for member in view.most_connected %}
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td>{{count}}</td>
+                  <td>{{member.connection_count}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

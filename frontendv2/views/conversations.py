@@ -48,8 +48,8 @@ class Conversations(SavannahFilterView):
         if self.conversation_search:
             conversations = conversations.filter(content__icontains=self.conversation_search)
 
-        conversations = conversations.select_related('channel', 'channel__source', 'speaker').prefetch_related('tags').order_by('-timestamp')
         self.result_count = conversations.count()
+        conversations = conversations.select_related('channel', 'channel__source', 'speaker').prefetch_related('tags').order_by('-timestamp')
         start = (self.page-1) * self.RESULTS_PER_PAGE
         return conversations[start:start+self.RESULTS_PER_PAGE]
 
@@ -246,13 +246,8 @@ class Conversations(SavannahFilterView):
         if self.conversation_search:
             convo_filter = convo_filter & Q(speaker_in__content__icontains=self.conversation_search)
 
-        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).filter(conversation_count__gt=0).prefetch_related('tags')
-        for m in members:
-            if m.conversation_count > 0:
-                activity_counts[m] = m.conversation_count
-        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
-        most_active.reverse()
-        return most_active[:20]
+        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).filter(conversation_count__gt=0).prefetch_related('tags').order_by('-conversation_count')
+        return members[:20]
 
     @property
     def most_connected(self):
@@ -264,14 +259,8 @@ class Conversations(SavannahFilterView):
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.role:
             members = members.filter(role=self.role)
-        members = members.annotate(connection_count=Count('connections', filter=connection_filter)).filter(connection_count__gt=0).prefetch_related('tags')
-        connection_counts = dict()
-        for m in members:
-            if m.connection_count > 0:
-                connection_counts[m] = m.connection_count
-        most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
-        most_connected.reverse()
-        return most_connected[:20]
+        members = members.annotate(connection_count=Count('connections', filter=connection_filter)).filter(connection_count__gt=0).prefetch_related('tags').order_by('-connection_count')
+        return members[:20]
 
     @login_required
     def as_view(request, community_id):
