@@ -85,19 +85,37 @@ class RssPlugin(BasePlugin):
         resp = requests.get(source.server)   
         if resp.status_code == 200:
             data = resp.text
-            parser = RssLinkParser()
-            parser.feed(data)
-            i = 0
-            for url, title in parser.rss_links.items():
-                channels.append({
-                    'id': url,
-                    'name': title,
-                    'topic': "",
-                    'count': i,
-                })
-                i += 1
-            if len(channels) == 0:
-                raise Exception("No RSS links found at %s" % source.server)
+            try:
+                rawxml = io.StringIO(data)
+                tree = XMLParser.parse(rawxml)
+                i = 0
+                for feedchannel in tree.findall('channel'):
+                    feed_url = feedchannel.find('{http://www.w3.org/2005/Atom}link').get('href')
+                    channels.append({
+                        'id': source.server,
+                        'name': feedchannel.find('title').text.strip(),
+                        'topic': feedchannel.find('description').text,
+                        'count': i,
+                    })
+                    i += 1
+                if len(channels) == 0:
+                    raise Exception("No channels found in %s" % source.server)
+            except:
+                parser = RssLinkParser()
+                parser.feed(data)
+                i = 0
+                for url, title in parser.rss_links.items():
+                    if url.startswith('/'):
+                        url = source.server + url
+                    channels.append({
+                        'id': url,
+                        'name': title,
+                        'topic': "",
+                        'count': i,
+                    })
+                    i += 1
+                if len(channels) == 0:
+                    raise Exception("No RSS links found at %s" % source.server)
         else:
             print("Request failed: %s" % resp.content)
             raise Exception("Request failed: %s" % resp.content)
@@ -129,18 +147,21 @@ class RssImporter(PluginImporter):
             self.import_item(item, channel, source, community)
 
     def import_item(self, item, channel, source, community):
+        article_link = item.find('link').text
+        guid_node = item.find('guid')
         author_node = item.find('{http://purl.org/dc/elements/1.1/}creator')
         if author_node is None:
             author_node = item.find('author')
         if author_node is None or not hasattr(author_node, 'text'):
             return
         author_name = author_node.text
+        if author_name is None:
+            print("No author name for article: %s" % article_link)
+            return
         tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
         article_title = item.find('title').text.strip()
         if len(article_title) > 198:
             article_title = article_title[:198]
-        article_link = item.find('link').text
-        guid_node = item.find('guid')
         origin_id = article_link
         blog_author_id = '%s/%s' % (source.server, author_name)
         member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name)
