@@ -32,6 +32,7 @@ class Contributions(SavannahFilterView):
     @property
     def all_contributions(self):
         contributions = Contribution.objects.filter(community=self.community)
+        contributions = contributions.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
         if self.tag:
             contributions = contributions.filter(tags=self.tag)
 
@@ -74,7 +75,7 @@ class Contributions(SavannahFilterView):
             members = members.filter(role=self.role)
 
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
-        members = members.filter(first_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+        members = members.filter(first_contrib__gte=self.rangestart, first_contrib__lte=self.rangeend)
         members = members.prefetch_related('tags')
         actives = dict()
         for m in members:
@@ -87,7 +88,7 @@ class Contributions(SavannahFilterView):
     @property
     def recent_contributors(self):
         members = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__isnull=False)
+        contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -106,7 +107,7 @@ class Contributions(SavannahFilterView):
     def top_contributors(self):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -125,7 +126,7 @@ class Contributions(SavannahFilterView):
         activity_counts = dict()
         contributor_ids = set()
         contributors = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -152,7 +153,7 @@ class Contributions(SavannahFilterView):
         activity_counts = dict()
         contributor_ids = set()
         contributors = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.role:
@@ -165,7 +166,7 @@ class Contributions(SavannahFilterView):
                 contributor_ids.add(c.id)
 
         members = Member.objects.filter(community=self.community)
-        members = members.annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = members.annotate(connection_count=Count('memberconnection__id', filter=Q(memberconnection__to_member__in=contributor_ids, memberconnection__first_connected__lte=self.rangeend, memberconnection__last_connected__gte=self.rangestart)))
         members = members.order_by('-connection_count').filter(connection_count__gt=0).prefetch_related('tags')
         for m in members:
             if m.connection_count > 0:
@@ -179,7 +180,7 @@ class Contributions(SavannahFilterView):
             months = list()
             counts = dict()
 
-            contributions = Contribution.objects.filter(community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            contributions = Contribution.objects.filter(community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
 
@@ -187,6 +188,7 @@ class Contributions(SavannahFilterView):
                 contributions = contributions.filter(author__role=self.role)
             contributions = contributions.order_by("timestamp")
 
+            counts['prev'] = total.count()
             for m in contributions:
                 month = self.trunc_date(m.timestamp)
                 if month not in months:
@@ -209,15 +211,13 @@ class Contributions(SavannahFilterView):
         return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     def channels_chart(self):
-        channel_names = dict()
         if not self._channelsChart:
             channels = list()
             counts = dict()
-            from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc', 'ffa280']
-            next_color = 0
+
 
             channels = Channel.objects.filter(source__community=self.community)
-            contrib_filter = Q(contribution__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             if self.role:
@@ -268,7 +268,7 @@ class Contributors(SavannahFilterView):
     def all_contributors(self):
         members = Member.objects.filter(community=self.community)
         contrib_filter = None
-        contrib_range_filter = Q(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+        contrib_range_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = Q(contribution__tags=self.tag)
             contrib_range_filter = contrib_range_filter & contrib_filter
@@ -278,7 +278,7 @@ class Contributors(SavannahFilterView):
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
         members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))
         members = members.annotate(contrib_count=Count('contribution', filter=contrib_range_filter))
-        members = members.filter(last_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+        members = members.filter(last_contrib__isnull=False, first_contrib__isnull=False)
         members = members.prefetch_related('tags').order_by(self.sort_by)
         
         self.result_count = members.count()

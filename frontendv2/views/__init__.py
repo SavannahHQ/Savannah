@@ -157,8 +157,34 @@ class SavannahFilterView(SavannahView):
             self.role = None
             request.session['role'] = None
 
+        self.rangestart = None
+        self.rangeend = None
         self.timespan = self.MAX_TIMESPAN
+        self.DATE_FORMAT = '%Y-%m-%d'
+        if 'timefilter' not in request.session:
+            request.session['timefilter'] = 'timespan'
         try:
+            if 'rangestart' in request.GET:
+                if request.GET.get('rangestart') == '':
+                    request.session['rangestart'] = None
+                else:
+                    self.rangestart = datetime.datetime.strptime(request.GET.get('rangestart'), self.DATE_FORMAT)
+                    request.session['rangestart'] = self.rangestart.strftime(self.DATE_FORMAT)
+                    request.session['timefilter'] = 'range'
+            elif 'rangestart' in request.session:
+                self.rangestart = datetime.datetime.strptime(request.session.get('rangestart'), self.DATE_FORMAT)
+
+            if 'rangeend' in request.GET:
+                if request.GET.get('rangeend') == '':
+                    request.session['rangeend'] = None
+                else:
+                    self.rangeend = datetime.datetime.strptime(request.GET.get('rangeend'), self.DATE_FORMAT)
+                    self.rangeend = self.rangeend.replace(hour=23, minute=59, second=59)
+                    request.session['rangeend'] = self.rangeend.strftime(self.DATE_FORMAT)
+                    request.session['timefilter'] = 'range'
+            elif 'rangeend' in request.session:
+                self.rangeend = datetime.datetime.strptime(request.session.get('rangeend'), self.DATE_FORMAT)
+
             if 'timespan' in request.GET:
                 if request.GET.get('timespan') == '':
                     request.session['timespan'] = self.MAX_TIMESPAN
@@ -167,15 +193,27 @@ class SavannahFilterView(SavannahView):
                     if self.timespan > self.MAX_TIMESPAN or self.timespan < 1:
                         self.timespan = self.MAX_TIMESPAN
                     request.session['timespan'] = self.timespan
+                request.session['timefilter'] = 'timespan'
             elif 'timespan' in request.session:
                 self.timespan = request.session.get('timespan')
-        except:
+
+        except Exception as e:
+            print(e)
             self.timespan = self.MAX_TIMESPAN
             request.session['timespan'] = self.MAX_TIMESPAN
+            request.session['timefilter'] = 'timespan'
+
+        self.timefilter = request.session['timefilter']
+        if self.timefilter == 'timespan':
+            self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
+            self.rangeend = datetime.datetime.utcnow()
+        else:
+            self.timespan = 1+(self.rangeend - self.rangestart).days
+
 
     @property
     def timespan_display(self):
-        if self.timespan == 180:
+        if self.timespan == 183:
             return "6 Months"
         elif self.timespan == 30:
             return "30 Days"
@@ -188,7 +226,7 @@ class SavannahFilterView(SavannahView):
 
     @property
     def timespan_icon(self):
-        if self.timespan == 180:
+        if self.timespan == 183:
             return "fas fa-calendar"
         elif self.timespan == 30:
             return "fas fa-calendar-alt"
@@ -209,29 +247,28 @@ class SavannahFilterView(SavannahView):
 
     @property
     def trunc_span(self):
-        if self.timespan > 30:
+        if self.timespan > 92:
             return "month"
-        elif self.timespan > 3:
+        elif self.timespan > 5:
             return "day"
         else:
             return "hour"
 
     @property
     def timespan_chart_span(self):
-        if self.timespan > 180:
-            return 12
-        elif self.timespan > 30:
-            return 6
-        elif self.timespan > 3:
+        if self.timespan > 92:
+            return int(self.timespan / 30.4)
+        elif self.timespan > 5:
             return self.timespan
         else:
             return self.timespan * 24
 
     def timespan_chart_keys(self, values):
         span_count = self.timespan_chart_span
+
         axis_values = []
         if self.trunc_span == "month":
-            end = datetime.datetime.utcnow()
+            end = self.rangeend
             year = end.year
             month = end.month
             for i in range(span_count):
@@ -242,13 +279,13 @@ class SavannahFilterView(SavannahView):
                     year -= 1
             return axis_values
         elif self.trunc_span == "day":
-            end = datetime.datetime.utcnow()
+            end = self.rangeend
             for i in range(span_count):
                 day = self.trunc_date(end - datetime.timedelta(days=i))
                 axis_values.insert(0, day)
             return axis_values
         elif self.trunc_span == "hour":
-            end = datetime.datetime.utcnow()
+            end = self.rangeend
             for i in range(span_count):
                 hour = self.trunc_date(end - datetime.timedelta(hours=i))
                 axis_values.insert(0, hour)

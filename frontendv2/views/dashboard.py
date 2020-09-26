@@ -61,9 +61,10 @@ class Dashboard(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
         if self.tag:
-            members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan), conversation__tags=self.tag)))
+            members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend, conversation__tags=self.tag)))
         else:
-            members = members.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))))
+            members = members.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)))
+        members = members.filter(conversation_count__gt=0)
         for m in members:
             activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
@@ -76,10 +77,11 @@ class Dashboard(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
         if self.tag:
-            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan), connections__tags=self.tag)))
+            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend, connections__tags=self.tag)))
         else:
-            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))))
+            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)))
 
+        members = members.filter(connection_count__gt=0)
         connection_counts = dict()
         for m in members:
             connection_counts[m] = m.connection_count
@@ -92,8 +94,8 @@ class Dashboard(SavannahFilterView):
             months = list()
             counts = dict()
             total = 0
-            members = Member.objects.filter(community=self.community, first_seen__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-            total = Member.objects.filter(community=self.community, first_seen__lt=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            members = Member.objects.filter(community=self.community, first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
+            total = Member.objects.filter(community=self.community, first_seen__lt=self.rangestart)
             if self.tag:
                 members = members.filter(tags=self.tag)
                 total = total.filter(tags=self.tag)
@@ -102,6 +104,7 @@ class Dashboard(SavannahFilterView):
                 total = total.filter(role=self.role)
 
             total = total.count()
+            counts['prev'] = total
             members = members.order_by("first_seen")
             for m in members:
                 total += 1
@@ -122,7 +125,7 @@ class Dashboard(SavannahFilterView):
     def members_chart_counts(self):
         (months, counts) = self.getMembersChart()
         cumulative_counts = []
-        previous = 0
+        previous = counts['prev']
         for month in self.timespan_chart_keys(months):
             cumulative_counts.append(counts.get(month, previous))
             previous = cumulative_counts[-1]
@@ -171,7 +174,7 @@ class Dashboard(SavannahFilterView):
             self._levelsChart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES)
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=project, level=level)
-                levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+                levels = levels.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
                 if self.tag:
                     levels = levels.filter(member__tags=self.tag)
                 if self.role:

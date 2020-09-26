@@ -39,6 +39,7 @@ class Conversations(SavannahFilterView):
     @property
     def all_conversations(self):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
+        conversations = conversations.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
         if self.tag:
             conversations = conversations.filter(tags=self.tag)
 
@@ -76,11 +77,7 @@ class Conversations(SavannahFilterView):
 
     def getResponseTimes(self):
         if not self._responseTimes:
-            range_span = datetime.timedelta(days=self.timespan)
-            range_1_end = datetime.datetime.utcnow()
-            range_1_start = range_1_end - range_span
-
-            replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=range_1_start, timestamp__lte=range_1_end)
+            replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.tag:
                 replies = replies.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
 
@@ -123,7 +120,7 @@ class Conversations(SavannahFilterView):
             months = list()
             counts = dict()
 
-            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
 
@@ -160,7 +157,7 @@ class Conversations(SavannahFilterView):
             channels = list()
             counts = dict()
             channels = Channel.objects.filter(source__community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
@@ -185,7 +182,7 @@ class Conversations(SavannahFilterView):
         if not self._tagsChart:
             counts = dict()
             tags = Tag.objects.filter(community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
@@ -213,7 +210,7 @@ class Conversations(SavannahFilterView):
                 Member.BOT: savannah_colors.MEMBER.BOT
             }
             members = Member.objects.filter(community=self.community)
-            convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
             if self.tag:
                 convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
             if self.role:
@@ -238,7 +235,7 @@ class Conversations(SavannahFilterView):
     def most_active(self):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.role:
@@ -254,7 +251,7 @@ class Conversations(SavannahFilterView):
         if self.conversation_search:
             return []
         members = Member.objects.filter(community=self.community)
-        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        connection_filter = Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.role:

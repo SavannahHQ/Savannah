@@ -20,6 +20,7 @@
 
   <!-- Custom styles for this template-->
   <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-datepicker/css/bootstrap-datepicker.standalone.min.css' %}" rel="stylesheet">
 
     <link rel="icon" href="{% static 'savannah/Savannah32.png' %}" type="image/png" sizes="32x32">
     <link rel="icon" href="{% static 'savannah/Savannah64.png' %}" type="image/png" sizes="64x64">
@@ -380,10 +381,17 @@
   <!-- Bootstrap core JavaScript-->
   <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
   <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
   <script>
 $(function () {
   $('[data-toggle="tooltip"]').tooltip()
 })
+$('.datepicker').datepicker();
+$('.input-daterange').each(function() {
+    $(this).datepicker({
+      format: 'yyyy-mm-dd'
+    });
+});
   </script>
   <!-- Core plugin JavaScript-->
   <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>

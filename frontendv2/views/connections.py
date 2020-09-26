@@ -28,43 +28,52 @@ class Connections(SavannahFilterView):
         if not self._connectionsChart:
             months = list()
             counts = dict()
-            total = 0
+
             connections = MemberConnection.objects.filter(via__community=self.community)
-            
             if self.tag:
                 connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
             if self.role:
-                connections = connections.filter(Q(from_member__role=self.role)&Q(to_member__role=self.role))
+                connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
 
-            connections = connections.order_by("first_connected")
+
+            counts['prev'] = connections.filter(first_connected__lt=self.rangestart).count()
+
+            connections = connections.filter(first_connected__gte=self.rangestart, first_connected__lte=self.rangeend)
             for c in connections:
-                total += 1
                 month = self.trunc_date(c.first_connected)
                 if month not in months:
                     months.append(month)
-                counts[month] = total
+                if month not in counts:
+                    counts[month] = 1
+                else:
+                    counts[month] += 1
             self._connectionsChart = (months, counts)
         return self._connectionsChart
         
     @property
     def connections_chart_months(self):
         (months, counts) = self.getConnectionsChart()
-        return months[-self.timespan_chart_span:]
+        return self.timespan_chart_keys(months)
 
     @property
     def connections_chart_counts(self):
         (months, counts) = self.getConnectionsChart()
-        return [counts[month]/2 for month in months[-self.timespan_chart_span:]]
+        cumulative_counts = []
+        previous = counts['prev']
+        for month in self.timespan_chart_keys(months):
+            cumulative_counts.append(counts.get(month, 0)+previous)
+            previous = cumulative_counts[-1]
+        return cumulative_counts
 
     def sources_chart(self):
         channel_names = dict()
         if not self._sourcesChart:
             counts = dict()
-            connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gt=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+            connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gte=self.rangestart, first_connected__lte=self.rangeend)
             if self.tag:
                 connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
             if self.role:
-                connections = connections.filter(Q(from_member__role=self.role)&Q(to_member__role=self.role))
+                connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
 
             connections = connections.annotate(source_name=F('via__name'), source_connector=F('via__connector'), source_icon=F('via__icon_name'))
             for c in connections:
@@ -98,7 +107,7 @@ class Connections(SavannahFilterView):
         else:
             timespan = 30
         
-        connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=timespan))
+        connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=view.rangeend - datetime.timedelta(days=timespan), last_connected__lte=view.rangeend)
         if view.tag:
             connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
         if view.role:

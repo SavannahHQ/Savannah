@@ -39,6 +39,7 @@ class Members(SavannahFilterView):
             members = members.filter(tags=self.tag)
         if self.role:
             members = members.filter(role=self.role)
+        members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
         return members.order_by("-first_seen")[:10]
 
     @property
@@ -51,6 +52,7 @@ class Members(SavannahFilterView):
             members = members.filter(role=self.role)
             
         members = members.annotate(last_active=Max('speaker_in__timestamp', filter=convo_filter))
+        members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
         actives = dict()
         for m in members:
             if m.last_active is not None:
@@ -58,41 +60,6 @@ class Members(SavannahFilterView):
         recently_active = [(member, tstamp) for member, tstamp in sorted(actives.items(), key=operator.itemgetter(1), reverse=True)]
         
         return recently_active[:10]
-
-    @property
-    def most_active(self):
-        activity_counts = dict()
-        members = Member.objects.filter(community=self.community)
-        convo_filter = Q(speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-        if self.tag:
-            convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
-        if self.role:
-            members = members.filter(role=self.role)
-
-        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter))
-        for m in members:
-            if m.conversation_count > 0:
-                activity_counts[m] = m.conversation_count
-        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
-        most_active.reverse()
-        return most_active[:20]
-
-    @property
-    def most_connected(self):
-        members = Member.objects.filter(community=self.community)
-        connection_filter = Q(memberconnection__last_connected__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-        if self.tag:
-            connection_filter = connection_filter & Q(connections__tags=self.tag)
-        if self.role:
-            members = members.filter(role=self.role)
-        members = members.annotate(connection_count=Count('connections', filter=connection_filter))
-        connection_counts = dict()
-        for m in members:
-            if m.connection_count > 0:
-                connection_counts[m] = m.connection_count
-        most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
-        most_connected.reverse()
-        return most_connected[:20]
 
     def getMembersChart(self):
         if not self._membersChart:
@@ -141,45 +108,11 @@ class Members(SavannahFilterView):
         (months, counts, monthly_active) = self.getMembersChart()
         return [monthly_active.get(month, 0) for month in self.timespan_chart_keys(months)]
 
-    def getTagsChart(self):
-        if not self._tagsChart:
-            tags = list()
-            counts = dict()
-            total = 0
-            tags = Tag.objects.filter(community=self.community)
-            if self.role:
-                tags = tags.annotate(member_count=Count('member', filter=Q(member__role=self.role))).order_by('-member_count')
-            else:
-                tags = tags.annotate(member_count=Count('member')).order_by('-member_count')
-            for t in tags:
-                counts[t] = t.member_count
-            self._tagsChart = [('#'+tag.name, count, '#'+tag.color) for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._tagsChart) > 8:
-                other_count = sum([count for tag, count, color in self._tagsChart[7:]])
-                self._tagsChart = self._tagsChart[:7]
-                self._tagsChart.append(("Other", other_count, "#efefef"))
-        return self._tagsChart
-
-    @property
-    def tag_names(self):
-        chart = self.getTagsChart()
-        return [tag[0] for tag in chart]
-
-    @property
-    def tag_counts(self):
-        chart = self.getTagsChart()
-        return [tag[1] for tag in chart]
-
-    @property
-    def tag_colors(self):
-        chart = self.getTagsChart()
-        return [tag[2] for tag in chart]
-
     def sources_chart(self):
         if not self._sourcesChart:
             counts = dict()
             other_count = 0
-            identity_filter = Q(contact__member__first_seen__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
+            identity_filter = Q(contact__member__first_seen__gte=self.rangestart, contact__member__last_seen__lte=self.rangeend)
             if self.tag:
                 identity_filter = identity_filter & Q(contact__member__tags=self.tag)
             if self.role:
@@ -235,7 +168,7 @@ class AllMembers(SavannahFilterView):
             members = members.filter(role=self.role)
 
         if self.timespan < 365:
-            members = members.filter(first_seen__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)).order_by('-first_seen')
+            members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend).order_by('-first_seen')
 
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
