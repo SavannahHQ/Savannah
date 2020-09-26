@@ -198,7 +198,6 @@ class SavannahFilterView(SavannahView):
                 self.timespan = request.session.get('timespan')
 
         except Exception as e:
-            print(e)
             self.timespan = self.MAX_TIMESPAN
             request.session['timespan'] = self.MAX_TIMESPAN
             request.session['timefilter'] = 'timespan'
