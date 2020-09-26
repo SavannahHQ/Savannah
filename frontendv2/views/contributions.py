@@ -188,7 +188,6 @@ class Contributions(SavannahFilterView):
                 contributions = contributions.filter(author__role=self.role)
             contributions = contributions.order_by("timestamp")
 
-            counts['prev'] = total.count()
             for m in contributions:
                 month = self.trunc_date(m.timestamp)
                 if month not in months:
