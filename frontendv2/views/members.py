@@ -324,7 +324,7 @@ class MemberProfile(SavannahView):
             from_colors = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
             next_color = 0
             channels = Channel.objects.filter(source__community=self.member.community)
-            convo_filter = Q(conversation__participants=self.member, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+            convo_filter = Q(conversation__speaker=self.member, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
