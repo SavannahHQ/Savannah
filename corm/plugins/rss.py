@@ -164,7 +164,7 @@ class RssImporter(PluginImporter):
             article_title = article_title[:198]
         origin_id = article_link
         blog_author_id = '%s/%s' % (source.server, author_name)
-        member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name)
+        member = self.make_member(blog_author_id, detail=author_name, tstamp=tstamp, name=author_name, speaker=True)
 
         blog_content = item.find('description').text
         origin_parts = origin_id.split("#")
