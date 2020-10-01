@@ -158,7 +158,7 @@ class RssImporter(PluginImporter):
         if author_name is None:
             print("No author name for article: %s" % article_link)
             return
-        tstamp = self.strptime(item.find('pubDate').text).replace(tzinfo=None)
+        tstamp = self.strptime(item.find('pubDate').text.strip()).replace(tzinfo=None)
         article_title = item.find('title').text.strip()
         if len(article_title) > 198:
             article_title = article_title[:198]
