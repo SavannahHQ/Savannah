@@ -114,7 +114,6 @@ class IdentityList(SavannahIntegrationView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        print(request.data)
         serializer = IdentitySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(source=request.source)

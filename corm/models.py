@@ -423,7 +423,7 @@ class Contribution(TaggableModel, ImportedDataModel):
         ordering = ('-timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     contribution_type = models.ForeignKey(ContributionType, on_delete=models.CASCADE)
-    channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=256)
     timestamp = models.DateTimeField(db_index=True)
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
