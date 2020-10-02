@@ -52,8 +52,8 @@ class ProjectOverview(SavannahFilterView):
     def core_levels(self):
         levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CORE).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
         levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-        if self.tag:
-            levels = levels.filter(member__tags=self.tag)
+        if self.member_tag:
+            levels = levels.filter(member__tags=self.member_tag)
         if self.role:
             levels = levels.filter(member__role=self.role)
         return levels[:100]
@@ -61,8 +61,8 @@ class ProjectOverview(SavannahFilterView):
     def contrib_levels(self):
         levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
         levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-        if self.tag:
-            levels = levels.filter(member__tags=self.tag)
+        if self.member_tag:
+            levels = levels.filter(member__tags=self.member_tag)
         if self.role:
             levels = levels.filter(member__role=self.role)
         return levels[:200]
@@ -74,8 +74,8 @@ class ProjectOverview(SavannahFilterView):
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=level)
                 levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-                if self.tag:
-                    levels = levels.filter(member__tags=self.tag)
+                if self.member_tag:
+                    levels = levels.filter(member__tags=self.member_tag)
                 if self.role:
                     levels = levels.filter(member__role=self.role)
                 self._levelsChart.add(level, levels.count())

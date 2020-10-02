@@ -143,6 +143,20 @@ class SavannahFilterView(SavannahView):
             self.tag = None
             request.session['tag'] = None
 
+        self.member_tag = None
+        try:
+            if 'member_tag' in request.GET:
+                if request.GET.get('member_tag') == '':
+                    equest.session['member_tag'] = None
+                else:
+                    self.member_tag = Tag.objects.get(community=self.community, name=request.GET.get('member_tag'))
+                    request.session['member_tag'] = request.GET.get('member_tag')
+            elif 'member_tag' in request.session:
+                self.member_tag = Tag.objects.get(community=self.community, name=request.session.get('member_tag'))
+        except:
+            self.member_tag = None
+            request.session['member_tag'] = None
+
         self.role = None
         try:
             if 'role' in request.GET:

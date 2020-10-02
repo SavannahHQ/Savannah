@@ -25,8 +25,8 @@ class Members(SavannahFilterView):
     @property
     def all_members(self):
         members = Member.objects.filter(community=self.community)
-        if self.tag:
-            members =members.filter(tags=self.tag)
+        if self.member_tag:
+            members =members.filter(tags=self.member_tag)
         if self.role:
             members =members.filter(role=self.role)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
@@ -35,8 +35,8 @@ class Members(SavannahFilterView):
     @property
     def new_members(self):
         members = Member.objects.filter(community=self.community)
-        if self.tag:
-            members = members.filter(tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
         members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
@@ -45,13 +45,12 @@ class Members(SavannahFilterView):
     @property
     def recently_active(self):
         members = Member.objects.filter(community=self.community)
-        convo_filter = Q(speaker_in__timestamp__isnull=False)
-        if self.tag:
-            convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
             
-        members = members.annotate(last_active=Max('speaker_in__timestamp', filter=convo_filter))
+        members = members.annotate(last_active=Max('speaker_in__timestamp', filter=Q(speaker_in__timestamp__isnull=False)))
         members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
         actives = dict()
         for m in members:
@@ -68,8 +67,8 @@ class Members(SavannahFilterView):
             monthly_active = dict()
             total = 0
             members = Member.objects.filter(community=self.community)
-            if self.tag:
-                members = members.filter(tags=self.tag)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
             if self.role:
                 members = members.filter(role=self.role)
 
@@ -113,8 +112,8 @@ class Members(SavannahFilterView):
             counts = dict()
             other_count = 0
             identity_filter = Q(contact__member__first_seen__gte=self.rangestart, contact__member__last_seen__lte=self.rangeend)
-            if self.tag:
-                identity_filter = identity_filter & Q(contact__member__tags=self.tag)
+            if self.member_tag:
+                identity_filter = identity_filter & Q(contact__member__tags=self.member_tag)
             if self.role:
                 identity_filter = identity_filter & Q(contact__member__role=self.role)
             sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact', filter=identity_filter))
@@ -161,8 +160,8 @@ class AllMembers(SavannahFilterView):
         if self.search:
             members = members.filter(Q(name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search))
 
-        if self.tag:
-            members = members.filter(tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
 
         if self.role:
             members = members.filter(role=self.role)
@@ -222,6 +221,7 @@ class MemberProfile(SavannahView):
         except:
             self.page = 1
         self.tag = None
+        self.member_tage = None
         self.role = None
         
     @property

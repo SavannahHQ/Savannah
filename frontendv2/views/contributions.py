@@ -36,6 +36,9 @@ class Contributions(SavannahFilterView):
         if self.tag:
             contributions = contributions.filter(tags=self.tag)
 
+        if self.member_tag:
+            contributions = contributions.filter(author__tags=self.member_tag)
+
         if self.role:
             contributions = contributions.filter(author__role=self.role)
 
@@ -71,6 +74,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = None
         if self.tag:
             contrib_filter = Q(contribution__tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
 
@@ -91,6 +96,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
 
@@ -110,6 +117,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
 
@@ -129,6 +138,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_tag:
+            contributors = contributors.filter(tags=self.member_tag)
         if self.role:
             contributors = contributors.filter(role=self.role)
 
@@ -156,6 +167,8 @@ class Contributions(SavannahFilterView):
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_tag:
+            contributors = contributors.filter(tags=self.member_tag)
         if self.role:
             contributors = contributors.filter(role=self.role)
 
@@ -184,6 +197,8 @@ class Contributions(SavannahFilterView):
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
 
+            if self.member_tag:
+                contributions = contributions.filter(author__tags=self.member_tag)
             if self.role:
                 contributions = contributions.filter(author__role=self.role)
             contributions = contributions.order_by("timestamp")
@@ -219,6 +234,8 @@ class Contributions(SavannahFilterView):
             contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+            if self.member_tag:
+                contrib_filter = contrib_filter & Q(contribution__author__tags=self.member_tag)
             if self.role:
                 contrib_filter = contrib_filter & Q(contribution__author__role=self.role)
 
@@ -271,6 +288,8 @@ class Contributors(SavannahFilterView):
         if self.tag:
             contrib_filter = Q(contribution__tags=self.tag)
             contrib_range_filter = contrib_range_filter & contrib_filter
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
 

@@ -21,8 +21,8 @@ class Dashboard(SavannahFilterView):
     @property 
     def member_count(self):
         members = self.community.member_set.all()
-        if self.tag:
-            members = members.filter(tags=self.tag)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.role:
             members = members.filter(role=self.role)
         return members.count()
@@ -32,6 +32,8 @@ class Dashboard(SavannahFilterView):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
         if self.tag:
             conversations = conversations.filter(Q(tags=self.tag)|Q(speaker__tags=self.tag))
+        if self.member_tag:
+            conversations = conversations.filter(speaker__tags=self.member_tag)
         if self.role:
             conversations = conversations.filter(speaker__role=self.role)
         return conversations.count()
@@ -40,7 +42,9 @@ class Dashboard(SavannahFilterView):
     def contribution_count(self):
         contributions = Contribution.objects.filter(community=self.community)
         if self.tag:
-            contributions = contributions.filter(Q(tags=self.tag)|Q(author__tags=self.tag))
+            contributions = contributions.filter(tags=self.tag)
+        if self.member_tag:
+            contributions = contributions.filter(author__tags=self.member_tag)
         if self.role:
             contributions = contributions.filter(author__role=self.role)
         return contributions.count()
@@ -49,7 +53,9 @@ class Dashboard(SavannahFilterView):
     def contributor_count(self):
         contributors = Member.objects.filter(community=self.community)
         if self.tag:
-            contributors = contributors.filter(tags=self.tag)
+            contributors = contributors.filter(contribution__tags=self.tag)
+        if self.member_tag:
+            contributors = contributors.filter(tags=self.member_tag)
         if self.role:
             contributors = contributors.filter(role=self.role)
         return contributors.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
@@ -60,6 +66,8 @@ class Dashboard(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         if self.role:
             members = members.filter(role=self.role)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.tag:
             members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend, conversation__tags=self.tag)))
         else:
@@ -76,6 +84,8 @@ class Dashboard(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         if self.role:
             members = members.filter(role=self.role)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
         if self.tag:
             members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend, connections__tags=self.tag)))
         else:
@@ -96,9 +106,9 @@ class Dashboard(SavannahFilterView):
             total = 0
             members = Member.objects.filter(community=self.community, first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
             total = Member.objects.filter(community=self.community, first_seen__lt=self.rangestart)
-            if self.tag:
-                members = members.filter(tags=self.tag)
-                total = total.filter(tags=self.tag)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
+                total = total.filter(tags=self.member_tag)
             if self.role:
                 members = members.filter(role=self.role)
                 total = total.filter(role=self.role)
@@ -140,6 +150,8 @@ class Dashboard(SavannahFilterView):
             conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
+            if self.member_tag:
+                conversations = conversations.filter(speaker__tags=self.member_tag)
             if self.role:
                 conversations = conversations.filter(speaker__role=self.role)
 
@@ -175,8 +187,8 @@ class Dashboard(SavannahFilterView):
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=project, level=level)
                 levels = levels.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
-                if self.tag:
-                    levels = levels.filter(member__tags=self.tag)
+                if self.member_tag:
+                    levels = levels.filter(member__tags=self.member_tag)
                 if self.role:
                     levels = levels.filter(member__role=self.role)
                 self._levelsChart.add(level, levels.count())

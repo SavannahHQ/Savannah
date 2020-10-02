@@ -30,8 +30,8 @@ class Connections(SavannahFilterView):
             counts = dict()
 
             connections = MemberConnection.objects.filter(via__community=self.community)
-            if self.tag:
-                connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
+            if self.member_tag:
+                connections = connections.filter(Q(from_member__tags=self.member_tag)|Q(to_member__tags=self.member_tag))
             if self.role:
                 connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
 
@@ -70,8 +70,8 @@ class Connections(SavannahFilterView):
         if not self._sourcesChart:
             counts = dict()
             connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gte=self.rangestart, first_connected__lte=self.rangeend)
-            if self.tag:
-                connections = connections.filter(Q(from_member__tags=self.tag)|Q(to_member__tags=self.tag))
+            if self.member_tag:
+                connections = connections.filter(Q(from_member__tags=self.member_tag)|Q(to_member__tags=self.member_tag))
             if self.role:
                 connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
 
@@ -108,8 +108,8 @@ class Connections(SavannahFilterView):
             timespan = 30
         
         connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=view.rangeend - datetime.timedelta(days=timespan), last_connected__lte=view.rangeend)
-        if view.tag:
-            connections = connections.filter(Q(to_member__tags=view.tag)|Q(from_member__tags=view.tag))
+        if view.member_tag:
+            connections = connections.filter(Q(to_member__tags=view.member_tag)|Q(from_member__tags=view.member_tag))
         if view.role:
             connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
         connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected')

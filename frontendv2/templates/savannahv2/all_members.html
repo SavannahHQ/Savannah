@@ -7,7 +7,7 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Members</h1>
-            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
+            {% include 'savannahv2/filter_button.html' with current_tag=view.tag members_only=True %}
           </div>
 
           <!-- Content Row -->
@@ -45,7 +45,7 @@
                   <td>{{member.last_seen}}</td>
                 </tr>
                 {% if member.note_count %}
-                <tr><td colspan=3>
+                <tr><td colspan="4">
                 <ul>
                 {% for note in member.note_set.all %}
                 <li><span class="note">{{note}}</span></li>
