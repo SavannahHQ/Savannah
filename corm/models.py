@@ -412,10 +412,7 @@ class ContributionType(models.Model):
     feed = models.URLField(null=True, blank=True)
 
     def __str__(self):
-        if self.source is not None:
-            return "%s %s (%s)" % (self.source.connector_name, self.name, self.community)
-        else:
-            return "%s (%s)" % (self.name, self.community)
+        return self.name
 
 class Contribution(TaggableModel, ImportedDataModel):
     class Meta:
