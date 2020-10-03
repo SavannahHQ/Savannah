@@ -1,8 +1,17 @@
 import datetime
 from rest_framework import serializers
 
-from corm.models import Source, Channel, Member, Contact, Conversation, Contribution
+from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType
 from corm.plugins import PluginImporter
+
+def update_source(source):
+    source.last_import = datetime.datetime.utcnow()
+    source.save()
+
+def update_channel(channel):
+    channel.last_import = datetime.datetime.utcnow()
+    channel.save()
+    update_source(channel.source)
 
 class ImportedModelRelatedField(serializers.Field):
     def __init__(self, model, source_from=None, related_field=None, many=False, *args, **kwargs):
@@ -57,6 +66,8 @@ class IdentitySerializer(serializers.Serializer):
             avatar_url=self.validated_data.get('avatar_url'), 
             name=self.validated_data.get('name', self.validated_data.get('detail'))
         )
+
+        update_source(source)
         return Contact.objects.get(source=source, member=member)
 
 
@@ -132,5 +143,68 @@ class ConversationSerializer(serializers.Serializer):
             participants.add(participant)
         convo.participants.set(participants)
 
+        update_channel(channel)
         return convo
+
+def get_or_create_contrib_type(source, name):
+    try:
+        contribution_type = ContributionType.objects.get(name=name, source=source)
+    except ContributionType.DoesNotExist:
+        contribution_type = ContributionType.objects.create(
+            community = source.community,
+            source = source,
+            name = name,
+        )
+    return contribution_type
+
+class ContributionSerializer(serializers.Serializer):
+    origin_id = serializers.CharField(max_length=256)
+    author = ImportedModelRelatedField(model=Contact, related_field='member', source_from='channel')
+    contribution_type = serializers.CharField(allow_null=False)
+    channel = ImportedModelRelatedField(model=Channel)
+    timestamp = serializers.DateTimeField()
+    title = serializers.CharField(allow_null=False)
+
+    location = serializers.URLField(required=False, allow_null=True)
+    conversation = ImportedModelRelatedField(Conversation, source_from='channel', required=False, allow_null=True)
+
+    def save(self, source):
+        # Get or create speaker Member and Contact
+        importer = PluginImporter(source)
+        author = importer.make_member(
+            origin_id=self.validated_data.get('author'), 
+            detail=self.validated_data.get('author'),
+            tstamp=self.validated_data.get('timestamp'), 
+        )
+
+        # Get or create Channel
+        channel = get_or_create_channel(origin_id=self.validated_data.get('channel'), source=source)
+
+        # Get or create contribution type
+        contribution_type = get_or_create_contrib_type(name=self.validated_data.get('contribution_type'), source=source)
+
+        # Get converasation if it exists
+        conversation=None
+        if self.validated_data.get('conversation', None):
+            try:
+                conversation = Conversation.objects.get(channel__source=source, origin_id=self.validated_data.get('conversation'))
+            except Exception as e:
+                pass
+
+        contrib, created = Contribution.objects.update_or_create(
+            origin_id=self.validated_data.get('origin_id'), 
+            community=source.community, 
+            defaults={
+                'contribution_type':contribution_type, 
+                'channel':channel, 
+                'author':author, 
+                'timestamp':self.validated_data.get('timestamp'), 
+                'title':self.validated_data.get('title'), 
+                'location':self.validated_data.get('location'),
+                'conversation':conversation
+            }
+        )
+
+        update_channel(channel)
+        return contrib
 

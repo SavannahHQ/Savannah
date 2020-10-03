@@ -15,7 +15,7 @@ from rest_framework import status
 from corm.models import Source, Channel, Member, Contact, Conversation, Contribution
 from frontendv2.views import SavannahView
 
-from .serializers import IdentitySerializer, ConversationSerializer
+from .serializers import IdentitySerializer, ConversationSerializer, ContributionSerializer
 from .icons import brand_icons
 
 # Create your views here.
@@ -152,4 +152,21 @@ class ConversationsList(SavannahIntegrationView):
         if serializer.is_valid():
             convo = serializer.save(source=request.source)
             return Response(ConversationSerializer(convo).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ContributionsList(SavannahIntegrationView):
+    """
+    Create new Contribution records
+    """
+
+    def get(self, request, format=None):
+        contribs = Contribution.objects.filter(channel__source=request.source)
+        serializer = ContributionSerializer(contribs, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = ContributionSerializer(data=request.data)
+        if serializer.is_valid():
+            contrib = serializer.save(source=request.source)
+            return Response(ContributionSerializer(contrib).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
