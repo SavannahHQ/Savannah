@@ -86,7 +86,7 @@
                     <div class="mb-2 col-lg-10">
                       <div id="notes_div">
                       {% for note in view.member.note_set.all %}
-                        <div class="mb-2"><span class="small font-weight-bold">{{note.timestamp.date}} - {{note.author}}</span><br/><span>{{note.content|linebreaksbr}}</span></div>
+                        <div class="mb-2"><span class="small font-weight-bold">{{note.timestamp.date}} - {{note.author_name}}</span><br/><span>{{note.content|linebreaksbr}}</span></div>
                       {% endfor %}
                       </div>
                       <a class="small" href="#" title="Add Note" role="button" id="openNoteDialogLink" data-toggle="modal" data-target="#noteDialog">

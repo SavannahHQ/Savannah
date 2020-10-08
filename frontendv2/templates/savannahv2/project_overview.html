@@ -106,7 +106,7 @@
                 <tbody>
                 {% for task in view.open_tasks %}
                 <tr>
-                  <td class="text-nowrap">{{task.owner}}</td>
+                  <td class="text-nowrap">{{task.owner_name}}</td>
                   <td><a href="{% url 'project_task_edit' community_id=view.community.id project_id=view.project.id task_id=task.id %}" title="{{task.detail}}">{{task.name}}</a></td>
                   <td>{{task.due}}</td>
                   <td>

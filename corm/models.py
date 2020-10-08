@@ -402,6 +402,16 @@ class Task(TaggableModel):
     def __str__(self):
         return self.name
 
+    @property
+    def owner_name(self):
+        try:
+            manager = ManagerProfile.objects.get(community=self.community, user=self.owner)
+            return str(manager)
+        except ManagerProfile.DoesNotExist:
+            if self.owner.first_name:
+                return self.owner.get_full_name()
+            return self.owner.username
+
 class ContributionType(models.Model):
     class Meta:
         verbose_name = _("Contribution Type")
@@ -481,6 +491,16 @@ class Note(TaggableModel):
                 return self.content[:min(len(self.content), 32)]
         else:
             return str(self.timestamp)
+
+    @property
+    def author_name(self):
+        try:
+            manager = ManagerProfile.objects.get(community=self.member.community, user=self.author)
+            return str(manager)
+        except ManagerProfile.DoesNotExist:
+            if self.author.first_name:
+                return self.author.get_full_name()
+            return self.author.username
 
 class Suggestion(models.Model):
     class Meta:
@@ -623,7 +643,10 @@ class ManagerProfile(models.Model):
         try:
             if self.realname:
                 return self.realname
-            return "%s" % self.user.username
+            elif self.user.first_name:
+                return self.user.get_full_name()
+            else:
+                return self.user.username
         except:
             return _("Unknown Profile")
 
