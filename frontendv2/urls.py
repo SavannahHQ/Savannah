@@ -50,6 +50,7 @@ urlpatterns = [
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('contributions/<int:community_id>/contributors', Contributors.as_view, name='contributors'),
+    path('contributions/<int:community_id>/contributors.csv', Contributors.as_csv, name='contributors_csv'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),

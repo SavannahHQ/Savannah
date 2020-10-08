@@ -29,8 +29,9 @@ th[scope="col"] > a:hover {
               <!-- All Contributions -->
               <a name="contributors" />
               <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header d-sm-flex align-items-center justify-content-between py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                  <a class="btn btn-sm btn-primary" href="{% url 'contributors_csv' view.community.id %}"><i class="fas fa-file-csv"> </i> Download</a>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <table class="table">
@@ -43,7 +44,7 @@ th[scope="col"] > a:hover {
                   </tr>
                 </thead>
                 <tbody>
-                {% for contributor in view.all_contributors %}
+                {% for contributor in view.paged_contributors %}
                 <tr>
                   <td class="text-nowrap">
                   <a href="{% url 'member_profile' contributor.id %}">

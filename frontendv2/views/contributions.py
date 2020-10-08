@@ -1,5 +1,7 @@
 import operator
 import datetime
+import csv
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max, Min
@@ -296,8 +298,15 @@ class Contributors(SavannahFilterView):
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
         members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))
         members = members.annotate(contrib_count=Count('contribution', filter=contrib_range_filter))
+        members = members.order_by(self.sort_by)
+        
+        return members
+
+    @property
+    def paged_contributors(self):
+        members = self.all_contributors
         members = members.filter(last_contrib__isnull=False, first_contrib__isnull=False)
-        members = members.prefetch_related('tags').order_by(self.sort_by)
+        members = members.prefetch_related('tags')
         
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
@@ -328,3 +337,14 @@ class Contributors(SavannahFilterView):
     def as_view(request, community_id):
         view = Contributors(request, community_id)
         return render(request, 'savannahv2/contributors.html', view.context)
+
+    @login_required
+    def as_csv(request, community_id):
+        view = Contributors(request, community_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="contributors.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Member', 'First Contrib', 'Last Contrib', 'Contrib Count'])
+        writer.writeheader()
+        for member in view.all_contributors:
+            writer.writerow({'Member': member.name, 'First Contrib':member.first_contrib, 'Last Contrib':member.last_contrib, 'Contrib Count':member.contrib_count})
+        return response
