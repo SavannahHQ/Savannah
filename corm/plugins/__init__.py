@@ -179,7 +179,8 @@ class PluginImporter:
                 self.import_channel(channel)
                 if self.verbosity > 2:
                     print("Completed import of %s" % channel.name)
-                if channel.last_import is None:
+                if channel.first_import is None:
+                    channel.first_import = datetime.datetime.utcnow()
                     recipients = self.source.community.managers or self.source.community.owner
                     notify.send(channel, 
                         recipient=recipients, 
@@ -205,6 +206,8 @@ class PluginImporter:
                     if self.verbosity:
                         print("Failed to import %s: %s" %(channel.name, e))
         self.source.last_import = datetime.datetime.utcnow()
+        if self.source.first_import is None:
+            self.source.first_import = datetime.datetime.utcnow()
         self.source.save()
 
     def import_channel(self, channel):

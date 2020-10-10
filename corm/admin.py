@@ -83,16 +83,16 @@ class TagAdminForm(ModelForm):
         return data.replace('#', '')
 
 class TagAdmin(admin.ModelAdmin):
-    list_display = ("name", "color_display", "community", "keywords")
-    list_filter = ("community",)
+    list_display = ("name", "color_display", "community", "keywords", "last_changed")
+    list_filter = ("community","last_changed")
     form = TagAdminForm
     def color_display(self, tag):
         return mark_safe("<span style=\"padding: 3px; background-color: #%s\">%s</span>" % (tag.color, tag.color))
 admin.site.register(Tag, TagAdmin)
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ("name", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "last_import", "enabled")
-    list_filter = ("connector", "community", "enabled", "last_import")
+    list_display = ("name", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "first_import", "last_import", "enabled")
+    list_filter = ("connector", "community", "enabled", "first_import", "last_import")
 
     def contact_count(self, source):
         return source.contact_set.all().count()
@@ -109,8 +109,8 @@ class SourceAdmin(admin.ModelAdmin):
 admin.site.register(Source, SourceAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ("name", "source", "conversation_count", "last_import")
-    list_filter = ("source__community", "source__connector", "last_import")
+    list_display = ("name", "source", "conversation_count", "first_import", "last_import")
+    list_filter = ("source__community", "source__connector", "first_import", "last_import")
     search_fields = ("name",)
 
     def conversation_count(self, channel):

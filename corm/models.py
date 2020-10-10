@@ -70,6 +70,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=256)
     color = models.CharField(max_length=16)
     keywords = models.CharField(max_length=256, null=True, blank=True, help_text=_("Comma-separated list of words. If found in a conversation, this tag will be applied."))
+    last_changed = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.community)
@@ -253,6 +254,7 @@ class Source(models.Model):
     auth_id = models.CharField(max_length=256, null=True, blank=True)
     auth_secret = models.CharField(max_length=256, null=True, blank=True)
     icon_name = models.CharField(max_length=256, null=True, blank=True)
+    first_import = models.DateTimeField(null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
     enabled = models.BooleanField(default=True)
 
@@ -281,6 +283,7 @@ class Channel(ImportedDataModel):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
+    first_import = models.DateTimeField(null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
 
     @property

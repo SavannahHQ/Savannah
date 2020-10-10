@@ -44,7 +44,7 @@ class TagEditForm(forms.ModelForm):
 class AddTag(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
-        self.edit_tag = Tag(community=self.community, color="E5E6E8")
+        self.edit_tag = Tag(community=self.community, color="E5E6E8", last_changed=datetime.datetime.utcnow())
         self.active_tab = "tags"
 
     @property
@@ -79,8 +79,12 @@ class EditTag(SavannahView):
     @login_required
     def as_view(request, tag_id):
         view = EditTag(request, tag_id)
+        keywords = view.edit_tag.keywords
         if request.method == "POST" and view.form.is_valid():
             view.form.save()
+            if view.edit_tag.keywords != keywords:
+                view.edit_tag.last_changed = datetime.datetime.utcnow()
+                view.edit_tag.save()
             return redirect('tags', community_id=view.community.id)
 
         return render(request, "savannahv2/tag_edit.html", view.context)
