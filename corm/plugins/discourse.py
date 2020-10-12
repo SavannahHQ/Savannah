@@ -208,7 +208,7 @@ class DiscourseImporter(PluginImporter):
                     for post in posts:
                         discourse_post_id = post['id']
                         post_tstamp = self.strptime(post['created_at'])
-                        if post_tstamp < from_date:
+                        if thread_post is not None and post_tstamp < from_date:
                             continue
                         post_user_id = post['user_id']
                         post_url = topic_url + '/' + str(post['post_number'])
@@ -220,6 +220,7 @@ class DiscourseImporter(PluginImporter):
                         topic_participants.add(author)
                         if thread_post is None:
                             thread_post = post_convo
+                            topic_participants.update(list(thread_post.participants.all()))
 
                         if post.get('accepted_answer') == True and thread_post.speaker.id != author.id:
                             title = "Answered: %s" % topic['title']
