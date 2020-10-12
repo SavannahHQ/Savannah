@@ -102,7 +102,7 @@ class Connections(SavannahFilterView):
         member_map = dict()
         connection_counts = dict()
         connected = set()
-        if view.timespan <= 30:
+        if view.timespan <= 31:
             timespan = view.timespan
         else:
             timespan = 30

@@ -239,14 +239,12 @@ class SavannahFilterView(SavannahView):
 
     @property
     def timespan_icon(self):
-        if self.timespan == 183:
-            return "fas fa-calendar"
-        elif self.timespan == 30:
-            return "fas fa-calendar-alt"
-        elif self.timespan == 7:
-            return "fas fa-calendar-week"
-        elif self.timespan == 1:
+        if self.timespan == 1:
             return "fas fa-calendar-day"
+        elif self.timespan <= 7:
+            return "fas fa-calendar-week"
+        elif self.timespan <= 90:
+            return "fas fa-calendar-alt"
         else:
             return "fas fa-calendar"
 

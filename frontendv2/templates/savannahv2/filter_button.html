@@ -3,13 +3,14 @@
             {% if view.timefilter == 'timespan' and view.timespan == view.MAX_TIMESPAN %}
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-calendar"></i> Past Year</button>
             {% elif view.timefilter == 'range' %}
-              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-calendar"></i> {{view.rangestart|date}} - {{view.rangeend|date}}</button>
+              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{{view.timespan_icon}}"></i> {{view.rangestart|date}}{% if view.rangestart.date != view.rangeend.date %} - {{view.rangeend|date}}{% endif %}</button>
             {% else %}
               <button style="white-space:nowrap;" class="btn dropdown-toggle btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{{view.timespan_icon}}"></i> {{view.timespan_display}}</button>
             {% endif %}
               <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton" style="min-width: 20rem;">
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan={{view.MAX_TIMESPAN}}"><i class="fas fa-calendar"></i> Past Year</a>
-                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=183"><i class="fas fa-calendar-plus"></i> 6 Months</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=183"><i class="fas fa-calendar"></i> 6 Months</a>
+                    <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=90"><i class="fas fa-calendar-alt"></i> 90 Days</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=30"><i class="fas fa-calendar-alt"></i> 30 Days</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=7"><i class="fas fa-calendar-week"></i> Last Week</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=1"><i class="fas fa-calendar-day"></i> Today</a>
