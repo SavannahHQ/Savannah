@@ -114,16 +114,26 @@ class Connections(SavannahFilterView):
             connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
         connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected')
 
-        for connection in connections[:10000]:
+        for connection in connections:
             if connection.from_member_id != connection.to_member_id:
-                if not connection.from_member_id in connected: 
-                    links.append({"source":connection.from_member_id, "target":connection.to_member_id})
-                    connected.add((connection.from_member_id, connection.to_member_id))
-                    member_map[connection.from_member_id] = connection.from_member
+                if connection.to_member_id > connection.from_member_id:
+                    connection_id = str(connection.to_member_id) + ":" + str(connection.from_member_id)
+                else:
+                    connection_id = str(connection.from_member_id) + ":" + str(connection.to_member_id)
+
+                links.append({"source":connection.from_member_id, "target":connection.to_member_id})
+                member_map[connection.from_member_id] = connection.from_member
+
+                if not connection_id in connected:
+                    connected.add(connection_id)
+
                     if connection.from_member_id not in connection_counts:
                         connection_counts[connection.from_member_id] = 1
                     else:
                         connection_counts[connection.from_member_id] += 1
+
+                    if len(connected) >= 100000:
+                        break
 
 
         for member_id, member in member_map.items():
@@ -139,5 +149,6 @@ class Connections(SavannahFilterView):
                 tag_color = "1f77b4"
             
             nodes.append({"id":member_id, "name":member.name, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
-                    
+        
+
         return JsonResponse({"nodes":nodes, "links":links})
