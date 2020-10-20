@@ -94,7 +94,10 @@ class SavannahView:
     def __init__(self, request, community_id):
         request.session['community'] = community_id
         self.request = request
-        self.community = get_object_or_404(Community, Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()), id=community_id)
+        if request.user.is_superuser:
+            self.community = get_object_or_404(Community, id=community_id)
+        else:
+            self.community = get_object_or_404(Community, Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()), id=community_id)
         if request.user.is_authenticated:
             self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow()})
             self.user_member = self.manager_profile.member
