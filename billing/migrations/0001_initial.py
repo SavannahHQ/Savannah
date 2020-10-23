@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('corm', '0078_managerprofile'),
+        ('corm', '0085_community_status'),
         ('djstripe', '0006_2_3'),
     ]
 

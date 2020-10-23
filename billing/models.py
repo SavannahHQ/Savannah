@@ -10,7 +10,7 @@ class Company(models.Model):
     email = models.EmailField()
     communities = models.ManyToManyField(Community, through='Management')
     customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL,
-        help_text="The team's Stripe Subscription object, if it exists"
+        help_text="The team's Stripe Customer object, if it exists"
     )
 
     def __str__(self):

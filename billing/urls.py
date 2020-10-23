@@ -19,11 +19,11 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 import djstripe
-from billing.views import create_company, subscribe
+#from billing.views import create_company, subscribe
 
 app_name = 'billing'
 urlpatterns = [
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
-    path("create_company/<int:community_id>/", create_company, name="create_company"),
-    path("subscribe/<int:community_id>/", subscribe, name="subscribe"),
+#    path("create_company/<int:community_id>/", create_company, name="create_company"),
+#    path("subscribe/<int:community_id>/", subscribe, name="subscribe"),
 ]
