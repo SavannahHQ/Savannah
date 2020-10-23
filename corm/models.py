@@ -29,6 +29,26 @@ class UserAuthCredentials(models.Model):
         return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
 
 class Community(models.Model):
+    SETUP = 0
+    ACTIVE = 1
+    SUSPENDED = 2
+    DEACTIVE = 3
+    ARCHIVED = 4
+
+    STATUS_CHOICES = [
+        (SETUP, 'Setup'),
+        (ACTIVE, 'Active'),
+        (SUSPENDED, 'Suspended'),
+        (DEACTIVE, 'Deactive'),
+        (ARCHIVED, 'Archived'),
+    ]
+    STATUS_NAMES = {
+        SETUP: "Setup",
+        ACTIVE: "Active",
+        SUSPENDED: "Suspended",
+        DEACTIVE: "Deactive",
+        ARCHIVED: "Archived"
+    }
     class Meta:
         verbose_name = _("Community")
         verbose_name_plural = _("Communities")
@@ -39,6 +59,7 @@ class Community(models.Model):
     logo = models.ImageField(upload_to='community_logos', null=True)
     icon = ImageSpecField(source='logo', spec=Icon)
     created = models.DateTimeField(auto_now_add=True)
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SETUP)
 
     @property
     def email(self):
