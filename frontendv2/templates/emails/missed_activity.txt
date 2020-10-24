@@ -1,4 +1,4 @@
-# You last looked at {{community.name}} in Savannah on {{last_seen}}
+# You last looked at {{community.name}} in {{SITE_NAME}} on {{last_seen}}
 
 {% if new_contributors.count > 0 and new_members.count > 0 %}
 Since then you have gained {{new_contributors.count}} new Contributors and {{new_members.count}} new Members.
@@ -11,17 +11,17 @@ Since then you have gained {{new_members.count}} new Members.
 {% if new_contributors.count > 0 %}
 ## New Contributors
 {% for contributor in new_contributors %}
- * {{contributor.name}} (https://savannahhq.com{% url 'member_profile' contributor.id %})
+ * {{contributor.name}} ({{SITE_ROOT}}{% url 'member_profile' contributor.id %})
 {% endfor %}
 {% endif %}
 
 {% if new_members.count > 0 %}
 ## New Members
 {% for member in new_members %}
- * {{member.name}} (https://savannahhq.com{% url 'member_profile' member.id %})
+ * {{member.name}} ({{SITE_ROOT}}{% url 'member_profile' member.id %})
 {% endfor %}
 {% endif %}
 
-View your Community: https://savannahhq.com{% url 'dashboard' community.id %}
+View your Community: {{SITE_ROOT}}{% url 'dashboard' community.id %}
 
-Change your email settings: https://savannahhq.com{% url 'manager_preferences' community.id %}
+Change your email settings: {{SITE_ROOT}}{% url 'manager_preferences' community.id %}

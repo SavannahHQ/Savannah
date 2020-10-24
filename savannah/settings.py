@@ -28,6 +28,8 @@ DEBUG = True
 ALPHA = False
 BETA = True
 OPEN_BETA = True
+SITE_ROOT = 'https://savannahhq.com'
+SITE_NAME = 'Savannah CRM'
 
 ALLOWED_HOSTS = []
 ALLOWED_EMAILS_PER_DAY = 100

@@ -1,4 +1,4 @@
-<h2>You last looked at {{community.name}} in Savannah on {{last_seen}}</h2>
+<h2>You last looked at {{community.name}} in {{SITE_NAME}} on {{last_seen}}</h2>
 
 {% if new_contributors.count > 0 and new_members.count > 0 %}
 <p>Since then you have gained {{new_contributors.count}} new Contributors and {{new_members.count}} new Members.</p>
@@ -12,7 +12,7 @@
 <h3>New Contributors</h3>
 <ul>
 {% for contributor in new_contributors %}
-<li><a href="https://savannahhq.com{% url 'member_profile' contributor.id %}">{{contributor.name}}</a></li>
+<li><a href="{{SITE_ROOT}}{% url 'member_profile' contributor.id %}">{{contributor.name}}</a></li>
 {% endfor %}
 </ul>
 {% endif %}
@@ -21,10 +21,10 @@
 <h3>New Members</h3>
 <ul>
 {% for member in new_members %}
-<li><a href="https://savannahhq.com{% url 'member_profile' member.id %}">{{member.name}}</a></li>
+<li><a href="{{SITE_ROOT}}{% url 'member_profile' member.id %}">{{member.name}}</a></li>
 {% endfor %}
 </ul>
 {% endif %}
 
-<p><a href="https://savannahhq.com{% url 'dashboard' community.id %}">View your Community</a></p>
-<p><a href="https://savannahhq.com{% url 'manager_preferences' community.id %}">Change your email settings</a></p>
+<p><a href="{{SITE_ROOT}}{% url 'dashboard' community.id %}">View your Community</a></p>
+<p><a href="{{SITE_ROOT}}{% url 'manager_preferences' community.id %}">Change your email settings</a></p>

@@ -1,5 +1,5 @@
 <h3>Invitation to manage {{community.name}}</h3>
 
-<p>You've been invited to manage {{community.name}} on SavannahHQ.com</p>
+<p>You've been invited to manage {{community.name}} on {{SITE_NAME}}</p>
 
-<p><a href="https://savannahhq.com{% url 'manager_accept' community.id %}?confirmation={{confirmation_key}}">Accept Invite</a></p>
+<p><a href="{{SITE_ROOT}}{% url 'manager_accept' community.id %}?confirmation={{confirmation_key}}">Accept Invite</a></p>

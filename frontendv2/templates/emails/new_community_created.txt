@@ -1,5 +1,5 @@
 # A new Community has been added to Savannah: {{community.name}}
 
-{{sender}} has added {{community.name}} to Savannah CRM
+{{sender}} has added {{community.name}} to {{SITE_NAME}}
 
-View Community: https://savannahhq.com{% url 'dashboard' community.id %}
+View Community: {{SITE_ROOT}}{% url 'dashboard' community.id %}

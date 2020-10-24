@@ -20,7 +20,9 @@ class EmailMessage(object):
         self.member = None
         self.context = {
             "community": self.community,
-            "sender": self.sender
+            "sender": self.sender,
+            "SITE_ROOT": getattr(settings, 'SITE_ROOT', ''),
+            "SITE_NAME": getattr(settings, 'SITE_NAME', ''),
         }
 
     def send(self, to):
