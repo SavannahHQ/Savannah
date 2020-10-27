@@ -62,6 +62,9 @@ INSTALLED_APPS = [
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
     'apiv1.apps.Apiv1Config',
+
+    'djstripe',
+    'billing.apps.BillingConfig',
 ]
 
 CORM_PLUGINS = [

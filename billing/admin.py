@@ -1,13 +1,13 @@
 from django.contrib import admin
 
-from billing.models import Company, Management
+from billing.models import Organization, Management
 
 # Register your models here.
-class CompanyAdmin(admin.ModelAdmin):
+class OrgAdmin(admin.ModelAdmin):
     list_display = ('name', 'email')
-admin.site.register(Company, CompanyAdmin)
+admin.site.register(Organization, OrgAdmin)
 
 class ManagementAdmin(admin.ModelAdmin):
-    list_display = ('company', 'community')
+    list_display = ('org', 'community')
 admin.site.register(Management, ManagementAdmin)
 

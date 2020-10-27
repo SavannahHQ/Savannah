@@ -133,7 +133,7 @@ def home(request):
     communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
     count = communities.count()
     if count < 1 and not settings.BETA:
-        return redirect('add-community')
+        return redirect('billing:signup')
     elif count == 1:
         return redirect('dashboard', community_id=communities[0].id)
 

@@ -18,12 +18,17 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
+from .views import signup_community, signup_org, signup_subscribe, signup_subscribe_session, subscription_success, subscription_cancel
+
 import djstripe
-#from billing.views import create_company, subscribe
 
 app_name = 'billing'
 urlpatterns = [
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
-#    path("create_company/<int:community_id>/", create_company, name="create_company"),
-#    path("subscribe/<int:community_id>/", subscribe, name="subscribe"),
+    path("signup/new/", signup_community, name="signup"),
+    path("signup/<int:community_id>/", signup_org, name="signup_org"),
+    path("signup/<int:community_id>/subscribe", signup_subscribe, name="signup_subscribe"),
+    path("signup/<int:community_id>/session", signup_subscribe_session, name="signup_subscribe_session"),
+    path("signup/<int:community_id>/success", subscription_success, name="subscription_success"),
+    path("signup/<int:community_id>/cancel", subscription_cancel, name="subscription_cancel"),
 ]

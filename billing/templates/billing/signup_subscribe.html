@@ -1,0 +1,82 @@
+{% extends "savannahv2/blank.html" %}
+{% load humanize static %}
+
+
+{% block page_title %} | Start your Community{% endblock %}
+
+{% block page_styles %}
+  <script src="https://js.stripe.com/v3/"></script>
+  <link rel="stylesheet" href="StripeElements.css">
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+     var DOMAIN = window.location.origin;
+ 
+      var stripe = Stripe("{{ STRIPE_KEY }}");
+ 
+      // Handle any errors from Checkout
+      var handleResult = function (result) {
+        if (result.error) {
+          var displayError = document.getElementById("error-message");
+          displayError.textContent = result.error.message;
+        }
+      };
+ 
+      // Create a Checkout Session with the selected plan ID
+      var createCheckoutSession = function() {
+        return fetch("{% url 'billing:signup_subscribe_session' community.id %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken":  '{{csrf_token}}',
+          },
+          // ... body section if you want to pass the product or price_id to the backend
+        }).then(function(result) {
+          return result.json();
+        });
+      };
+ 
+    // Setup event handler to create a Checkout Session when button is clicked
+      document
+        .getElementById("subscribe-btn")
+        .addEventListener("click", function (evt) {
+          createCheckoutSession().then(function(data) {
+            // Call Stripe.js method to redirect to the new Checkout page
+            stripe
+              .redirectToCheckout(
+                {
+                    sessionId: data.sessionId
+                }
+              )
+              .then(handleResult);
+          });
+        });
+</script>
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Content Row -->
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="align-items-center">
+            <h2>Subcribe through Stripe</h2>
+
+
+            <div class="row justify-content-center">
+            Savannah uses Stripe for payment processing
+            </div>
+            <button id="subscribe-btn" class="btn btn-success" type="submit">Step 2: Subscribe your Community</button>
+        </div>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+<!-- End row -->
+
+{% endblock %}
