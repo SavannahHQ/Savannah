@@ -56,7 +56,7 @@ class Community(models.Model):
     name = models.CharField(verbose_name="Community Name", max_length=256)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
-    logo = models.ImageField(upload_to='community_logos', null=True)
+    logo = models.ImageField(verbose_name="Community Logo", help_text="Will be resized to a 32x32px icon.", upload_to='community_logos', null=True)
     icon = ImageSpecField(source='logo', spec=Icon)
     created = models.DateTimeField(auto_now_add=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SETUP)

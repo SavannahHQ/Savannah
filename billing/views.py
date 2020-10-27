@@ -3,61 +3,162 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
 from django.http import JsonResponse
+from django import forms
+from django.db.models import Q
 
 import json
 
 import stripe, djstripe
+from djstripe import webhooks
+
 from corm.models import Community
-from billing.models import Company, Management
-from frontendv2.views import SavannahView
+from billing.models import Organization, Management
+from frontendv2.views import SavannahView, get_session_community
+from frontendv2.models import EmailMessage
 
 # Create your views here.
-@login_required
-def create_community(request):
-    # If POST
-        # Create community
-        # Redirect to company creation form
-    # If GET
-        # Show community creation form
-    pass
+class NewCommunityForm(forms.ModelForm):
+    class Meta:
+        model = Community
+        fields = ['name', 'logo']
+    
+class CommunityCreationEmail(EmailMessage):
+    def __init__(self, community):
+        super(CommunityCreationEmail, self).__init__(community.owner, community)
+        self.subject = "A new community had been created: %s" % self.community.name
+        self.category = "community_creation"
+
+        self.text_body = "emails/new_community_created.txt"
+        self.html_body = "emails/new_community_created.html"
+
 
 @login_required
-def create_company(request, community_id):
+def signup_community(request):
+    community = Community(owner=request.user)
+    if request.method == "POST":
+        form = NewCommunityForm(request.POST, files=request.FILES, instance=community)
+        if form.is_valid():
+            new_community = form.save()
+            new_community.bootstrap()
+            msg = CommunityCreationEmail(new_community)
+            msg.send(settings.ADMINS)
+            # Redirect to company creation form
+            #messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
+            return redirect('billing:signup_org', community_id=new_community.id)
+    else:
+        form = NewCommunityForm(instance=community)
+
+    context = {
+        "form": form,
+    }
+    return render(request, 'billing/signup_community.html', context)
+
+
+@login_required
+def signup_org(request, community_id):
+    # If community doesn't exist
+        # Redirect to community signup form
+    try:
+         community = Community.objects.get(Q(owner=request.user) | Q(managers__in=request.user.groups.all()), id=community_id)
+    except Exception as e:
+        messages.error(request, "Unknown Community")
+        return redirect('billing:signup')
+
+    stripe.api_key =settings.STRIPE_SECRET_KEY
     # If community has a company
         # Redirect to subscription form
+    try:
+        management = Management.objects.get(community=community)
+        return redirect('billing:signup_subscribe', community_id=community.id)
+    except:
+        pass
 
-    # If POST
-        # Create Customer & Company
-        # Redirect to subscription form
-    # If GET
-        # Show company creation form
-    pass
+    try:
+        customer = stripe.Customer.create(
+            email=request.user.email,
+            name=community.name,
+        )
+        djstripe_customer = djstripe.models.Customer.sync_from_stripe_data(customer)
+        djstripe_customer.subscriber = community
+        djstripe_customer.save()
+        org, created = Organization.objects.get_or_create(customer=djstripe_customer, defaults={'name': community.name, 'email': request.user.email})
+
+        management, created = Management.objects.get_or_create(org=org, community=community)
+        return redirect('billing:signup_subscribe', community_id=community.id)
+    except Exception as e:
+        messages.error(request, "Failed to find or create a billing organization for %s" % community.name)
+        messages.error(request, e)
+        customer = None
+        org = None
+        return redirect('billing:signup')
 
 @login_required
-def subscribe_community(request, community_id):
+def signup_subscribe_session(request, community_id):
+ 
+    management = get_object_or_404(Management, community_id=community_id)
+    community = management.community
+    org = management.org
+
+
+    if request.method == 'POST':
+ 
+        # Set Stripe API key
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+ 
+        # Create Stripe Checkout session
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            mode="subscription",
+            line_items=[
+                {
+                    "price": settings.STRIPE_DEFAULT_PLAN,
+                    "quantity": 1
+                }
+            ],
+            customer=org.customer.id,
+            success_url=settings.SITE_ROOT + reverse('billing:subscription_success', kwargs={'community_id': community.id}) + "?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url= settings.SITE_ROOT + reverse('billing:subscription_cancel', kwargs={'community_id': community.id}), # The cancel_url is typically set to the original product page
+        )
+ 
+    return JsonResponse({'sessionId': checkout_session['id']})
+
+@login_required
+def signup_subscribe(request, community_id):
     # If community has a subscription
         # Redirect to Stripe customer portal
 
-    #If GET
-        # Show subscription options form
-        # Use Stripe Checkout button
-    pass
+    management = get_object_or_404(Management, community_id=community_id)
+    community = management.community
+    org = management.org
+
+    context = {
+        "community": community,
+        "org": org,
+        "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
+        "STRIPE_PLAN": settings.STRIPE_DEFAULT_PLAN,
+    }
+    return render(request, 'billing/signup_subscribe.html', context)
 
 @login_required
 def create_checkout_session(request, community_id):
     # Create Stripe.checkout.Session
         # Use community_id as client_reference_id
     # Return session id in JSON
+    pass
 
 @login_required
-def subscription_success(request):
+def subscription_success(request, community_id):
     # Redirect to Community dashboard
-    pass
+    community = get_object_or_404(Community, id=community_id)
+    messages.success(request, "Your subscription to Savannah CRM has begun!")
+    return redirect('dashboard', community_id=community.id)
 
 @login_required
-def subscription_cancel(request):
+def subscription_cancel(request, community_id):
     # Redirect to subscribe_community
-    pass
+    community = get_object_or_404(Community, id=community_id)
+    messages.error(request, "Unable to process your subscription")
+    return redirect('billing:signup_subscribe', community_id=community.id)
 
 @webhooks.handler("checkout.session.completed")
 def checkout_session_completed(event, **kwargs):
@@ -65,44 +166,11 @@ def checkout_session_completed(event, **kwargs):
     session = event.data["object"]
     community_id = session["client_reference_id"]
     subscription_id = session["subscription"]
+    management = Management.objects.get(community_id=community_id)
+
     # Add subscription to Management model of this community
+    management.subscribe(subscription_id)
 
-
-# def get_session_company(request):
-#     community_id = request.session.get('community')
-#     if community_id is not None:
-#         try:
-#             return Company.objects.get(communities__id=community_id)
-#         except:
-#             pass
-#     return None
-
-# @login_required
-# def create_company(request, community_id):
-#     community = get_object_or_404(Community, id=community_id)
-
-#     stripe.api_key =settings.STRIPE_TEST_SECRET_KEY
-#     try:
-#         management = Management.objects.get(community=community)
-#         company = management.company
-#     except:
-#         try:
-#             customer = stripe.Customer.create(
-#                 email=request.user.email,
-#                 name=community.name,
-#             )
-#             djstripe_customer = djstripe.models.Customer.sync_from_stripe_data(customer)
-#             djstripe_customer.subscriber = community
-#             djstripe_customer.save()
-#             company, created = Company.objects.get_or_create(customer=djstripe_customer, defaults={'name': community.name, 'email': request.user.email})
-
-#             management, created = Management.objects.get_or_create(company=company, community=community)
-#         except Exception as e:
-#             messages.error(request, "Failed to find or create a Company for %s" % community.name)
-#             messages.error(request, e)
-#             customer = None
-#             company = None
-#     return redirect('billing:subscribe', community_id=community.id)
 
 # @login_required
 # def subscribe(request, community_id):
