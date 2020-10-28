@@ -31,5 +31,7 @@ class Management(models.Model):
             subscription = Subscription.objects.get(id=subscription_id)
             self.subscription = subscription
             self.save()
+            self.community.status = Community.ACTIVE
+            self.community.save()
         except:
             raise Exception(msg="Failed to subscribe %s: Unknown Stripe plan" % self.community.name)
