@@ -116,7 +116,11 @@ class SavannahView:
         self.active_tab = ""
         self.charts = set()
 
-        self._add_sources_message()
+        if self.community.status == Community.SETUP:
+            messages.warning(self.request, "You must finish your <a class=\"\" href=\"%s\">community setup</a> before Savannah will import any activity." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+        elif self.community.status == Community.ACTIVE:
+            self._add_sources_message()
+
 
     def _add_sources_message(self):
         if self.request.method == "GET" and self.community.source_set.all().count() == 0:

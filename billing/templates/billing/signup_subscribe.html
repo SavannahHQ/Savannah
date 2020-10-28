@@ -6,7 +6,50 @@
 
 {% block page_styles %}
   <script src="https://js.stripe.com/v3/"></script>
-  <link rel="stylesheet" href="StripeElements.css">
+{% endblock %}
+
+{% block page_content %}
+
+<!-- Content Row -->
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-68 col-md-8 mb-5 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="align-items-center">
+            <h2>Subscription Plans</h2>
+
+            <div class="card shadow h-100 p-0 py-0 col-lg-6 col-sm-8 border border-primary">
+              <img class="card-img-top" src="{% static '/savannah/CardHeader.png' %}">
+              <div class="card-body">
+                <h5 class="card-title">Savannah Basic</h5>
+                <div class="card-text">
+                  <div class="p-2">
+                    <ul class="p-0 text-left">
+                      <li>Unlimited members</li>
+                      <li>Unlimited activity retention</li>
+                      <li>Hourly activity imports</li>
+                      <li>6-months of past history</li>
+                      <li>Invite fellow managers</li>
+                    </ul>
+                  </div>
+                  <div class="mb-1 font-weight-bold text-gray-800">$49.99/month</div>
+                  <button id="subscribe-btn" class="btn btn-success" type="submit">Subscribe</button>
+                  </div>
+                </div>
+            </div>
+
+            <div class="text-muted text-small">
+            Savannah uses Stripe for payment processing
+            </div>
+        </div>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+<!-- End row -->
+
 {% endblock %}
 
 {% block page_scripts %}
@@ -53,30 +96,4 @@
           });
         });
 </script>
-{% endblock %}
-
-{% block page_content %}
-
-<!-- Content Row -->
-<div class="row mt-5 justify-content-center">
-<div class="col-xl-6 col-md-6 mb-8 mt-8 align-items-center">
-<center>
-    <div class="card shadow h-100 py-2">
-    <div class="card-body">
-        <div class="align-items-center">
-            <h2>Subcribe through Stripe</h2>
-
-
-            <div class="row justify-content-center">
-            Savannah uses Stripe for payment processing
-            </div>
-            <button id="subscribe-btn" class="btn btn-success" type="submit">Step 2: Subscribe your Community</button>
-        </div>
-    </div>
-    </div>
-</center>
-</div>
-</div>
-<!-- End row -->
-
 {% endblock %}
