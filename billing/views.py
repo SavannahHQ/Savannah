@@ -172,6 +172,25 @@ def checkout_session_completed(event, **kwargs):
     # Add subscription to Management model of this community
     management.subscribe(subscription_id)
 
+@login_required
+def manage_account(request, community_id):
+    management = get_object_or_404(Management, community_id=community_id)
+    community = management.community
+    org = management.org
+
+    # Set Stripe API key
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    # Create Stripe Billing Portal session
+    session = stripe.billing_portal.Session.create(
+        customer=org.customer.id,
+        return_url=settings.SITE_ROOT + reverse('dashboard', kwargs={'community_id': community.id}),
+    )
+    if 'url' in session:
+        return redirect(session['url'])
+    else:
+        message.error(request, "Unable to launch Stripe Customer Portal")
+        return redirect('dashboard', community_id=community_id)
 
 # @login_required
 # def subscribe(request, community_id):
