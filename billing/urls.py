@@ -18,7 +18,7 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
 
-from .views import signup_community, signup_org, signup_subscribe, signup_subscribe_session, subscription_success, subscription_cancel
+from .views import signup_community, signup_org, signup_subscribe, signup_subscribe_session, subscription_success, subscription_cancel, manage_account
 
 import djstripe
 
@@ -31,4 +31,5 @@ urlpatterns = [
     path("signup/<int:community_id>/session", signup_subscribe_session, name="signup_subscribe_session"),
     path("signup/<int:community_id>/success", subscription_success, name="subscription_success"),
     path("signup/<int:community_id>/cancel", subscription_cancel, name="subscription_cancel"),
+    path("manage/<int:community_id>/", manage_account, name="manage_account"),
 ]
