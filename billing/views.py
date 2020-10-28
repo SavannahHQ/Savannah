@@ -109,6 +109,7 @@ def signup_subscribe_session(request, community_id):
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             mode="subscription",
+            client_reference_id=community.id,
             line_items=[
                 {
                     "price": settings.STRIPE_DEFAULT_PLAN,
