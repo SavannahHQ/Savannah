@@ -174,8 +174,12 @@ def checkout_session_completed(event, **kwargs):
 
 @login_required
 def manage_account(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if community.owner != request.user:
+        messages.warning(request, "Only the owner of this community can access billing information")
+        return redirect('dashboard', community_id=community_id)
+
     management = get_object_or_404(Management, community_id=community_id)
-    community = management.community
     org = management.org
 
     # Set Stripe API key
