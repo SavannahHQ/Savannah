@@ -110,6 +110,7 @@ def signup_subscribe_session(request, community_id):
             payment_method_types=["card"],
             mode="subscription",
             client_reference_id=community.id,
+            allow_promotion_codes=True,
             line_items=[
                 {
                     "price": settings.STRIPE_DEFAULT_PLAN,
