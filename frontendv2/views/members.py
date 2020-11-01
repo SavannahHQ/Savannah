@@ -13,6 +13,7 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import PieChart
+from savannah.utils import safe_int
 
 class Members(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -368,11 +369,17 @@ from django.http import JsonResponse
 def add_note(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     if request.method == "POST":
+        note_id = safe_int(request.POST.get('note_id'), 0)
         note_content = request.POST.get('note_content')
         if note_content is None or note_content == '':
             return JsonResponse({'success': False, 'errors':'No content provided'}, status=400)
-        new_note = Note.objects.create(member=member, author=request.user, content=note_content)
-        return JsonResponse({'success': True, 'errors':None})
+        if note_id != 0:
+            note = Note.objects.get(id=note_id)
+            note.content=note_content
+            note.save()
+        else:
+            note = Note.objects.create(member=member, author=request.user, content=note_content)
+        return JsonResponse({'success': True, 'errors':None, 'note_id': note.id})
     return JsonResponse({'success': False, 'errors':'Only POST method supported'}, status=405)
 
 @login_required
