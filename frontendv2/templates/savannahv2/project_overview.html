@@ -35,7 +35,7 @@
                   </div>
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Tag</div>
-                    <div class="mb-2 col-lg-10">{% if view.project.tag %}<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{view.project.tag.color}};">#{{view.project.tag.name}}</span>{% endif %}</div>
+                    <div class="mb-2 col-lg-10">{% if view.project.tag %}<span class="tag-pill" style="background-color: #{{view.project.tag.color}};"><span style="color: #{{view.project.tag.color}};">{{view.project.tag.name}}</span></span>{% endif %}</div>
                   </div>
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Channels</div>

@@ -352,7 +352,7 @@ $('#tag_form_dropdown').on('hide.bs.dropdown', function () {
         var tag = tags[i];
         if (tag.checked) {
           var tag_name = tag.labels[0].textContent;
-          tags_html += '<span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: '+tag.parentNode.style.backgroundColor+';"><a href="?tag='+tag_name+'">#'+tag_name+'</a></span>'
+          tags_html += '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
 
         }
     }

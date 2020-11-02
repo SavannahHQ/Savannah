@@ -21,26 +21,13 @@
   <!-- Custom styles for this template-->
   <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
   <link href="{% static 'vendor/bootstrap-datepicker/css/bootstrap-datepicker.standalone.min.css' %}" rel="stylesheet">
+  <link href="{% static 'savannah/savannah.css' %}" rel="stylesheet">
 
-    <link rel="icon" href="{% static 'savannah/Savannah32.png' %}" type="image/png" sizes="32x32">
-    <link rel="icon" href="{% static 'savannah/Savannah64.png' %}" type="image/png" sizes="64x64">
-    <link rel="icon" href="{% static 'savannah/Savannah128.png' %}" type="image/png" sizes="128x128">
+  <link rel="icon" href="{% static 'savannah/Savannah32.png' %}" type="image/png" sizes="32x32">
+  <link rel="icon" href="{% static 'savannah/Savannah64.png' %}" type="image/png" sizes="64x64">
+  <link rel="icon" href="{% static 'savannah/Savannah128.png' %}" type="image/png" sizes="128x128">
 
-    <style>
-    .short-text { display: none; }
-    @media only screen and (max-width: 800px) {
-        .short-text { display: inline; }
-        .full-text { display: none; }
-
-        .table { 
-          font-size: 0.8em;
-        }
-        .table td { 
-          padding: 2px 1px 2px 5px;
-        }
-    }
-    </style>
-    {% if GOOGLE_ANALYTICS_ID %}
+  {% if GOOGLE_ANALYTICS_ID %}
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
     <script>

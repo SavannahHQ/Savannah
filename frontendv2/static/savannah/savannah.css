@@ -1,0 +1,19 @@
+.tag-pill {
+    font-size: 0.75em; margin-right: 2px; padding: 1px 7px 1px 7px; border-radius: 1em; 
+}
+.tag-pill > * {
+    filter: grayscale(50%) brightness(40%) contrast(100%);
+}
+
+.short-text { display: none; }
+@media only screen and (max-width: 800px) {
+    .short-text { display: inline; }
+    .full-text { display: none; }
+
+    .table { 
+        font-size: 0.8em;
+    }
+    .table td { 
+        padding: 2px 1px 2px 5px;
+    }
+}

@@ -39,11 +39,11 @@
                   <td>{{ channel.name }}</td>
                   <td>
                       <span class="tag_form_dropdown dropdown no-arrow">
-                        <a class="dropdown-toggle small tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="dropdown-toggle tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         {% if channel.tag %}
-                          <span style="margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{channel.tag.color}};">#{{channel.tag.name}}</span>
+                          <span class="tag-pill" style="background-color: #{{channel.tag.color}};"><span style="color: #{{channel.tag.color}};">{{channel.tag.name}}</span></span>
                         {% else %}
-                          <i class="fas fa-tag text-gray-500"> </i>
+                          <i class="fas fa-tag small text-gray-500"> </i>
                         {% endif %}
                         </a>
                         <div class="mb-0 dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
@@ -132,9 +132,9 @@ $('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
         if (tag.checked) {
           var tag_name = tag.labels[0].textContent;
           if (tag.value == '') {
-            tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
+            tags_html = "<i class=\"fas fa-tag small text-gray-500\"> </i>";
           } else {
-            tags_html = '<span style="margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: '+tag.parentNode.style.backgroundColor+';"><a href="?tag='+tag_name+'">#'+tag_name+'</a></span>'
+            tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
           }
 
         }

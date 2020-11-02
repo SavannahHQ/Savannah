@@ -26,7 +26,7 @@
                 </div>
                 <div class="card-body">
                     {% if project.owner %}<p>Owner: {{project.owner}}</p>{% endif %}
-                    {% if project.tag %}<p>Tag: <span style="font-size: 0.75em; margin-right: 2px; padding: 1px 5px 1px 5px; border-radius: 1em; background-color: #{{project.tag.color}};">#{{project.tag.name}}</span></p>{% endif %}
+                    {% if project.tag %}<p>Tag: <span class="tag-pill" style="background-color: #{{project.tag.color}};"><span style="color: #{{project.tag.color}};">{{project.tag.name}}</span></span></p>{% endif %}
                     {% if project.channels.all.count > 0 %}<p>Channels: {{project.channels.all.count}}</p>{% endif %}
                     <p>{{project.task_count}} Tasks</p>
                 </div>
