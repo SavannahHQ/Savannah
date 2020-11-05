@@ -194,8 +194,8 @@
             <i class="fa fa-bars"></i>
           </button>
 
-            <!-- Community Switcher -->
-            <div class="dropdown">
+          <!-- Community Switcher -->
+          <div class="dropdown">
             <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <img src="{{active_community.icon_path}}" /><span class="d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100">{{active_community.name}}</span>
             </button>
@@ -206,10 +206,10 @@
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item " href="{% url 'add-community' %}"><i class="text-lg text-muted fas fa-plus-square align-top"> </i> New Community</a>
             </div>
-            </div>
+          </div>
 
           <!-- Topbar Search -->
-          <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search" action="{% url 'all_members' active_community.id %}">
+          <form class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-search" action="{% url 'all_members' active_community.id %}">
             <div class="input-group">
               <input name="search" {% if view.search %}value="{{view.search}}" {% endif %}type="text" class="form-control bg-light border-0 small" placeholder="Search for Member..." aria-label="Search" aria-describedby="basic-addon2">
               <div class="input-group-append">
@@ -220,6 +220,12 @@
             </div>
           </form>
 
+          <div class="navbar-nav ml-none mr-auto">
+            <div class="nav-item">
+              <a class="nav-link" href="{% url 'member_add' view.community.id %}" title="Add Member"><i class="fas fa-plus fa-fw">&nbsp;</i></a>
+            </div>
+          </div>
+          
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
 

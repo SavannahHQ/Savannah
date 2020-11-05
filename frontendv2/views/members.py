@@ -538,3 +538,42 @@ class GiftManager(SavannahView):
             return redirect('member_profile', member_id=member_id)
 
         return render(request, 'savannahv2/gift_form.html', view.context)
+
+
+class TagEditForm(forms.ModelForm):
+    class Meta:
+        model = Tag
+        fields = ['name', 'color', 'keywords']
+        widgets = {
+            'color': forms.TextInput(attrs={'type': 'color'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super(TagEditForm, self).__init__(*args, **kwargs)
+        if 'color' in self.initial:
+            self.initial['color'] = '#%s'%self.initial['color']
+
+    def clean_color(self):
+        data = self.cleaned_data['color']
+        return data.replace('#', '')
+        
+class MemberAdd(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "members"
+        self.edit_member = Member(community_id=community_id, first_seen=datetime.datetime.utcnow(), last_seen=datetime.datetime.utcnow())
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            return MemberEditForm(instance=self.edit_member, data=self.request.POST)
+        else:
+            return MemberEditForm(instance=self.edit_member)
+
+    @login_required
+    def as_view(request, community_id):
+        view = MemberAdd(request, community_id)
+        if request.method == "POST" and view.form.is_valid():
+            new_member = view.form.save()
+            return redirect('member_profile', member_id=new_member.id)
+
+        return render(request, "savannahv2/member_add.html", view.context)
