@@ -122,6 +122,32 @@ class AcceptManager(SavannahView):
         return render(request, "savannahv2/manager_accept.html", context)
 
 
+def resend_invitation(request, community_id):
+    if request.method == "POST":
+        community = get_object_or_404(Community, id=community_id)
+        invite_id = request.POST.get('invite_id', 0)
+        try:
+            invite = ManagerInvite.objects.get(id=invite_id)
+        except ManagerInvite.DoesNotExist:
+            messages.error(request, "Invitation not found")
+            return redirect('managers', commuinity_id=community_id)
+        ManagerInvite.send(community, request.user, invite.email)
+        messages.success(request, "Invitation has been resent")
+    return redirect('managers', community_id=community_id)
+
+def revoke_invitation(request, community_id):
+    if request.method == "POST":
+        community = get_object_or_404(Community, id=community_id)
+        invite_id = request.POST.get('invite_id', 0)
+        try:
+            invite = ManagerInvite.objects.get(id=invite_id)
+        except ManagerInvite.DoesNotExist:
+            messages.error(request, "Invitation not found")
+            return redirect('managers', commuinity_id=community_id)
+        invite.delete()
+        messages.success(request, "Invitation has been revoked")
+    return redirect('managers', community_id=community_id)
+
 class Gifts(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)

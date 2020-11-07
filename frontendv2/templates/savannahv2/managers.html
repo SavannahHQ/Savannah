@@ -78,8 +78,8 @@
                   <td>{{invite.timestamp}}</td>
                   <td>{{invite.expires}}</td>
                   <td>
-                    <a class="btn btn-sm btn-primary" href="" title="Resend Invitation"><i class="fas fa-share"></i></a>
-                    <a class="btn btn-sm btn-danger" href="" title="Revoke Invitation"><i class="fas fa-trash"></i></a>
+                    <form class="form-inline d-inline" action="{% url 'resend_invite' community_id=view.community.id %}" method="POST">{% csrf_token %}<input type="hidden" name="invite_id" value="{{invite.id}}"><button type="submit" class="btn btn-sm btn-primary" title="Resend Invitation"><i class="fas fa-share"></i></button></form>
+                    <form class="form-inline d-inline" action="{% url 'revoke_invite' community_id=view.community.id %}" method="POST">{% csrf_token %}<input type="hidden" name="invite_id" value="{{invite.id}}"><button type="submit" class="btn btn-sm btn-danger" title="Revoke Invitation"><i class="fas fa-trash"></i></button></form>
                   </td>
                 </tr>
                 {% endfor %}
