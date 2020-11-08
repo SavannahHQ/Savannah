@@ -132,7 +132,6 @@ class Members(SavannahFilterView):
     @login_required
     def as_view(request, community_id):
         members = Members(request, community_id)
-
         return render(request, 'savannahv2/members.html', members.context)
 
 
@@ -362,6 +361,22 @@ class MemberProfile(SavannahView):
     @login_required
     def as_view(request, member_id):
         view = MemberProfile(request, member_id)
+        if request.method == 'POST':
+            if 'delete_note' in request.POST:
+                note = get_object_or_404(Note, id=request.POST.get('delete_note'))
+                context = view.context
+                context.update({
+                    'object_type':"Note", 
+                    'object_name': note.content[:96], 
+                    'object_id': note.id,
+                })
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                note = get_object_or_404(Note, id=request.POST.get('object_id'))
+                note.delete()
+                messages.success(request, "Note deleted")
+
+                return redirect('member_profile', member_id=member_id)
         return render(request, 'savannahv2/member_profile.html', view.context)
 
 from django.http import JsonResponse
