@@ -44,7 +44,7 @@ class UserAuthAdmin(admin.ModelAdmin):
 admin.site.register(UserAuthCredentials, UserAuthAdmin)
 
 class CommunityAdmin(admin.ModelAdmin):
-    list_display = ("logo_icon", "name", "member_count", "source_count", "channel_count", "managers", "owner", "created")
+    list_display = ("logo_icon", "name", "link", "member_count", "source_count", "channel_count", "managers", "owner", "created")
     list_display_links = ("name",)
     list_filter = ("created",)
     search_fields = ("name", "owner")
@@ -63,6 +63,10 @@ class CommunityAdmin(admin.ModelAdmin):
     def channel_count(self, community):
         return Channel.objects.filter(source__community=community).count()
     channel_count.short_description = "Channels"
+
+    def link(self, community):
+        return mark_safe("<a href=\"/dashboard/%s\">View</a>" % community.id)
+    link.short_description = "Dashboard"
 
 admin.site.register(Community, CommunityAdmin)
 
