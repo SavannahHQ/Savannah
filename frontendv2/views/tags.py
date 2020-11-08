@@ -23,6 +23,25 @@ class Tags(SavannahView):
     @login_required
     def as_view(request, community_id):
         view = Tags(request, community_id)
+        if request.method == 'POST':
+            if 'delete_tag' in request.POST:
+                tag = get_object_or_404(Tag, id=request.POST.get('delete_tag'))
+                context = view.context
+                context.update({
+                    'object_type':"Tag", 
+                    'object_name': tag.name, 
+                    'object_id': tag.id,
+                    'warning_msg': "This will remove the tag from all Members, Conversations and Contributions",
+                })
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                tag = get_object_or_404(Tag, id=request.POST.get('object_id'))
+                tag_name = tag.name
+                tag.delete()
+                messages.success(request, "Deleted tag: <b>%s</b>" % tag_name)
+
+                return redirect('tags', community_id=community_id)
+
         return render(request, "savannahv2/tags.html", view.context)
 
 class TagEditForm(forms.ModelForm):
@@ -88,4 +107,3 @@ class EditTag(SavannahView):
             return redirect('tags', community_id=view.community.id)
 
         return render(request, "savannahv2/tag_edit.html", view.context)
-

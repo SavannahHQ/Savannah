@@ -29,9 +29,12 @@
                     <th scope="col">Members</th>
                     <th scope="col">Channels</th>
                     <th scope="col">Keywords</th>
+                    <th class="text-center" width="100px" scope="col"></th>
                   </tr>
                 </thead>
                 <tbody>
+                <form class="inline-form" action="{% url 'tags' view.community.id %}" method="POST">
+                {% csrf_token %}
                 {% for tag in view.all_tags %}
                 <tr style="background-color: #{{tag.color}}aa">
                   <td class="text-nowrap text-gray-800" >
@@ -40,6 +43,7 @@
                   <td>{{tag.member_count|intcomma}}</td>
                   <td>{{tag.channel_count|intcomma}}</td>
                   <td>{{tag.keywords|default:'-'}}</td>
+                  <td class="text-center text-nowrap"><button style="background-color: #55555533" class="btn btn-sm" type="submit" name="delete_tag" value="{{tag.id}}" title="Delete Tag"><i class="fas fa-trash"> </i></button></td>
                 </tr>
                 {% endfor %}
                 </tbody>
