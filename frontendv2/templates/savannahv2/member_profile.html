@@ -83,9 +83,9 @@
                   {% endif %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Notes</div>
+                    <div class="mb-2 col-lg-8">
                     <form class="inline-form" action="{% url 'member_profile' view.member.id %}" method="POST">
                     {% csrf_token %}                    
-                    <div class="mb-2 col-lg-10">
                       <a class="btn btn-sm btn-primary" href="#" title="Add Note" role="button" id="openNoteDialogLink" data-toggle="modal" data-target="#noteDialog">
                         <i class="fas fa-sticky-note"> </i> Add Note
                       </a>
@@ -97,8 +97,8 @@
                         <span id="id_note_{{note.id}}" data-note_id="{{note.id}}">{{note.content|linebreaksbr}}</span>
                         </div>
                       {% endfor %}
-                      </div>
                       </form>
+                      </div>
                     </div>
                     <!-- Member Note Modal -->
                     <div class="modal fade" id="noteDialog" role="dialog">
