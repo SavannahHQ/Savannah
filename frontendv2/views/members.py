@@ -367,7 +367,7 @@ class MemberProfile(SavannahView):
                 context = view.context
                 context.update({
                     'object_type':"Note", 
-                    'object_name': note.content[:96], 
+                    'object_name': str(note), 
                     'object_id': note.id,
                 })
                 return render(request, "savannahv2/delete_confirm.html", context)

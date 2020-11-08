@@ -491,7 +491,7 @@ class Note(TaggableModel):
             try:
                 return self.content[:self.content.index('\n')]
             except:
-                return self.content[:min(len(self.content), 32)]
+                return self.content[:min(len(self.content), 64)]
         else:
             return str(self.timestamp)
 

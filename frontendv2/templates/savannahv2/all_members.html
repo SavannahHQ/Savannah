@@ -48,7 +48,7 @@
                 <tr><td colspan="4">
                 <ul>
                 {% for note in member.note_set.all %}
-                <li><span class="note">{{note}}</span></li>
+                <li><span class="note">{{note.content}}</span></li>
                 {% endfor %}
                 </ul>
                 </td></tr>
