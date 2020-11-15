@@ -22,7 +22,7 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Tracked Channels</h6>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 table-responsive">
                 <table class="table">
                 <thead>
                   <tr>
@@ -87,7 +87,7 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Available Channels</h6>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 table-responsive">
                 <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
                 {% csrf_token %}
                 <table class="table">
