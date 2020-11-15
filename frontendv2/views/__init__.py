@@ -4,13 +4,12 @@ from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UsernameField
-from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UsernameField, SetPasswordForm
 from django.contrib import messages
 from django import forms
 
 from corm.models import *
-from frontendv2.models import EmailMessage
+from frontendv2.models import EmailMessage, PasswordResetRequest
 
 # Create your views here.
 def index(request):
@@ -40,8 +39,12 @@ class NewUserForm(UserCreationForm):
         self.fields['email'].required = True
 
 def login(request):
+    next_view = 'home'
+    if 'next' in request.GET:
+        next_view = request.GET.get('next', 'home')
+
     if request.user.is_authenticated:
-        return redirect('home')
+        return redirect(next_view)
 
     context = {
         "signup_form":  NewUserForm(),
@@ -55,7 +58,7 @@ def login(request):
                 raw_password = login_form.cleaned_data.get("password")
                 user = authenticate(username=username, password=raw_password)
                 login_user(request, user, backend=user.backend)
-                return redirect('home')
+                return redirect(next_view)
             else:
                 context["login_form"] = login_form
                 context["action"] = "login"
@@ -67,12 +70,63 @@ def login(request):
                 raw_password = signup_form.cleaned_data.get("password1")
                 user = authenticate(username=username, password=raw_password)
                 login_user(request, user, backend=user.backend)
-                return redirect('home')
+                return redirect(next_view)
             else:
                 context["signup_form"] = signup_form
                 context["action"] = "signup"
 
     return render(request, 'savannahv2/login.html', context)
+
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField(
+        label="Email",
+        max_length=254,
+        widget=forms.EmailInput(attrs={'autocomplete': 'email'})
+    )
+
+def password_reset_request(request):
+    context = {}
+    if request.method == "POST":
+        form = PasswordResetRequestForm(data=request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            PasswordResetRequest.send(email)
+            messages.success(request, "Password reset email sent")
+            return redirect("login")
+        else:
+            messages.error(request, "Invalid emails")
+
+    else:
+        form = PasswordResetRequestForm()
+
+    context['form'] = form
+    return render(request, 'savannahv2/password_reset.html', context)
+
+
+def reset_password(request, request_key):
+    try:
+        reset = PasswordResetRequest.objects.get(key=request_key)
+        if reset.expires >= datetime.datetime.utcnow():
+            if request.method == "POST":
+                form = SetPasswordForm(user=reset.user, data=request.POST)
+                if form.is_valid():
+                    user = form.save()
+                    login_user(request, user)
+                    messages.success(request, "Your password has been reset")
+                    reset.delete()
+                    return redirect('home')
+            else:
+                form = SetPasswordForm(user=reset.user)
+
+            context = {
+                'form': form
+            }
+            return render(request, 'savannahv2/password_reset.html', context)
+        else:
+            messages.error(request, "Your password reset request has expired")
+    except:
+        messages.error(request, "Invalid reset request")
+    return redirect('login')
 
 @login_required
 def home(request):

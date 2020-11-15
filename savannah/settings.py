@@ -30,11 +30,13 @@ BETA = True
 OPEN_BETA = True
 SITE_ROOT = 'https://savannahhq.com'
 SITE_NAME = 'Savannah CRM'
+SYSTEM_USER = 'admin'
 
 ALLOWED_HOSTS = []
 ALLOWED_EMAILS_PER_DAY = 100
 DEFAULT_FROM_EMAIL = "SavannahHQ <noreply@savannahhq.com>"
 EMAIL_CONFIRMAION_EXPIRATION_DAYS = 10
+PASSWORD_RESET_EXPIRATION_DAYS = 1
 
 
 # Application definition

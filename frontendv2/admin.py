@@ -1,5 +1,5 @@
 from django.contrib import admin
-from frontendv2.models import EmailRecord, ManagerInvite
+from frontendv2.models import EmailRecord, ManagerInvite, PasswordResetRequest
 
 # Register your models here.
 class EmailAdmin(admin.ModelAdmin):
@@ -29,4 +29,9 @@ class ManagerInviteAdmin(admin.ModelAdmin):
     list_display = ("community", "email", "invited_by", "timestamp", "expires")
     list_filter = ("community", "invited_by", "timestamp", "expires")
 admin.site.register(ManagerInvite, ManagerInviteAdmin)
+
+class PasswordResetAdmin(admin.ModelAdmin):
+    list_display = ("user", "email",  "timestamp", "expires")
+    list_filter = ("timestamp", "expires")
+admin.site.register(PasswordResetRequest, PasswordResetAdmin)
 

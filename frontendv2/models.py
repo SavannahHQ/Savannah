@@ -4,13 +4,14 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.template.loader import get_template, render_to_string
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 
-from corm.models import Community, Member
+from corm.models import Community, Member, ManagerProfile
 
 import datetime
 
 class EmailMessage(object):
-    def __init__(self, sender, community):
+    def __init__(self, sender, community=None):
         self.sender = sender
         self.community = community
         self.category = None
@@ -142,5 +143,51 @@ class ManagerInvite(models.Model):
             }
         )
         msg = ManagerInviteEmail(invite)
+        msg.send(email)
+
+
+class PasswordResetEmail(EmailMessage):
+    def __init__(self, request):
+        system_user = get_object_or_404(User, username=settings.SYSTEM_USER)
+        super(PasswordResetEmail, self).__init__(system_user)
+        self.subject = "Password reset for %s" % settings.SITE_NAME
+        self.category = "password_reset"
+        self.context.update({
+            'reset_key': request.key,
+            'expiration': request.expires
+        })
+        self.text_body = "emails/password_reset_email.txt"
+        self.html_body = "emails/password_reset_email.html"
+
+
+class PasswordResetRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    email = models.EmailField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    key = models.CharField(max_length=256)
+    expires = models.DateTimeField()
+
+    @classmethod
+    def send(cls, email):
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            try:
+                manager = ManagerProfile.objects.get(contact_email=email)
+                user = manager.user
+            except ManagerProfile.DoesNotExist:
+                # No matching user, silently ignore
+                return
+
+        valid_for = getattr(settings, "PASSWORD_RESET_EXPIRATION_DAYS", 1)
+        request, created = PasswordResetRequest.objects.update_or_create(
+            user=user,
+            email=email,
+            defaults={
+                "key": get_random_string(length=32),
+                "expires": datetime.datetime.utcnow() + datetime.timedelta(days=valid_for)
+            }
+        )
+        msg = PasswordResetEmail(request)
         msg.send(email)
 

@@ -8,8 +8,9 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django import forms
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
+
 
 from corm.models import *
 from corm.connectors import ConnectionManager
@@ -226,7 +227,7 @@ class ManagerPreferencesForm(forms.ModelForm):
 
 class ManagerPreferences(SavannahView):
     def __init__(self, request, community_id):
-        self.request = request
+        super(ManagerPreferences, self).__init__(request, community_id)
         self.community = get_object_or_404(Community, id=community_id)
         self.manager = get_object_or_404(ManagerProfile, community=self.community, user=request.user)
         self.active_tab = "community"
@@ -248,3 +249,71 @@ class ManagerPreferences(SavannahView):
             return redirect('dashboard', community_id=community_id)
 
         return render(request, 'savannahv2/manager_edit.html', view.context)
+
+class ManagerPasswordChange(SavannahView):
+    def __init__(self, request, community_id):
+        super(ManagerPasswordChange, self).__init__(request, community_id)
+        self.community = get_object_or_404(Community, id=community_id)
+        self.manager = get_object_or_404(ManagerProfile, community=self.community, user=request.user)
+        self.active_tab = "community"
+        self._form = None
+
+    @property 
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = PasswordChangeForm(user=self.request.user, data=self.request.POST)
+            else:
+                self._form = PasswordChangeForm(user=self.request.user)
+        return self._form
+
+    @login_required
+    def as_view(request, community_id):
+        view = ManagerPasswordChange(request, community_id)
+        if request.method == "POST" and view.form.is_valid():
+            user = view.form.save()
+            login_user(request, user)
+            messages.success(request, "Your password has been changed")
+            return redirect('manager_preferences', community_id=community_id)
+
+        return render(request, 'savannahv2/password_change.html', view.context)
+
+class ManagerDelete(SavannahView):
+    def __init__(self, request, community_id):
+        super(ManagerDelete, self).__init__(request, community_id)
+        self.community = get_object_or_404(Community, id=community_id)
+        self.manager = get_object_or_404(ManagerProfile, community=self.community, user=request.user)
+        self.active_tab = "community"
+        self._form = None
+
+    @property
+    def other_managers(self):
+        if self.community.managers is not None:
+            return self.community.managers.user_set.exclude(id=self.request.user.id)
+        else:
+            return {'count': 0}
+
+    @property
+    def is_owner(self):
+        return self.community.owner == self.request.user
+
+    @login_required
+    def as_view(request, community_id):
+        view = ManagerDelete(request, community_id)
+        if request.method == "POST":
+            if view.is_owner:
+                if 'new_owner' not in request.POST or not request.POST.get('new_owner', 0):
+                    messages.error(request, "You must select a new owner before leaving")
+                    return redirect('manager_delete', community_id=community_id)
+                else:
+                    new_owner = get_object_or_404(User, id=request.POST.get('new_owner'))
+                    view.community.owner = new_owner
+                    view.community.save()
+
+            if view.community.managers is not None:
+                view.community.managers.user_set.remove(request.user)
+            view.manager.delete()
+
+            return redirect('home')
+
+        return render(request, "savannahv2/manager_leave.html", view.context)

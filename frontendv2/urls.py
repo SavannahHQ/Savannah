@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Dashboard
@@ -24,7 +25,7 @@ from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import MemberMergeSuggestions, ContributionSuggestions
-from frontendv2.views.community import Managers, ManagerPreferences, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager
+from frontendv2.views.community import Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager
 from frontendv2.views.projects import Projects, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
 from frontendv2.views.reports import Reports, view_report
 from frontendv2 import views
@@ -34,6 +35,9 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
+    path("account/reset/", views.password_reset_request, name="password_reset"),
+    path("account/reset/<request_key>/", views.reset_password, name="reset_password"),
+
     path('community/new', views.new_community, name='add-community'),
 
     path('dashboard/<int:community_id>/', Dashboard.as_view, name='dashboard'),
@@ -77,6 +81,8 @@ urlpatterns = [
     path('managers/<int:community_id>/resend/', resend_invitation, name='resend_invite'),
     path('managers/<int:community_id>/revoke/', revoke_invitation, name='revoke_invite'),
     path('managers/<int:community_id>/preferences', ManagerPreferences.as_view, name='manager_preferences'),
+    path('managers/<int:community_id>/password', ManagerPasswordChange.as_view, name='manager_password'),
+    path('managers/<int:community_id>/delete', ManagerDelete.as_view, name='manager_delete'),
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
     path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),
