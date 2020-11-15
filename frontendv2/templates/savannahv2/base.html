@@ -89,13 +89,6 @@
           <span>Members</span></a>
       </li>
 
-      <!-- Nav Item - Projects -->
-      <li class="nav-item {% if active_tab == "projects" %}active{% endif %}">
-        <a class="nav-link" href="{% url 'projects' view.community.id %}">
-          <i class="fas fa-fw fa-tasks"></i>
-          <span>Projects</span></a>
-      </li>
-
       <!-- Nav Item - Conversations -->
       <li class="nav-item {% if active_tab == "conversations" %}active{% endif %}">
         <a class="nav-link" href="{% url 'conversations' request.session.community %}">
@@ -115,6 +108,13 @@
         <a class="nav-link" href="{% url 'connections' request.session.community %}">
           <i class="fas fa-fw fa-project-diagram"></i>
           <span>Connections</span></a>
+      </li>
+
+      <!-- Nav Item - Projects -->
+      <li class="nav-item {% if active_tab == "projects" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'projects' view.community.id %}">
+          <i class="fas fa-fw fa-tasks"></i>
+          <span>Projects</span></a>
       </li>
 
       <!-- Nav Item - Reports -->
@@ -141,6 +141,13 @@
         Settings
       </div>
 
+      <!-- Nav Item - Managers -->
+      <li class="nav-item {% if active_tab == "community" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'managers' view.community.id %}">
+          <i class="fas fa-fw fa-users-cog"></i>
+          <span>Community</span></a>
+      </li>
+
       <!-- Nav Item - Sources -->
       <li class="nav-item {% if active_tab == "sources" %}active{% endif %}">
         <a class="nav-link" href="{% url 'sources' view.community.id %}">
@@ -151,15 +158,8 @@
       <!-- Nav Item - Tags -->
       <li class="nav-item {% if active_tab == "tags" %}active{% endif %}">
         <a class="nav-link" href="{% url 'tags' view.community.id %}">
-          <i class="fas fa-fw fa-hashtag"></i>
+          <i class="fas fa-fw fa-tags"></i>
           <span>Tags</span></a>
-      </li>
-
-      <!-- Nav Item - Managers -->
-      <li class="nav-item {% if active_tab == "community" %}active{% endif %}">
-        <a class="nav-link" href="{% url 'managers' view.community.id %}">
-          <i class="fas fa-fw fa-user-tie"></i>
-          <span>Managers</span></a>
       </li>
 
       <!-- Nav Item - Managers -->

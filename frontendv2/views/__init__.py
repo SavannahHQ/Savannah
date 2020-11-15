@@ -361,7 +361,7 @@ class SavannahFilterView(SavannahView):
         else:
             return values[-span_count:]
 
-class NewCommunityForm(forms.ModelForm):
+class CommunityForm(forms.ModelForm):
     class Meta:
         model = Community
         fields = ['name', 'logo']
@@ -379,7 +379,7 @@ class CommunityCreationEmail(EmailMessage):
 def new_community(request):
     community = Community(owner=request.user)
     if request.method == "POST":
-        form = NewCommunityForm(request.POST, files=request.FILES, instance=community)
+        form = CommunityForm(request.POST, files=request.FILES, instance=community)
         if form.is_valid():
             new_community = form.save()
             new_community.bootstrap()
@@ -388,7 +388,7 @@ def new_community(request):
             messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
             return redirect('dashboard', community_id=new_community.id)
     else:
-        form = NewCommunityForm(instance=community)
+        form = CommunityForm(instance=community)
 
     communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
     context = {

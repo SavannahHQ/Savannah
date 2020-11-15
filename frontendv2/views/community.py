@@ -15,7 +15,7 @@ from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetVi
 from corm.models import *
 from corm.connectors import ConnectionManager
 
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahView, CommunityForm
 from frontendv2.models import ManagerInvite
 
 class Managers(SavannahView):
@@ -317,3 +317,30 @@ class ManagerDelete(SavannahView):
             return redirect('home')
 
         return render(request, "savannahv2/manager_leave.html", view.context)
+
+class EditCommunity(SavannahView):
+
+    def __init__(self, request, community_id):
+        super(EditCommunity, self).__init__(request, community_id)
+        self.community = get_object_or_404(Community, id=community_id)
+        self.active_tab = "community"
+        self._form = None
+
+    @property 
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = CommunityForm(instance=self.community, data=self.request.POST, files=self.request.FILES)
+            else:
+                self._form = CommunityForm(instance=self.community)
+        return self._form
+
+    @login_required
+    def as_view(request, community_id):
+        view = EditCommunity(request, community_id)
+        if request.method == "POST" and view.form.is_valid():
+            community = view.form.save()
+            messages.success(request, "Community information updated")
+            return redirect('managers', community_id=community_id)
+
+        return render(request, 'savannahv2/community_edit.html', view.context)

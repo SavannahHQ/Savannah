@@ -2,20 +2,24 @@
 {% load static %}
 {% load humanize %}
 
-{% block page_title %} | {{view.community.name}} Managers{% endblock %}
+{% block page_title %} | {{view.community.name}} Settings{% endblock %}
 
 {% block page_content %}
+<!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.community.name}} Settings</h1>
+          </div>
 
           <!-- Content Row -->
           <div class="row">
 
             <!-- Content Column -->
-            <div class="col-lg-10 mb-8">
+            <div class="col-xl-8 col-lg-9 mb-8">
 
               <!-- Managers -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">{{view.community.name}} Managers</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Managers</h6>
                   <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'manager_invite' view.community.id %}"><i class="fas fa-user-plus"></i> Invite</a>
                 </div>
                 <div class="card-body p-0">
@@ -44,14 +48,6 @@
                 </div>
               </div>
 
-            </div>
-          </div>
-
-          <!-- Content Row -->
-          <div class="row">
-
-            <!-- Content Column -->
-            <div class="col-lg-10 mb-8">
 
               <!-- Invitations -->
               <div class="card shadow mb-4">
@@ -77,7 +73,7 @@
                   <td>{{invite.invited_by}}</td>
                   <td>{{invite.timestamp}}</td>
                   <td>{{invite.expires}}</td>
-                  <td>
+                  <td class="text-nowrap">
                     <form class="form-inline d-inline" action="{% url 'resend_invite' community_id=view.community.id %}" method="POST">{% csrf_token %}<input type="hidden" name="invite_id" value="{{invite.id}}"><button type="submit" class="btn btn-sm btn-primary" title="Resend Invitation"><i class="fas fa-share"></i></button></form>
                     <form class="form-inline d-inline" action="{% url 'revoke_invite' community_id=view.community.id %}" method="POST">{% csrf_token %}<input type="hidden" name="invite_id" value="{{invite.id}}"><button type="submit" class="btn btn-sm btn-danger" title="Revoke Invitation"><i class="fas fa-trash"></i></button></form>
                   </td>
@@ -90,7 +86,30 @@
               </div>
 
             </div>
+
+            <!-- Profile  -->
+            <div class="col-xl-4 col-lg-3">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Display Info</h6>
+                  <a class="btn btn-primary btn-sm" href="{% url 'community_edit' view.community.id %}"><i class="fas fa-edit"> </i> Edit</a>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                <p><b>Icon: </b><img src="{{view.community.icon_path}}" /></p>
+                <p><b>Name: </b>{{view.community.name}}</p>
+
+                </div>            
+
+                </div>
+              </div>
+            </div>
+            
           </div>
+
         </div>
         <!-- /.container-fluid -->
 {% endblock %}
