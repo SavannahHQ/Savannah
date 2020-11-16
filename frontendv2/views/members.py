@@ -232,6 +232,9 @@ class MemberProfile(SavannahView):
     def member_levels(self):
         return MemberLevel.objects.filter(community=self.community, member=self.member).order_by('-project__default_project', '-level', 'timestamp')
 
+    def open_tasks(self):
+        return Task.objects.filter(stakeholders=self.member, done__isnull=True)
+
     @property
     def all_gifts(self):
         return Gift.objects.filter(community=self.community, member=self.member)
@@ -592,3 +595,85 @@ class MemberAdd(SavannahView):
             return redirect('member_profile', member_id=new_member.id)
 
         return render(request, "savannahv2/member_add.html", view.context)
+
+class MemberTaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ['name', 'project', 'owner', 'due', 'detail']
+        widgets = {
+            'due': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super(MemberTaskForm, self).__init__(*args, **kwargs)
+        self.fields['due'].input_formats = ["%Y-%m-%dT%H:%M"]
+
+
+class MemberTaskAdd(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super(MemberTaskAdd, self).__init__(request, self.member.community.id)
+        self.active_tab = "members"
+        self._form = None
+
+    @property
+    def form(self):
+        if self._form is None:
+            task = Task(community=self.community, owner=self.request.user)
+            if self.request.method == 'POST':
+                self._form = MemberTaskForm(instance=task, data=self.request.POST)
+            else:
+                self._form = MemberTaskForm(instance=task)
+            self._form.fields['owner'].widget.choices = [(user.id, user.username) for user in User.objects.filter(groups=self.community.managers).order_by('username')]
+            self._form.fields['project'].widget.choices = [(project.id, project.name) for project in Project.objects.filter(community=self.community).order_by('-default_project', 'name')]
+        return self._form
+
+    @login_required
+    def as_view(request, member_id):
+        view = MemberTaskAdd(request, member_id)
+        if request.method == "POST" and view.form.is_valid():
+            task = view.form.save()
+            task.stakeholders.add(view.member)
+            return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/task_add.html', view.context)
+
+class MemberTaskEdit(SavannahView):
+    def __init__(self, request, member_id, task_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super(MemberTaskEdit, self).__init__(request, self.member.community.id)
+        self.task = get_object_or_404(Task, id=task_id)
+        self.active_tab = "members"
+        self._form = None
+
+    @property
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = MemberTaskForm(instance=self.task, data=self.request.POST)
+            else:
+                self._form = MemberTaskForm(instance=self.task)
+            self._form.fields['owner'].widget.choices = [(user.id, user.username) for user in User.objects.filter(groups=self.community.managers)]
+            self._form.fields['project'].widget.choices = [(project.id, project.name) for project in Project.objects.filter(community=self.community).order_by('-default_project', 'name')]
+        return self._form
+
+    @login_required
+    def as_view(request, member_id, task_id):
+        view = MemberTaskEdit(request, member_id, task_id)
+        if request.method == "POST" and view.form.is_valid():
+            task = view.form.save()
+            task.stakeholders.add(view.member)
+            return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/task_edit.html', view.context)
+
+    @login_required
+    def mark_task_done(request, member_id):
+        if request.method == "POST":
+            task_id = request.POST.get('mark_done')
+            try:
+                task = Task.objects.get(id=task_id)
+                task.done = datetime.datetime.utcnow()
+                task.save()
+            except:
+                messages.error(request, "Task not found, could not mark as done.")
+        return redirect('member_profile', member_id=member_id)

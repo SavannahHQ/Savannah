@@ -18,7 +18,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Dashboard
-from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager
+from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
@@ -52,6 +52,9 @@ urlpatterns = [
     path('member/<int:member_id>/watch', watch_member, name='member_watch_form'),
     path('member/<int:member_id>/gift', GiftManager.add_view, name='gift_add'),
     path('member/<int:member_id>/gift/<int:gift_id>/', GiftManager.edit_view, name='gift_edit'),
+    path('member/<int:member_id>/task/add', MemberTaskAdd.as_view, name='task_add'),
+    path('member/<int:member_id>/task/<int:task_id>/', MemberTaskEdit.as_view, name='task_edit'),
+    path('member/<int:member_id>/task/done', MemberTaskEdit.mark_task_done, name='task_done'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('contributions/<int:community_id>/contributors', Contributors.as_view, name='contributors'),

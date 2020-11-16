@@ -141,6 +141,40 @@
 
               <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Tasks</h6>
+                  <a href="{% url 'task_add' view.member.id %}" class="text-gray-500"><i class="fas fa-plus"></i> Task</a>
+                </div>
+                <div class="card-body p-0">
+                <form action="{% url 'task_done' member_id=view.member.id %}" method="POST">
+                {% csrf_token %}
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Owner</th>
+                    <th scope="col">Task</th>
+                    <th scope="col">Due</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for task in view.open_tasks %}
+                <tr>
+                  <td class="text-nowrap">{{task.owner_name}}</td>
+                  <td><a href="{% url 'task_edit' member_id=view.member.id task_id=task.id %}" title="{{task.detail}}">{{task.name}}</a></td>
+                  <td>{{task.due}}</td>
+                  <td>
+                    <button class="btn btn-sm btn-danger text-nowrap" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </form>
+                </div>
+              </div>
+
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Gifts</h6>
                   <a href="{% url 'gift_add' view.member.id %}" class="text-gray-500"><i class="fas fa-gifts"></i> Send</a>
                 </div>
