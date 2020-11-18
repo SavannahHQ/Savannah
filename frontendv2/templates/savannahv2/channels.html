@@ -132,7 +132,7 @@ $('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
         if (tag.checked) {
           var tag_name = tag.labels[0].textContent;
           if (tag.value == '') {
-            tags_html = "<i class=\"fas fa-tag small text-gray-500\"> </i>";
+            tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
           } else {
             tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
           }
