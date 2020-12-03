@@ -238,7 +238,7 @@ admin.site.register(ContributionType, ContributionTypeAdmin)
 
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ("title", "contribution_type", "channel", "timestamp", "author", "tag_list")
-    list_filter = ("contribution_type__source__connector", "community", "contribution_type", "timestamp")
+    list_filter = ("contribution_type__source__connector", "community", "contribution_type__name", "timestamp")
     raw_id_fields = ('conversation', 'author')
     def tag_list(self, contribution):
         return ", ".join([tag.name for tag in contribution.tags.all()[:10]])
