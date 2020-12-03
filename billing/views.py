@@ -180,7 +180,11 @@ def manage_account(request, community_id):
         messages.warning(request, "Only the owner of this community can access billing information")
         return redirect('dashboard', community_id=community_id)
 
-    management = get_object_or_404(Management, community_id=community_id)
+    try:
+        management = Management.objects.get(community_id=community_id)
+    except Management.DoesNotExist:
+        return redirect('billing:signup_org', community_id=community.id)
+
     org = management.org
 
     # Set Stripe API key
@@ -197,55 +201,3 @@ def manage_account(request, community_id):
         message.error(request, "Unable to launch Stripe Customer Portal")
         return redirect('dashboard', community_id=community_id)
 
-# @login_required
-# def subscribe(request, community_id):
-#     management = get_object_or_404(Management, community_id=community_id)
-#     community = management.community
-#     company = management.company
-
-#     if request.method == 'POST':
-#         stripe.api_key =settings.STRIPE_TEST_SECRET_KEY
-#         data = json.loads(request.body.decode('utf-8'))
-#         try:
-#             # Attach the payment method to the customer
-#             stripe.PaymentMethod.attach(
-#                 data['paymentMethodId'],
-#                 customer=data['customerId'],
-#             )
-#             # Set the default payment method on the customer
-#             stripe.Customer.modify(
-#                 data['customerId'],
-#                 invoice_settings={
-#                     'default_payment_method': data['paymentMethodId'],
-#                 },
-#             )
-
-#             # Create the subscription
-#             subscription = stripe.Subscription.create(
-#                 customer=company.customer.id,
-#                 items=[
-#                     {
-#                     'price': settings.STRIPE_DEFAULT_PLAN,
-#                     },
-#                 ],
-#                 metadata={
-#                     'community_id': community.id,
-#                     'community_name': community.name
-#                 },
-#                 expand=['latest_invoice.payment_intent'],
-#                 )
-#             djstripe_subscription = djstripe.models.Subscription.sync_from_stripe_data(subscription)
-#             management.subscription = djstripe_subscription
-#             management.save()
-#             messages.success(request, "Subscription added!")
-#             return JsonResponse(subscription)
-#         except Exception as e:
-#             return JsonResponse({'error':{'message': str(e)}})
-    
-#     context = {
-#         "community": community,
-#         "company": company,
-#         "STRIPE_KEY": settings.STRIPE_TEST_PUBLIC_KEY,
-#         "STRIPE_PLAN": 'price_1HLxhJLZDN7eRvmoW5g5PGVj'
-#     }
-#     return render(request, 'billing/subscribe.html', context)
