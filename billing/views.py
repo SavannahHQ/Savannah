@@ -187,6 +187,9 @@ def manage_account(request, community_id):
 
     org = management.org
 
+    if management.subscription is None:
+        return redirect('billing:signup_subscribe', community_id=community.id)
+
     # Set Stripe API key
     stripe.api_key = settings.STRIPE_SECRET_KEY
 
