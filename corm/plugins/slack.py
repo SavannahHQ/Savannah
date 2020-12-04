@@ -214,7 +214,7 @@ class SlackImporter(PluginImporter):
                     print("Data Error: %s" % resp.data)
             else:
                 print("HTTP %s Error: %s" % (resp.status_code, resp.content))
-        for thread_id, thread_ts in self._update_threads.items():
+        for thread_id, thread_ts in list(self._update_threads.items()):
             self.import_thread(channel, thread_ts, from_timestamp)
             # data = self.get_message(channel, thread_ts)
             # if data is not None:
@@ -235,6 +235,8 @@ class SlackImporter(PluginImporter):
                     if data['has_more']:
                         has_more = True
                         cursor = data['response_metadata']['next_cursor']
+                        if self.verbosity >= 3:
+                            print("Thread has_more=True, cursor=%s" % cursor)
                     for message in data['messages']:
                         if message['type'] == 'message' and ('subtype' not in message or message['subtype'] == "bot_message"):
                             self.import_message(channel, message)
