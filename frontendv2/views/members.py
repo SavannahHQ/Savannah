@@ -143,6 +143,11 @@ class AllMembers(SavannahFilterView):
         self.RESULTS_PER_PAGE = 25
         self.community = get_object_or_404(Community, id=community_id)
 
+        self.sort_by = request.session.get("sort_members", "name")
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'first_seen', '-first_seen', 'last_seen', '-last_seen'):
+            self.sort_by = request.GET.get('sort') 
+            request.session['sort_members'] = self.sort_by
+
         try:
             self.page = int(request.GET.get('page', 1))
         except:
@@ -167,7 +172,8 @@ class AllMembers(SavannahFilterView):
             members = members.filter(role=self.role)
 
         if self.timespan < 365:
-            members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend).order_by('-first_seen')
+            members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
+        members = members.order_by(self.sort_by)
 
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()

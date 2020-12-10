@@ -263,7 +263,7 @@ class SlackImporter(PluginImporter):
             user_email = user.get('profile').get('email')
             user_real_name = user.get('real_name', user_name)
         slack_user_id = "slack.com/%s" % user_id
-        speaker = self.make_member(slack_user_id, detail=user_name, email_address=user_email, tstamp=tstamp, speaker=True, name=user_real_name)
+        speaker = self.make_member(slack_user_id, channel=channel, detail=user_name, email_address=user_email, tstamp=tstamp, speaker=True, name=user_real_name)
         if user_isbot and speaker.role != Member.BOT:
             speaker.role = Member.BOT
             speaker.save()

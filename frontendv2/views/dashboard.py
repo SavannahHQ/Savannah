@@ -1,18 +1,130 @@
 import operator
 import datetime
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, Min
+
+from notifications.models import Notification
 
 from corm.models import *
 from corm.connectors import ConnectionManager
-from frontendv2.views import SavannahFilterView
+from frontendv2.views import SavannahFilterView, SavannahView
+from frontendv2.views.projects import TaskForm
 from frontendv2.views.charts import FunnelChart
 
-class Dashboard(SavannahFilterView):
+class ManagerDashboard(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "dashboard"
+        self.charts = set()
+
+    @property
+    def open_tasks(self):
+        return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due')
+
+    @property
+    def open_gifts(self):
+        return Gift.objects.filter(community=self.community, received_date__isnull=True).order_by('sent_date')
+
+    @property
+    def member_watches(self):
+        watches = MemberWatch.objects.filter(manager=self.request.user, member__community=self.community).order_by('-last_seen')
+        watches = watches.select_related('member').prefetch_related('member__tags')
+        return watches
+
+    @property
+    def new_members(self):
+        members = Member.objects.filter(community=self.community).order_by("-first_seen")[:5]
+        members = members.prefetch_related('tags')
+        return members
+
+    @property
+    def new_contributors(self):
+        members = Member.objects.filter(community=self.community)
+        members = members.annotate(first_contrib=Min('contribution__timestamp'))
+        members = members.order_by('-first_contrib')[:5].prefetch_related('tags')
+        actives = dict()
+        for m in members:
+            if m.first_contrib is not None:
+                actives[m] = m.first_contrib
+        recently_active = [(member, tstamp) for member, tstamp in sorted(actives.items(), key=operator.itemgetter(1), reverse=True)]
+        
+        return recently_active[:5]
+
+    @property 
+    def recent_connections(self):
+        if self.user_member:
+            connections = MemberConnection.objects.filter(from_member=self.user_member).order_by('-last_connected')[:10]
+            connections.select_related('to_member').prefetch_related('to_member__tags')
+            return connections
+        else:
+            return []
+
+    @property
+    def recent_conversations(self):
+        if self.user_member:
+            recent = []
+            channels = set()
+            convos = Conversation.objects.filter(participants=self.user_member).order_by('-timestamp')
+            convos = convos.select_related('channel').select_related('channel__source')
+            for con in convos:
+                if con.channel not in channels:
+                    channels.add(con.channel)
+                    recent.append((con.channel, con.timestamp, con.location))
+                if len(recent) >= 10:
+                    break
+            return recent
+        else:
+            return []
+
+    @login_required
+    def as_view(request, community_id):
+        dashboard = ManagerDashboard(request, community_id)
+
+        return render(request, 'savannahv2/manager_dashboard.html', dashboard.context)
+
+class ManagerTaskEdit(SavannahView):
+    def __init__(self, request, community_id, task_id):
+        super(ManagerTaskEdit, self).__init__(request, community_id)
+        self.task = get_object_or_404(Task, community=community_id, id=task_id)
+        self.active_tab = "dashboard"
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            form = TaskForm(instance=self.task, data=self.request.POST)
+        else:
+            form = TaskForm(instance=self.task)
+        form.fields['owner'].widget.choices = [(user.id, user.username) for user in User.objects.filter(groups=self.community.managers)]
+        form.fields['project'].widget.choices = [(project.id, project.name) for project in Project.objects.filter(community=self.community).order_by('-default_project', 'name')]
+        form.fields['stakeholders'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=self.community)]
+        return form
+
+    @login_required
+    def as_view(request, community_id, task_id):
+        view = ManagerTaskEdit(request, community_id, task_id)
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            return redirect('dashboard', community_id=community_id)
+
+        return render(request, 'savannahv2/manager_task_edit.html', view.context)
+
+    @login_required
+    def mark_task_done(request, community_id):
+        if request.method == "POST":
+            task_id = request.POST.get('mark_done')
+            try:
+                task = Task.objects.get(id=task_id, community_id=community_id)
+                task.done = datetime.datetime.utcnow()
+                task.save()
+            except:
+                messages.error(request, "Task not found, could not mark as done.")
+        return redirect('dashboard', community_id=community_id)
+
+class Overview(SavannahFilterView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "overview"
         self._membersChart = None
         self._channelsChart = None
         self._levelsChart = None
@@ -197,6 +309,6 @@ class Dashboard(SavannahFilterView):
 
     @login_required
     def as_view(request, community_id):
-        dashboard = Dashboard(request, community_id)
+        dashboard = Overview(request, community_id)
 
-        return render(request, 'savannahv2/dashboard.html', dashboard.context)
+        return render(request, 'savannahv2/overview.html', dashboard.context)

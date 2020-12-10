@@ -240,6 +240,8 @@ class MemberWatch(models.Model):
     start = models.DateTimeField(auto_now_add=True)
     end = models.DateTimeField(null=True, blank=True)
     level = models.SmallIntegerField(choices=DEFAULT_TAGS.items(), default=WARNING)
+    last_seen = models.DateTimeField(null=True, blank=True)
+    last_channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, blank=True)
 
 class GiftType(models.Model):
     class Meta:
@@ -649,7 +651,7 @@ class ManagerProfile(models.Model):
     " Store profile information about a manager of a community"
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    member = models.ForeignKey(Member, on_delete=models.SET_NULL, blank=True, null=True)
+    member = models.ForeignKey(Member, verbose_name=_("Member Profile"), on_delete=models.SET_NULL, blank=True, null=True)
     realname = models.CharField(verbose_name=_("Preferred Name"), max_length=150, blank=True)
     contact_email = models.EmailField(verbose_name=_("Preferred Email"), null=True, blank=True)
     tz = models.CharField(

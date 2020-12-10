@@ -1,0 +1,266 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | {{view.community.name}}{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">My Dashboard</h1>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <div class="col-xl-8 col-lg-7">
+
+            <!-- Tasks -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks"></i> Open Tasks</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                <form action="{% url 'manager_task_done' view.community.id %}" method="POST">
+                {% csrf_token %}
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Task</th>
+                    <th scope="col">Due</th>
+                    <th scope="col">Stakeholders</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for task in view.open_tasks %}
+                <tr>
+                  <td><a href="{% url 'manager_task_edit' view.community.id task.id %}" title="{{task.detail}}" data-toggle="tooltip">{{task.name}}</a></td>
+                  <td>{{task.due}}</td>
+                  <td>
+                  {% if task.stakeholders.all.count > 0 %}
+                  {% for member in task.stakeholders.all %}
+                      <a href="{% url 'member_profile' member.id %}">{{member.name}}</a><br/>
+                  {% endfor %}
+                  {% endif %}
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-danger text-nowrap" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </form>
+                </div>
+              </div>
+
+              <!-- Gift Checkin -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-gifts"></i> Outstanding Gifts</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Sent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for gift in view.open_gifts %}
+                <tr>
+                  <td><a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a></td>
+                  <td class="text-nowrap"><a href="{% url 'gift_edit' gift.member.id gift.id %}">{{gift.gift_type.name}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
+                  <td>{{gift.sent_date}}</td>
+                  <td>{{gift.received_date|default:''}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+ 
+               <!-- Gift Checkin -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-eye"></i> Watched Members</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Last Seen</th>
+                    <th scope="col">Channel</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for watch in view.member_watches %}
+                <tr>
+                  <td><a href="{% url 'member_profile' watch.member.id %}">{{watch.member}}</a></td>
+                  <td>{{watch.last_seen|default:''}}</td>
+                  <td><i class="{{watch.last_channel.source.icon_name}}"></i>&nbsp;{{watch.last_channel|default:''}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+ 
+            </div>
+
+            <!-- Narrow Right column -->
+            <div class="col-xl-4 col-lg-5">
+
+            <!-- New Members -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Newest Members</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.new_members %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{member.first_seen}}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td colspan="2" align="center">
+                    <a href ="{% url 'all_members' view.community.id %}?sort=-first_seen"><b>More...</b></a>
+                  </td>
+                </tr>
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            <!-- New Members -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Newest Contributors</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member, tstamp in view.new_contributors %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{tstamp}}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td colspan="2" align="center">
+                    <a href ="{% url 'contributors' view.community.id %}?sort=-first_contrib"><b>More...</b></a>
+                  </td>
+                </tr>
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Recent Connections-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Connections</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for connection in view.recent_connections %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=connection.to_member.tags.all %}
+                  </td>
+                  <td>{{connection.last_connected}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Conversations</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Channel</th>
+                    <th scope="col"><span class="short-text">#</span><span class="full-text">Date</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for channel, tstamp, location in view.recent_conversations %}
+                <tr>
+                  <td>
+                    <a href="{{location}}" target="_blank"><i class="{{channel.source.icon_name}}"></i>&nbsp;{{ channel.name }}</a>
+                  </td>
+                  <td>{{tstamp}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

@@ -58,7 +58,7 @@ class PluginImporter:
         self.API_BACKOFF_SECONDS = 10
 
 
-    def make_member(self, origin_id, detail, tstamp=None, email_address=None, avatar_url=None, name=None, speaker=False, replace_first_seen=False):
+    def make_member(self, origin_id, detail, tstamp=None, channel=None, email_address=None, avatar_url=None, name=None, speaker=False, replace_first_seen=False):
         save_member = False
         if origin_id in self._member_cache:
             member = self._member_cache[origin_id]
@@ -114,6 +114,9 @@ class PluginImporter:
 
         if speaker and tstamp is not None:
             for watch in MemberWatch.objects.filter(member=member, start__lte=tstamp):
+                watch.last_seen = tstamp
+                watch.last_channel = channel
+                watch.save()
                 has_recent_notification = Notification.objects.filter(recipient=watch.manager, actor_object_id=member.id, actor_content_type=ContentType.objects.get_for_model(member), verb="has been active in", timestamp__gte=tstamp - datetime.timedelta(hours=1)).count()
                 if not has_recent_notification:
                     notify.send(member, 

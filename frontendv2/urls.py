@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from frontendv2.views.dashboard import Dashboard
+from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit
 from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
@@ -40,7 +40,10 @@ urlpatterns = [
 
     path('community/new', views.new_community, name='add-community'),
 
-    path('dashboard/<int:community_id>/', Dashboard.as_view, name='dashboard'),
+    path('dashboard/<int:community_id>/', ManagerDashboard.as_view, name='dashboard'),
+    path('dashboard/<int:community_id>/task/<int:task_id>/', ManagerTaskEdit.as_view, name='manager_task_edit'),
+    path('dashboard/<int:community_id>/task/done', ManagerTaskEdit.mark_task_done, name='manager_task_done'),
+    path('overview/<int:community_id>/', Overview.as_view, name='overview'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),

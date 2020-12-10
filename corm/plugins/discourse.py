@@ -212,7 +212,7 @@ class DiscourseImporter(PluginImporter):
                             continue
                         post_user_id = post['user_id']
                         post_url = topic_url + '/' + str(post['post_number'])
-                        author = self.make_member(post_user_id, post['username'], post_tstamp, speaker=True)
+                        author = self.make_member(post_user_id, post['username'], channel=channel, tstamp=post_tstamp, speaker=True)
 
                         content = re.sub('<[^<]+?>', '', post['cooked'])
                         post_convo = self.make_conversation(discourse_post_id, channel, author, content=content, tstamp=post_tstamp, location=post_url, thread=thread_post)

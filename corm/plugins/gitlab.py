@@ -221,7 +221,7 @@ class GitlabImporter(PluginImporter):
 
         thread_author = issue.get('author')
         thread_user_id = thread_author.get('web_url')
-        thread_speaker = self.make_member(origin_id=thread_user_id, detail=thread_author.get('username'), tstamp=thread_tstamp, avatar_url=thread_author.get('avatar_url'), name=thread_author.get('name'), speaker=True)
+        thread_speaker = self.make_member(origin_id=thread_user_id, channel=channel, detail=thread_author.get('username'), tstamp=thread_tstamp, avatar_url=thread_author.get('avatar_url'), name=thread_author.get('name'), speaker=True)
         participants.add(thread_speaker)
 
         thread_text = issue.get('description')
@@ -245,7 +245,7 @@ class GitlabImporter(PluginImporter):
         if comments_url == GITLAB_MR_COMMENTS:
             author = issue.get('author')
             gitlab_user_id = author.get('web_url')
-            submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=thread_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
+            submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), channel=channel, tstamp=thread_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
             
             activity, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':thread_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link, 'conversation':thread})
             # Not all comments should get the channel tag, but all PRs should
@@ -264,7 +264,7 @@ class GitlabImporter(PluginImporter):
                         convo_tstamp = self.strptime(note.get('created_at'))
                         author = note.get('author')
                         gitlab_user_id = author.get('web_url')
-                        speaker = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), tstamp=convo_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
+                        speaker = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), channel=channel, tstamp=convo_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
                         participants.add(speaker)
 
                         convo_text = note.get('body')

@@ -242,7 +242,7 @@ class DiscordImporter(PluginImporter):
 
         user = message['author']
         discord_user_id = user.get('id')
-        speaker = self.make_member(discord_user_id, detail=user.get('username'), email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
+        speaker = self.make_member(discord_user_id, channel=channel, detail=user.get('username'), email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
         if (user.get('bot', False) or user.get('system', False))and speaker.role != Member.BOT:
             speaker.role = Member.BOT
             speaker.save()
@@ -256,7 +256,7 @@ class DiscordImporter(PluginImporter):
         participants = set()
         participants.add(speaker)
         for tagged_user in message.get('mentions', []):
-            member = self.make_member(tagged_user.get('id'), detail=tagged_user.get('username'), email_address=tagged_user.get('email'), tstamp=tstamp, speaker=False, name=tagged_user.get('username'))
+            member = self.make_member(tagged_user.get('id'), channel=channel, detail=tagged_user.get('username'), email_address=tagged_user.get('email'), tstamp=tstamp, speaker=False, name=tagged_user.get('username'))
             participants.add(member)
             convo_text = convo_text.replace("<@!%s>"%tagged_user.get('id'), "@%s"%tagged_user.get('username'))
             if (tagged_user.get('bot', False) or tagged_user.get('system', False))and member.role != Member.BOT:

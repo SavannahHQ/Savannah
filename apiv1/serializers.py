@@ -113,14 +113,16 @@ class ConversationSerializer(serializers.Serializer):
     def save(self, source):
         # Get or create speaker Member and Contact
         importer = PluginImporter(source)
+        # Get or create Channel
+        channel = get_or_create_channel(origin_id=self.validated_data.get('channel'), source=source)
+
         speaker = importer.make_member(
             origin_id=self.validated_data.get('speaker'), 
             detail=self.validated_data.get('speaker'),
+            channel=channel,
             tstamp=self.validated_data.get('timestamp'), 
+            speaker=True,
         )
-
-        # Get or create Channel
-        channel = get_or_create_channel(origin_id=self.validated_data.get('channel'), source=source)
 
         convo = importer.make_conversation(
             origin_id=self.validated_data.get('origin_id'), 
@@ -171,14 +173,16 @@ class ContributionSerializer(serializers.Serializer):
     def save(self, source):
         # Get or create speaker Member and Contact
         importer = PluginImporter(source)
+        # Get or create Channel
+        channel = get_or_create_channel(origin_id=self.validated_data.get('channel'), source=source)
+
         author = importer.make_member(
             origin_id=self.validated_data.get('author'), 
             detail=self.validated_data.get('author'),
+            channel=channel,
             tstamp=self.validated_data.get('timestamp'), 
+            speaker=True,
         )
-
-        # Get or create Channel
-        channel = get_or_create_channel(origin_id=self.validated_data.get('channel'), source=source)
 
         # Get or create contribution type
         contribution_type = get_or_create_contrib_type(name=self.validated_data.get('contribution_type'), source=source)
