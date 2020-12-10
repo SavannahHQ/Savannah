@@ -41,7 +41,7 @@ class ManagerDashboard(SavannahView):
     @property
     def new_contributors(self):
         members = Member.objects.filter(community=self.community)
-        members = members.annotate(first_contrib=Min('contribution__timestamp'))
+        members = members.annotate(first_contrib=Min('contribution__timestamp')).filter(first_contrib__isnull=False)
         members = members.order_by('-first_contrib')[:5].prefetch_related('tags')
         actives = dict()
         for m in members:

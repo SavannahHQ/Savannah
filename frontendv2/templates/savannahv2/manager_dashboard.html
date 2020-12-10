@@ -141,7 +141,7 @@
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td>{{member.first_seen}}</td>
+                  <td class="text-nowrap">{{member.first_seen}}</td>
                 </tr>
                 {% endfor %}
                 <tr>
@@ -174,7 +174,7 @@
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td>{{tstamp}}</td>
+                  <td class="text-nowrap">{{tstamp}}</td>
                 </tr>
                 {% endfor %}
                 <tr>
