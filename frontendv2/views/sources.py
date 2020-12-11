@@ -74,13 +74,13 @@ class Sources(SavannahView):
         for source in sources:
             if source.contact_count > 0:
                 link = reverse('channels', kwargs={'community_id':source.community_id, 'source_id':source.id})
-                nodes.append({"id":source.id, "name":"%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), "link":link, "color":source_node_color, "connections":source.contact_count})
+                nodes.append({"id":'s%s'%source.id, "name":"%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), "link":link, "color":source_node_color, "connections":source.contact_count})
             
         contacts = Contact.objects.filter(source__community=view.community, member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         contacts = contacts.annotate(member_name=F('member__name'), member_role=F('member__role'), tag_count=Count('member__tags'))
 
         for contact in contacts:
-            links.append({"source":contact.source_id, "target":contact.member_id})
+            links.append({"source":'s%s'%contact.source_id, "target":'m%s'%contact.member_id})
             connected.add((contact.source_id, contact.member_id))
             member_map[contact.member_id] = contact
             if contact.member_id not in connection_counts:
@@ -100,7 +100,7 @@ class Sources(SavannahView):
                 tag_color = "36b9cc"
 
             link = reverse('member_profile', kwargs={'member_id':member_id})
-            nodes.append({"id":member_id, "name":contact.member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
+            nodes.append({"id":'m%s'%member_id, "name":contact.member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
                     
         return JsonResponse({"nodes":nodes, "links":links})
 
