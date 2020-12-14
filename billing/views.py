@@ -117,6 +117,9 @@ def signup_subscribe_session(request, community_id):
                     "quantity": 1
                 }
             ],
+            subscription_data={
+                "trial_period_days": 30,
+            },
             customer=org.customer.id,
             success_url=settings.SITE_ROOT + reverse('billing:subscription_success', kwargs={'community_id': community.id}) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url= settings.SITE_ROOT + reverse('billing:subscription_cancel', kwargs={'community_id': community.id}), # The cancel_url is typically set to the original product page
