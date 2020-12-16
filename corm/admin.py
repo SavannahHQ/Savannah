@@ -212,8 +212,8 @@ admin.site.register(Conversation, ConversationAdmin)
 
 class TaskAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "due", "community", "project", "stakeholder_list", "is_done")
-    list_filter = (isNotNull("done"), "community", "owner", "project__community", "project", "tags", "stakeholders")
-    raw_id_fields = ('stakeholders',)
+    list_filter = (isNotNull("done"), "community", "owner", "project", "tags", "stakeholders")
+    raw_id_fields = ('stakeholders','conversation')
     actions = ('mark_done',"mark_notdone")
     def stakeholder_list(self, task):
         return ", ".join([member.name for member in task.stakeholders.all()[:10]])
@@ -328,7 +328,7 @@ class ReportAdmin(admin.ModelAdmin):
 admin.site.register(Report, ReportAdmin)
 
 class ManagersAdmin(admin.ModelAdmin):
-    list_display = ('user', 'community', 'member', 'realname', 'contact_email', 'last_seen', 'send_notifications')
+    list_display = ('user', 'community', 'member', 'last_seen', 'realname', 'contact_email', 'send_notifications')
     list_filter = ('community', 'last_seen', 'send_notifications')
     raw_id_fields = ('member',)
 admin.site.register(ManagerProfile, ManagersAdmin)
