@@ -201,7 +201,8 @@
                   <h6 class="m-0 font-weight-bold text-primary">Recent Connections</h6>
                 </div>
                 <div class="card-body p-0">
-                <table class="table">
+                {% if view.user_member %}
+                <table class="table mb-0">
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
@@ -220,6 +221,9 @@
                 {% endfor %}
                 </tbody>
                 </table>
+                {% else %}
+                <div class="alert alert-info m-2">Attach your Member Profile to your <a href="{% url 'manager_preferences' view.community.id %}">account</a> to see your connections.</div>
+                {% endif %}
                 </div>
               </div>
             </div>
@@ -233,7 +237,8 @@
                   <h6 class="m-0 font-weight-bold text-primary">Recent Conversations</h6>
                 </div>
                 <div class="card-body p-0">
-                <table class="table">
+                {% if view.user_member %}
+                <table class="table mb-0">
                 <thead>
                   <tr>
                     <th scope="col">Channel</th>
@@ -251,6 +256,9 @@
                 {% endfor %}
                 </tbody>
                 </table>
+                {% else %}
+                <div class="alert alert-info m-2">Attach your Member Profile to your <a href="{% url 'manager_preferences' view.community.id %}">account</a> to see your conversations.</div>
+                {% endif %}
                 </div>
               </div>
 
