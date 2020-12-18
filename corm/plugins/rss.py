@@ -34,7 +34,7 @@ class RssForm(forms.ModelForm):
         model = Source
         fields = ['name', 'server']
         labels = {
-            'server': 'Website URL',
+            'server': 'Feed or Website URL',
         }
     def __init__(self, *args, **kwargs):
         super(RssForm, self).__init__(*args, **kwargs)
