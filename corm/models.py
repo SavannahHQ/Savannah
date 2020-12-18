@@ -375,7 +375,7 @@ class Project(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     channels = models.ManyToManyField(Channel, blank=True)
     threshold_period = models.SmallIntegerField(verbose_name="Activity Period", default=365, help_text="Timerange in days to look at for level activity")
-    threshold_user = models.SmallIntegerField(verbose_name="User level", default=1, help_text="Number of conversations needed to become a User")
+    threshold_user = models.SmallIntegerField(verbose_name="Visitor level", default=1, help_text="Number of conversations needed to become a Visitor")
     threshold_participant = models.SmallIntegerField(verbose_name="Participant level", default=3, help_text="Number of conversations needed to become a Participant")
     threshold_contributor = models.SmallIntegerField(verbose_name="Contributor level", default=1, help_text="Number of contributions needed to become a Contributor")
     threshold_core = models.SmallIntegerField(verbose_name="Core level", default=5, help_text="Number of contributions needed to become a Core Contributor")
