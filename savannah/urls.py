@@ -29,6 +29,7 @@ urlpatterns = [
     path('gitlab/', include('corm.plugins.gitlab')),
     path('discourse/', include('corm.plugins.discourse')),
     path('discord/', include('corm.plugins.discord')),
+    path('stackexchange/', include('corm.plugins.stackexchange')),
     path('rss/', include('corm.plugins.rss')),
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('billing/', include('billing.urls')),

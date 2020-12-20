@@ -73,6 +73,7 @@ CORM_PLUGINS = [
     "corm.plugins.discord.DiscordPlugin",
     "corm.plugins.github.GithubPlugin",
     "corm.plugins.gitlab.GitlabPlugin",
+    "corm.plugins.stackexchange.StackExchangePlugin",
     "corm.plugins.rss.RssPlugin",
 ]
 

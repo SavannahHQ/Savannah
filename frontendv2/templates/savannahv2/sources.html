@@ -45,11 +45,12 @@
                     <button class="m-0 btn btn-sm btn-success text-white dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-plus"></i> Add</button>
                     <div class="dropdown-menu animated--fade-in" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="{% url 'slack_auth' %}"><i class="fab fa-slack"></i> Slack</a>
+                        <a class="dropdown-item" href="{% url 'discord_auth' %}"><i class="fab fa-discord"></i> Discord</a>
                         <a class="dropdown-item" href="{% url 'github_add' %}"><i class="fab fa-github"></i> Github</a>
                         <a class="dropdown-item" href="{% url 'gitlab_add' %}"><i class="fab fa-gitlab"></i> Gitlab</a>
                         <a class="dropdown-item" href="{% url 'discourse_auth' %}"><i class="fab fa-discourse"></i> Discourse</a>
+                        <a class="dropdown-item" href="{% url 'stackexchange_add' %}"><i class="fab fa-stack-overflow"></i> Stack Exchange</a>
                         <a class="dropdown-item" href="{% url 'rss_auth' %}"><i class="fas fa-globe"></i> Blog</a>
-                        <a class="dropdown-item" href="{% url 'discord_auth' %}"><i class="fab fa-discord"></i> Discord</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'integration_add' %}"><i class="fas fa-edit"></i> API Integration</a>
 
