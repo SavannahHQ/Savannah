@@ -236,6 +236,8 @@ class StackExchangeImporter(PluginImporter):
         else:
             from_date = datetime.datetime.utcnow() - datetime.timedelta(days=365)
             pause_between_pages = True
+            channel.last_import = datetime.datetime.utcnow()
+            channel.last_import.save()
         print("From %s since %s" % (channel.name, from_date))
         
         questions = set()
