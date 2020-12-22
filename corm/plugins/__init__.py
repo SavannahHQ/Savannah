@@ -40,6 +40,13 @@ class BasePlugin:
     def get_source_importer(self, source):
         raise NotImplementedError
 
+    def search_channels(self, source, text):
+        matching = []
+        for channel in self.get_channels(source):
+            if text in channel['name']:
+                matching.append(channel)
+        return matching
+                
     def get_channels(self, source):
         return []
         

@@ -84,8 +84,18 @@
 
               <!-- New Members-->
               <div class="card shadow mb-4">
-                <div class="card-header py-3">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Available Channels</h6>
+          <form class="d-none d-sm-inline-block form-inline" action="{% url 'channels' view.community.id view.source.id %}" method="GET">
+            <div class="input-group">
+              <input name="search_channels" type="text" class="form-control small" placeholder="Search..." value="{{view.search_channels|default:''}}" aria-label="Search" aria-describedby="basic-addon2">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search fa-sm"></i>
+                </button>
+              </div>
+            </div>
+          </form>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">

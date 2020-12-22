@@ -110,6 +110,7 @@ class Channels(SavannahView):
         self.source = get_object_or_404(Source, id=source_id, community=self.community)
         self.active_tab = "sources"
         self.available_channels = []
+        self.search_channels = None
 
     def _add_sources_message(self):
         pass
@@ -139,6 +140,18 @@ class Channels(SavannahView):
         for channel in self._get_source_channels(request):
             if channel['id'] not in tracked_channel_ids:
                 channels.append(channel)
+        self.available_channels = sorted(channels, key=lambda c: c['count'], reverse=True)
+
+    def search_available_channels(self, request, text):
+        tracked_channel_ids = [channel.origin_id for channel in Channel.objects.filter(source=self.source)]
+        channels = []
+        plugin = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
+        try:
+            for channel in plugin.search_channels(self.source, text):
+                if channel['id'] not in tracked_channel_ids:
+                    channels.append(channel)
+        except Exception as e:
+            messages.warning(self.request, "Unable to list available channels: %s" % e)
         self.available_channels = sorted(channels, key=lambda c: c['count'], reverse=True)
 
     def track_channel(self, request, origin_id):
@@ -180,8 +193,11 @@ class Channels(SavannahView):
 
                 return redirect('channels', community_id=community_id, source_id=source_id)
 
-
-        view.fetch_available_channels(request)
+        if 'search_channels' in request.GET:
+            view.search_available_channels(request, request.GET.get('search_channels'))
+            view.search_channels = request.GET.get('search_channels')
+        else:
+            view.fetch_available_channels(request)
         return render(request, "savannahv2/channels.html", view.context)
 
 from django.http import JsonResponse

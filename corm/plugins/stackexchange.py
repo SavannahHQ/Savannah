@@ -21,6 +21,7 @@ TOKEN_URL = 'https://stackexchange.com/oauth/access_token'
 SELF_SITES_URL = '/2.2/me/associated?key=%(access_key)s&access_token=%(access_token)s'
 SITE_TAGS_URL = '/2.2/me/tags?site=%(site)s&key=%(access_key)s&access_token=%(access_token)s'
 SITE_ALL_TAGS_URL = '/2.2/tags?site=%(site)s&key=%(access_key)s&access_token=%(access_token)s'
+SITE_SEARCH_TAGS_URL = '/2.2/tags?inname=%(search)s&site=%(site)s&key=%(access_key)s&access_token=%(access_token)s'
 SITE_QUESTIONS_URL = '/2.2/questions/?order=desc&sort=activity&filter=withbody&min=%(from_date)s&tagged=%(tag)s&page=%(page)s'
 SITE_ANSWERS_URL = '/2.2/questions/%(question_id)s/answers?order=desc&sort=activity&filter=withbody&min=%(from_date)s&page=%(page)s'
 SITE_COMMENTS_URL = '/2.2/posts/%(question_id)s/comments?order=desc&sort=creation&filter=withbody&min=%(from_date)s&page=%(page)s'
@@ -165,6 +166,26 @@ class StackExchangePlugin(BasePlugin):
     def get_source_importer(self, source):
         return StackExchangeImporter(source)
 
+    def search_channels(self, source, text):
+        channels = []
+        # popular tags
+        resp = requests.get(API_BASE_PATH + SITE_SEARCH_TAGS_URL % {'search': text, 'site': source.auth_id, 'access_key': settings.STACKEXCHANGE_CLIENT_KEY, 'access_token': source.auth_secret})
+        if resp.status_code == 200:
+            data = resp.json()
+            for channel in data['items']:
+                channels.append(
+                    {
+                        'id': channel['name'],
+                        'name': channel['name'],
+                        'topic': '',
+                        'count':channel['count'],
+                        'is_private': channel['is_moderator_only'],
+                    }
+                )
+                if len(channels) >= 100:
+                    break       
+        return channels
+
     def get_channels(self, source):
         channel_ids = set()
         channels = []
@@ -178,7 +199,7 @@ class StackExchangePlugin(BasePlugin):
                         'id': channel['name'],
                         'name': channel['name'],
                         'topic': '',
-                        'count':channel['count'] * 100000000, # To put these at the top of the channels list
+                        'count':channel['count'] * 1000000000, # To put these at the top of the channels list
                         'is_private': channel['is_moderator_only'],
                     }
                 )
