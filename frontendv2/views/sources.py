@@ -150,6 +150,9 @@ class Channels(SavannahView):
             for channel in plugin.search_channels(self.source, text):
                 if channel['id'] not in tracked_channel_ids:
                     channels.append(channel)
+            request.session['source_channels_cache'] = channels
+            request.session['source_channels_source'] = self.source.id
+            request.session['source_channels_expiration'] = datetime.datetime.timestamp(datetime.datetime.utcnow() + datetime.timedelta(minutes=10))
         except Exception as e:
             messages.warning(self.request, "Unable to list available channels: %s" % e)
         self.available_channels = sorted(channels, key=lambda c: c['count'], reverse=True)
