@@ -23,6 +23,7 @@ SITE_TAGS_URL = '/2.2/me/tags?site=%(site)s&key=%(access_key)s&access_token=%(ac
 SITE_ALL_TAGS_URL = '/2.2/tags?site=%(site)s&key=%(access_key)s&access_token=%(access_token)s'
 SITE_QUESTIONS_URL = '/2.2/questions/?order=desc&sort=activity&filter=withbody&min=%(from_date)s&tagged=%(tag)s&page=%(page)s'
 SITE_ANSWERS_URL = '/2.2/questions/%(question_id)s/answers?order=desc&sort=activity&filter=withbody&min=%(from_date)s&page=%(page)s'
+SITE_COMMENTS_URL = '/2.2/posts/%(question_id)s/comments?order=desc&sort=creation&filter=withbody&min=%(from_date)s&page=%(page)s'
 
 class StackExchangeSiteForm(forms.ModelForm):
     class Meta:
@@ -241,7 +242,6 @@ class StackExchangeImporter(PluginImporter):
         print("From %s since %s" % (channel.name, from_date))
         
         questions = set()
-        question_answers = dict()
         questions_page = 1
         while questions_page:
             # Pause between pages when doing a full import
@@ -273,9 +273,6 @@ class StackExchangeImporter(PluginImporter):
                     convo.title = question.get('title')
 
                     questions.add(convo)
-                    if question.get('is_answered'):
-                        question_answers[question.get('accepted_answer_id')] = question.get('question_id')
-
 
                 if question_data.get('has_more', False):
                     questions_page += 1
@@ -288,7 +285,7 @@ class StackExchangeImporter(PluginImporter):
                 print("Question lookup failed: %s" % question_resp.content)
 
 
-
+        answers = set()
         for question_convo in questions:
             answers_page = 1
             while answers_page:
@@ -325,6 +322,7 @@ class StackExchangeImporter(PluginImporter):
                         question_convo.participants.add(speaker)
                         speaker.add_connection(question_convo.speaker, self.source, tstamp)
 
+                        answers.add(answer_convo)
                         if answer.get('is_accepted'):
                             #print(answer)
                             title = "Answered: %s" % question_convo.title
@@ -344,3 +342,53 @@ class StackExchangeImporter(PluginImporter):
                 # Answers api call failed
                 else:
                     print("Answer lookup failed: %s" % answer_resp.content)
+
+        posts = questions.union(answers)
+        for post in posts:
+            posts_page = 1
+            while posts_page:
+                # Pause between pages when doing a full import
+                if pause_between_pages and posts_page > 1:
+                    sleep(5)
+
+                comments_resp = self.api_call(SITE_COMMENTS_URL % {
+                    'question_id': post.origin_id,
+                    'page': posts_page,
+                    'from_date': self.strftime(from_date),
+                })
+                if comments_resp.status_code == 200:
+                    comments_data = comments_resp.json()
+                    for comment in comments_data.get('items'):
+                        #print(comment)
+                        tstamp = self.strptime(comment.get('creation_date'))
+                        convo_link = comment.get('link')
+                        se_user = comment.get('owner')
+                        se_user_id = se_user.get('link')
+                        if se_user_id is None:
+                            se_user_id = se_user.get('display_name')
+                            se_username = se_user.get('display_name')
+                        else:
+                            se_username = se_user_id.split('/')[-1]
+
+                        comment_link = post.location+'#comment%s_%s' % (comment.get('comment_id'), post.origin_id)
+                        speaker = self.make_member(origin_id=se_user.get('user_id'), detail=se_username, name=se_user['display_name'], tstamp=tstamp, channel=channel, speaker=True, avatar_url=se_user.get('profile_image'))
+
+                        comment_text = re.sub('<[^<]+?>', '', answer.get('body'))
+                        comment_convo = self.make_conversation(origin_id=comment.get('comment_id'), channel=channel, speaker=speaker, content=comment_text, tstamp=tstamp, location=comment_link, thread=post, dedup=True)
+                        comment_convo.participants.add(speaker)
+                        comment_convo.participants.add(post.speaker)
+                        post.participants.add(speaker)
+                        speaker.add_connection(post.speaker, self.source, tstamp)
+
+
+                    if comments_data.get('has_more', False):
+                        comment_page += 1
+                    else:
+                        comment_page = 0
+                        break
+
+                # Comments api call failed
+                else:
+                    print("Comments lookup failed: %s" % comments_resp.content)
+
+    

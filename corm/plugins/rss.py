@@ -167,6 +167,7 @@ class RssImporter(PluginImporter):
         member = self.make_member(blog_author_id, detail=author_name, channel=channel, tstamp=tstamp, name=author_name, speaker=True)
 
         blog_content = item.find('description').text
+        blog_content = re.sub('<[^<]+?>', '', blog_content)
         origin_parts = origin_id.split("#")
 
         if len(origin_parts) == 2:
