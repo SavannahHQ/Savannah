@@ -211,7 +211,7 @@ class SlackImporter(PluginImporter):
                             else:
                                 self.import_message(channel, message)
                 else:
-                    print("Data Error: %s" % resp.data)
+                    print("Data Error: %s" % resp.content)
             else:
                 print("HTTP %s Error: %s" % (resp.status_code, resp.content))
         for thread_id, thread_ts in list(self._update_threads.items()):
