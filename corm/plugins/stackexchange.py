@@ -394,7 +394,7 @@ class StackExchangeImporter(PluginImporter):
                         comment_link = post.location+'#comment%s_%s' % (comment.get('comment_id'), post.origin_id)
                         speaker = self.make_member(origin_id=se_user.get('user_id'), detail=se_username, name=se_user['display_name'], tstamp=tstamp, channel=channel, speaker=True, avatar_url=se_user.get('profile_image'))
 
-                        comment_text = re.sub('<[^<]+?>', '', answer.get('body'))
+                        comment_text = re.sub('<[^<]+?>', '', comment.get('body'))
                         comment_convo = self.make_conversation(origin_id=comment.get('comment_id'), channel=channel, speaker=speaker, content=comment_text, tstamp=tstamp, location=comment_link, thread=post, dedup=True)
                         comment_convo.participants.add(speaker)
                         comment_convo.participants.add(post.speaker)
