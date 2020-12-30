@@ -388,24 +388,24 @@ class CommunityCreationEmail(EmailMessage):
         self.text_body = "emails/new_community_created.txt"
         self.html_body = "emails/new_community_created.html"
 
-@login_required
-def new_community(request):
-    community = Community(owner=request.user)
-    if request.method == "POST":
-        form = CommunityForm(request.POST, files=request.FILES, instance=community)
-        if form.is_valid():
-            new_community = form.save()
-            new_community.bootstrap()
-            msg = CommunityCreationEmail(new_community)
-            msg.send(settings.ADMINS)
-            messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
-            return redirect('dashboard', community_id=new_community.id)
-    else:
-        form = CommunityForm(instance=community)
+# @login_required
+# def new_community(request):
+#     community = Community(owner=request.user)
+#     if request.method == "POST":
+#         form = CommunityForm(request.POST, files=request.FILES, instance=community)
+#         if form.is_valid():
+#             new_community = form.save()
+#             new_community.bootstrap()
+#             msg = CommunityCreationEmail(new_community)
+#             msg.send(settings.ADMINS)
+#             messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
+#             return redirect('dashboard', community_id=new_community.id)
+#     else:
+#         form = CommunityForm(instance=community)
 
-    communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
-    context = {
-        "communities": communities,
-        "form": form,
-    }
-    return render(request, 'savannahv2/community_add.html', context)
+#     communities = Community.objects.filter(Q(owner=request.user) | Q(managers__in=request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+#     context = {
+#         "communities": communities,
+#         "form": form,
+#     }
+#     return render(request, 'savannahv2/community_add.html', context)

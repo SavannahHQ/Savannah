@@ -38,7 +38,7 @@ urlpatterns = [
     path("account/reset/", views.password_reset_request, name="password_reset"),
     path("account/reset/<request_key>/", views.reset_password, name="reset_password"),
 
-    path('community/new', views.new_community, name='add-community'),
+    #path('community/new', views.new_community, name='add-community'),
 
     path('dashboard/<int:community_id>/', ManagerDashboard.as_view, name='dashboard'),
     path('dashboard/<int:community_id>/task/<int:task_id>/', ManagerTaskEdit.as_view, name='manager_task_edit'),
