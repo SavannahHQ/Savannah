@@ -35,3 +35,12 @@ class Management(models.Model):
             self.community.save()
         except Exception as e:
             raise Exception("Failed to subscribe %s: %s" % (self.community.name, e))
+
+    @classmethod
+    def unsubscribe(self, subscription_id):
+        try:
+            management = Management.objects.get(subscription__id=subscription_id)
+            management.community.status = Community.DEACTIVE
+            management.community.save()
+        except Exception as e:
+            raise Exception("Failed to unsubscribe %s: %s" % (subscription_id, e))        

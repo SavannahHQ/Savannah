@@ -176,6 +176,13 @@ def checkout_session_completed(event, **kwargs):
     # Add subscription to Management model of this community
     management.subscribe(subscription_id)
 
+@webhooks.handler("customer.subscription.deleted")
+def subscription_canceled(event, **kwargs):
+    # Deactive the community this subscription belonged to
+    subscription = event.data["object"]
+    Management.unsubscribe(subscription['id'])
+
+
 @login_required
 def manage_account(request, community_id):
     community = get_object_or_404(Community, id=community_id)
