@@ -332,7 +332,7 @@ class Contact(ImportedDataModel):
     detail = models.CharField(max_length=256)
     name = models.CharField(max_length=256, null=True, blank=True)
     email_address = models.EmailField(null=True, blank=True)
-    avatar_url = models.URLField(null=True, blank=True)
+    avatar_url = models.URLField(max_length=512, null=True, blank=True)
 
     @property
     def link_url(self):
