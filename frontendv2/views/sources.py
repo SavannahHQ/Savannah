@@ -122,11 +122,14 @@ class Channels(SavannahView):
         channels = []
         if 'source_channels_cache' in request.session:
             if int(request.session.get('source_channels_source')) == self.source.id and request.session.get('source_channels_expiration') >= datetime.datetime.timestamp(datetime.datetime.utcnow()):
-                return request.session.get('source_channels_cache')
+                cached_channels = request.session.get('source_channels_cache')
+                if len(cached_channels) > 0:
+                    return cached_channels
         if self.source.connector in ConnectionManager.CONNECTOR_PLUGINS:
             plugin  = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
             try:
                 channels = plugin.get_channels(self.source)
+                request.session['source_channels_search'] = None
                 request.session['source_channels_cache'] = channels
                 request.session['source_channels_source'] = self.source.id
                 request.session['source_channels_expiration'] = datetime.datetime.timestamp(datetime.datetime.utcnow() + datetime.timedelta(minutes=10))
@@ -150,6 +153,7 @@ class Channels(SavannahView):
             for channel in plugin.search_channels(self.source, text):
                 if channel['id'] not in tracked_channel_ids:
                     channels.append(channel)
+            request.session['source_channels_search'] = text
             request.session['source_channels_cache'] = channels
             request.session['source_channels_source'] = self.source.id
             request.session['source_channels_expiration'] = datetime.datetime.timestamp(datetime.datetime.utcnow() + datetime.timedelta(minutes=10))
@@ -199,6 +203,9 @@ class Channels(SavannahView):
         if 'search_channels' in request.GET:
             view.search_available_channels(request, request.GET.get('search_channels'))
             view.search_channels = request.GET.get('search_channels')
+        if 'source_channels_search' in request.session and request.session['source_channels_search'] is not None and int(request.session.get('source_channels_source')) == source_id and request.session.get('source_channels_expiration') >= datetime.datetime.timestamp(datetime.datetime.utcnow()):
+            view.search_available_channels(request, request.session.get('source_channels_search'))
+            view.search_channels = request.session.get('source_channels_search')
         else:
             view.fetch_available_channels(request)
         return render(request, "savannahv2/channels.html", view.context)

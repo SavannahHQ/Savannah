@@ -114,6 +114,7 @@
                   <td class="text-nowrap">
                     {% if channel.is_private %}<i class="fas fa-lock" title="Private"></i> {% endif %}
                     {% if channel.is_archived %}<i class="fas fa-archive" title="Archived"></i> {% endif %}
+                    {% if channel.is_favorite %}<i class="fas fa-star" title="Favorite"></i> {% endif %}
                     {{ channel.name }}
                   </td>
                   <td>{{channel.topic}}</td>

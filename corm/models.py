@@ -24,6 +24,7 @@ class UserAuthCredentials(models.Model):
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
     auth_secret = models.CharField(max_length=256, null=True, blank=True)
+    auth_refresh = models.CharField(max_length=256, null=True, blank=True)
 
     def __str__(self):
         return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
@@ -360,7 +361,7 @@ class Conversation(TaggableModel, ImportedDataModel):
             content = self.content.strip()
             if len(content) > 2:
                 try:
-                    return content[:min(content.strip().index('\n'), 64)]
+                    return content[:min(content.strip().replace('\n', ' '), 64)]
                 except:
                     return content[:min(len(content), 64)]
         return str(self.timestamp)

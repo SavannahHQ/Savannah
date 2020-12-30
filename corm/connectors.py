@@ -5,8 +5,6 @@ class ConnectionManager(object):
     CONNECTOR_CHOICES=  [
             ("corm.plugins.null", "Manual Entry"),
             ("corm.plugins.api", "API"),
-            ("corm.plugins.reddit", "Reddit"),
-            ("corm.plugins.twitter", "Twitter"),
         ]
 
     CONNECTOR_PLUGINS = dict()

@@ -30,6 +30,7 @@ urlpatterns = [
     path('discourse/', include('corm.plugins.discourse')),
     path('discord/', include('corm.plugins.discord')),
     path('stackexchange/', include('corm.plugins.stackexchange')),
+    path('reddit/', include('corm.plugins.reddit')),
     path('rss/', include('corm.plugins.rss')),
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('billing/', include('billing.urls')),
