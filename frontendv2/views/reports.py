@@ -19,6 +19,7 @@ from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView
 from frontendv2.models import ManagerInvite
+from frontendv2.views.charts import PieChart
 
 class Reports(SavannahView):
     def __init__(self, request, community_id):
@@ -39,8 +40,10 @@ def view_report(request, community_id, report_id):
     report = get_object_or_404(Report, id=report_id)
     if report.report_type == Report.GROWTH:
         return GrowthReport.as_view(request, community_id, report)
+    elif report.report_type == Report.ANNUAL:
+        return AnnualReport.as_view(request, community_id, report)
     else:
-        message.error(request, "Unknown report type: %s" % self.report.report_type)
+        messages.error(request, "Unknown report type: %s" % self.report.report_type)
         return redirect('reports', community_id=community_id)
 
 class GrowthReport(SavannahView):
@@ -149,3 +152,83 @@ class GrowthReport(SavannahView):
         if request.method == "POST":
             pass
         return render(request, "savannahv2/report_growth.html", view.context)
+
+class AnnualReport(SavannahView):
+    def __init__(self, request, community_id, report):
+        super().__init__(request, community_id)
+        self.active_tab = "reports"
+        self.report = report
+        self.data = json.loads(self.report.data)
+        self.charts = set()
+
+    @property
+    def year_name(self):
+        return self.data['start'].year
+        
+    @property
+    def new_member_count(self):
+        return self.data['counts']['new_members']
+
+    @property
+    def new_contributor_count(self):
+        return self.data['counts']['new_contributors']
+
+    @property
+    def conversation_count(self):
+        return self.data['counts']['conversations']
+
+    @property
+    def contribution_count(self):
+        return self.data['counts']['contributions']
+
+    @property
+    def top_contributors(self):
+        for member in self.data['top_contributors']:
+            yield(member)
+
+    @property
+    def top_supporters(self):
+        for member in self.data['top_supporters']:
+            yield(member)
+
+    @property
+    def members_chart_keys(self):
+        activity = self.data['member_activity']
+        return activity['months']
+
+    @property
+    def members_chart_joined(self):
+        activity = self.data['member_activity']
+        return activity['joined']
+
+    @property
+    def members_chart_active(self):
+        activity = self.data['member_activity']
+        return activity['active']
+
+    @property
+    def conversation_sources_chart(self):
+        chart = PieChart("conversationSources", title="Conversations by Source")
+        for source in self.data['conversation_sources']:
+                chart.add(ConnectionManager.display_name(source['connector']), source['conversation_count'])
+        self.charts.add(chart)
+        return chart
+
+    @property
+    def contribution_types_chart(self):
+        chart = PieChart("conversationSources", title="Contributions by Type")
+        for t in self.data['contribution_types']:
+                chart.add("%s in %s" % (t['name'], t['source_name']), t['contribution_count'])
+        self.charts.add(chart)
+        return chart
+
+    @property
+    def contribution_types(self):
+        return self.data['contribution_types']
+
+    @login_required
+    def as_view(request, community_id, report):
+        view = AnnualReport(request, community_id, report)
+        if request.method == "POST":
+            pass
+        return render(request, "savannahv2/report_annual.html", view.context)

@@ -10,7 +10,7 @@ from django.db.models.functions import Trunc
 from django.core.serializers.json import DjangoJSONEncoder
 
 
-from corm.models import Community, Member, Conversation, Tag, Contact, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag
+from corm.models import *
 from corm.models import Report, pluralize
 from notifications.signals import notify
 
@@ -30,6 +30,7 @@ class Command(BaseCommand):
 
         for community in Community.objects.all():
             self.make_growth_report(community)
+            self.make_annual_report(community)
 
     def make_growth_report(self, community):
         month = datetime.datetime(self.tstamp.year, self.tstamp.month, 1, 0, 0, 0) - datetime.timedelta(days=1)
@@ -40,6 +41,26 @@ class Command(BaseCommand):
         data = json.dumps(reporter.data(), cls=DjangoJSONEncoder)
 
         report, created = Report.objects.update_or_create(community=community, report_type=Report.GROWTH, generated=end, defaults={'title':"Monthly Report for %s %s" % (calendar.month_name[start.month], start.year), 'data':data})
+        if created:
+            recipients = community.managers or community.owner
+            notify.send(report, 
+                recipient=recipients, 
+                verb="is ready in ",
+                target=community,
+                level='success',
+                icon_name="fas fa-file-invoice",
+                link=reverse('report_view', kwargs={'community_id': community.id, 'report_id':report.id})
+            )
+
+    def make_annual_report(self, community):
+        year = self.tstamp.year - 1
+        start = datetime.datetime(year, 1, 1, 0, 0, 0)
+        end = datetime.datetime(year, 12, 31, 23, 59, 59)
+
+        reporter = AnnualReporter(community, start, end)
+        data = json.dumps(reporter.data(), cls=DjangoJSONEncoder)
+
+        report, created = Report.objects.update_or_create(community=community, report_type=Report.ANNUAL, generated=end + datetime.timedelta(days=1), defaults={'title':"Annual Report for %s" % start.year, 'data':data})
         if created:
             recipients = community.managers or community.owner
             notify.send(report, 
@@ -211,6 +232,100 @@ class GrowthReporter(Reporter):
         months = self.timespan_chart_keys(sorted(months))
         return {
             'days': months, 
+            'joined': [joined.get(month, 0) for month in months], 
+            'active': [active.get(month, 0) for month in months], 
+        }
+
+class AnnualReporter(Reporter):
+
+    @property
+    def time_range(self):
+        return "year"
+
+    def data(self):
+        return {
+            'start': self.start,
+            'end': self.end,
+            'member_activity': self.get_member_activity(),
+            'counts': self.get_counts(),
+            'conversation_sources': self.get_conversation_sources(),
+            'contribution_types': self.get_contribution_types(),
+            'top_supporters': self.get_top_supporters(),
+            'top_contributors': self.get_top_contributors(),
+        }
+
+    def get_counts(self):
+        counts = dict()
+        conversations = Conversation.objects.filter(channel__source__community=self.community)
+        conversations = conversations.filter(timestamp__gte=self.start, timestamp__lte=self.end)
+        counts['conversations'] = conversations.count()
+        contributions = Contribution.objects.filter(community=self.community)
+        contributions = contributions.filter(timestamp__gte=self.start, timestamp__lte=self.end)
+        counts['contributions'] = contributions.count()
+
+        members = Member.objects.filter(community=self.community)
+        counts['new_members'] = members.filter(first_seen__gte=self.start, first_seen__lte=self.end).count()
+        members = members.annotate(first_contrib=Min('contribution__timestamp'))
+        counts['new_contributors'] =  members.filter(first_contrib__gte=self.start, first_contrib__lte=self.end).count()
+        return counts
+
+    def get_conversation_sources(self):
+        sources = Source.objects.filter(community=self.community)
+        convo_filter = Q(channel__conversation__timestamp__gte=self.start, channel__conversation__timestamp__lte=self.end)
+
+        sources = sources.annotate(conversation_count=Count('channel__conversation', filter=convo_filter)).filter(conversation_count__gt=0)
+
+        return list(sources.values('name', 'connector', 'icon_name', 'conversation_count').order_by('-conversation_count'))
+
+    def get_contribution_types(self):
+        types = ContributionType.objects.filter(source__community=self.community).select_related('source')
+        contrib_filter = Q(contribution__timestamp__gte=self.start, contribution__timestamp__lte=self.end)
+        types = types.annotate(contribution_count=Count('contribution'), filter=contrib_filter).filter(contribution_count__gt=0)
+        return list(types.values('name', 'source__name', 'source__connector', 'source__icon_name', 'contribution_count').order_by('-contribution_count'))
+
+    def get_top_contributors(self):
+        members = Member.objects.filter(community=self.community)
+        contrib_filter = Q(contribution__timestamp__gte=self.start, contribution__timestamp__lte=self.end)
+
+        members = members.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0).order_by('-contribution_count')[:20]
+        return [{'member_id': member.id, 'member_name': member.name, 'contributions': member.contribution_count} for member in members]
+
+
+    def get_top_supporters(self):
+        activity_counts = dict()
+        members = Member.objects.filter(community=self.community)
+        convo_filter = Q(speaker_in__timestamp__gte=self.start, speaker_in__timestamp__lte=self.end)
+
+        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).filter(conversation_count__gt=0).order_by('-conversation_count')[:20]
+        return [{'member_id': member.id, 'member_name': member.name, 'conversations': member.conversation_count} for member in members]
+
+    def get_member_activity(self):
+        months = list()
+        joined = dict()
+        active = dict()
+        total = 0
+        members = Member.objects.filter(community=self.community)
+
+        seen = members.filter(first_seen__gte=self.start, first_seen__lte=self.end).annotate(month=Trunc('first_seen', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+        for m in seen:
+            total += 1
+            month = self.trunc_date(m['month'])
+
+            if month not in months:
+                months.append(month)
+            joined[month] = m['member_count']
+
+        spoke = members.filter(speaker_in__timestamp__gte=self.start, speaker_in__timestamp__lte=self.end).annotate(month=Trunc('speaker_in__timestamp', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+        for a in spoke:
+            if a['month'] is not None:
+                month = self.trunc_date(a['month'])
+
+                if month not in months:
+                    months.append(month)
+                active[month] = a['member_count']
+        months = self.timespan_chart_keys(sorted(months))
+        return {
+            'months': months, 
             'joined': [joined.get(month, 0) for month in months], 
             'active': [active.get(month, 0) for month in months], 
         }

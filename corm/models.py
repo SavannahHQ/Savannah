@@ -627,12 +627,10 @@ class SuggestConversationAsContribution(Suggestion):
 
 class Report(models.Model):
     GROWTH = 0
-    IMPACT = 1
-    MEMBER = 2
+    ANNUAL = 1
     TYPES = {
         GROWTH: 'Growth',
-        IMPACT: 'Impact',
-        MEMBER: 'Member',
+        ANNUAL: 'Annual',
     }
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
