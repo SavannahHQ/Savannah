@@ -130,7 +130,7 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Top Supporters</h6>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 table-responsive">
                 <table class="table">
                 <thead>
                   <tr>
@@ -162,12 +162,12 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Top Contributors</h6>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 table-responsive">
                 <table class="table">
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
-                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributions</span></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,7 +193,7 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Contribution Types</h6>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 table-responsive">
                 <table class="table">
                 <thead>
                   <tr>
@@ -205,7 +205,7 @@
                 <tbody>
                 {% for type in view.contribution_types %}
                 <tr>
-                  <td class="text-nowrap"><i class="{{type.source__icon_name}}"></i> {{type.source__name}}</td>
+                  <td><i class="{{type.source__icon_name}}"></i>&nbsp;{{type.source__name}}</td>
                   <td>{{type.name}}</td>
                   <td>{{type.contribution_count}}</td>
                 </tr>
