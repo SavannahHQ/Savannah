@@ -152,7 +152,7 @@ class Member(TaggableModel):
     email_address = models.EmailField(null=True, blank=True)
     mailing_address = models.CharField(max_length=256, null=True, blank=True)
     phone_number = models.CharField(max_length=32, null=True, blank=True)
-    avatar_url = models.URLField(null=True, blank=True)
+    avatar_url = models.URLField(max_length=512, null=True, blank=True)
     role = models.CharField(max_length=32, choices=MEMBER_ROLE, default=COMMUNITY)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
