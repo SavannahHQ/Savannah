@@ -8,7 +8,7 @@ from corm.models import Community, Member, Conversation, Gift, GiftType
 from corm.models import pluralize
 from notifications.signals import notify
 
-CONTEXT_TIMESPAN = datetime.timedelta(days=30)
+CONTEXT_TIMESPAN = datetime.timedelta(days=60)
 
 class Command(BaseCommand):
     help = 'Calculate the impact of a gift on conversations'
