@@ -19,7 +19,9 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Contributions</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Contributions
+                  {% if view.tag %}{% include 'savannahv2/tag_list.html' with tag=view.tag %}{% endif %}
+                  </h6>
                   <a class="text-gray-500" href="{% url 'conversation_as_contribution_suggestions' view.community.id %}"><i class="far fa-lightbulb"> </i> Suggestions</a>
                 </div>
                 <!-- Card Body -->
@@ -288,14 +290,14 @@ var myLineChart = new Chart(ctx, {
     datasets: [{
       label: "Contributions",
       lineTension: 0.3,
-      backgroundColor: "#{{colors.CONTRIBUTION}}22",
-      borderColor: "#{{colors.CONTRIBUTION}}",
+      backgroundColor: "#{{view.tag.color|default:colors.CONTRIBUTION}}22",
+      borderColor: "#{{view.tag.color|default:colors.CONTRIBUTION}}",
       pointRadius: 3,
-      pointBackgroundColor: "#{{colors.CONTRIBUTION}}",
-      pointBorderColor: "#{{colors.CONTRIBUTION}}",
+      pointBackgroundColor: "#{{view.tag.color|default:colors.CONTRIBUTION}}",
+      pointBorderColor: "#{{view.tag.color|default:colors.CONTRIBUTION}}",
       pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#{{colors.CONTRIBUTION}}",
-      pointHoverBorderColor: "#{{colors.CONTRIBUTION}}",
+      pointHoverBackgroundColor: "#{{view.tag.color|default:colors.CONTRIBUTION}}",
+      pointHoverBorderColor: "#{{view.tag.color|default:colors.CONTRIBUTION}}",
       pointHitRadius: 10,
       pointBorderWidth: 2,
       data: {{view.contributions_chart_counts|safe}},
