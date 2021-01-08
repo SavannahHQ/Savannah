@@ -388,6 +388,9 @@ class CommunityCreationEmail(EmailMessage):
         self.text_body = "emails/new_community_created.txt"
         self.html_body = "emails/new_community_created.html"
 
+def new_community(request):
+    return redirect('billing:signup')
+    
 # @login_required
 # def new_community(request):
 #     community = Community(owner=request.user)
