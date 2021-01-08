@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static %}
+{% load static simple_math %}
 
 {% block page_title %} | {{view.member.name}}{% endblock %}
 
@@ -184,6 +184,7 @@
                   <tr>
                     <th scope="col">Type</th>
                     <th scope="col">Sent</th>
+                    <th scope="col">Impact</th>
                     <th scope="col">Received</th>
                   </tr>
                 </thead>
@@ -192,6 +193,7 @@
                 <tr>
                   <td class="text-nowrap"><a href="{% url 'gift_edit' view.member.id gift.id %}">{{gift.gift_type.name}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
                   <td>{{gift.sent_date}}</td>
+                  <td>{% if gift.impact == 0 %}--{% else %}{% if gift.impact > 0 %}<span class="text-success"><i class="fas fa-caret-up"></i> {% else %}<span class="text-danger"><i class="fas fa-caret-down"></i> {% endif %}{{gift.impact|abs|floatformat:-2}}%{% endif %}</td>
                   <td>{{gift.received_date|default:''}}</td>
                 </tr>
                 {% endfor %}

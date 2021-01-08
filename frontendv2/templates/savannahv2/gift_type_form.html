@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static %}
+{% load static simple_math %}
 {% load crispy_forms_tags %}
 
 {% block page_title %} | {% if view.gift.id %}Edit {{view.gift.name}}{% else %}Add Gift{% endif %}{% endblock %}
@@ -54,6 +54,7 @@
                   <tr>
                     <th scope="col" width="25%">Name</th>
                     <th scope="col" width="25%">Sent</th>
+                    <th scope="col" width="25%">Impact</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -61,6 +62,7 @@
                 <tr>
                   <td><a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
                   <td>{{gift.sent_date}}</td>
+                  <td>{% if gift.impact == 0 %}--{% else %}{% if gift.impact > 0 %}<span class="text-success"><i class="fas fa-caret-up"></i> {% else %}<span class="text-danger"><i class="fas fa-caret-down"></i> {% endif %}{{gift.impact|abs|floatformat:-2}}%{% endif %}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

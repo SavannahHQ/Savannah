@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static %}
+{% load static simple_math %}
 {% load humanize %}
 
 {% block page_title %} | {{view.community.name}} Gifts{% endblock %}
@@ -25,6 +25,7 @@
                   <tr>
                     <th scope="col" width="25%">Name</th>
                     <th scope="col" width="25%">Sent</th>
+                    <th scope="col" width="25%">Relative Impact</th>
                     <th scope="col" width="50%">Contents</th>
                   </tr>
                 </thead>
@@ -33,6 +34,7 @@
                 <tr>
                   <td><a href="{% url 'gift_type_edit' view.community.id gift.id %}">{{gift.name}}</a></td>
                   <td>{{gift.sent}}</td>
+                  <td>{% if gift.impact == 0 %}--{% else %}{% if gift.impact > 0 %}<span class="text-success"><i class="fas fa-caret-up"></i> {% else %}<span class="text-danger"><i class="fas fa-caret-down"></i> {% endif %}{{gift.impact|abs|floatformat:-2}}%{% endif %}</td>
                   <td>{{gift.contents}}</td>
                 </tr>
                 {% endfor %}

@@ -251,6 +251,7 @@ class GiftType(models.Model):
     name = models.CharField(max_length=256)
     contents = models.TextField()
     discontinued = models.DateTimeField(null=True, blank=True)
+    impact = models.IntegerField(default=0, null=False, blank=False)
 
     def __str__(self):
         if self.discontinued is not None:
@@ -268,6 +269,7 @@ class Gift(models.Model):
     sent_date = models.DateTimeField()
     received_date = models.DateTimeField(null=True, blank=True)
     tracking = models.CharField(max_length=512, null=True, blank=True)
+    impact = models.IntegerField(default=0, null=False, blank=False)
 
     def __str__(self):
         if self.gift_type is not None:
