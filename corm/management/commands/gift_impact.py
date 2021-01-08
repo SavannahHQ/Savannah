@@ -41,13 +41,6 @@ class Command(BaseCommand):
                 continue
             range_start = sent - CONTEXT_TIMESPAN
             range_end = sent + CONTEXT_TIMESPAN
-            baseline_pre = contributions.filter(speaker__role=Member.COMMUNITY, timestamp__lt=sent, timestamp__gte=range_start).count()
-            if not baseline_pre:
-                baseline_pre = 1
-            baseline_post = contributions.filter(speaker__role=Member.COMMUNITY, timestamp__gt=sent, timestamp__lte=range_end).count()
-            baseline_rate = baseline_post / baseline_pre
-            if self.verbosity >= 2:
-                print("Baseline for %s is %s" % (gift, baseline_rate))
 
             member_pre = contributions.filter(speaker=gift.member, timestamp__lt=sent, timestamp__gte=range_start).count()
             member_post = contributions.filter(speaker=gift.member, timestamp__gt=sent, timestamp__lte=range_end).count()
@@ -61,10 +54,10 @@ class Command(BaseCommand):
 
             gift.impact = int(100 * member_rate)
             gift.save()
-            gift_impact = member_rate - baseline_rate
+
             if gift.gift_type not in gift_impacts:
                 gift_impacts[gift.gift_type] = []
-            gift_impacts[gift.gift_type].append(gift_impact)
+            gift_impacts[gift.gift_type].append(member_rate)
 
         if self.verbosity >= 2 and len(gift_impacts) > 0:
             print("-------------------------------------------")
