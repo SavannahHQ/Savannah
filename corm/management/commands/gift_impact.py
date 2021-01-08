@@ -46,11 +46,11 @@ class Command(BaseCommand):
             member_post = contributions.filter(speaker=gift.member, timestamp__gt=sent, timestamp__lte=range_end).count()
             if not member_pre:
                 member_pre = 1
-            member_rate = member_post / member_pre
+            member_rate = (member_post / member_pre) - 1
             if self.verbosity >= 2:
                 print("Member rate for %s is %s" % (gift.member, member_rate))
             if self.verbosity >= 3:
-                print("Member pre  %s: %s\nMember post %s: %s" % (range_start, member_pre, range_end, member_post))
+                print("Member pre  %s - %s: %s\nMember post %s - %s: %s" % (range_start.date(), sent.date(), member_pre, sent.date(), range_end.date(), member_post))
 
             gift.impact = int(100 * member_rate)
             gift.save()
