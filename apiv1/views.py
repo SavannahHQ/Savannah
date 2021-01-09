@@ -15,7 +15,7 @@ from rest_framework import status
 from corm.models import Source, Channel, Member, Contact, Conversation, Contribution
 from frontendv2.views import SavannahView
 
-from .serializers import IdentitySerializer, ConversationSerializer, ContributionSerializer
+from .serializers import SourceSerializer, IdentitySerializer, ConversationSerializer, ContributionSerializer
 from .icons import brand_icons
 
 # Create your views here.
@@ -102,6 +102,15 @@ class SavannahIntegrationView(APIView):
     authentication_classes = [SourceTokenAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+
+class SourceInfo(SavannahIntegrationView):
+    """
+    Returns information about the Source for this API token
+    """
+
+    def get(self, request, format=None):
+        serializer = SourceSerializer(request.source, many=False)
+        return Response(serializer.data)
 
 class IdentityList(SavannahIntegrationView):
     """

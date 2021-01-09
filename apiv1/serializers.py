@@ -13,6 +13,14 @@ def update_channel(channel):
     channel.save()
     update_source(channel.source)
 
+class SourceSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=256, required=False, allow_null=True)
+    icon_name = serializers.CharField(max_length=256, required=False, allow_null=True)
+    first_import = serializers.DateTimeField()
+    last_import = serializers.DateTimeField()
+    enabled = serializers.BooleanField()
+
+
 class ImportedModelRelatedField(serializers.Field):
     def __init__(self, model, source_from=None, related_field=None, many=False, *args, **kwargs):
         self.model = model

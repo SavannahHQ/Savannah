@@ -19,6 +19,7 @@ from django.urls import path
 from apiv1 import views
 
 urlpatterns = [
+    path('', views.SourceInfo.as_view()),
     path('add/', views.SourceAdd.as_view, name='integration_add'),
     path('identity/', views.IdentityList.as_view()),
     path('identity/<str:origin_id>/', views.IdentityDetail.as_view()),
