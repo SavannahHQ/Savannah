@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 from rest_framework import serializers
 
 from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType
@@ -13,12 +14,21 @@ def update_channel(channel):
     channel.save()
     update_source(channel.source)
 
+def django_field_value(instance, field_name):
+    print("Looking up %s in %s" % (field_name, instance))
+    field_stack = field_name.split('__')
+    for field_name in field_stack[:-1]:
+        instance = getattr(instance, field_name)
+    print("Returning %s from %s" % (field_stack[-1], instance))
+    return getattr(instance, field_stack[-1])
+
 class SourceSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False, allow_null=True)
     icon_name = serializers.CharField(max_length=256, required=False, allow_null=True)
     first_import = serializers.DateTimeField()
     last_import = serializers.DateTimeField()
     enabled = serializers.BooleanField()
+
 
 
 class ImportedModelRelatedField(serializers.Field):
@@ -58,6 +68,29 @@ class ImportedModelRelatedField(serializers.Field):
     def to_internal_value(self, data):
         return data
 
+class ZapierIDField(serializers.Field):
+    def __init__(self, id_field='origin_id', tstamp_field='timestamp', many=False, *args, **kwargs):
+        self.id_field = id_field
+        self.tstamp_field = tstamp_field
+        self.many = many
+        super().__init__(*args, **kwargs)
+
+    def get_attribute(self, instance):
+        # We pass the object instance onto `to_representation`,
+        # not just the field attribute.
+        id_value = django_field_value(instance, self.id_field)
+        tstamp_value = django_field_value(instance, self.tstamp_field)
+        hash_value = hashlib.md5()
+        hash_value.update(str(id_value).encode('utf-8'))
+        hash_value.update(str(tstamp_value).encode('utf-8'))
+        return hash_value.hexdigest()
+
+    def to_representation(self, value):
+        return value
+
+    def to_internal_value(self, data):
+        return data
+
 class IdentitySerializer(serializers.Serializer):
     origin_id = serializers.CharField(max_length=256)
     username = serializers.CharField(source='detail', max_length=256)
@@ -77,6 +110,14 @@ class IdentitySerializer(serializers.Serializer):
 
         update_source(source)
         return Contact.objects.get(source=source, member=member)
+
+class ZapierIdentitySerializer(serializers.Serializer):
+    id = ZapierIDField(id_field='origin_id', tstamp_field='member__first_seen')
+    origin_id = serializers.CharField(max_length=256)
+    username = serializers.CharField(source='detail', max_length=256)
+    name = serializers.CharField(max_length=256, required=False, allow_null=True)
+    email = serializers.EmailField(source='email_address', required=False, allow_null=True)
+    avatar = serializers.URLField(source='avatar_url', required=False, allow_null=True)
 
 
 def get_or_create_member(source, origin_id):

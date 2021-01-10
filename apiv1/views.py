@@ -15,7 +15,7 @@ from rest_framework import status
 from corm.models import Source, Channel, Member, Contact, Conversation, Contribution
 from frontendv2.views import SavannahView
 
-from .serializers import SourceSerializer, IdentitySerializer, ConversationSerializer, ContributionSerializer
+from .serializers import SourceSerializer, IdentitySerializer, ConversationSerializer, ContributionSerializer, ZapierIdentitySerializer
 from .icons import brand_icons
 
 # Create your views here.
@@ -128,6 +128,17 @@ class IdentityList(SavannahIntegrationView):
             serializer.save(source=request.source)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ZapierIdentityList(SavannahIntegrationView):
+    """
+    List all identities with zapier id field
+    """
+
+    def get(self, request, format=None):
+        identities = Contact.objects.filter(source=request.source).select_related('member').order_by('-member__last_seen')
+        serializer = ZapierIdentitySerializer(identities, many=True)
+        return Response(serializer.data)
+
 
 class IdentityDetail(SavannahIntegrationView):
     """
