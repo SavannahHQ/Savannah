@@ -1,9 +1,11 @@
 import datetime
 import hashlib
+from collections import OrderedDict
 from rest_framework import serializers
 
-from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType
+from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType, Tag
 from corm.plugins import PluginImporter
+from django.db import models
 
 def update_source(source):
     source.last_import = datetime.datetime.utcnow()
@@ -30,6 +32,26 @@ class SourceSerializer(serializers.Serializer):
     enabled = serializers.BooleanField()
 
 
+class TagsField(serializers.Field):
+    def __init__(self, through=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.through = through
+
+    def get_attribute(self, instance):
+        # We pass the object instance onto `to_representation`,
+        # not just the field attribute.
+        if isinstance(instance, OrderedDict):
+            return instance.get(self.source)
+
+        if self.through and hasattr(instance, self.through):
+            instance = getattr(instance, self.through)
+        return [tag.name for tag in getattr(instance, self.source).all()]
+
+    def to_representation(self, value):
+        return value
+
+    def to_internal_value(self, data):
+        return data
 
 class ImportedModelRelatedField(serializers.Field):
     def __init__(self, model, source_from=None, related_field=None, many=False, *args, **kwargs):
@@ -44,7 +66,10 @@ class ImportedModelRelatedField(serializers.Field):
         # We pass the object instance onto `to_representation`,
         # not just the field attribute.
         if self.source_from:
-            self.corm_source = getattr(instance, self.source_from).source
+            if self.source_from == 'self':
+                self.corm_source = instance.source
+            else:
+                self.corm_source = getattr(instance, self.source_from).source
         else:
             self.corm_source = getattr(instance, self.source).source
         return getattr(instance, self.source)
@@ -97,6 +122,7 @@ class IdentitySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False, allow_null=True)
     email = serializers.EmailField(source='email_address', required=False, allow_null=True)
     avatar = serializers.URLField(source='avatar_url', required=False, allow_null=True)
+    tags = TagsField(through='member', required=False)
 
     def save(self, source):
         importer = PluginImporter(source)
@@ -107,6 +133,12 @@ class IdentitySerializer(serializers.Serializer):
             avatar_url=self.validated_data.get('avatar_url'), 
             name=self.validated_data.get('name', self.validated_data.get('detail'))
         )
+
+        for tag_name in self.validated_data.get('tags', []):
+            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={
+                'color': 'E5E6E8'
+            })
+            member.tags.add(tag)
 
         update_source(source)
         return Contact.objects.get(source=source, member=member)
@@ -157,7 +189,8 @@ class ConversationSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField()
     content = serializers.CharField(allow_null=True)
     location = serializers.URLField(required=False, allow_null=True)
-    participants = ImportedModelRelatedField(model=Contact, related_field='member', source_from='channel', many=True)
+    participants = ImportedModelRelatedField(model=Contact, related_field='member', source_from='channel', many=True, required=False)
+    tags = TagsField(required=False)
 
     def save(self, source):
         # Get or create speaker Member and Contact
@@ -184,7 +217,7 @@ class ConversationSerializer(serializers.Serializer):
         )
 
         participants = set()
-        for participant_origin_id in self.validated_data.get('participants'):
+        for participant_origin_id in self.validated_data.get('participants', []):
             participant = importer.make_member(
                 origin_id=participant_origin_id, 
                 detail=participant_origin_id,
@@ -193,6 +226,12 @@ class ConversationSerializer(serializers.Serializer):
             speaker.add_connection(participant, source, self.validated_data.get('timestamp'))
             participants.add(participant)
         convo.participants.set(participants)
+
+        for tag_name in self.validated_data.get('tags', []):
+            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={
+                'color': 'E5E6E8'
+            })
+            convo.tags.add(tag)
 
         update_channel(channel)
         return convo
