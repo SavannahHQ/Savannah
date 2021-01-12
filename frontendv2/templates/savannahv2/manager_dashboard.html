@@ -106,7 +106,10 @@
                 <tbody>
                 {% for watch in view.member_watches %}
                 <tr>
-                  <td><a href="{% url 'member_profile' watch.member.id %}">{{watch.member}}</a></td>
+                  <td>
+                    <a href="{% url 'member_profile' watch.member.id %}">{{watch.member}}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=watch.member.tags.all %}
+                  </td>
                   <td>{{watch.last_seen|default:''}}</td>
                   <td><i class="{{watch.last_channel.source.icon_name}}"></i>&nbsp;{{watch.last_channel|default:''}}</td>
                 </tr>
