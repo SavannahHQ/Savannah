@@ -11,6 +11,11 @@ from imagekit.processors import ResizeToFill
 
 from corm.connectors import ConnectionManager
 
+class IsNull(models.Func):
+    _output_field = models.BooleanField()
+    arity = 1
+    template = '%(expressions)s IS NULL'
+
 class Icon(ImageSpec):
     processors = [ResizeToFill(32, 32)]
     format = 'PNG'

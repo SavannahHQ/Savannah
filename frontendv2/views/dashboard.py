@@ -28,7 +28,7 @@ class ManagerDashboard(SavannahView):
 
     @property
     def member_watches(self):
-        watches = MemberWatch.objects.filter(manager=self.request.user, member__community=self.community).order_by('-last_seen')
+        watches = MemberWatch.objects.filter(manager=self.request.user, member__community=self.community).order_by(IsNull('last_seen'), '-last_seen')
         watches = watches.select_related('member').prefetch_related('member__tags')
         return watches
 
