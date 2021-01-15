@@ -38,7 +38,7 @@
                 <tr>
                   <td>{{manager.username}}</td>
                   <td>{{manager.first_name}} {{manager.last_name}}</td>
-                  <td>{{manager.email_address}}</td>
+                  <td>{% if manager.email %}<a href="mailto:{{manager.email}}">{{manager.email}}</a>{% endif %}</td>
                   <td>{{manager.last_login}}</td>
                 </tr>
                 {% endfor %}
@@ -69,7 +69,7 @@
                 <tbody>
                 {% for invite in view.invitations %}
                 <tr>
-                  <td>{{invite.email}}</td>
+                  <td><a href="mailto:{{invite.email}}">{{invite.email}}</a></td>
                   <td>{{invite.invited_by}}</td>
                   <td>{{invite.timestamp}}</td>
                   <td>{{invite.expires}}</td>
