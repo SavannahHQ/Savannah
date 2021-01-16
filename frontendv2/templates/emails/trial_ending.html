@@ -1,0 +1,6 @@
+<h3>Your trial period for {{community.name}} is about to end</h3>
+
+<p>Your trial period for {{community.name}} on {{SITE_NAME}} will end on {{trial_end|date}}, after which you will be billed at your regular rate of {{price}} {{currency}}/{{interval}}.</p>
+
+<p><a href="{{SITE_ROOT}}{% url 'billing:manage_account' community.id %}">Manage your billing information</a></p>
+<p><a href="{{SITE_ROOT}}{% url 'dashboard' community.id %}">View your Community</a></p>

@@ -1,0 +1,7 @@
+# Your trial period for {{community.name}} is about to end
+
+Your trial period for {{community.name}} on {{SITE_NAME}} will end on {{trial_end|date}}, after which you will be billed at your regular rate of {{price}} {{currency}}/{{interval}}.
+
+You can change your billing information or cancel your subscription at: {{SITE_ROOT}}{% url 'billing:manage_account' community.id %}
+
+View your Community: {{SITE_ROOT}}{% url 'dashboard' community.id %}

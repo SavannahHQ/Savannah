@@ -7,6 +7,7 @@ from django import forms
 from django.db.models import Q
 
 import json
+import datetime
 
 import stripe, djstripe
 from djstripe import webhooks
@@ -181,6 +182,29 @@ def subscription_canceled(event, **kwargs):
     # Deactive the community this subscription belonged to
     subscription = event.data["object"]
     Management.unsubscribe(subscription['id'])
+
+class TrialEndingEmail(EmailMessage):
+    def __init__(self, community):
+        super(TrialEndingEmail, self).__init__(community.owner, community)
+        self.subject = "Your trial period for %s is about to end" % self.community.name
+        self.category = "trial_ending"
+
+        self.text_body = "emails/trial_ending.txt"
+        self.html_body = "emails/trial_ending.html"
+
+@webhooks.handler("customer.subscription.trial_will_end")
+def send_trial_end_email(event, **kwargs):
+    subscription = event.data["object"]
+    mgmt = Management.objects.get(subscription__id=subscription['id'])
+    community = mgmt.community
+    msg = TrialEndingEmail(community)
+    msg.context.update({
+        "trial_end": datetime.datetime.fromtimestamp(subscription["trial_end"]),
+        "price":   (subscription["plan"]["amount"]/100),
+        "currency": subscription["plan"]["currency"],
+        "interval": subscription["plan"]["interval"],
+    })
+    msg.send(community.owner.email)
 
 
 @login_required
