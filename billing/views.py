@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.conf import settings
 from django.http import JsonResponse
@@ -185,7 +186,8 @@ def subscription_canceled(event, **kwargs):
 
 class TrialEndingEmail(EmailMessage):
     def __init__(self, community):
-        super(TrialEndingEmail, self).__init__(community.owner, community)
+        system_user = get_object_or_404(User, username=settings.SYSTEM_USER)
+        super(TrialEndingEmail, self).__init__(system_user, community)
         self.subject = "Your trial period for %s is about to end" % self.community.name
         self.category = "trial_ending"
 
@@ -206,6 +208,32 @@ def send_trial_end_email(event, **kwargs):
     })
     msg.send(community.owner.email)
 
+class PaymentFailedEmail(EmailMessage):
+    def __init__(self, community):
+        system_user = get_object_or_404(User, username=settings.SYSTEM_USER)
+        super(PaymentFailedEmail, self).__init__(system_user, community)
+        self.subject = "Problems with your Savannah CRM Account"
+        self.category = "billing_error"
+
+        self.text_body = "emails/payment_failed.txt"
+        self.html_body = "emails/payment_failed.html"
+
+@webhooks.handler("invoice.payment_failed")
+def payment_failed(event, **kwargs):
+    invoice = event.data["object"]
+    mgmt = Management.objects.get(subscription__id=invoice['subscription'])
+    community = mgmt.community
+    if invoice["attempt"] >= 3:
+        Management.suspend(invoice['subscription'])
+    msg = PaymentFailedEmail(community)
+    msg.context.update({
+        "invoice_date": datetime.datetime.fromtimestamp(invoice["created"]),
+        "next_attempt": datetime.datetime.fromtimestamp(invoice["next_payment_attempt"]),
+        "price":   (invoice["amount_due"]/100),
+        "invoice_url": invoice["hosted_invoice_url"],
+
+    })
+    msg.send(community.owner.email)
 
 @login_required
 def manage_account(request, community_id):
