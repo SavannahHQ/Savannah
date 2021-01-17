@@ -2,7 +2,7 @@
 
 We were unable to process your subscription payment of {{price}} for {{community.name}} on {{SITE_NAME}}.
 
-You can view and pay your invoice at {{invoice_url}}.
+You can view and pay your invoice at {{invoice_url}}
 
 Otherwise will automatically attempt to reprocess this payment on {{next_attempt|date}}.
 
