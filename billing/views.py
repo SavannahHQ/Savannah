@@ -223,7 +223,7 @@ def payment_failed(event, **kwargs):
     invoice = event.data["object"]
     mgmt = Management.objects.get(subscription__id=invoice['subscription'])
     community = mgmt.community
-    if invoice["attempt"] >= 3:
+    if invoice["attempt_count"] >= 3:
         Management.suspend(invoice['subscription'])
     msg = PaymentFailedEmail(community)
     msg.context.update({
