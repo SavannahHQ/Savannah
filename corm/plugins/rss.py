@@ -128,6 +128,13 @@ class RssImporter(PluginImporter):
         self.TIMESTAMP_FORMAT = '%a, %d %b %Y %H:%M:%S %z'
         self.BLOG_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Blog Post")
 
+    def strptime(self, dtimestamp):
+        try:
+            int(dtimestamp[-4:])
+            return datetime.datetime.strptime(dtimestamp, self.TIMESTAMP_FORMAT)
+        except:
+            return datetime.datetime.strptime(dtimestamp, '%a, %d %b %Y %H:%M:%S %Z')
+
     def get_channels(self):
         channels = self.source.channel_set.filter(origin_id__isnull=False).order_by('last_import')
         return channels
