@@ -121,7 +121,7 @@ class PluginImporter:
 
         if speaker and tstamp is not None:
             for watch in MemberWatch.objects.filter(member=member, start__lte=tstamp):
-                if tstamp > watch.last_seen:
+                if watch.last_seen is None or tstamp > watch.last_seen:
                     watch.last_seen = tstamp
                     watch.last_channel = channel
                     watch.save()

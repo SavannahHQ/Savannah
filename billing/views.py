@@ -212,7 +212,7 @@ class PaymentFailedEmail(EmailMessage):
     def __init__(self, community):
         system_user = get_object_or_404(User, username=settings.SYSTEM_USER)
         super(PaymentFailedEmail, self).__init__(system_user, community)
-        self.subject = "Problems with your Savannah CRM Account"
+        self.subject = "Problems with your Savannah CRM account"
         self.category = "billing_error"
 
         self.text_body = "emails/payment_failed.txt"
