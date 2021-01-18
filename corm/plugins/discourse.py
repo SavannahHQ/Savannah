@@ -4,6 +4,7 @@ from django.contrib import messages
 from django import forms
 from django.shortcuts import redirect, get_object_or_404, reverse, render
 from django.urls import path
+from django.contrib.auth.decorators import login_required
 
 from corm.plugins import BasePlugin, PluginImporter
 from corm.models import Community, Source, Contribution, ContributionType
@@ -36,6 +37,7 @@ class SourceAdd(SavannahView):
     def _add_sources_message(self):
         pass
 
+    @login_required
     def as_view(request):
         view = SourceAdd(request, community_id=request.session['community'])
         new_source = Source(community=view.community, connector="corm.plugins.discourse", icon_name="fab fa-discourse")
