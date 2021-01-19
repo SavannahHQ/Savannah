@@ -22,7 +22,12 @@ class Sources(SavannahView):
         return Source.objects.filter(community=self.community).annotate(channel_count=Count('channel', distinct=True), member_count=Count('contact', distinct=True))
 
     def _add_sources_message(self):
-        pass
+        if self.request.method == "GET":
+            if self.community.source_set.all().count() == 0:
+                messages.info(self.request, "Add a source for your community activity using the <div class=\"btn btn-success btn-sm\"><i class=\"fas fa-plus\"></i> Add</div> button below.")
+            elif self.community.status == Community.SETUP:
+                messages.warning(self.request, "Your activity will begin importing once you finish your <a class=\"\" href=\"%s\">community setup</a>." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+       
 
     @login_required
     def as_view(request, community_id):

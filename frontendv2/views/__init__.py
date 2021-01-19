@@ -170,16 +170,16 @@ class SavannahView:
         self.active_tab = ""
         self.charts = set()
 
-        if self.community.status == Community.SETUP:
-            messages.warning(self.request, "You must finish your <a class=\"\" href=\"%s\">community setup</a> before Savannah will import any activity." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
-        elif self.community.status == Community.ACTIVE:
-            self._add_sources_message()
+        self._add_sources_message()
 
 
     def _add_sources_message(self):
-        if self.request.method == "GET" and self.community.source_set.all().count() == 0:
-            messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-file-import\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
-
+        if self.request.method == "GET":
+            if self.community.source_set.all().count() == 0:
+                messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-file-import\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+            elif self.community.status == Community.SETUP:
+                messages.warning(self.request, "You must finish your <a class=\"\" href=\"%s\">community setup</a> before Savannah will import any activity." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+        
     @property
     def context(self):
         communities = Community.objects.filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')

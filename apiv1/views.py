@@ -44,7 +44,7 @@ class SourceAdd(SavannahView):
             form = APISourceForm(data=request.POST, instance=new_source)
             if form.is_valid():
                 source = form.save()
-                messages.success(request, "Your API Integration source has been created. You can start using it with the authentication token below.")
+                messages.success(request, 'Your API Integration source has been created. You can <a href="https://docs.savannahhq.com/api/" target="savannah_docs">start using it</a> with the authentication token below.')
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
 
         icon_choices = [('fas fa-cogs', 'Custom Integration')]

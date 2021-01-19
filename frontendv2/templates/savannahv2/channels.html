@@ -6,7 +6,7 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'sources' view.community.id %}"><i class="fas fa-arrow-left"></i></a> {{view.source.name}}</h1>
-            {% if view.source.connector == 'corm.plugins.api' %}API Token: {{ view.source.auth_secret }}{% endif %}
+            {% if view.source.connector == 'corm.plugins.api' %}<div>API Token: {{ view.source.auth_secret }} <a href="https://docs.savannahhq.com/api/" target="savannah_docs" title="API Docs"><i class="fa fa-question-circle">&nbsp;</i></a></div>{% endif %}
           </div>
 
           <!-- Content Row -->
