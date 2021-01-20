@@ -130,10 +130,9 @@ class SourceAdmin(admin.ModelAdmin):
 
     def status(self, source):
         if source.import_failed_attempts > 0:
-            return mark_safe('<img src="/static/admin/img/icon-no.svg" title="%s">' % source.import_failed_message)
+            return mark_safe('<img src="%sadmin/img/icon-no.svg" title="%s">' % (settings.STATIC_URL, source.import_failed_message))
         else:
-            return mark_safe('<img src="/static/admin/img/icon-yes.svg" title="ok">')
-
+            return mark_safe('<img src="%sadmin/img/icon-yes.svg" title="ok">' % settings.STATIC_URL)
     def contact_count(self, source):
         return source.contact_set.all().count()
     contact_count.short_description = "Contacts"
@@ -155,9 +154,9 @@ class ChannelAdmin(admin.ModelAdmin):
 
     def status(self, channel):
         if channel.import_failed_attempts > 0:
-            return mark_safe('<img src="/static/admin/img/icon-no.svg" title="%s">' % channel.import_failed_message)
+            return mark_safe('<img src="%sadmin/img/icon-no.svg" title="%s">' % (settings.STATIC_URL, channel.import_failed_message))
         else:
-            return mark_safe('<img src="/static/admin/img/icon-yes.svg" title="ok">')
+            return mark_safe('<img src="%sadmin/img/icon-yes.svg" title="ok">' % settings.STATIC_URL)
 
     def conversation_count(self, channel):
         return channel.conversation_set.all().count()
