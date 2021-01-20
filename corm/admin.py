@@ -36,6 +36,36 @@ def isNotNull(parameter_name, title=None):
     NotNullFilter.parameter_name = parameter_name
     return NotNullFilter
 
+def isNotZero(parameter_name, title=None):
+    if title is None:
+        title = "has %s" % parameter_name
+
+    class NotZeroFilter(admin.SimpleListFilter):
+
+        def lookups(self, request, model_admin):
+            return (
+                ('1', 'True'),
+                ('0', 'False'),
+            )
+
+        def queryset(self, request, queryset):
+            if self.value() == '1':
+                filter_string = self.parameter_name + '__gte'
+                has_positive_value = {
+                    filter_string: 1
+                }
+                return queryset.filter(**has_positive_value)
+            if self.value() == '0':
+                filter_string = self.parameter_name
+                has_zero_value = {
+                    filter_string: 0
+                }
+                return queryset.filter(**has_zero_value)
+
+    NotZeroFilter.title = title
+    NotZeroFilter.parameter_name = parameter_name
+    return NotZeroFilter
+
 # Register your models here.
 
 class UserAuthAdmin(admin.ModelAdmin):
@@ -95,8 +125,14 @@ class TagAdmin(admin.ModelAdmin):
 admin.site.register(Tag, TagAdmin)
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ("name", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "first_import", "last_import", "enabled")
-    list_filter = ("connector", "community", "enabled", "first_import", "last_import")
+    list_display = ("name", "status", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "first_import", "last_import", "enabled")
+    list_filter = (isNotZero("import_failed_attempts", "import failures"), "connector", "community", "enabled", "first_import", "last_import")
+
+    def status(self, source):
+        if source.import_failed_attempts > 0:
+            return mark_safe('<img src="/static/admin/img/icon-no.svg" title="%s">' % source.import_failed_message)
+        else:
+            return mark_safe('<img src="/static/admin/img/icon-yes.svg" title="ok">')
 
     def contact_count(self, source):
         return source.contact_set.all().count()
@@ -113,9 +149,15 @@ class SourceAdmin(admin.ModelAdmin):
 admin.site.register(Source, SourceAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ("name", "source", "conversation_count", "first_import", "last_import")
-    list_filter = ("source__community", "source__connector", "first_import", "last_import")
+    list_display = ("name", "status", "source", "conversation_count", "first_import", "last_import")
+    list_filter = (isNotZero("import_failed_attempts", "import failures"), "source__community", "source__connector", "first_import", "last_import")
     search_fields = ("name",)
+
+    def status(self, channel):
+        if channel.import_failed_attempts > 0:
+            return mark_safe('<img src="/static/admin/img/icon-no.svg" title="%s">' % channel.import_failed_message)
+        else:
+            return mark_safe('<img src="/static/admin/img/icon-yes.svg" title="ok">')
 
     def conversation_count(self, channel):
         return channel.conversation_set.all().count()
