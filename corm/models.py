@@ -295,7 +295,13 @@ class Source(models.Model):
     first_import = models.DateTimeField(null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
     enabled = models.BooleanField(default=True)
+    import_failed_attempts = models.SmallIntegerField(default=0)
+    import_failed_message = models.CharField(max_length=256, null=True, blank=True)
 
+    @property
+    def import_failed(self):
+        return self.import_failed_attempts > 0
+        
     @property
     def activity_set(self):
         return Contribution.objects.filter(contribution_type__source=self)
@@ -323,6 +329,12 @@ class Channel(ImportedDataModel):
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     first_import = models.DateTimeField(null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
+    import_failed_attempts = models.SmallIntegerField(default=0)
+    import_failed_message = models.CharField(max_length=256, null=True, blank=True)
+
+    @property
+    def import_failed(self):
+        return self.import_failed_attempts > 0
 
     @property
     def connector_name(self):

@@ -36,7 +36,10 @@
                 <tbody>
                 {% for channel in view.all_channels %}
                 <tr>
-                  <td>{{ channel.name }}</td>
+                  <td>
+                    {{ channel.name }}
+                    {% if channel.import_failed_attempts > 0 %}<i data-toggle="tooltip" class="fas fa-exclamation-triangle text-danger" title="{{channel.import_failed_message}}">&nbsp;</i>{% endif %}
+                  </td>
                   <td>
                       <span class="tag_form_dropdown dropdown no-arrow">
                         <a class="dropdown-toggle tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

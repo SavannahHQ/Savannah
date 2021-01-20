@@ -77,6 +77,7 @@
                 <tr>
                   <td>
                     <a href="{% url 'channels' view.community.id source.id %}"><i class="{{source.icon_name}}"></i> {{ source.name }}</a>
+                    {% if source.import_failed_attempts > 0 %}<i data-toggle="tooltip" class="fas fa-exclamation-triangle text-danger" title="{{source.import_failed_message}}">&nbsp;</i>{% endif %}
                   </td>
                   <td>{{source.channel_count}}</td>
                   <td>{{source.member_count}}</td>

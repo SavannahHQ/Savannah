@@ -83,6 +83,10 @@ class DiscoursePlugin(BasePlugin):
         importer = DiscourseImporter(source)
         channels = []
         resp = importer.api_call(DISCOURSE_CATEGORIES_URL)
+        if resp.status_code == 403:
+            # Attempt to lookup public categories
+            resp = importer.api_request(source.server+DISCOURSE_CATEGORIES_URL, headers={})
+
         if resp.status_code == 200:
             data = resp.json()
             for category in data.get('category_list').get('categories'):
@@ -253,4 +257,6 @@ class DiscourseImporter(PluginImporter):
 
         else:
             print("%s: %s" % (resp.status_code, resp.content))
+            error = resp.json()
+            raise RuntimeError("%s: %s" % (error["error_type"], ','.join(error["errors"])))
 

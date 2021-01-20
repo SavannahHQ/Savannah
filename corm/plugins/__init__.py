@@ -190,6 +190,7 @@ class PluginImporter:
         return channels
 
     def run(self):
+        failures = list()
         for channel in self.get_channels():
             try:
                 self.import_channel(channel)
@@ -207,8 +208,14 @@ class PluginImporter:
                         link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
                     )
                 channel.last_import = datetime.datetime.utcnow()
+                channel.import_failed_attempts = 0
+                channel.import_failed_message = None
                 channel.save()
             except Exception as e:
+                    channel.import_failed_attempts += 1
+                    channel.import_failed_message = str(e)
+                    channel.save()
+                    failures.append(channel.name)
                     recipients = self.source.community.managers or self.source.community.owner
                     notify.send(channel, 
                         recipient=recipients, 
@@ -224,6 +231,16 @@ class PluginImporter:
         self.source.last_import = datetime.datetime.utcnow()
         if self.source.first_import is None:
             self.source.first_import = datetime.datetime.utcnow()
+        if len(failures) > 0:
+            self.source.import_failed_attempts += 1
+            if len(failures) == 1:
+                self.source.import_failed_message = "Failed to import channel: %s" % failures[0]
+            else:
+                self.source.import_failed_message = "Failed to import %s channels" % len(failures)
+        else:
+            self.source.import_failed_attempts = 0
+            self.source.import_failed_message = None
+
         self.source.save()
 
     def import_channel(self, channel):
