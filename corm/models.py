@@ -159,7 +159,7 @@ class Member(TaggableModel):
     phone_number = models.CharField(max_length=32, null=True, blank=True)
     avatar_url = models.URLField(max_length=512, null=True, blank=True)
     role = models.CharField(max_length=32, choices=MEMBER_ROLE, default=COMMUNITY)
-    company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
+    company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 

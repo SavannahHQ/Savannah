@@ -32,8 +32,6 @@
                   </tr>
                 </thead>
                 <tbody>
-                <form class="inline-form" action="{% url 'companies' view.community.id %}" method="POST">
-                {% csrf_token %}
                 {% for company in view.all_companies %}
                 <tr>
                   <td class="text-nowrap text-gray-800" >
@@ -62,10 +60,14 @@
                       </span>
                   </td>
                   <td>{{company.member_count|intcomma}}</td>
-                  <td class="text-center text-nowrap"><button class="btn btn-sm btn-danger" type="submit" name="delete_company" value="{{company.id}}" title="Delete Company"><i class="fas fa-trash"> </i></button></td>
+                  <td class="text-center text-nowrap">
+                    <form class="inline-form" action="{% url 'companies' view.community.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-danger" type="submit" name="delete_company" value="{{company.id}}" title="Delete Company"><i class="fas fa-trash"> </i></button>
+                    </form>
+                  </td>
                 </tr>
                 {% endfor %}
-                </form>
                 </tbody>
                 </table>
                 </div>

@@ -28,7 +28,7 @@ class Companies(SavannahView):
                 company = get_object_or_404(Company, id=request.POST.get('delete_company'))
                 context = view.context
                 context.update({
-                    'object_type':"Company", 
+                    'object_type':"the Company", 
                     'object_name': company.name, 
                     'object_id': company.id,
                     'warning_msg': "This will remove the Company from all Members",
