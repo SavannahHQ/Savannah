@@ -2,12 +2,12 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block page_title %} | Edit Company {{view.edit_tag.name}}{% endblock %}
+{% block page_title %} | Edit Company {{view.edit_company.name}}{% endblock %}
 
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">{% if view.edit_tag.id %}Edit {{view.edit_tag.name}}{% else %}Add Company{% endif %}</h1>
+            <h1 class="h3 mb-0 text-gray-800">{% if view.edit_company.id %}Edit {{view.edit_company.name}}{% else %}Add Company{% endif %}</h1>
           </div>
 
           <!-- Content Row -->
@@ -26,7 +26,7 @@
                 <div class="card-body">
                 <div class="container-fluid">
 
-                <form class="form" action="{% url 'company_edit' view.edit_tag.id %}" method="POST">
+                <form class="form" action="{% url 'company_edit' view.edit_company.id %}" method="POST">
                 {% csrf_token %}
                 {{ view.form|crispy }}
                 <button class="btn btn-primary" type="submit">Save</button>

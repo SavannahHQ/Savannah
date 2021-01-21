@@ -47,7 +47,32 @@ class Companies(SavannahView):
 class CompanyEditForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = ['name', 'website', 'is_staff']
+        fields = ['name', 'website', 'domains', 'is_staff']
+        
+    domains = forms.CharField(required=False, help_text="Comma-separated list of email domains")
+    def __init__(self, *args, **kwargs):
+        super(CompanyEditForm, self).__init__(*args, **kwargs)
+        self.initial['domains'] = ', '.join([d.domain for d in CompanyDomains.objects.filter(company=self.instance)])
+
+    def save(self, *args, **kwargs):
+        saved = super(CompanyEditForm, self).save(*args, **kwargs)
+        old_domains = dict([(d.domain, d) for d in CompanyDomains.objects.filter(company=self.instance)])
+        new_domains = self.cleaned_data['domains'].split(',')
+        for domain in new_domains:
+            domain = domain.strip()
+            if domain in old_domains:
+                del old_domains[domain]
+                continue
+            else:
+                CompanyDomains.objects.create(company=self.instance, domain=domain)
+
+        for removed in old_domains.values():
+            removed.delete()
+        return saved
+
+    def clean_domains(self):
+        data = self.cleaned_data['domains']
+        return data
 
 class AddCompany(SavannahView):
     def __init__(self, request, community_id):
@@ -93,7 +118,7 @@ class EditCompany(SavannahView):
             edited_company = view.form.save()
             if edited_company.is_staff != is_staff:
                 for member in Member.objects.filter(company=edited_company):
-                    if edited_company.is_staff != is_staff and member.role != MemberConnection.BOT:
+                    if edited_company.is_staff != is_staff and member.role != Member.BOT:
                         if edited_company.is_staff:
                             member.role = Member.STAFF
                         else:
@@ -101,7 +126,7 @@ class EditCompany(SavannahView):
                         member.save()
             return redirect('companies', community_id=view.community.id)
 
-        return render(request, "savannahv2/community_edit.html", view.context)
+        return render(request, "savannahv2/company_edit.html", view.context)
 
 from django.http import JsonResponse
 @login_required
