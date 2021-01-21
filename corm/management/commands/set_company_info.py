@@ -12,7 +12,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-      members = Member.objects.filter(company__isnull=True)
       verbosity = options.get('verbosity')
 
       community_id = options.get('community_id')
@@ -24,8 +23,8 @@ class Command(BaseCommand):
           communities = Community.objects.filter(status=Community.ACTIVE)
 
       for community in communities:
+        members = Member.objects.filter(community=community, company__isnull=True)
         print("Updating info from %s members in %s" % (members.count(), community))
-        members = members.filter(community=community)
         domain_cache = dict([(d.domain, d.company) for d in CompanyDomains.objects.filter(company__community=community)])
 
         for member in members:
