@@ -49,7 +49,7 @@ class CompanyEditForm(forms.ModelForm):
         model = Company
         fields = ['name', 'website', 'domains', 'is_staff']
         
-    domains = forms.CharField(required=False, help_text="Comma-separated list of email domains")
+    domains = forms.CharField(required=False, help_text="Comma-separated list of email domains", label="Email Domains")
     def __init__(self, *args, **kwargs):
         super(CompanyEditForm, self).__init__(*args, **kwargs)
         self.initial['domains'] = ', '.join([d.domain for d in CompanyDomains.objects.filter(company=self.instance)])
