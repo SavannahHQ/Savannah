@@ -21,7 +21,7 @@ class Command(BaseCommand):
       if community_id:
           communities = [Community.objects.get(id=community_id)]
       else:
-          community = Community.objects.filter(status=Community.ACTIVE)
+          communities = Community.objects.filter(status=Community.ACTIVE)
 
       for community in communities:
         print("Updating info from %s members in %s" % (members.count(), community))
