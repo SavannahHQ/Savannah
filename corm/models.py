@@ -740,6 +740,7 @@ class Company(models.Model):
     website = models.URLField(max_length=512, null=True, blank=True)
     icon_url = models.URLField(max_length=512, null=True, blank=True)
     is_staff = models.BooleanField(default=False)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name

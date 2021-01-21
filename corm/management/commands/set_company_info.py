@@ -40,6 +40,12 @@ class Command(BaseCommand):
                     continue
                 company = domain_cache[domain]
                 member.company = company
-                if company.is_staff:
-                    member.role = Member.STAFF
                 member.save()
+
+        # Ensure that all members with a company have their role and tag set
+        for member in Member.objects.filter(community=community, company__isnull=False):
+            if member.company.is_staff:
+                member.role = Member.STAFF
+                member.save()
+            if member.company.tag:
+                member.tags.add(member.company.tag)

@@ -383,7 +383,7 @@ class SourceGroupsInline(admin.TabularInline):
     fk_name = "company"
 
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("name", "community", "members", "is_staff")
+    list_display = ("name", "community", "tag", "members", "is_staff")
     list_filter = ("community", "is_staff")
     inlines = [
         CompanyDomainInline,
@@ -392,7 +392,7 @@ class CompanyAdmin(admin.ModelAdmin):
 
     def members(self, company):
         return Member.objects.filter(company=company).count()
-        
+
 admin.site.register(Company, CompanyAdmin)
 
 # class CompanyDomainAdmin(admin.ModelAdmin):
