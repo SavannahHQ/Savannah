@@ -27,10 +27,11 @@
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col">Member</th>
+                    <th scope="col"><a href="?sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col">Company</th>
                     <th scope="col">Role</th>
-                    <th scope="col">Joined</th>
-                    <th scope="col">Last Seen</th>
+                    <th scope="col"><a href="?sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">Joined&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -40,6 +41,7 @@
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% if member.tag_count %}{% include 'savannahv2/tag_list.html' with tags=member.tags.all %}{% endif %}
                   </td>
+                  <td>{{member.company|default:''}}</td>
                   <td>{{member.get_role_display}}</td>
                   <td>{{member.first_seen}}</td>
                   <td>{{member.last_seen}}</td>

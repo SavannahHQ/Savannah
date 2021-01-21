@@ -144,7 +144,7 @@ class AllMembers(SavannahFilterView):
         self.community = get_object_or_404(Community, id=community_id)
 
         self.sort_by = request.session.get("sort_members", "name")
-        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'first_seen', '-first_seen', 'last_seen', '-last_seen'):
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'company', '-company', 'first_seen', '-first_seen', 'last_seen', '-last_seen'):
             self.sort_by = request.GET.get('sort') 
             request.session['sort_members'] = self.sort_by
 
@@ -163,7 +163,7 @@ class AllMembers(SavannahFilterView):
     def all_members(self):
         members = Member.objects.filter(community=self.community)
         if self.search:
-            members = members.filter(Q(name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search) | Q(note__content__icontains=self.search))
+            members = members.filter(Q(name__icontains=self.search) | Q(company__name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search) | Q(note__content__icontains=self.search))
 
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
