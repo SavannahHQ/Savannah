@@ -432,7 +432,7 @@ def watch_member(request, member_id):
 class MemberEditForm(forms.ModelForm):
     class Meta:
         model = Member
-        fields = ['name', 'role', 'email_address', 'phone_number', 'mailing_address']
+        fields = ['name', 'company', 'role', 'email_address', 'phone_number', 'mailing_address']
         widgets = {
             'mailing_address': forms.Textarea(attrs={'cols': 40, 'rows': 6}),
         }

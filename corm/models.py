@@ -159,6 +159,7 @@ class Member(TaggableModel):
     phone_number = models.CharField(max_length=32, null=True, blank=True)
     avatar_url = models.URLField(max_length=512, null=True, blank=True)
     role = models.CharField(max_length=32, choices=MEMBER_ROLE, default=COMMUNITY)
+    company = models.ForeignKey('Company', on_delete=models.CASCADE, null=True, blank=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
@@ -730,7 +731,36 @@ class ManagerProfile(models.Model):
         local = self.timezone.localize(dt)
         return local.astimezone(pytz.utc)
 
+class Company(models.Model):
+    class Meta:
+        verbose_name_plural = "Companies"
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    name = models.CharField(max_length=256)
+    website = models.URLField(max_length=512, null=True, blank=True)
+    icon_url = models.URLField(max_length=512, null=True, blank=True)
+    is_staff = models.BooleanField(default=False)
 
+    def __str__(self):
+        return self.name
+
+class CompanyDomains(models.Model):
+    class Meta:
+        verbose_name = "Company Domain"
+        verbose_name_plural = "Company Domains"
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    domain = models.CharField(max_length=256, null=True, blank=True, help_text=_('Email domain names'))
+
+    def __str__(self):
+        return self.domain
+        
+class SourceGroup(ImportedDataModel):
+    company = models.ForeignKey(Company, related_name='groups', on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    name = models.CharField(max_length=256)
+
+    def __str__(self):
+        return self.name
+        
 def pluralize(count, singular, plural=None):
     if plural is None:
         plural = singular + "s"

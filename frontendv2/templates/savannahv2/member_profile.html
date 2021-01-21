@@ -39,6 +39,16 @@
                     <div class="mb-2 col-lg-2 font-weight-bold">Active</div>
                     <div class="mb-2 col-lg-10">{{view.member.first_seen.date}} - {{view.member.last_seen.date}}</div>
                   </div>
+                  {% if view.member.company %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Company</div>
+                    {% if view.member.company.website %}
+                    <div class="mb-2 col-lg-10"><a href="{{view.member.company.website}}" target="_blank">{{view.member.company}}</a></div>
+                    {% else %}
+                    <div class="mb-2 col-lg-10">{{view.member.company}}</div>
+                    {% endif %}
+                  </div>
+                  {% endif %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Role</div>
                     <div class="mb-2 col-lg-10">{{view.member.get_role_display}}</div>

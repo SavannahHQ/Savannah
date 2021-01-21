@@ -373,3 +373,30 @@ class ManagersAdmin(admin.ModelAdmin):
     list_filter = ('community', 'last_seen', 'send_notifications')
     raw_id_fields = ('member',)
 admin.site.register(ManagerProfile, ManagersAdmin)
+
+class CompanyDomainInline(admin.TabularInline):
+    model = CompanyDomains
+    fk_name = "company"
+
+class SourceGroupsInline(admin.TabularInline):
+    model = SourceGroup
+    fk_name = "company"
+
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ("name", "community", "is_staff")
+    list_filter = ("community", "is_staff")
+    inlines = [
+        CompanyDomainInline,
+        SourceGroupsInline,
+    ]
+admin.site.register(Company, CompanyAdmin)
+
+# class CompanyDomainAdmin(admin.ModelAdmin):
+#     list_display = ("domain", "company", "community")
+#     list_filter = ("community",)
+# admin.site.register(CompanyDomains, CompanyDomainAdmin)
+
+# class SourceGroupAdmin(admin.ModelAdmin):
+#     list_display = ("name", "community", "source")
+#     list_filter = ("source__connector", "community")
+# admin.site.register(SourceGroup, SourceGroupAdmin)
