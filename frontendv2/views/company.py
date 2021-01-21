@@ -18,7 +18,7 @@ class Companies(SavannahView):
         self.active_tab = "company"
 
     def all_companies(self):
-        return Company.objects.filter(community=self.community).annotate(member_count=Count('member', distinct=True))
+        return Company.objects.filter(community=self.community).annotate(member_count=Count('member', distinct=True)).order_by('name')
 
     @login_required
     def as_view(request, community_id):
