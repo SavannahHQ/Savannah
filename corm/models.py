@@ -733,6 +733,7 @@ class ManagerProfile(models.Model):
 
 class Company(models.Model):
     class Meta:
+        ordering = ('name',)
         verbose_name_plural = "Companies"
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
@@ -745,6 +746,7 @@ class Company(models.Model):
 
 class CompanyDomains(models.Model):
     class Meta:
+        ordering = ('domain',)
         verbose_name = "Company Domain"
         verbose_name_plural = "Company Domains"
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
