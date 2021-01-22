@@ -44,7 +44,7 @@
                       <span class="tag_form_dropdown dropdown no-arrow">
                         <a class="dropdown-toggle tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         {% if channel.tag %}
-                          <span class="tag-pill" style="background-color: #{{channel.tag.color}};"><span style="color: #{{channel.tag.color}};">{{channel.tag.name}}</span></span>
+                          <span class="tag-pill" style="background-color: #{{channel.tag.color}};"><span class="tag-text" style="color: #{{channel.tag.color}}aa;">{{channel.tag.name}}</span></span>
                         {% else %}
                           <i class="fas fa-tag text-gray-500"> </i>
                         {% endif %}
@@ -56,7 +56,7 @@
                           <input type="hidden" name="channel_id" value="{{channel.id}}"/>
                           <div class="dropdown-item" style=""><input id="channel_{{channel.id}}_tag_clear" name="tag_select" value="" class="p-2 tag_select form-check-input" type="radio" {% if not channel.tag %}checked="1"{% endif %}><label class="form-check-label" for="channel_{{channel.id}}_tag_clear">None</label></div>
                           {% for tag in view.community.tag_set.all %}
-                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="channel_{{channel.id}}_tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="radio" {% if tag.id == channel.tag.id %}checked="1"{% endif %}><label class="form-check-label" for="channel_{{channel.id}}_tag_{{tag.id}}">{{tag.name}}</label></div>
+                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="channel_{{channel.id}}_tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="radio" {% if tag.id == channel.tag.id %}checked="1"{% endif %}><label class="form-check-label" for="channel_{{channel.id}}_tag_{{tag.id}}"><span style="color:#{{tag.color}}aa;" class="tag-text">{{tag.name}}</span></label></div>
                           {% endfor %}
                           </form>
                         </div>
@@ -148,7 +148,7 @@ $('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
           if (tag.value == '') {
             tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
           } else {
-            tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
+            tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span class="tag-text" style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
           }
 
         }

@@ -66,7 +66,7 @@
                           <form id="tags_form" action="#" method="POST" class="form">
                           {% csrf_token %}
                           {% for tag in view.community.tag_set.all %}
-                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="checkbox" {% if tag in view.member.tags.all %}checked="1"{% endif %}><label class="form-check-label" for="tag_{{tag.id}}">{{tag.name}}</label></div>
+                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="checkbox" {% if tag in view.member.tags.all %}checked="1"{% endif %}><label class="form-check-label" for="tag_{{tag.id}}"><span style="color:#{{tag.color}}aa;" class="tag-text">{{tag.name}}</span></label></div>
                           {% endfor %}
                           </form>
                         </div>
@@ -405,7 +405,7 @@ $('#tag_form_dropdown').on('hide.bs.dropdown', function () {
         var tag = tags[i];
         if (tag.checked) {
           var tag_name = tag.labels[0].textContent;
-          tags_html += '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
+          tags_html += '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span class="tag-text" style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
 
         }
     }
