@@ -67,7 +67,13 @@
                   <td class="text-center">
                     <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
                     {% csrf_token %}
-                    <button class="btn btn-danger btn-sm" type="submit" name="remove_channel" value="{{channel.id}}" >Remove</button>
+                    {% if channel.enabled %}
+                    <button class="btn btn-secondary btn-sm" type="submit" name="disable_channel" value="{{channel.id}}" title="Disable"><i class="fas fa-ban"> </i></button>
+                    {% else %}
+                    <button class="btn btn-success btn-sm" type="submit" name="enable_channel" value="{{channel.id}}" title="Enable"><i class="fas fa-check"> </i></button>
+                    {% endif %}
+                    &nbsp;
+                    <button class="btn btn-danger btn-sm" type="submit" name="remove_channel" value="{{channel.id}}" title="Remove"><i class="fas fa-trash"> </i></button>
                     </form>
                   </td>
                 </tr>

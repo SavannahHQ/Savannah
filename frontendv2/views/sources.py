@@ -188,7 +188,17 @@ class Channels(SavannahView):
                 channel_origin_id = request.POST.get('track_channel_id')
                 view.track_channel(request, channel_origin_id)
                 return redirect('channels', community_id=community_id, source_id=source_id)
-            elif 'remove_channel' in request.POST:
+            if 'disable_channel' in request.POST:
+                channel = get_object_or_404(Channel, id=request.POST.get('disable_channel'))
+                channel.enabled = False
+                channel.save()
+                return redirect('channels', community_id=community_id, source_id=source_id)
+            if 'enable_channel' in request.POST:
+                channel = get_object_or_404(Channel, id=request.POST.get('enable_channel'))
+                channel.enabled = True
+                channel.save()
+                return redirect('channels', community_id=community_id, source_id=source_id)
+            if 'remove_channel' in request.POST:
                 channel = get_object_or_404(Channel, id=request.POST.get('remove_channel'))
                 context = view.context
                 context.update({'object_type':"Channel", 'object_name': channel.name, 'object_id': channel.id})

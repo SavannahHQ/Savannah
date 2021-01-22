@@ -192,6 +192,8 @@ class PluginImporter:
     def run(self):
         failures = list()
         for channel in self.get_channels():
+            if not channel.enabled:
+                continue
             try:
                 self.import_channel(channel)
                 if self.verbosity > 2:
@@ -214,6 +216,8 @@ class PluginImporter:
             except Exception as e:
                     channel.import_failed_attempts += 1
                     channel.import_failed_message = str(e)
+                    if channel.import_failed_attempts >= settings.MAX_CHANNEL_IMPORT_FAILURES:
+                        channel.enabled = False
                     channel.save()
                     failures.append(channel.name)
                     recipients = self.source.community.managers or self.source.community.owner
@@ -233,6 +237,8 @@ class PluginImporter:
             self.source.first_import = datetime.datetime.utcnow()
         if len(failures) > 0:
             self.source.import_failed_attempts += 1
+            if self.source.import_failed_attempts >= settings.MAX_SOURCE_IMPORT_FAILURES:
+                self.source.enabled = False
             if len(failures) == 1:
                 self.source.import_failed_message = "Failed to import channel: %s" % failures[0]
             else:

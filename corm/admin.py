@@ -125,7 +125,7 @@ class TagAdmin(admin.ModelAdmin):
 admin.site.register(Tag, TagAdmin)
 
 class SourceAdmin(admin.ModelAdmin):
-    list_display = ("name", "status", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "first_import", "last_import", "enabled")
+    list_display = ("name", "enabled", "status", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "first_import", "last_import")
     list_filter = (isNotZero("import_failed_attempts", "import failures"), "connector", "community", "enabled", "first_import", "last_import")
 
     def status(self, source):
@@ -148,8 +148,8 @@ class SourceAdmin(admin.ModelAdmin):
 admin.site.register(Source, SourceAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ("name", "status", "source", "conversation_count", "first_import", "last_import")
-    list_filter = (isNotZero("import_failed_attempts", "import failures"), "source__community", "source__connector", "first_import", "last_import")
+    list_display = ("name", "enabled", "status", "source", "conversation_count", "first_import", "last_import")
+    list_filter = (isNotZero("import_failed_attempts", "import failures"), "source__community", "source__connector", "enabled", "first_import", "last_import")
     search_fields = ("name",)
 
     def status(self, channel):
