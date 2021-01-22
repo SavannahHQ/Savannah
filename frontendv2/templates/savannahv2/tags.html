@@ -36,14 +36,14 @@
                 <form class="inline-form" action="{% url 'tags' view.community.id %}" method="POST">
                 {% csrf_token %}
                 {% for tag in view.all_tags %}
-                <tr style="background-color: #{{tag.color}}aa">
-                  <td class="text-nowrap text-gray-800" >
-                    <a href="{% url 'tag_edit' tag.id %}"><i class="fas fa-hashtag"></i> {{ tag.name }}</a>
+                <tr style="background-color: #{{tag.color}}; color: #{{tag.color}}aa">
+                  <td class="tag-text text-nowrap text-gray-800">
+                    <a href="{% url 'tag_edit' tag.id %}" style="color: #{{tag.color}}aa"><i class="fas fa-hashtag"></i> {{ tag.name }}</a>
                   </td>
-                  <td>{{tag.member_count|intcomma}}</td>
-                  <td>{{tag.channel_count|intcomma}}</td>
-                  <td>{{tag.keywords|default:'-'}}</td>
-                  <td class="text-center text-nowrap"><button style="background-color: #55555533" class="btn btn-sm" type="submit" name="delete_tag" value="{{tag.id}}" title="Delete Tag"><i class="fas fa-trash"> </i></button></td>
+                  <td class="tag-text">{{tag.member_count|intcomma}}</td>
+                  <td class="tag-text">{{tag.channel_count|intcomma}}</td>
+                  <td class="tag-text">{{tag.keywords|default:'-'}}</td>
+                  <td class="tag-text text-center text-nowrap"><button style="background-color: #55555533;" class="btn btn-sm" type="submit" name="delete_tag" value="{{tag.id}}" title="Delete Tag"><i class="fas fa-trash"> </i></button></td>
                 </tr>
                 {% endfor %}
                 </form>

@@ -4,7 +4,7 @@
     padding: 1px 7px 1px 7px; 
     border-radius: 1em; 
 }
-.tag-pill > * {
+.tag-text {
     filter: invert(1) grayscale(1) contrast(5);
 }
 
