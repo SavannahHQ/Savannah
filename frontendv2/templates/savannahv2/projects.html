@@ -32,7 +32,7 @@
                     <p>{{project.task_count}} Tasks</p>
                   {% else %}
                     {% if project.owner %}<p>Owner: {{project.owner}}</p>{% endif %}
-                    {% if project.tag %}<p>Tag: <span class="tag-pill" style="background-color: #{{project.tag.color}};"><span style="color: #{{project.tag.color}};">{{project.tag.name}}</span></span></p>{% endif %}
+                    {% if project.tag %}<p>Tag: <span class="tag-pill" style="background-color: #{{project.tag.color}};"><span class="tag-text" style="color: #{{project.tag.color}}aa;">{{project.tag.name}}</span></span></p>{% endif %}
                     {% if project.channels.all.count > 0 %}<p>Channels: {{project.channels.all.count}}</p>{% endif %}
                     <p>{{project.task_count}} Tasks</p>
                   {% endif %}
