@@ -437,6 +437,10 @@ class MemberEditForm(forms.ModelForm):
             'mailing_address': forms.Textarea(attrs={'cols': 40, 'rows': 6}),
         }
 
+    def limit_to(self, community):
+        self.fields['company'].widget.choices = [('', '-----')] + [(company.id, company.name) for company in Company.objects.filter(community=community).order_by('name')]
+
+
 class MemberEdit(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
@@ -446,9 +450,11 @@ class MemberEdit(SavannahView):
     @property
     def form(self):
         if self.request.method == 'POST':
-            return MemberEditForm(instance=self.member, data=self.request.POST)
+            form = MemberEditForm(instance=self.member, data=self.request.POST)
         else:
-            return MemberEditForm(instance=self.member)
+            form = MemberEditForm(instance=self.member)
+        form.limit_to(self.community)
+        return form
 
     @login_required
     def as_view(request, member_id):
