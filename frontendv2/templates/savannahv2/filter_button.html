@@ -27,9 +27,9 @@
             <span class="dropdown">
             {% if view.member_tag %}
               {% if view.role %}
-                <button style="white-space:nowrap; color:#5a5c69; background-color: #{{view.member_tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {{view.member_tag.name}}</button>
+                <button style="white-space:nowrap; background-color: #{{view.member_tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span style="color: #{{view.member_tag.color}}aa" class="tag-text"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {{view.member_tag.name}}</span></button>
               {% else %}
-                <button style="white-space:nowrap; color:#5a5c69; background-color: #{{view.member_tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-users"></i> {{view.member_tag.name}}</button>
+                <button style="white-space:nowrap; background-color: #{{view.member_tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span style="color: #{{view.member_tag.color}}aa" class="tag-text"><i class="fas fa-users"></i> {{view.member_tag.name}}</span></button>
               {% endif %}
             {% else %}
               {% if view.role %}
@@ -47,21 +47,21 @@
                     <div class="dropdown-divider">Member Tag</div>
                     <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag="><i class="fas fa-tags"></i> Any Tags</a>
                     {% for tag in view.community.tag_set.all %}
-                    <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
+                    <a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{tag.name}}</span></a>
                     {% endfor %}
               </div>
             </span>
           {% if not members_only %}
             <span class="dropdown">
             {% if view.tag %}
-              <button style="white-space:nowrap; color:#5a5c69; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-hashtag"></i> {{view.tag.name}}</button>
+              <button style="white-space:nowrap; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span style="color: #{{view.tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{view.tag.name}}</span></button>
             {% else %}
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Tags</button>
             {% endif %}
               <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
                     <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag="><i class="fas fa-times"></i> Clear</a>
                     {% for tag in view.community.tag_set.all %}
-                    <a style="white-space:nowrap; color:#5a5c69; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag={{tag.name}}"><i class="fas fa-hashtag"></i> {{tag.name}}</a>
+                    <a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{tag.name}}</span></a>
                     {% endfor %}
               </div>
             </span>
