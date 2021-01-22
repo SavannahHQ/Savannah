@@ -450,6 +450,10 @@ class Task(TaggableModel):
     conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
 
     @property
+    def past_due(self):
+        return self.due < datetime.datetime.utcnow()
+        
+    @property
     def is_done(self):
         return self.done is not None
 

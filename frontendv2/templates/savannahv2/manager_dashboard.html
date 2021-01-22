@@ -36,7 +36,7 @@
                 </thead>
                 <tbody>
                 {% for task in view.open_tasks %}
-                <tr>
+                <tr {% if task.past_due %}style="background: #FF000033;"{% endif %}>
                   <td><a href="{% url 'manager_task_edit' view.community.id task.id %}" title="{{task.detail}}" data-toggle="tooltip">{{task.name}}</a></td>
                   <td>{{task.due}}</td>
                   <td>
@@ -47,7 +47,7 @@
                   {% endif %}
                   </td>
                   <td>
-                    <button class="btn btn-sm btn-danger text-nowrap" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
+                    <button class="btn btn-sm {% if task.past_due %}btn-danger{% else %}btn-success{% endif %} text-nowrap" title="Mark as Done" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i></a>
                   </td>
                 </tr>
                 {% endfor %}
