@@ -1,8 +1,11 @@
 .tag-pill {
-    font-size: 0.75em; margin-right: 2px; padding: 1px 7px 1px 7px; border-radius: 1em; 
+    font-size: 0.75em; 
+    margin-right: 2px; 
+    padding: 1px 7px 1px 7px; 
+    border-radius: 1em; 
 }
 .tag-pill > * {
-    filter: grayscale(50%) brightness(40%) contrast(100%);
+    filter: invert(1) grayscale(1) contrast(5);
 }
 
 .short-text { display: none; }
