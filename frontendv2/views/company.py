@@ -52,7 +52,8 @@ class CompanyEditForm(forms.ModelForm):
     domains = forms.CharField(required=False, help_text="Comma-separated list of email domains", label="Email Domains")
     def __init__(self, *args, **kwargs):
         super(CompanyEditForm, self).__init__(*args, **kwargs)
-        self.initial['domains'] = ', '.join([d.domain for d in CompanyDomains.objects.filter(company=self.instance)])
+        if not 'domains' in self.initial:
+            self.initial['domains'] = ', '.join([d.domain for d in CompanyDomains.objects.filter(company=self.instance)])
 
     def save(self, *args, **kwargs):
         saved = super(CompanyEditForm, self).save(*args, **kwargs)
@@ -79,21 +80,41 @@ class AddCompany(SavannahView):
         super().__init__(request, community_id)
         self.edit_company = Company(community=self.community)
         self.active_tab = "company"
+        self.for_member = None
+        self.default_name = None
+        self.default_domain = None
+        self.default_website = None
 
     @property
     def form(self):
         if self.request.method == 'POST':
             return CompanyEditForm(instance=self.edit_company, data=self.request.POST)
         else:
-            return CompanyEditForm(instance=self.edit_company)
+            return CompanyEditForm(instance=self.edit_company, initial={'name': self.default_name, 'website': self.default_website, 'domains': self.default_domain})
 
     @login_required
     def as_view(request, community_id):
         view = AddCompany(request, community_id)
         if request.method == "POST" and view.form.is_valid():
             view.form.save()
+            if 'for_member' in request.POST and request.POST.get('for_member'):
+                for_member = request.POST.get('for_member')
+                member = Member.objects.get(community=view.community, id=request.POST.get('for_member'))
+                member.company = view.edit_company
+                member.save()
+                return redirect('member_profile', member_id=member.id)
             return redirect('companies', community_id=community_id)
 
+        if 'for_member' in request.GET and request.GET.get('for_member'):
+            try: 
+                member = Member.objects.get(community=view.community, id=request.GET.get('for_member'))
+                (identity, domain) = member.email_address.split('@', maxsplit=1)
+                view.default_domain = domain
+                view.default_website = 'https://'+domain
+                view.default_name = domain.rsplit('.', maxsplit=1)[0]
+                view.for_member = request.GET.get('for_member')
+            except Exception as e:
+                pass
         return render(request, "savannahv2/company_add.html", view.context)
 
 class EditCompany(SavannahView):
