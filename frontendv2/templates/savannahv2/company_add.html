@@ -31,7 +31,7 @@
                 <input type="hidden" name="for_member" value="{{view.for_member|default:''}}" />
                 {{ view.form|crispy }}
                 <button class="btn btn-primary" type="submit">Save</button>
-                <a class="btn btn-secondary" href="{% url 'companies' view.community.id %}">Cancel</a>
+                <a class="btn btn-secondary" href="{% if view.for_member %}{% url 'member_profile' view.for_member %}{% else %}{% url 'companies' view.community.id %}{% endif %}">Cancel</a>
                 </form>
                 </div>            
 

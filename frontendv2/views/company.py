@@ -111,7 +111,7 @@ class AddCompany(SavannahView):
                 (identity, domain) = member.email_address.split('@', maxsplit=1)
                 view.default_domain = domain
                 view.default_website = 'https://'+domain
-                view.default_name = domain.rsplit('.', maxsplit=1)[0]
+                view.default_name = domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
                 view.for_member = request.GET.get('for_member')
             except Exception as e:
                 pass
