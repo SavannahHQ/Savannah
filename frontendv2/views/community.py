@@ -16,7 +16,7 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView, CommunityForm
-from frontendv2.models import ManagerInvite
+from frontendv2.models import ManagerInvite, ManagerProfile
 
 class Managers(SavannahView):
     def __init__(self, request, community_id):
@@ -24,10 +24,12 @@ class Managers(SavannahView):
         self.active_tab = "community"
 
     def all_managers(self):
+        managers = []
         if self.community.managers is not None:
-            return self.community.managers.user_set.all()
-        else:
-            return []
+            for user in self.community.managers.user_set.all():
+                manager, created = ManagerProfile.objects.get_or_create(community=self.community, user=user)
+                managers.append(manager)
+        return managers
 
     def invitations(self):
         return ManagerInvite.objects.filter(community=self.community)

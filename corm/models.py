@@ -452,7 +452,7 @@ class Task(TaggableModel):
     @property
     def past_due(self):
         return self.due < datetime.datetime.utcnow()
-        
+
     @property
     def is_done(self):
         return self.done is not None
@@ -685,7 +685,7 @@ class ManagerProfile(models.Model):
         blank=False,
         null=False,
     )
-    last_seen = models.DateTimeField()
+    last_seen = models.DateTimeField(null=True, blank=True)
     avatar = models.ImageField(upload_to='manager_avatars', null=True, blank=True)
     icon = ImageSpecField(source='avatar', spec=Icon)
     send_notifications = models.BooleanField(

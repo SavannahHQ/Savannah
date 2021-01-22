@@ -30,16 +30,16 @@
                     <th scope="col" width="25%">Username</th>
                     <th scope="col" width="25%">Name</th>
                     <th scope="col" width="25%">Email</th>
-                    <th scope="col" width="25%">Last Login</th>
+                    <th scope="col" width="25%">Last Active</th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for manager in view.all_managers %}
                 <tr>
-                  <td>{{manager.username}}</td>
-                  <td>{{manager.first_name}} {{manager.last_name}}</td>
+                  <td>{{manager.user.username}}</td>
+                  <td>{{manager}}</td>
                   <td>{% if manager.email %}<a href="mailto:{{manager.email}}">{{manager.email}}</a>{% endif %}</td>
-                  <td>{{manager.last_login}}</td>
+                  <td>{{manager.last_seen|default:'-'}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
