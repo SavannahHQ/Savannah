@@ -39,12 +39,14 @@ class Projects(SavannahView):
 
         return render(request, "savannahv2/projects.html", view.context)
 
-class ProjectOverview(SavannahFilterView):
+class ProjectOverview(SavannahView):
     def __init__(self, request, community_id, project_id):
         super().__init__(request, community_id)
         self.active_tab = "projects"
         self.project = get_object_or_404(Project, community=self.community, id=project_id)
         self._levelsChart = None
+        self._engagementChart = None
+        self.timespan = self.project.threshold_period
 
     def open_tasks(self):
         return Task.objects.filter(project=self.project, done__isnull=True)
@@ -52,19 +54,11 @@ class ProjectOverview(SavannahFilterView):
     def core_levels(self):
         levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CORE).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
         levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-        if self.member_tag:
-            levels = levels.filter(member__tags=self.member_tag)
-        if self.role:
-            levels = levels.filter(member__role=self.role)
         return levels[:100]
         
     def contrib_levels(self):
         levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-timestamp').select_related('member').prefetch_related('member__tags')
         levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-        if self.member_tag:
-            levels = levels.filter(member__tags=self.member_tag)
-        if self.role:
-            levels = levels.filter(member__role=self.role)
         return levels[:200]
         
     @property
@@ -74,13 +68,67 @@ class ProjectOverview(SavannahFilterView):
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=level)
                 levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-                if self.member_tag:
-                    levels = levels.filter(member__tags=self.member_tag)
-                if self.role:
-                    levels = levels.filter(member__role=self.role)
                 self._levelsChart.add(level, levels.count())
         self.charts.add(self._levelsChart)
         return self._levelsChart
+
+    def getEngagementChart(self):
+        if not self._engagementChart:
+            conversations_counts = dict()
+            activity_counts = dict()
+            if self.project.default_project:
+                project_filter = None
+            else:
+                project_filter = Q(channel__in=self.project.channels.all())
+            if self.project.tag is not None:
+                project_filter = project_filter | Q(tags=self.project.tag)
+
+            conversations = conversations = Conversation.objects.filter(channel__source__community=self.project.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            conversations = conversations.filter(project_filter)
+
+            conversations = conversations.order_by("timestamp")
+            for c in conversations:
+                month = str(c.timestamp)[:10]
+                if month not in conversations_counts:
+                    conversations_counts[month] = 1
+                else:
+                    conversations_counts[month] += 1
+
+            activity = Contribution.objects.filter(community=self.project.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            activity = activity.filter(project_filter)
+            activity = activity.order_by("timestamp")
+
+            for a in activity:
+                month = str(a.timestamp)[:10]
+                if month not in activity_counts:
+                    activity_counts[month] = 1
+                else:
+                    activity_counts[month] += 1
+            self._engagementChart = (conversations_counts, activity_counts)
+        return self._engagementChart
+        
+    @property
+    def engagement_chart_months(self):
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(self.project.threshold_period)]
+        date_list.reverse()
+        return [str(day)[:10] for day in date_list]
+
+    @property
+    def engagement_chart_conversations(self):
+        (conversations_counts, activity_counts) = self.getEngagementChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(self.project.threshold_period)]
+        date_list.reverse()
+        return [conversations_counts.get(str(day)[:10], 0) for day in date_list]
+
+    @property
+    def engagement_chart_activities(self):
+        (conversations_counts, activity_counts) = self.getEngagementChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
+        date_list.reverse()
+        return [activity_counts.get(str(day)[:10], 0) for day in date_list]
 
     @login_required
     def as_view(request, community_id, project_id):

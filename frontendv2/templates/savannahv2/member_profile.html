@@ -254,7 +254,21 @@
                 <div class="card-body">
                   <div class="ml-3">
                   {% for level in view.member_levels %}
-                    <div class="mb-2"><a href="{% url 'project_overview' view.community.id level.project.id %}"><i class="fas {% if level.project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{level.project.name}}</a> - {{level.level_name}}<br/><small>{{level.timestamp}}</small></div>
+                    <div class="mb-2">
+                      <a href="{% url 'project_overview' view.community.id level.project.id %}"><i class="fas {% if level.project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{level.project.name}}</a> - <small>{{level.timestamp|date}}</small>
+                      <br/>
+                      <a href="{% url 'project_overview' view.community.id level.project.id %}">
+                      {% if level.level == level.CORE %}
+                      <img src="{% static 'savannah/progression_core.png' %}" title="Core" />
+                      {% elif level.level == level.CONTRIBUTOR %}
+                      <img src="{% static 'savannah/progression_contrib.png' %}" title="Contributor" />
+                      {% elif level.level == level.PARTICIPANT %}
+                      <img src="{% static 'savannah/progression_participant.png' %}" title="Participant" />
+                      {% elif level.level == level.USER %}
+                      <img src="{% static 'savannah/progression_visitor.png' %}" title="Visitor" />
+                      {% endif %}
+                      </a>
+                      </div>
                   {% endfor %}
                   </div>
                 </div>
