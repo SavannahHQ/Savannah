@@ -4,6 +4,7 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
+from django.db.models.functions import Trunc
 from django.contrib import messages
 from django.http import JsonResponse
 from django import forms
@@ -76,59 +77,108 @@ class ProjectOverview(SavannahView):
         if not self._engagementChart:
             conversations_counts = dict()
             activity_counts = dict()
-            if self.project.default_project:
-                project_filter = None
-            else:
+            project_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            if not self.project.default_project:
                 project_filter = Q(channel__in=self.project.channels.all())
-            if self.project.tag is not None:
-                project_filter = project_filter | Q(tags=self.project.tag)
+                if self.project.tag is not None:
+                    project_filter = project_filter | Q(tags=self.project.tag)
 
-            conversations = conversations = Conversation.objects.filter(channel__source__community=self.project.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            conversations = conversations = Conversation.objects.filter(channel__source__community=self.project.community)
             conversations = conversations.filter(project_filter)
+            conversations = conversations.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(convo_count=Count('id', distinct=True)).order_by('month')
 
-            conversations = conversations.order_by("timestamp")
+            months = list()
             for c in conversations:
-                month = str(c.timestamp)[:10]
-                if month not in conversations_counts:
-                    conversations_counts[month] = 1
-                else:
-                    conversations_counts[month] += 1
+                month = self.trunc_date(c['month'])
+                if month not in months:
+                    months.append(month)
+                conversations_counts[month] = c['convo_count']
 
-            activity = Contribution.objects.filter(community=self.project.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            activity = Contribution.objects.filter(community=self.project.community)
             activity = activity.filter(project_filter)
-            activity = activity.order_by("timestamp")
+            activity = activity.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(contrib_count=Count('id', distinct=True)).order_by('month')
 
             for a in activity:
-                month = str(a.timestamp)[:10]
-                if month not in activity_counts:
-                    activity_counts[month] = 1
-                else:
-                    activity_counts[month] += 1
-            self._engagementChart = (conversations_counts, activity_counts)
+                month = self.trunc_date(a['month'])
+                if month not in months:
+                    months.append(month)
+                activity_counts[month] = a['contrib_count']
+
+            self._engagementChart = (sorted(months), conversations_counts, activity_counts)
         return self._engagementChart
         
     @property
     def engagement_chart_months(self):
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(self.project.threshold_period)]
-        date_list.reverse()
-        return [str(day)[:10] for day in date_list]
+        (months, conversations_counts, activity_counts) = self.getEngagementChart()
+        return self.timespan_chart_keys(months)
 
     @property
     def engagement_chart_conversations(self):
-        (conversations_counts, activity_counts) = self.getEngagementChart()
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(self.project.threshold_period)]
-        date_list.reverse()
-        return [conversations_counts.get(str(day)[:10], 0) for day in date_list]
+        (months, conversations_counts, activity_counts) = self.getEngagementChart()
+        return [conversations_counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
     @property
     def engagement_chart_activities(self):
-        (conversations_counts, activity_counts) = self.getEngagementChart()
-        base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(self.project.threshold_period)]
-        date_list.reverse()
-        return [activity_counts.get(str(day)[:10], 0) for day in date_list]
+        (months, conversations_counts, activity_counts) = self.getEngagementChart()
+        return [activity_counts.get(month, 0) for month in self.timespan_chart_keys(months)]
+
+    def trunc_date(self, date):
+        if self.trunc_span == "month":
+            return str(date)[:7]
+        elif self.trunc_span == "day":
+            return str(date)[:10]
+        else:
+            return "%s %s:00" % (str(date)[:10], date.hour)
+
+    @property
+    def trunc_span(self):
+        if self.timespan > 120:
+            return "month"
+        elif self.timespan > 5:
+            return "day"
+        else:
+            return "hour"
+
+    @property
+    def timespan_chart_span(self):
+        if self.timespan > 120:
+            return int(self.timespan / 30.4)
+        elif self.timespan > 5:
+            return self.timespan
+        else:
+            return self.timespan * 24
+
+    def timespan_chart_keys(self, values):
+        span_count = self.timespan_chart_span
+        self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
+        self.rangeend = datetime.datetime.utcnow()
+
+        axis_values = []
+        if self.trunc_span == "month":
+            end = self.rangeend
+            year = end.year
+            month = end.month
+            for i in range(span_count):
+                axis_values.insert(0, "%04d-%02d" % (year, month))
+                month -= 1
+                if month < 1:
+                    month = 12
+                    year -= 1
+            return axis_values
+        elif self.trunc_span == "day":
+            end = self.rangeend
+            for i in range(span_count):
+                day = self.trunc_date(end - datetime.timedelta(days=i))
+                axis_values.insert(0, day)
+            return axis_values
+        elif self.trunc_span == "hour":
+            end = self.rangeend
+            for i in range(span_count):
+                hour = self.trunc_date(end - datetime.timedelta(hours=i))
+                axis_values.insert(0, hour)
+            return axis_values
+        else:
+            return values[-span_count:]
 
     @login_required
     def as_view(request, community_id, project_id):
@@ -187,7 +237,7 @@ class ProjectAdd(SavannahView):
             return redirect('projects', community_id=community_id)
         if request.method == "POST" and view.form.is_valid():
             project = view.form.save()
-            messages.info(request, "Member level changes may take up to 24 hours to take effect.")
+            messages.info(request, "Member level changes may take up to an hour to take effect.")
             return redirect('project_overview', community_id=community_id, project_id=project.id)
 
         return render(request, 'savannahv2/project_add.html', view.context)
