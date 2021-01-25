@@ -126,7 +126,7 @@ class ProjectOverview(SavannahView):
     def engagement_chart_activities(self):
         (conversations_counts, activity_counts) = self.getEngagementChart()
         base = datetime.datetime.today()
-        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
+        date_list = [base - datetime.timedelta(days=x) for x in range(self.project.threshold_period)]
         date_list.reverse()
         return [activity_counts.get(str(day)[:10], 0) for day in date_list]
 
