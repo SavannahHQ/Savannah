@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.email_count = 0
-        for manager in ManagerProfile.objects.filter(send_notifications=True).order_by('-last_seen'):
+        for manager in ManagerProfile.objects.filter(send_notifications=True, last_seen__isnull=False).order_by('-last_seen'):
             if manager.email:
                 self.send_missed_activity_report(manager)
 
