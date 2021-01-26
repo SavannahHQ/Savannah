@@ -255,17 +255,17 @@
                   <div class="ml-3">
                   {% for level in view.member_levels %}
                     <div class="mb-2">
-                      <a href="{% url 'project_overview' view.community.id level.project.id %}"><i class="fas {% if level.project.default_project %}fa-users{% else %}fa-tasks{% endif %}"></i> {{level.project.name}}</a> - <small>{{level.timestamp|date}}</small>
+                      <a href="{% url 'project_overview' view.community.id level.project.id %}" title="{{level.level_name}}"><i class="fas {% if level.project.default_project %}fa-globe{% else %}fa-tasks{% endif %}"></i> {{level.project.name}}</a>
                       <br/>
-                      <a href="{% url 'project_overview' view.community.id level.project.id %}">
+                      <a href="{% url 'project_overview' view.community.id level.project.id %}" title="{{level.level_name}}">
                       {% if level.level == level.CORE %}
-                      <img src="{% static 'savannah/progression_core.png' %}" title="Core" />
+                      <img src="{% static 'savannah/progression_core.png' %}" />
                       {% elif level.level == level.CONTRIBUTOR %}
-                      <img src="{% static 'savannah/progression_contrib.png' %}" title="Contributor" />
+                      <img src="{% static 'savannah/progression_contrib.png' %}" />
                       {% elif level.level == level.PARTICIPANT %}
-                      <img src="{% static 'savannah/progression_participant.png' %}" title="Participant" />
+                      <img src="{% static 'savannah/progression_participant.png' %}" />
                       {% elif level.level == level.USER %}
-                      <img src="{% static 'savannah/progression_visitor.png' %}" title="Visitor" />
+                      <img src="{% static 'savannah/progression_visitor.png' %}" />
                       {% endif %}
                       </a>
                       </div>
