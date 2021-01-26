@@ -167,8 +167,8 @@
                 <tbody>
                 {% for level in view.core_levels %}
                 <tr>
-                  <td class="text-nowrap">
-                    <a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i> {{level.member}}</a>
+                  <td>
+                    <a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i>&nbsp;{{level.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
                   </td>
                   <td>{{level.timestamp}}</td>
@@ -202,8 +202,8 @@
                 <tbody>
                 {% for level in view.contrib_levels %}
                 <tr>
-                  <td class="text-nowrap">
-                    <a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i> {{level.member}}</a>
+                  <td>
+                    <a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i>&nbsp;{{level.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
                   </td>
                   <td>{{level.timestamp}}</td>
