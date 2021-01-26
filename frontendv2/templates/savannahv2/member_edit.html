@@ -38,6 +38,30 @@
               </div>
             </div>
 
+            <!-- Profile  -->
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Identities</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                {% for identity in view.identities %}
+                <div class="mb-3">
+                  <div><a href="{{identity.link_url}}" target="_blank"><i class="{{identity.source.icon_name}}"></i> {{identity.detail}}</a></div>
+                  {% if identity.name and identity.name != identity.detail %}<div>{{identity.name}}</div>{% endif %}
+                  {% if identity.email_address %}<div>{{identity.email_address}}</div>{% endif %}
+                </div>
+                {% endfor %}
+                </div>            
+
+                </div>
+              </div>
+            </div>
 
           </div>
         </div>

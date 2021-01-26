@@ -448,6 +448,10 @@ class MemberEdit(SavannahView):
         self.active_tab = "members"
 
     @property
+    def identities(self):
+        return Contact.objects.filter(member=self.member).all()
+        
+    @property
     def form(self):
         if self.request.method == 'POST':
             form = MemberEditForm(instance=self.member, data=self.request.POST)
