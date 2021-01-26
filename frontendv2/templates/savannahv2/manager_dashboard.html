@@ -65,12 +65,15 @@
                 </div>
                 <!-- Card Body -->
                 <div class="card-body p-0">
+                <form action="{% url 'manager_gift_received' view.community.id %}" method="POST">
+                {% csrf_token %}
                 <table class="table">
                 <thead>
                   <tr>
                     <th scope="col">Member</th>
                     <th scope="col">Type</th>
                     <th scope="col">Sent</th>
+                    <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -79,11 +82,14 @@
                   <td><a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a></td>
                   <td class="text-nowrap"><a href="{% url 'gift_edit' gift.member.id gift.id %}">{{gift.gift_type.name}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
                   <td>{{gift.sent_date}}</td>
-                  <td>{{gift.received_date|default:''}}</td>
+                  <td>
+                    <button class="btn btn-sm btn-success text-nowrap" title="Mark as Received" name="mark_received" value="{{gift.id}}"><i class="fas fa-check"> </i> </a>
+                  </td>
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
+                </form>
                 </div>
               </div>
  

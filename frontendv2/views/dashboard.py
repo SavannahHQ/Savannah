@@ -78,6 +78,18 @@ class ManagerDashboard(SavannahView):
             return []
 
     @login_required
+    def mark_gift_received(request, community_id):
+        if request.method == "POST":
+            gift_id = request.POST.get('mark_received')
+            try:
+                gift = Gift.objects.get(id=gift_id, community_id=community_id)
+                gift.received_date = datetime.datetime.utcnow()
+                gift.save()
+            except:
+                messages.error(request, "Gift not found, could not mark as received.")
+        return redirect('dashboard', community_id=community_id)
+
+    @login_required
     def as_view(request, community_id):
         dashboard = ManagerDashboard(request, community_id)
 

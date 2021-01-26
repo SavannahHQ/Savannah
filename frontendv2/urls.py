@@ -44,6 +44,7 @@ urlpatterns = [
     path('dashboard/<int:community_id>/', ManagerDashboard.as_view, name='dashboard'),
     path('dashboard/<int:community_id>/task/<int:task_id>/', ManagerTaskEdit.as_view, name='manager_task_edit'),
     path('dashboard/<int:community_id>/task/done', ManagerTaskEdit.mark_task_done, name='manager_task_done'),
+    path('dashboard/<int:community_id>/gift/received', ManagerDashboard.mark_gift_received, name='manager_gift_received'),
     path('overview/<int:community_id>/', Overview.as_view, name='overview'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
