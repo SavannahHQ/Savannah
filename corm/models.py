@@ -444,7 +444,7 @@ class Task(TaggableModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, null=False, blank=False)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     name = models.CharField(max_length=256)
-    detail = models.TextField()
+    detail = models.TextField(null=True, blank=True)
     due = models.DateTimeField()
     done = models.DateTimeField(null=True, blank=True, db_index=True)
     stakeholders = models.ManyToManyField(Member)

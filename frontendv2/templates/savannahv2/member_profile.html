@@ -7,7 +7,25 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">{{view.member.name}}</h1>
-            <form action="{% url 'member_watch_form' view.member.id %}" method="POST">
+            <span>
+            <form class="d-none d-sm-inline-block form-inline" action="{% url 'member_followup_form' view.member.id %}" method="POST">
+              {% csrf_token %}
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user-clock"></i> Follow-up</button>
+              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
+                    <button name="days" value="1" class="btn btn-link dropdown-item p-2" type="submit">Tomorrow</button>
+                    <button name="days" value="2" class="btn btn-link dropdown-item p-2" type="submit">In 2 days</button>
+                    <button name="days" value="7" class="btn btn-link dropdown-item p-2" type="submit">Next Week</button>
+                    <button name="days" value="30" class="btn btn-link dropdown-item p-2" type="submit">Next month</button>
+                    <button name="days" value="91" class="btn btn-link dropdown-item p-2" type="submit">In 3 months</button>
+                    <button name="days" value="182" class="btn btn-link dropdown-item p-2" type="submit">In 6 months</button>
+                    <div class="input-group input-daterange pr-1 pl-1">
+                      <input type="text" class="form-control text-sm" name="custom" value="">
+                      <div class="input-group-append"><button class="btn btn-primary btn-sm input-group-text" type="submit"><i class="fas fa-chevron-right"> </i></button></div>
+                    </div>
+              </div>
+            </form>
+
+            <form class="d-none d-sm-inline-block form-inline" action="{% url 'member_watch_form' view.member.id %}" method="POST">
             {% csrf_token %}
             {% if view.is_watched %}
               <input type="hidden" name="action" value="unwatch">
@@ -17,6 +35,7 @@
               <button type="submit" class="btn btn-default" ><i class="fas fa-eye"></i> Watch</button>
             {% endif %}
             </form>
+            </span>
           </div>
 
           <!-- Content Row -->
@@ -174,7 +193,7 @@
                 <tr>
                   <td class="text-nowrap">{{task.owner_name}}</td>
                   <td><a href="{% url 'task_edit' member_id=view.member.id task_id=task.id %}" title="{{task.detail}}">{{task.name}}</a></td>
-                  <td>{{task.due}}</td>
+                  <td>{{task.due|date}}</td>
                   <td>
                     <button class="btn btn-sm btn-danger text-nowrap" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i> Done</a>
                   </td>

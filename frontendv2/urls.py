@@ -18,7 +18,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit
-from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit
+from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
@@ -55,6 +55,7 @@ urlpatterns = [
     path('member/<int:member_id>/tag', tag_member, name='member_tag_form'),
     path('member/<int:member_id>/note', add_note, name='member_note_form'),
     path('member/<int:member_id>/watch', watch_member, name='member_watch_form'),
+    path('member/<int:member_id>/followup', followup_on_member, name='member_followup_form'),
     path('member/<int:member_id>/gift', GiftManager.add_view, name='gift_add'),
     path('member/<int:member_id>/gift/<int:gift_id>/', GiftManager.edit_view, name='gift_edit'),
     path('member/<int:member_id>/task/add', MemberTaskAdd.as_view, name='task_add'),

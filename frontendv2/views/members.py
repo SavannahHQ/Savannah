@@ -417,6 +417,25 @@ def tag_member(request, member_id):
     return JsonResponse({'success': False, 'errors':'Only POST method supported'}, status=405)
 
 @login_required
+def followup_on_member(request, member_id):
+    member = get_object_or_404(Member, id=member_id)
+    if request.method == "POST":
+        days = request.POST.get('days', "1")
+        custom = request.POST.get('custom')
+        if custom:
+            due = datetime.datetime.strptime(custom, '%Y-%m-%d')
+        else:
+            try:
+                due = datetime.datetime.utcnow() + datetime.timedelta(days=int(days))
+            except:
+                messages.error(request, "Bad follow-up duration: %s" % days)
+                pass
+        followup = Task.objects.create(owner=request.user, community=member.community, name="Follow up with %s" % member.name, due=due, project=member.community.default_project)
+        followup.stakeholders.add(member)
+        messages.success(request, "Follow-up task created for %s" % due.date())
+    return redirect('member_profile', member_id=member_id)
+
+@login_required
 def watch_member(request, member_id):
     member = get_object_or_404(Member, id=member_id)
     if request.method == "POST":
@@ -450,7 +469,7 @@ class MemberEdit(SavannahView):
     @property
     def identities(self):
         return Contact.objects.filter(member=self.member).all()
-        
+
     @property
     def form(self):
         if self.request.method == 'POST':
