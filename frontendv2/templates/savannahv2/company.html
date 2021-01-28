@@ -1,0 +1,258 @@
+{% extends "savannahv2/base.html"%}
+{% load static simple_math %}
+
+{% block page_title %} | {{view.company.name}}{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.company.name}}</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Profile</h6>
+                  <a class="text-gray-500" href="{% url 'company_edit' view.company.id %}"><i class="fas fa-edit"> </i>Edit</a>
+                    
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Active</div>
+                    <div class="mb-2 col-lg-10">{{view.company.first_seen|date|default:''}} - {{view.company.last_seen|date|default:''}}</div>
+                  </div>
+                  {% if view.company.website %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Website</div>
+                    <div class="mb-2 col-lg-10">
+                      <a href="{{view.company.website}}" target="_blank">{{view.company.website}}</a>
+                    </div>
+                  </div>
+                  {% endif %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Tag</div>
+                    <div class="mb-2 col-lg-10">
+                      <span class="tag_form_dropdown dropdown no-arrow">
+                        <a class="dropdown-toggle tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% if view.company.tag %}
+                          <span class="tag-pill" style="background-color: #{{view.company.tag.color}};"><span class="tag-text" style="color: #{{view.company.tag.color}}aa;">{{view.company.tag.name}}</span></span>
+                        {% else %}
+                          <i class="fas fa-tag text-gray-500"> </i>
+                        {% endif %}
+                        </a>
+                        <div class="mb-0 dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                          <div class="dropdown-header">Tags:</div>
+                          <form action="#" method="POST" class="form tag_form">
+                          {% csrf_token %}
+                          <input type="hidden" name="company_id" value="{{view.company.id}}"/>
+                          <div class="dropdown-item" style=""><input id="company_{{view.company.id}}_tag_clear" name="tag_select" value="" class="p-2 tag_select form-check-input" type="radio" {% if not view.company.tag %}checked="1"{% endif %}><label class="form-check-label" for="company_{{view.company.id}}_tag_clear">None</label></div>
+                          {% for tag in view.community.tag_set.all %}
+                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="company_{{view.company.id}}_tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="radio" {% if tag.id == view.company.tag.id %}checked="1"{% endif %}><label class="form-check-label" for="company_{{view.company.id}}_tag_{{tag.id}}"><span style="color:#{{tag.color}}aa;" class="tag-text">{{tag.name}}</span></label></div>
+                          {% endfor %}
+                          </form>
+                        </div>
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+                </div>
+              </div>
+
+              <!-- Content Row -->
+              <div class="row">
+
+                <!-- Area Chart -->
+                <div class="col-lg-12">
+                  <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                      <h6 class="m-0 font-weight-bold text-primary">Activity</h6>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                      <div class="chart-area">
+                        <canvas id="engagementChart"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+
+            <!-- Contacts List -->
+            <div class="col-xl-4 col-lg-5">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Members</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="ml-3">
+                  {% for member in view.all_members %}
+                    <div class="mb-3">
+                      <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{view.member.get_role_display}}"></i> {{member}}</a>
+                      <br/><small class="muted">{{member.first_seen|date|default:''}} - {{member.last_seen|date|default:''}}</small>
+                    </div>
+                  {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script>
+$('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
+    var tags = e.relatedTarget.parentElement.getElementsByClassName("tag_select");
+    var tags_html = "";
+    for (var i = 0; i < tags.length; i++){
+        var tag = tags[i];
+        if (tag.checked) {
+          var tag_name = tag.labels[0].textContent;
+          if (tag.value == '') {
+            tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
+          } else {
+            tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span class="tag-text" style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
+          }
+
+        }
+    }
+    var tag_form = e.relatedTarget.parentElement.getElementsByClassName('tag_form')[0];
+    $.post( "{% url 'company_tag_form' view.community.id %}", $(tag_form).serialize(), function(data) {
+        var tag_row = e.relatedTarget.parentElement.getElementsByClassName("tag_row")[0];
+        tag_row.innerHTML = tags_html
+      },
+      'json' // I expect a JSON response
+    );
+});
+  </script>
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("engagementChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.engagement_chart_months|safe}},
+    datasets: [{
+      label: "Conversations",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.CONVERSATION}}22",
+      borderColor: "#{{colors.CONVERSATION}}",
+      pointRadius: 1,
+      pointBackgroundColor: "#{{colors.CONVERSATION}}",
+      pointBorderColor: "#{{colors.CONVERSATION}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.CONVERSATION}}",
+      pointHoverBorderColor: "#{{colors.CONVERSATION}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.engagement_chart_conversations|safe}},
+    },
+    {
+      label: "Contributions",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.CONTRIBUTION}}22",
+      borderColor: "#{{colors.CONTRIBUTION}}",
+      pointRadius: 1,
+      pointBackgroundColor: "#{{colors.CONTRIBUTION}}",
+      pointBorderColor: "#{{colors.CONTRIBUTION}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.CONTRIBUTION}}",
+      pointHoverBorderColor: "#{{colors.CONTRIBUTION}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.engagement_chart_activities|safe}},
+    }],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+
+{% endblock %}

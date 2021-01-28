@@ -878,6 +878,22 @@ class Company(models.Model):
     is_staff = models.BooleanField(default=False, help_text="Treat members as staff")
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE, null=True, blank=True)
 
+    @property
+    def first_seen(self):
+        try:
+            first_convo = Conversation.objects.filter(speaker__community=self.community, speaker__company=self).order_by('timestamp')[0]
+            return first_convo.timestamp
+        except Exception as e:
+            return None
+        
+    @property
+    def last_seen(self):
+        try:
+            last_convo = Conversation.objects.filter(speaker__community=self.community, speaker__company=self).order_by('-timestamp')[0]
+            return last_convo.timestamp
+        except Exception as e:
+            return None
+        
     def __str__(self):
         return self.name
 

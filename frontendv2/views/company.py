@@ -4,6 +4,8 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
+from django.db.models.functions import Trunc
+
 from django.contrib import messages
 from django import forms
 
@@ -11,6 +13,96 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView
+
+class CompanyProfile(SavannahView):
+    def __init__(self, request, company_id):
+        self.company = get_object_or_404(Company, id=company_id)
+        super().__init__(request, self.company.community.id)
+        self.active_tab = "company"
+        self._sourcesChart = None
+        self._engagementChart = None
+        self.timespan=90
+
+    @property
+    def all_members(self):
+        return Member.objects.filter(community=self.community, company=self.company).prefetch_related('tags').order_by('name')
+
+    @property
+    def sources_chart(self):
+        if not self._sourcesChart:
+            counts = dict()
+            other_count = 0
+            identity_filter = Q(contact__member__company=self.company)
+            sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact', filter=identity_filter))
+            for source in sources:
+                if source.identity_count == 0:
+                    continue
+                counts[source] = source.identity_count
+
+            self._sourcesChart = PieChart("sourcesChart", title="Member Sources", limit=8)
+            for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), count)
+        self.charts.add(self._sourcesChart)
+        return self._sourcesChart
+
+    def getEngagementChart(self):
+        if not self._engagementChart:
+            conversations_counts = dict()
+            activity_counts = dict()
+            company_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+
+            conversations = conversations = Conversation.objects.filter(channel__source__community=self.community, speaker__company=self.company)
+            conversations = conversations.filter(company_filter)
+            conversations = conversations.annotate(month=Trunc('timestamp', 'day')).values('month').annotate(convo_count=Count('id', distinct=True)).order_by('month')
+
+            months = list()
+            for c in conversations:
+                month = str(c['month'])[:10]
+                if month not in months:
+                    months.append(month)
+                conversations_counts[month] = c['convo_count']
+
+            activity = Contribution.objects.filter(community=self.community, author__company=self.company)
+            activity = activity.filter(company_filter)
+            activity = activity.annotate(month=Trunc('timestamp', 'day')).values('month').annotate(contrib_count=Count('id', distinct=True)).order_by('month')
+
+            for a in activity:
+                month = str(a['month'])[:10]
+                if month not in months:
+                    months.append(month)
+                activity_counts[month] = a['contrib_count']
+
+            self._engagementChart = (conversations_counts, activity_counts)
+        return self._engagementChart
+        
+    @property
+    def engagement_chart_months(self):
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
+        date_list.reverse()
+        return [str(day)[:10] for day in date_list]
+
+    @property
+    def engagement_chart_conversations(self):
+        (conversations_counts, activity_counts) = self.getEngagementChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
+        date_list.reverse()
+        return [conversations_counts.get(str(day)[:10], 0) for day in date_list]
+
+    @property
+    def engagement_chart_activities(self):
+        (conversations_counts, activity_counts) = self.getEngagementChart()
+        base = datetime.datetime.today()
+        date_list = [base - datetime.timedelta(days=x) for x in range(90)]
+        date_list.reverse()
+        return [activity_counts.get(str(day)[:10], 0) for day in date_list]
+
+    @login_required
+    def as_view(request, company_id):
+        view = CompanyProfile(request, company_id)
+
+        return render(request, "savannahv2/company.html", view.context)
 
 class Companies(SavannahView):
     def __init__(self, request, community_id):

@@ -61,11 +61,7 @@
                   {% if view.member.company %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Company</div>
-                    {% if view.member.company.website %}
-                    <div class="mb-2 col-lg-10"><a href="{{view.member.company.website}}" target="_blank">{{view.member.company}}</a></div>
-                    {% else %}
-                    <div class="mb-2 col-lg-10">{{view.member.company}}</div>
-                    {% endif %}
+                    <div class="mb-2 col-lg-10"><a href="{% url 'company_profile' view.member.company.id %}">{{view.member.company}}</a></div>
                   </div>
                   {% endif %}
                   <div class="row mb-2">

@@ -35,7 +35,7 @@
                 {% for company in view.all_companies %}
                 <tr>
                   <td class="text-nowrap text-gray-800" >
-                    <a href="{% url 'company_edit' company.id %}">{{ company.name }}</a>
+                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
                   </td>
                   <td>
                       <span class="tag_form_dropdown dropdown no-arrow">
