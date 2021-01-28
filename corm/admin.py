@@ -220,6 +220,17 @@ class MemberAdmin(admin.ModelAdmin):
 
 admin.site.register(Member, MemberAdmin)
 
+class MergedMemberAdmin(admin.ModelAdmin):
+    list_display = ('name', 'community', 'merged_with', 'merged_date')
+    list_filter = ('community', 'merged_date')
+    actions = ('restore',)
+    def restore(self, request, queryset):
+        for merge in queryset:
+            merge.restore()
+    restore.short_description = "Restore to Member"
+
+admin.site.register(MemberMergeRecord, MergedMemberAdmin)
+
 class MemberWatchAdmin(admin.ModelAdmin):
     list_display = ('manager', 'member', 'start', 'end', 'level')
     list_filter = ('manager', 'member__community', 'level', 'start', 'end')

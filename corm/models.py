@@ -4,6 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.messages.constants import DEFAULT_TAGS, WARNING
+from jsonfield.fields import JSONField
 
 from imagekit import ImageSpec
 from imagekit.models import ImageSpecField
@@ -193,6 +194,8 @@ class Member(TaggableModel):
         return self.name
 
     def merge_with(self, other_member):
+        merge_record = MemberMergeRecord.from_member(other_member, self)
+
         if self.user is None and other_member.user is not None :
             self.user = other_member.user
         if other_member.first_seen is not None and (self.first_seen is None or self.first_seen > other_member.first_seen):
@@ -205,6 +208,13 @@ class Member(TaggableModel):
             self.role = Member.STAFF
         if self.email_address is None and other_member.email_address is not None:
             self.email_address = other_member.email_address
+        if self.mailing_address is None and other_member.mailing_address is not None:
+            self.mailing_address = other_member.mailing_address
+        if self.phone_number is None and other_member.phone_number is not None:
+            self.phone_number = other_member.phone_number
+        if self.company is None and other_member.company is not None:
+            self.company = other_member.company
+
         self_contacts = [c.detail for c in self.contact_set.all()]
         other_contacts = [c.detail for c in other_member.contact_set.all()]
         if other_member.name is not None and self.name in self_contacts and other_member.name not in other_contacts:
@@ -215,16 +225,18 @@ class Member(TaggableModel):
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
         MemberConnection.objects.filter(to_member=other_member).update(to_member=self)
         Contribution.objects.filter(author=other_member).update(author=self)
+        Gift.objects.filter(member=other_member).update(member=self)
+        MemberWatch.objects.filter(member=other_member).update(member=self)
 
         for tag in other_member.tags.all():
             self.tags.add(tag)
 
         Conversation.objects.filter(speaker=other_member).update(speaker=self)
-        for convo in Conversation.objects.filter(participants=other_member):
+        for convo in Conversation.objects.filter(speaker__community=self.community, participants=other_member):
             convo.participants.add(self)
             convo.participants.remove(other_member)
 
-        for task in Task.objects.filter(stakeholders=other_member):
+        for task in Task.objects.filter(project__community=self.community, stakeholders=other_member):
             task.stakeholders.add(self)
             task.stakeholders.remove(other_member)
 
@@ -240,6 +252,125 @@ class Member(TaggableModel):
                 level.save()
         self.save()
         other_member.delete()
+
+class MemberMergeRecord(models.Model):
+    community =  models.ForeignKey(Community, on_delete=models.CASCADE)
+    name = models.CharField(max_length=256, db_index=True)
+    merged_with = models.ForeignKey(Member, null=True, blank=True, on_delete=models.SET_NULL)
+    merged_date = models.DateField(auto_now_add=True)
+    data = data = JSONField(null=True, blank=True)
+
+    @classmethod
+    def _serialize(self, member):
+        data = {
+            'name': member.name,
+            'email_address': member.email_address,
+            'first_seen': member.first_seen.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+            'last_seen': member.last_seen.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+            'mailing_address': member.mailing_address,
+            'phone_number': member.phone_number,
+            'avatar_url': member.avatar_url,
+            'role': member.role,
+            'company': member.company_id,
+            'identities': [ident.id for ident in Contact.objects.filter(member=member)],
+            'tags': [tag.id for tag in member.tags.all()],
+            'notes': [note.id for note in Note.objects.filter(member=member)],
+            'gifts': [gift.id for gift in Gift.objects.filter(member=member)],
+            'conversations': [c.id for c in Conversation.objects.filter(speaker=member)],
+            'contributions': [c.id for c in Contribution.objects.filter(author=member)],
+            'watches': [w.id for w in MemberWatch.objects.filter(member=member)],
+            'tasks': [t.id for t in Task.objects.filter(stakeholders=member)],
+            'levels': dict([(level.project_id, (level.level, level.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'))) for level in MemberLevel.objects.filter(member=member)])
+        }
+        return data
+
+    @classmethod
+    def from_member(cls, member, target=None):
+        data = {}
+        data['removed'] = cls._serialize(member)
+        if target:
+            data['original'] = cls._serialize(target)
+        record = MemberMergeRecord.objects.create(community=member.community, name=member.name, merged_with=target, data=data)
+        return record
+
+
+    def restore(self):
+        now = datetime.datetime.utcnow()
+
+        # Restore the removed member
+        removed = self.data['removed']
+        member = Member.objects.create(
+            community=self.community, 
+            name=self.name,
+            first_seen=removed.get('first_seen', now),
+            last_seen=removed.get('last_seen', removed.get('first_seen', now)),
+            email_address=removed.get('email_address'),
+            phone_number=removed.get('phone_number'),
+            mailing_address=removed.get('mailing_address'),
+            avatar_url=removed.get('avatar_url'),
+            role=removed.get('role', Member.COMMUNITY),
+        )
+        try:
+            member.company = Company.objects.get(id=removed.get('company'))
+        except:
+            pass
+        member.save()
+
+        Contact.objects.filter(id__in=removed.get('identities', [])).update(member=member)
+        Note.objects.filter(id__in=removed.get('notes', [])).update(member=member)
+        Gift.objects.filter(id__in=removed.get('gifts', [])).update(member=member)
+        Conversation.objects.filter(id__in=removed.get('conversations', [])).update(speaker=member)
+        Contribution.objects.filter(id__in=removed.get('contributions', [])).update(author=member)
+
+        member.tags.set(Tag.objects.filter(id__in=removed.get('tags', [])).all())
+
+        for task in Task.objects.filter(id__in=removed.get('tasks', [])):
+            task.stakeholders.remove(self.merged_with)
+            task.stakeholders.add(member)
+
+        for project_id in removed.get('levels', []):
+            try:
+                project = Project.objects.get(id=project_id)
+                level, tstamp = removed['levels'][project_id]
+                MemberLevel.objects.create(community=member.community, timestamp=tstamp, member=member, level=level, project=project)
+            except:
+                pass
+
+        # Reset the original member
+        original = self.data.get('original')
+        if original:
+            original_first_seen = datetime.datetime.strptime(original.get('first_seen'), '%Y-%m-%dT%H:%M:%S.%f')
+            original_last_seen = datetime.datetime.strptime(original.get('last_seen'), '%Y-%m-%dT%H:%M:%S.%f')
+            removed_first_seen = datetime.datetime.strptime(removed.get('first_seen'), '%Y-%m-%dT%H:%M:%S.%f')
+            removed_last_seen = datetime.datetime.strptime(removed.get('last_seen'), '%Y-%m-%dT%H:%M:%S.%f')
+
+            if original.get('name') != self.merged_with.name and removed.get('name') == self.merged_with.name:
+                self.merged_with.name = original.get('name')
+            if original_first_seen != self.merged_with.first_seen and removed_first_seen == self.merged_with.first_seen:
+                self.merged_with.first_seen = original_first_seen
+            if original_last_seen != self.merged_with.last_seen and removed_last_seen == self.merged_with.last_seen:
+                self.merged_with.last_seen = original_last_seen
+            if original.get('email_address') != self.merged_with.email_address and removed.get('email_address') == self.merged_with.email_address:
+                self.merged_with.email_address = original.get('email_address')
+            if original.get('phone_number') != self.merged_with.phone_number and removed.get('phone_number') == self.merged_with.phone_number:
+                self.merged_with.phone_number = original.get('phone_number')
+            if original.get('mailing_address') != self.merged_with.mailing_address and removed.get('mailing_address') == self.merged_with.mailing_address:
+                self.merged_with.mailing_address = original.get('mailing_address')
+            if original.get('role') != self.merged_with.role and removed.get('role') == self.merged_with.role:
+                self.merged_with.role = original.get('role')
+            if original.get('company') != self.merged_with.company_id and removed.get('company') == self.merged_with.company_id:
+                self.merged_with.company_id = original.get('company')
+
+            added_tags = set(removed.get('tags', [])) - set(original.get('tags', []))
+            for tag_id in added_tags:
+                try:
+                    tag = Tag.objects.get(id=tag_id)
+                    self.merged_with.tags.remove(tag)
+                except:
+                    pass
+            self.merged_with.save()
+        self.delete()
+        return member
 
 class MemberWatch(models.Model):
     manager = models.ForeignKey(User, on_delete=models.CASCADE)
