@@ -223,6 +223,7 @@ admin.site.register(Member, MemberAdmin)
 class MergedMemberAdmin(admin.ModelAdmin):
     list_display = ('name', 'community', 'merged_with', 'merged_date')
     list_filter = ('community', 'merged_date')
+    raw_id_fields = ('merged_with',)
     actions = ('restore',)
     def restore(self, request, queryset):
         for merge in queryset:
