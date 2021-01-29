@@ -31,6 +31,18 @@ OPEN_BETA = True
 SITE_ROOT = 'https://savannahhq.com'
 SITE_NAME = 'Savannah CRM'
 SYSTEM_USER = 'admin'
+PUBLIC_EMAIL_DOMAINS = [
+    'gmail.com',
+    'googlemail.com',
+    'outlook.com',
+    'yahoo.com',
+    'mail.ru',
+    'me.com',
+    'hotmail.com',
+    'icloud.com',
+    'protonmail.com',
+    'qq.com',
+]
 
 ALLOWED_HOSTS = []
 ALLOWED_EMAILS_PER_DAY = 100

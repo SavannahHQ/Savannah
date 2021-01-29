@@ -109,6 +109,9 @@ class Companies(SavannahView):
         super().__init__(request, community_id)
         self.active_tab = "company"
 
+    def suggestion_count(self):
+        return SuggestCompanyCreation.objects.filter(community=self.community, status__isnull=True).count()
+
     def all_companies(self):
         return Company.objects.filter(community=self.community).annotate(member_count=Count('member', distinct=True)).order_by('name')
 

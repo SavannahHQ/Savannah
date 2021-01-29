@@ -93,7 +93,7 @@
                     <div class="mb-2 col-lg-2 font-weight-bold">Email</div>
                     <div class="mb-2 col-lg-10">
                       <a href="mailto:{{view.member.email_address}}">{{view.member.email_address}}</a>
-                      {% if not view.member.company %}<a class="small" href="{% url 'company_add' view.community.id %}?for_member={{view.member.id}}" title="Make Company"><i class="fas fa-plus">&nbsp;</i><i class="far fa-building">&nbsp;</i></a>{% endif %}
+                      {% if view.member.suggest_company %}<a class="small" href="{% url 'company_add' view.community.id %}?for_member={{view.member.id}}" title="Make Company"><i class="fas fa-plus">&nbsp;</i><i class="far fa-building">&nbsp;</i></a>{% endif %}
                     </div>
                   </div>
                   {% endif %}

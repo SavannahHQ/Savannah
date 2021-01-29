@@ -86,3 +86,41 @@ class ContributionSuggestions(SavannahView):
 
             return redirect('conversation_as_contribution_suggestions', community_id=community_id)
         return render(request, 'savannahv2/conversation_as_contribution_suggestions.html', view.context)
+
+class CompanyCreationSuggestions(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "companies"
+    
+    @property
+    def all_suggestions(self):
+        suggestions = SuggestCompanyCreation.objects.filter(community=self.community, status__isnull=True).order_by("-created_at")
+        return suggestions
+
+    @login_required
+    def as_view(request, community_id):
+        view = CompanyCreationSuggestions(request, community_id)
+
+        if request.method == 'POST':
+            if 'reject' in request.POST:
+                suggestion_id = request.POST.get('reject')
+                suggestion = SuggestCompanyCreation.objects.get(id=suggestion_id)
+                suggestion.reject(request.user)
+                messages.info(request, "Suggested rejected, you won't see it again")
+            elif 'accept' in request.POST:
+                success_count = 0
+                selected = request.POST.getlist('selected')
+                for suggestion_id in selected:
+                    try:
+                        suggestion = SuggestCompanyCreation.objects.get(id=suggestion_id)
+                        suggestion.accept(request.user)
+                        success_count += 1
+                    except:
+                        pass
+                if len(selected) > 0:
+                    messages.success(request, "<b>%s</b> %s been created" % (success_count, pluralize(len(selected), "Company has", "Companies have")))
+                else:
+                    messages.warning(request, "You haven't selected any company suggestions")
+
+            return redirect('company_suggestions', community_id=community_id)
+        return render(request, 'savannahv2/company_suggestions.html', view.context)

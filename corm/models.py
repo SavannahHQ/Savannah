@@ -169,8 +169,15 @@ class Member(TaggableModel):
         try:
             return MemberLevel.objects.get(community=self.community, member=self, project=self.community.default_project)
         except Exception as e:
-            print(e)
             return None
+
+    @property
+    def suggest_company(self):
+        if self.company or not self.email_address:
+            return False
+        user, domain = self.email_address.split('@', maxsplit=1)
+        if domain not in settings.PUBLIC_EMAIL_DOMAINS:
+            return True
 
     def is_connected(self, other):
         return MemberConnection.objects.filter(from_member=self, to_member=other).count() > 0
@@ -924,6 +931,24 @@ class SourceGroup(ImportedDataModel):
     def __str__(self):
         return self.name
         
+class SuggestCompanyCreation(Suggestion):
+    domain = models.CharField(max_length=256)
+
+    def accept_action(self):
+        default_domain = self.domain
+        default_website = 'https://'+self.domain
+        default_name = self.domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
+        new_company = Company.objects.create(name=default_name, community=self.community, website=default_website)
+        new_domain = CompanyDomains.objects.create(company=new_company, domain=default_domain)
+        members = Member.objects.filter(community=self.community, company__isnull=True, email_address__endswith=default_domain)
+        for member in members:
+            (identity, domain) = member.email_address.split('@', maxsplit=1)
+            if domain == self.domain:
+                member.company = new_company
+                member.save()
+        self.delete()
+        return False
+
 def pluralize(count, singular, plural=None):
     if plural is None:
         plural = singular + "s"
