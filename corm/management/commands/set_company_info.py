@@ -63,7 +63,7 @@ class Command(BaseCommand):
         for domain, count in unknown_domain_counts.items():
             if domain in settings.PUBLIC_EMAIL_DOMAINS:
                 continue
-            if count >= 5:
+            if count >= settings.COMPANY_SUGGESTION_MATCHES:
                 suggestion, created = SuggestCompanyCreation.objects.get_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
                 if created:
                     created_count += 1
