@@ -35,10 +35,14 @@ PUBLIC_EMAIL_DOMAINS = [
     'gmail.com',
     'googlemail.com',
     'outlook.com',
+    'outlook.fr',
+    'outlook.de',
     'live.com',
     'live.fr',
     'live.de',
     'yahoo.com',
+    'yahoo.co.uk',
+    'yahoo.com.br',
     'yahoo.fr',
     'yahoo.de',
     'aol.com',
@@ -50,6 +54,8 @@ PUBLIC_EMAIL_DOMAINS = [
     'me.com',
     'hotmail.com',
     'hotmail.co.uk',
+    'hotmail.fr',
+    'hotmail.de',
     'icloud.com',
     'protonmail.com',
     'qq.com',
@@ -59,6 +65,9 @@ PUBLIC_EMAIL_DOMAINS = [
     'gmx.net',
     'gmx.de',
     'free.fr',
+    'web.com',
+    'web.fr',
+    'web.de',
 ]
 COMPANY_SUGGESTION_MATCHES = 3
 
