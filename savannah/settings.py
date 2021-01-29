@@ -35,6 +35,7 @@ PUBLIC_EMAIL_DOMAINS = [
     'gmail.com',
     'googlemail.com',
     'outlook.com',
+    'live.com',
     'yahoo.com',
     'mail.ru',
     'me.com',
@@ -42,6 +43,10 @@ PUBLIC_EMAIL_DOMAINS = [
     'icloud.com',
     'protonmail.com',
     'qq.com',
+    '163.com',
+    '126.com',
+    'gmx.net',
+    'gmx.de',
 ]
 
 ALLOWED_HOSTS = []
