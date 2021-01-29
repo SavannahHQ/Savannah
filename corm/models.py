@@ -164,6 +164,14 @@ class Member(TaggableModel):
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
+    @property
+    def default_level(self):
+        try:
+            return MemberLevel.objects.get(community=self.community, member=self, project=self.community.default_project)
+        except Exception as e:
+            print(e)
+            return None
+
     def is_connected(self, other):
         return MemberConnection.objects.filter(from_member=self, to_member=other).count() > 0
 
