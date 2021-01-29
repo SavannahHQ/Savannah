@@ -18,7 +18,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit
-from frontendv2.views.members import Members, MemberProfile, MemberMerge, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member
+from frontendv2.views.members import Members, MemberProfile, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
@@ -52,6 +52,7 @@ urlpatterns = [
     path('member/<int:community_id>/add', MemberAdd.as_view, name='member_add'),
     path('member/<int:member_id>/edit', MemberEdit.as_view, name='member_edit'),
     path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
+    path('member/<int:member_id>/merge_history', MemberMergeHistory.as_view, name='merge_history'),
     path('member/<int:member_id>/tag', tag_member, name='member_tag_form'),
     path('member/<int:member_id>/note', add_note, name='member_note_form'),
     path('member/<int:member_id>/watch', watch_member, name='member_watch_form'),

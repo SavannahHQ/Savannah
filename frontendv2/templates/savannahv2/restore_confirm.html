@@ -1,0 +1,52 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | Restore {{object_name}}{% endblock %}
+
+{% block page_content %}
+
+          <!-- Content Row -->
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-8 mb-8">
+
+              <!-- New Members-->
+              <div class="card shadow mb-4 border-success">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Restore {{object_name}}?</h6>
+                </div>
+                <div class="card-body">
+                  <h4 class="h-4">Are you sure you want to restore {{object_type}}: <b>{{object_name}}</b>?</h4>
+                  {% if warning_msg %}<p>{{warning_msg}}</p>{% endif %}
+                  {% if object_dependencies %}
+                  It will also revert:
+                  <ul>
+                    {% for count, objects in object_dependencies %}
+                    <li>{{count|intcomma}} {{objects}}
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                    <form method="post">{% csrf_token %}
+                    <div>
+                    <input type="hidden" name="restore_confirm" value="yes">
+                    <input type="hidden" name="object_id" value="{{object_id}}">
+                    <input class="btn btn-success" type="submit" value="Yes, I’m sure">
+                    <a href="?cancel" class="btn btn-secondary">No, take me back</a>
+                    </div>
+                    </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

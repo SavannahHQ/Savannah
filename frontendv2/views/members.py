@@ -231,6 +231,10 @@ class MemberProfile(SavannahView):
         self.role = None
         
     @property
+    def has_merge_history(self):
+        return MemberMergeRecord.objects.filter(community=self.member.community, merged_with=self.member).count() > 0
+        
+    @property
     def is_watched(self):
         return MemberWatch.objects.filter(manager=self.request.user, member=self.member).count() > 0
         
@@ -387,6 +391,38 @@ class MemberProfile(SavannahView):
 
                 return redirect('member_profile', member_id=member_id)
         return render(request, 'savannahv2/member_profile.html', view.context)
+
+class MemberMergeHistory(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    def all_merges(self):
+        return MemberMergeRecord.objects.filter(community=self.member.community, merged_with=self.member).order_by('-merged_date')
+
+    @login_required
+    def as_view(request, member_id):
+        view = MemberMergeHistory(request, member_id)
+        if request.method == 'POST':
+            if 'restore_member' in request.POST:
+                record = get_object_or_404(MemberMergeRecord, id=request.POST.get('restore_member'))
+                # TODO Redirect to confirmation page
+                context = view.context
+                context.update({
+                    'object_type':"Member", 
+                    'object_name': record.name, 
+                    'object_id': record.id,
+                    'warning_msg': 'This will also revert changes to the current member that were the result of this merge',
+                })
+                return render(request, "savannahv2/restore_confirm.html", context)
+            elif 'restore_confirm' in request.POST:
+                record = get_object_or_404(MemberMergeRecord, id=request.POST.get('object_id'))
+                new_member = record.restore()
+                messages.success(request, "Member restored")
+
+                return redirect('member_profile', member_id=new_member.id)
+        return render(request, 'savannahv2/merge_history.html', view.context)
 
 from django.http import JsonResponse
 @login_required

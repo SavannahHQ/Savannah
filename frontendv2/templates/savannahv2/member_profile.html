@@ -242,11 +242,12 @@
                   <h6 class="m-0 font-weight-bold text-primary">Identities</h6>
                   <div class="dropdown no-arrow">
                     <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                      <i class="fas fa-people-arrows fa-fw text-gray-400"></i>
                     </a>
                     <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
                       <div class="dropdown-header">Identity Actions:</div>
-                      <a class="dropdown-item" href="{% url 'member_merge' view.member.id %}"><i class="fas fa-people-arrows"> </i> Merge Members</a>
+                      <a class="dropdown-item" href="{% url 'member_merge' view.member.id %}"><i class="fas fa-people-arrows"> </i> Merge with...</a>
+                      <a class="dropdown-item{% if not view.has_merge_history %} disabled{% endif %}" href="{% url 'merge_history' view.member.id %}"><i class="fas fa-history"> </i> Merge History</a>
                     </div>
                   </div>
                 </div>
