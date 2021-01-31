@@ -175,10 +175,16 @@ class SavannahView:
 
     def _add_sources_message(self):
         if self.request.method == "GET":
-            if self.community.source_set.all().count() == 0:
+            if self.community.status == Community.SUSPENDED:
+                messages.warning(self.request, "Updates to this community have been suspended due to a billing problem. Please update your <a href=\"%s\">billing information</a> to resume updates." % reverse('billing:manage_account', kwargs={'community_id':self.community.id}))
+            elif self.community.status == Community.DEACTIVE:
+                messages.error(self.request, "This community has been deactivated and will not recieve updates. You may reactive is by <a href=\"%s\">renewing your subcription</a> or <a href=\"%s\">starting a new one</a>." % (reverse('billing:manage_account', kwargs={'community_id':self.community.id}), reverse('billing:signup_org', kwargs={'community_id':self.community.id})))
+            elif self.community.status == Community.ARCHIVED:
+                messages.info(self.request, "This community has been archived and will no longer receive updates.")
+            elif self.community.source_set.all().count() == 0:
                 messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-file-import\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
             elif self.community.status == Community.SETUP:
-                messages.warning(self.request, "You must finish your <a class=\"\" href=\"%s\">community setup</a> before Savannah will import any activity." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+                messages.success(self.request, "Savannah is ready to begin importing data from your community. <a href=\"%s\">Start you subsription now!</a>" % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
         
     @property
     def context(self):
