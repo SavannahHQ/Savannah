@@ -220,25 +220,21 @@ class GithubImporter(PluginImporter):
         else:
             print("Failed to lookup identity info: %s" % resp.content)
 
-    def import_channel(self, channel):
+    def import_channel(self, channel, from_date, full_import=False):
       source = channel.source
       community = source.community
       github_path = channel.origin_id.split('/')
 
       owner = github_path[3]
       repo = github_path[4]
-      if channel.last_import and not self.full_import:
-        from_date = channel.last_import.strftime(GITHUB_TIMESTAMP)
-      else:
-        from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
-      print("  since %s" % from_date)
 
       tag_matcher = re.compile('\@([a-zA-Z0-9]+)')
       found_members = dict()
 
+      from_date_str = from_date.strftime(GITHUB_TIMESTAMP)
       issues_page = 1
       while (issues_page):
-        repo_issues_url = GITHUB_ISSUES_URL % {'owner': owner, 'repo': repo, 'since': from_date, 'page': issues_page}
+        repo_issues_url = GITHUB_ISSUES_URL % {'owner': owner, 'repo': repo, 'since': from_date_str, 'page': issues_page}
             
         resp = self.api_call(repo_issues_url)
         if resp.status_code == 200:

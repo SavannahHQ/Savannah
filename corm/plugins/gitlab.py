@@ -187,14 +187,9 @@ class GitlabImporter(PluginImporter):
     def update_identity(self, identity):
         pass
 
-    def import_channel(self, channel):
+    def import_channel(self, channel, from_date, full_import=False):
         source = channel.source
         community = source.community
-        if channel.last_import and not self.full_import:
-            from_date = channel.last_import
-        else:
-            from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
-        print("From %s since %s" % (channel.name, from_date))
         
         updated_after = self.strftime(from_date)
         resp = self.api_call(GITLAB_ISSUES_URL % {'project_id': channel.origin_id, 'updated_after': updated_after})

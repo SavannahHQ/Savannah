@@ -56,7 +56,8 @@ class PluginImporter:
         self.source = source
         self.community = source.community
         self.verbosity = 0
-        self.full_import = False
+        self._first_import = False
+        self._full_import = False
         self._member_cache = dict()
         self.API_HEADERS = dict()
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
@@ -64,7 +65,20 @@ class PluginImporter:
         self.API_BACKOFF_ATTEMPTS = 5
         self.API_BACKOFF_SECONDS = 10
 
+    def get_full_import(self):
+        return self._full_import or self._first_import
 
+    def set_full_import(self, val=None):
+        self._full_import = val
+    full_import = property(get_full_import, set_full_import)
+
+    def get_first_import(self):
+        return self._first_import
+
+    def set_first_import(self, val=None):
+        self._first_import = val
+    first_import = property(get_first_import, set_first_import)
+        
     def make_member(self, origin_id, detail, tstamp=None, channel=None, email_address=None, avatar_url=None, name=None, speaker=False, replace_first_seen=False):
         save_member = False
         if origin_id in self._member_cache:
@@ -189,17 +203,44 @@ class PluginImporter:
         channels = self.source.channel_set.filter(origin_id__isnull=False, source__auth_secret__isnull=False).order_by('last_import')
         return channels
 
-    def run(self):
+    def run(self, new_only=False):
         failures = list()
-        for channel in self.get_channels():
+        channels = self.get_channels()
+        if new_only:
+            channels = channels.filter(first_import__isnull=True)
+        if len(channels) == 0:
+            return
+        for channel in channels:
             if not channel.enabled:
                 continue
+            if new_only and channel.first_import is not None:
+                continue
+            if self.verbosity >= 2:
+                print("Importing channel: %s" % channel.name)
+            full_import = self.full_import
+            first_import = self.first_import
             try:
-                self.import_channel(channel)
-                if self.verbosity > 2:
-                    print("Completed import of %s" % channel.name)
                 if channel.first_import is None:
                     channel.first_import = datetime.datetime.utcnow()
+                    first_import = True
+                    channel.save()
+
+                if channel.last_import and not self.full_import:
+                    from_date = channel.last_import
+                else:
+                    from_date = datetime.datetime.utcnow() - datetime.timedelta(days=settings.MAX_IMPORT_HISTORY_DAYS)
+                    # Because we're going a full import, set the last_imported to now to avoid the next run
+                    # also trying to do a full import if this one hasn't finished yet.
+                    full_import = True
+                    channel.last_import = datetime.datetime.utcnow()
+                    channel.save()
+                print("From %s since %s" % (channel.name, from_date))
+
+                self.import_channel(channel, from_date, full_import)
+
+                if self.verbosity > 2:
+                    print("Completed import of %s" % channel.name)
+                if first_import:
                     recipients = self.source.community.managers or self.source.community.owner
                     notify.send(channel, 
                         recipient=recipients, 
@@ -209,32 +250,39 @@ class PluginImporter:
                         icon_name="fas fa-file-import",
                         link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id})
                     )
+                if channel.oldest_import is None or from_date < channel.oldest_import:
+                    channel.oldest_import = from_date
                 channel.last_import = datetime.datetime.utcnow()
                 channel.import_failed_attempts = 0
                 channel.import_failed_message = None
                 channel.save()
             except Exception as e:
-                    channel.import_failed_attempts += 1
-                    channel.import_failed_message = str(e)
-                    if channel.import_failed_attempts >= settings.MAX_CHANNEL_IMPORT_FAILURES:
-                        channel.enabled = False
-                    channel.save()
-                    failures.append(channel.name)
-                    recipients = self.source.community.managers or self.source.community.owner
-                    notify.send(channel, 
-                        recipient=recipients, 
-                        verb="failed to import into",
-                        target=self.community,
-                        level='error',
-                        icon_name="fas fa-file-import",
-                        link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id}),
-                        error=str(e)
-                    )
-                    if self.verbosity:
-                        print("Failed to import %s: %s" %(channel.name, e))
+                if first_import:
+                    channel.first_import = None
+                    channel.oldest_import = None
+                channel.import_failed_attempts += 1
+                channel.import_failed_message = str(e)
+                if channel.import_failed_attempts >= settings.MAX_CHANNEL_IMPORT_FAILURES:
+                    channel.enabled = False
+                channel.save()
+                failures.append(channel.name)
+                recipients = self.source.community.managers or self.source.community.owner
+                notify.send(channel, 
+                    recipient=recipients, 
+                    verb="failed to import into",
+                    target=self.community,
+                    level='error',
+                    icon_name="fas fa-file-import",
+                    link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id}),
+                    error=str(e)
+                )
+                if self.verbosity:
+                    print("Failed to import %s: %s" %(channel.name, e))
+            if self.full_import:
+                sleep(5)
         self.source.last_import = datetime.datetime.utcnow()
         if self.source.first_import is None:
-            self.source.first_import = datetime.datetime.utcnow()
+            self.source.first_import = self.source.last_import
         if len(failures) > 0:
             self.source.import_failed_attempts += 1
             if self.source.import_failed_attempts >= settings.MAX_SOURCE_IMPORT_FAILURES:

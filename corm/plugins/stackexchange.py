@@ -249,24 +249,15 @@ class StackExchangeImporter(PluginImporter):
         full_path += '&'+urlencode(auth_params)
         return self.api_request(full_path, headers=[])
 
-    def import_channel(self, channel):
+    def import_channel(self, channel, from_date, full_import=False):
         source = channel.source
         community = source.community
-        if channel.last_import and not self.full_import:
-            from_date = channel.last_import
-            pause_between_pages = False
-        else:
-            from_date = datetime.datetime.utcnow() - datetime.timedelta(days=365)
-            pause_between_pages = True
-            channel.last_import = datetime.datetime.utcnow()
-            channel.save()
-        print("From %s since %s" % (channel.name, from_date))
         
         questions = set()
         questions_page = 1
         while questions_page:
             # Pause between pages when doing a full import
-            if pause_between_pages and questions_page > 1:
+            if full_import and questions_page > 1:
                 sleep(5)
 
             question_resp = self.api_call(SITE_QUESTIONS_URL % {
@@ -311,7 +302,7 @@ class StackExchangeImporter(PluginImporter):
             answers_page = 1
             while answers_page:
                 # Pause between pages when doing a full import
-                if pause_between_pages and answers_page > 1:
+                if full_import and answers_page > 1:
                     sleep(5)
 
                 answer_resp = self.api_call(SITE_ANSWERS_URL % {
@@ -369,7 +360,7 @@ class StackExchangeImporter(PluginImporter):
             posts_page = 1
             while posts_page:
                 # Pause between pages when doing a full import
-                if pause_between_pages and posts_page > 1:
+                if full_import and posts_page > 1:
                     sleep(5)
 
                 comments_resp = self.api_call(SITE_COMMENTS_URL % {

@@ -474,6 +474,7 @@ class Channel(ImportedDataModel):
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
+    oldest_import = models.DateTimeField(null=True, blank=True)
     first_import = models.DateTimeField(null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
     import_failed_attempts = models.SmallIntegerField(default=0)

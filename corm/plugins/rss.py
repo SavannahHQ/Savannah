@@ -139,7 +139,7 @@ class RssImporter(PluginImporter):
         channels = self.source.channel_set.filter(origin_id__isnull=False).order_by('last_import')
         return channels
 
-    def import_channel(self, channel):
+    def import_channel(self, channel, from_date, full_import=False):
       source = channel.source
       community = source.community
 

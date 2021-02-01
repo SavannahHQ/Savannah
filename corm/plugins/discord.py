@@ -196,13 +196,7 @@ class DiscordImporter(PluginImporter):
     def api_call(self, path):
         return self.api_request(path, headers=self.API_HEADERS)
 
-    def import_channel(self, channel):
-        if channel.last_import and not self.full_import:
-            from_date = channel.last_import
-        else:
-            from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
-        print("From %s since %s" % (channel.name, from_date))
-
+    def import_channel(self, channel, from_date, full_import=False):
         cursor = None
         has_more = True
         utc = pytz.timezone('UTC')

@@ -224,13 +224,7 @@ class RedditImporter(PluginImporter):
             identity.member.avatar_url = identity.avatar_url
         identity.member.save()
 
-    def import_channel(self, channel):
-        if channel.last_import and not self.full_import:
-            from_date = channel.last_import
-        else:
-            from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
-        print("From %s since %s" % (channel.name, from_date))
-
+    def import_channel(self, channel, from_date, full_import=False):
         self.from_timestamp = self.strftime(from_date)
         cursor = ''
         has_more = True

@@ -148,7 +148,7 @@ class SourceAdmin(admin.ModelAdmin):
 admin.site.register(Source, SourceAdmin)
 
 class ChannelAdmin(admin.ModelAdmin):
-    list_display = ("name", "enabled", "status", "source", "conversation_count", "first_import", "last_import")
+    list_display = ("name", "enabled", "status", "source", "conversation_count", "first_import", "last_import", "oldest_import")
     list_filter = (isNotZero("import_failed_attempts", "import failures"), "source__community", "source__connector", "enabled", "first_import", "last_import")
     search_fields = ("name",)
 

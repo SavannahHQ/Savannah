@@ -150,19 +150,13 @@ class DiscourseImporter(PluginImporter):
         else:
             print("Failed to lookup identity info: %s" % resp.status_code)
 
-    def import_channel(self, channel):
+    def import_channel(self, channel, from_date, full_import=False):
       source = channel.source
       community = source.community
       discourse_path = channel.origin_id.split('/')
 
       category_name = discourse_path[-2]
       category_id = int(discourse_path[-1])
-
-      if channel.last_import and not self.full_import:
-          from_date = channel.last_import
-      else:
-          from_date = datetime.datetime.utcnow() - datetime.timedelta(days=180)
-      print("From %s since %s" % (category_name, self.strftime(from_date)))
 
       has_more = True
       page = 0
