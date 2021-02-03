@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate, login as login_user, logout as log
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
 
-
+from simple_ga import api as ga
 from corm.models import *
 from corm.connectors import ConnectionManager
 
@@ -60,6 +60,7 @@ class InviteManager(SavannahView):
                 for email in emails:
                     ManagerInvite.send(view.community, request.user, email)
                 messages.success(request, "Invitations sent!")
+                ga.add_event(request, 'manager_invited', category='community')
                 return redirect("managers", community_id=community_id)
             else:
                 messages.error(request, "Invalid emails")
@@ -116,6 +117,7 @@ class AcceptManager(SavannahView):
                         request.user.save()
                     messages.success(request, "You've been added to %s as a new Manager!" % view.community.name)
                     invite.delete()
+                    ga.add_event(request, 'manager_added', category='community')
                     return redirect('dashboard', community_id=community_id)
                 else:
                     context['error'] = "Your invitation has expired"

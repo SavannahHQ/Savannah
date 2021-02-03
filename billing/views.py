@@ -18,6 +18,8 @@ from billing.models import Organization, Management
 from frontendv2.views import SavannahView, get_session_community
 from frontendv2.models import EmailMessage
 
+from simple_ga import api as ga
+
 # Create your views here.
 class NewCommunityForm(forms.ModelForm):
     class Meta:
@@ -46,6 +48,7 @@ def signup_community(request):
             msg.send(settings.ADMINS)
             # Redirect to company creation form
             #messages.success(request, "Welcome to your new Communtiy! Learn what to do next in our <a target=\"_blank\" href=\"http://docs.savannahhq.com/getting-started/\">Getting Started</a> guide.")
+            ga.add_event(request, 'community_creation', category='signup')
             return redirect('billing:signup_org', community_id=new_community.id)
     else:
         form = NewCommunityForm(instance=community)
@@ -86,6 +89,7 @@ def signup_org(request, community_id):
         org, created = Organization.objects.get_or_create(customer=djstripe_customer, defaults={'name': community.name, 'email': request.user.email})
 
         management, created = Management.objects.get_or_create(org=org, community=community)
+        ga.add_event(request, 'org_creation', category='signup')
         return redirect('billing:signup_subscribe', community_id=community.id)
     except Exception as e:
         messages.error(request, "Failed to find or create a billing organization for %s" % community.name)
@@ -126,7 +130,7 @@ def signup_subscribe_session(request, community_id):
             success_url=settings.SITE_ROOT + reverse('billing:subscription_success', kwargs={'community_id': community.id}) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url= settings.SITE_ROOT + reverse('billing:subscription_cancel', kwargs={'community_id': community.id}), # The cancel_url is typically set to the original product page
         )
- 
+
     return JsonResponse({'sessionId': checkout_session['id']})
 
 @login_required
@@ -144,6 +148,7 @@ def signup_subscribe(request, community_id):
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
         "STRIPE_PLAN": settings.STRIPE_DEFAULT_PLAN,
     }
+    ga.add_event(request, 'subcription_options_viewed', category='signup')
     return render(request, 'billing/signup_subscribe.html', context)
 
 @login_required
@@ -158,6 +163,7 @@ def subscription_success(request, community_id):
     # Redirect to Community dashboard
     community = get_object_or_404(Community, id=community_id)
     messages.success(request, "Your subscription to Savannah CRM has begun!")
+    ga.add_event(request, 'subcription_created', category='signup')
     return redirect('dashboard', community_id=community.id)
 
 @login_required
@@ -165,6 +171,7 @@ def subscription_cancel(request, community_id):
     # Redirect to subscribe_community
     community = get_object_or_404(Community, id=community_id)
     messages.error(request, "Unable to process your subscription")
+    ga.add_event(request, 'subcription_abort', category='signup')
     return redirect('billing:signup_subscribe', community_id=community.id)
 
 @webhooks.handler("checkout.session.completed")
