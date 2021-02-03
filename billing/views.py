@@ -99,12 +99,13 @@ def signup_org(request, community_id):
         return redirect('billing:signup')
 
 @login_required
-def signup_subscribe_session(request, community_id):
+def signup_subscribe_session(request, community_id,):
  
     management = get_object_or_404(Management, community_id=community_id)
     community = management.community
     org = management.org
-
+    plan_id = request.GET.get('plan', None)
+    plan = get_object_or_404(djstripe.models.Plan, id=plan_id)
 
     if request.method == 'POST':
  
@@ -119,7 +120,7 @@ def signup_subscribe_session(request, community_id):
             allow_promotion_codes=True,
             line_items=[
                 {
-                    "price": settings.STRIPE_DEFAULT_PLAN,
+                    "price": plan_id,
                     "quantity": 1
                 }
             ],
@@ -145,6 +146,7 @@ def signup_subscribe(request, community_id):
     context = {
         "community": community,
         "org": org,
+        "plans": djstripe.models.Plan.objects.all().order_by('amount'),
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
         "STRIPE_PLAN": settings.STRIPE_DEFAULT_PLAN,
     }

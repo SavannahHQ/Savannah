@@ -40,6 +40,9 @@ class SourceAdd(SavannahView):
     @login_required
     def as_view(request):
         view = SourceAdd(request, community_id=request.session['community'])
+        if not view.community.management.can_add_source():
+            messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+            return redirect('sources', community_id=view.community.id)
         new_source = Source(community=view.community, connector="corm.plugins.discourse", icon_name="fab fa-discourse")
         if request.method == "POST":
             form = DiscourseForm(data=request.POST, instance=new_source)
@@ -67,6 +70,9 @@ class DiscoursePlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "%s/u/%s" % (contact.source.server, contact.detail)
 
+    def get_icon_name(self):
+        return 'fab fa-discourse'
+        
     def get_auth_url(self):
         return reverse('discourse_auth')
 

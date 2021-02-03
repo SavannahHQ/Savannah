@@ -35,6 +35,31 @@ class UserAuthCredentials(models.Model):
     def __str__(self):
         return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
 
+class ManagementPermissionMixin(object):
+
+    def can_add_manager(self):
+        return False
+
+    def can_add_source(self):
+        return False
+
+    def can_add_tag(self):
+        return False
+
+    def can_add_project(self):
+        return False
+
+    def max_import_date(self):
+        return datetime.datetime.utcnow()
+
+    def max_retention_date(self):
+        return datetime.datetime.utcnow()
+
+class NoManagement(ManagementPermissionMixin):
+    def __init__(self, community, metadata={}):
+        self.community = community
+        self.metadata = metadata
+
 class Community(models.Model):
     SETUP = 0
     ACTIVE = 1
@@ -67,6 +92,15 @@ class Community(models.Model):
     icon = ImageSpecField(source='logo', spec=Icon)
     created = models.DateTimeField(auto_now_add=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SETUP)
+
+    @property
+    def management(self):
+        try:
+            return self._management
+        except:
+            return NoManagement(community=self, metadata={
+                'name': 'No Plan'
+            })
 
     @property
     def email(self):

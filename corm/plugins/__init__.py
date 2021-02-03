@@ -28,8 +28,17 @@ class BasePlugin:
     def __init__(self):
         pass
 
+    def get_icon_name(self):
+        return 'fas fa-cogs'
+
+    def get_auth_url(self):
+        return ''
+
     def get_identity_url(self, contact):
         return None
+
+    def get_connector(self):
+        return self.__class__.__module__
 
     def get_source_type_name(self):
         return self.__class__.__name__

@@ -100,6 +100,9 @@ class SourceAdd(SavannahView):
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
+    if not community.management.can_add_source():
+        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        return redirect('sources', community_id=community.id)
     client_id = settings.GITLAB_CLIENT_ID
     gitlab_auth_scope = [
         'read_user',
@@ -141,6 +144,9 @@ class GitlabPlugin(BasePlugin):
 
     def get_identity_url(self, contact):
         return contact.origin_id
+
+    def get_icon_name(self):
+        return 'fab fa-gitlab'
 
     def get_auth_url(self):
         return reverse('gitlab_auth')

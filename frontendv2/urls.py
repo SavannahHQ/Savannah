@@ -22,7 +22,7 @@ from frontendv2.views.members import Members, MemberProfile, MemberMerge, Member
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
-from frontendv2.views.sources import Sources, Channels, tag_channel
+from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions
 from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager
@@ -96,6 +96,7 @@ urlpatterns = [
     path('managers/<int:community_id>/password', ManagerPasswordChange.as_view, name='manager_password'),
     path('managers/<int:community_id>/delete', ManagerDelete.as_view, name='manager_delete'),
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
+    path('sources/<int:community_id>/add/<str:connector>', add_source, name='add_source'),
     path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),
     path('sources/<int:community_id>/channels/<int:source_id>/tag', tag_channel, name='channel_tag_form'),
