@@ -53,6 +53,9 @@ class InviteManager(SavannahView):
     @login_required
     def as_view(request, community_id):
         view = InviteManager(request, community_id)
+        if not view.community.management.can_add_manager():
+            messages.warning(request, "You've reached your maximum allowed Managers. Upgrade your plan to add more.")
+            return redirect('managers', community_id=community_id)
         if request.method == "POST":
             view.form = ManagerInviteForm(data=request.POST)
             if view.form.is_valid():

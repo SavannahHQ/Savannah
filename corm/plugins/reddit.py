@@ -30,6 +30,9 @@ USER_PROFILE_URL = 'https://oauth.reddit.com/user/%(user)s/about'
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
+    if not community.management.can_add_source():
+        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        return redirect('sources', community_id=community.id)
     client_id = settings.REDDIT_CLIENT_ID
     reddit_auth_scope = [
         'identity',
@@ -106,6 +109,9 @@ class RedditPlugin(BasePlugin):
             return "%s/u/%s" % (contact.source.server, reddit_id)
         else:
             return None
+
+    def get_icon_name(self):
+        return 'fab fa-reddit'
 
     def get_auth_url(self):
         return reverse('reddit_auth')

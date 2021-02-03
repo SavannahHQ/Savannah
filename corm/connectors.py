@@ -1,4 +1,5 @@
 from django.conf import settings
+from collections import OrderedDict
 
 class ConnectionManager(object):
 
@@ -7,8 +8,8 @@ class ConnectionManager(object):
             ("corm.plugins.api", "API"),
         ]
 
-    CONNECTOR_PLUGINS = dict()
-    CONNECTOR_IMPORTERS = dict()
+    CONNECTOR_PLUGINS = OrderedDict()
+    CONNECTOR_IMPORTERS = OrderedDict()
     CONNECTOR_MAP_CACHE = None
 
     @classmethod

@@ -75,6 +75,9 @@ class SlackPlugin(BasePlugin):
         else:
             return None
 
+    def get_icon_name(self):
+        return 'fab fa-slack'
+
     def get_auth_url(self):
         return reverse('slack_auth')
 

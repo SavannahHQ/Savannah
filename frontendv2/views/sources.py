@@ -28,6 +28,8 @@ class Sources(SavannahView):
             elif self.community.status == Community.SETUP:
                 messages.warning(self.request, "Your activity will begin importing once you finish your <a class=\"\" href=\"%s\">community setup</a>." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
        
+    def available_plugins(self):
+        return ConnectionManager.CONNECTOR_PLUGINS.values()
 
     @login_required
     def as_view(request, community_id):
@@ -108,6 +110,17 @@ class Sources(SavannahView):
             nodes.append({"id":'m%s'%member_id, "name":contact.member_name, "link":link, "color":tag_color, "connections":connection_counts.get(member_id, 0)})
                     
         return JsonResponse({"nodes":nodes, "links":links})
+
+@login_required
+def add_source(request, community_id, connector):
+    community = get_object_or_404(Community, id=community_id)
+    if not community.management.can_add_source():
+        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        return redirect('sources', community_id=community.id)
+
+    plugin = ConnectionManager.CONNECTOR_PLUGINS[connector]
+    plugin_add_view = plugin.get_add_view()
+    return plugin_add_view(request)
 
 class Channels(SavannahView):
     def __init__(self, request, community_id, source_id):

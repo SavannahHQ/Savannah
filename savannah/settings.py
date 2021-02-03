@@ -110,13 +110,13 @@ INSTALLED_APPS = [
 ]
 
 CORM_PLUGINS = [
-    "corm.plugins.discourse.DiscoursePlugin",
     "corm.plugins.slack.SlackPlugin",
-    "corm.plugins.discord.DiscordPlugin",
+    "corm.plugins.discourse.DiscoursePlugin",
     "corm.plugins.github.GithubPlugin",
-    "corm.plugins.gitlab.GitlabPlugin",
-    "corm.plugins.stackexchange.StackExchangePlugin",
     "corm.plugins.reddit.RedditPlugin",
+    "corm.plugins.stackexchange.StackExchangePlugin",
+    "corm.plugins.discord.DiscordPlugin",
+    "corm.plugins.gitlab.GitlabPlugin",
     "corm.plugins.rss.RssPlugin",
 ]
 

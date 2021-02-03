@@ -95,6 +95,10 @@ class SourceAdd(SavannahView):
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
+    if not community.management.can_add_source():
+        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        return redirect('sources', community_id=community.id)
+
     client_id = settings.DISCORD_CLIENT_ID
     discord_auth_scope = [
         'bot',
@@ -145,6 +149,9 @@ class DiscordPlugin(BasePlugin):
         else:
             return None
 
+    def get_icon_name(self):
+        return 'fab fa-discord'
+        
     def get_auth_url(self):
         return reverse('discord_auth')
 
