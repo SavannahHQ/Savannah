@@ -122,6 +122,13 @@
           <span>Projects</span></a>
       </li>
 
+      <!-- Nav Item - Companies -->
+      <li class="nav-item {% if active_tab == "company" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'companies' view.community.id %}">
+          <i class="fas fa-fw fa-building"></i>
+          <span>Companies</span></a>
+      </li>
+
       <!-- Nav Item - Reports -->
       <li class="nav-item {% if active_tab == "reports" %}active{% endif %}">
         <a class="nav-link" href="{% url 'reports' request.session.community %}">
@@ -172,13 +179,6 @@
         <a class="nav-link" href="{% url 'gifts' view.community.id %}">
           <i class="fas fa-fw fa-gifts"></i>
           <span>Gifts</span></a>
-      </li>
-
-      <!-- Nav Item - Managers -->
-      <li class="nav-item {% if active_tab == "company" %}active{% endif %}">
-        <a class="nav-link" href="{% url 'companies' view.community.id %}">
-          <i class="fas fa-fw fa-building"></i>
-          <span>Companies</span></a>
       </li>
 
       <!-- Divider -->
