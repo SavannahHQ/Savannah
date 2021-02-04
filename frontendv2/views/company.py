@@ -13,6 +13,7 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView
+from frontendv2.views.charts import PieChart, ChartColors
 
 class CompanyProfile(SavannahView):
     def __init__(self, request, company_id):
@@ -108,12 +109,51 @@ class Companies(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "company"
+        self._membersChart = None
+        self._conversationsChart = None
+        self._contributionsChart = None
+        self._company_colors = dict()
 
     def suggestion_count(self):
         return SuggestCompanyCreation.objects.filter(community=self.community, status__isnull=True).count()
 
     def all_companies(self):
         return Company.objects.filter(community=self.community).annotate(member_count=Count('member', distinct=True)).order_by('name')
+
+    def members_chart(self):
+        if not self._membersChart:
+            companies = Company.objects.filter(community=self.community, is_staff=False).annotate(member_count=Count('member')).filter(member_count__gt=0).order_by('-member_count')
+
+            chart_colors = ChartColors()
+            self._membersChart = PieChart("membersChart", title="Members by Company", limit=8)
+            for company in companies:
+                if company.tag:
+                    self._company_colors[company.id] = company.tag.color
+                else:
+                    self._company_colors[company.id] = chart_colors.next()
+                self._membersChart.add(company.name, company.member_count, data_color=self._company_colors[company.id])
+        self.charts.add(self._membersChart)
+        return self._membersChart
+
+    def conversations_chart(self):
+        if not self._conversationsChart:
+            companies = Company.objects.filter(community=self.community, is_staff=False).annotate(convo_count=Count('member__speaker_in')).filter(convo_count__gt=0).order_by('-convo_count')
+
+            self._conversationsChart = PieChart("conversationsChart", title="Conversations by Company", limit=8)
+            for company in companies:
+                self._conversationsChart.add(company.name, company.convo_count, data_color=self._company_colors[company.id])
+        self.charts.add(self._conversationsChart)
+        return self._conversationsChart
+
+    def contributions_chart(self):
+        if not self._contributionsChart:
+            companies = Company.objects.filter(community=self.community, is_staff=False).annotate(contrib_count=Count('member__contribution')).filter(contrib_count__gt=0).order_by('-contrib_count')
+
+            self._contributionsChart = PieChart("contributionsChart", title="Contributions by Company", limit=8)
+            for company in companies:
+                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id])
+        self.charts.add(self._contributionsChart)
+        return self._contributionsChart
 
     @login_required
     def as_view(request, community_id):
