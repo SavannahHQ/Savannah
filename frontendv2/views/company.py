@@ -1,7 +1,7 @@
 import operator
 from functools import reduce
 import datetime
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 from django.db.models.functions import Trunc
@@ -132,7 +132,7 @@ class Companies(SavannahView):
                     self._company_colors[company.id] = company.tag.color
                 else:
                     self._company_colors[company.id] = chart_colors.next()
-                self._membersChart.add(company.name, company.member_count, data_color=self._company_colors[company.id])
+                self._membersChart.add(company.name, company.member_count, data_color=self._company_colors[company.id], data_link=reverse('company_profile', kwargs={'company_id': company.id}))
         self.charts.add(self._membersChart)
         return self._membersChart
 
@@ -143,7 +143,7 @@ class Companies(SavannahView):
             self._conversationsChart = PieChart("conversationsChart", title="Conversations by Company")
             self._conversationsChart.set_show_legend(False)
             for company in companies:
-                self._conversationsChart.add(company.name, company.convo_count, data_color=self._company_colors[company.id])
+                self._conversationsChart.add(company.name, company.convo_count, data_color=self._company_colors[company.id], data_link=reverse('company_profile', kwargs={'company_id': company.id}))
         self.charts.add(self._conversationsChart)
         return self._conversationsChart
 
@@ -154,7 +154,7 @@ class Companies(SavannahView):
             self._contributionsChart = PieChart("contributionsChart", title="Contributions by Company")
             self._contributionsChart.set_show_legend(False)
             for company in companies:
-                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id])
+                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id], data_link=reverse('company_profile', kwargs={'company_id': company.id}))
         self.charts.add(self._contributionsChart)
         return self._contributionsChart
 

@@ -1,6 +1,6 @@
 <script>
 var ctx = document.getElementById("{{chart.id}}");
-var myPieChart = new Chart(ctx, {
+var {{chart.id}} = new Chart(ctx, {
   type: 'doughnut',
   data: {
     labels: {{chart.get_data_names|safe}},
@@ -28,4 +28,16 @@ var myPieChart = new Chart(ctx, {
     cutoutPercentage: 0,
   },
 });
+$("#{{chart.id}}").click( 
+    function(evt){
+        var activePoints = {{chart.id}}.getElementAtEvent(evt);
+        if (activePoints.length > 0) {
+          var dataLinks = {{chart.get_data_links|safe}};
+          if (dataLinks[activePoints[0]._index].length > 0) {
+            //window.alert(dataLinks[activePoints[0]._index]);
+            window.location = dataLinks[activePoints[0]._index];
+          }
+        }
+    }
+); 
 </script>

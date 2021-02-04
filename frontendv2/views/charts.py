@@ -46,10 +46,10 @@ class PieChart(Chart):
         self._processed_data = None
         self._show_legend = True
 
-    def add(self, data_name, data_value, data_color=None):
+    def add(self, data_name, data_value, data_color=None, data_link=None):
         if data_color is None:
             data_color = next(self.colors)
-        self._raw_data.append((data_name, data_value, data_color))
+        self._raw_data.append((data_name, data_value, data_color, data_link))
 
     @property
     def show_legend(self, setval=None):
@@ -66,9 +66,9 @@ class PieChart(Chart):
         if self._processed_data is None:
             self._processed_data = self._raw_data
             if self.limit is not None and self.limit > 0 and len(self._processed_data) > self.limit:
-                other_count = sum([count for channel, count, color in self._processed_data[self.limit-1:]])
+                other_count = sum([count for channel, count, color, link in self._processed_data[self.limit-1:]])
                 self._processed_data = self._processed_data[:self.limit-1]
-                self._processed_data.append(("Other", other_count, savannah_colors.OTHER))
+                self._processed_data.append(("Other", other_count, savannah_colors.OTHER, None))
         return self._processed_data
 
     def get_data_names(self):
@@ -79,6 +79,9 @@ class PieChart(Chart):
 
     def get_data_colors(self):
         return ['#'+data[2] for data in self.processed_data]
+
+    def get_data_links(self):
+        return [data[3] or "" for data in self.processed_data]
 
 class FunnelChart(Chart):
     def __init__(self, id, title, stages, colors=None):
