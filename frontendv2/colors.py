@@ -1,7 +1,7 @@
 #OLD CHART_COLORS = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
 # http://paletton.com/#uid=73y2l0kq7Bhf0HFkUCM-7CFGssV
 # http://paletton.com/#uid=72z2l0kq7Bhf0HFkUCM-7CFGssV
-CHART_COLORS = ['4987BB', '43C28C', '9DEB52', 'E3FA57', 'FF8859', 'FFB959', 'E85184', 'B143BC']
+CHART_COLORS = ['4987BB', '3AA8C7', '43C28C', '9DEB52', 'E3FA57', 'FFE758', 'FFB959', 'FF752F', 'F4556E', 'E866B5', 'C16DCA', '8A79D6']
 OTHER = 'dfdfdf'
 
 # http://paletton.com/#uid=53D0i0ktVI-9wPvl2IuLjvVQznh
