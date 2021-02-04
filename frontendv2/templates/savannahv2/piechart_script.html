@@ -23,7 +23,7 @@ var myPieChart = new Chart(ctx, {
       caretPadding: 10,
     },
     legend: {
-      display: true
+      display: {{chart.show_legend|default:'true'}}
     },
     cutoutPercentage: 0,
   },

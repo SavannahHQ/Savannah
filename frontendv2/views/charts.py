@@ -44,11 +44,22 @@ class PieChart(Chart):
         self.colors = ChartColors()
         self._raw_data = []
         self._processed_data = None
+        self._show_legend = True
 
     def add(self, data_name, data_value, data_color=None):
         if data_color is None:
             data_color = next(self.colors)
         self._raw_data.append((data_name, data_value, data_color))
+
+    @property
+    def show_legend(self, setval=None):
+        if self._show_legend:
+            return 'true'
+        else:
+            return 'false'
+
+    def set_show_legend(self, show):
+        self._show_legend = show
 
     @property
     def processed_data(self):

@@ -125,7 +125,8 @@ class Companies(SavannahView):
             companies = Company.objects.filter(community=self.community, is_staff=False).annotate(member_count=Count('member')).filter(member_count__gt=0).order_by('-member_count')
 
             chart_colors = ChartColors()
-            self._membersChart = PieChart("membersChart", title="Members by Company", limit=16)
+            self._membersChart = PieChart("membersChart", title="Members by Company")
+            self._membersChart.set_show_legend(False)
             for company in companies:
                 if company.tag:
                     self._company_colors[company.id] = company.tag.color
@@ -139,7 +140,8 @@ class Companies(SavannahView):
         if not self._conversationsChart:
             companies = Company.objects.filter(community=self.community, is_staff=False).annotate(convo_count=Count('member__speaker_in')).filter(convo_count__gt=0).order_by('-convo_count')
 
-            self._conversationsChart = PieChart("conversationsChart", title="Conversations by Company", limit=16)
+            self._conversationsChart = PieChart("conversationsChart", title="Conversations by Company")
+            self._conversationsChart.set_show_legend(False)
             for company in companies:
                 self._conversationsChart.add(company.name, company.convo_count, data_color=self._company_colors[company.id])
         self.charts.add(self._conversationsChart)
@@ -149,7 +151,8 @@ class Companies(SavannahView):
         if not self._contributionsChart:
             companies = Company.objects.filter(community=self.community, is_staff=False).annotate(contrib_count=Count('member__contribution')).filter(contrib_count__gt=0).order_by('-contrib_count')
 
-            self._contributionsChart = PieChart("contributionsChart", title="Contributions by Company", limit=16)
+            self._contributionsChart = PieChart("contributionsChart", title="Contributions by Company")
+            self._contributionsChart.set_show_legend(False)
             for company in companies:
                 self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id])
         self.charts.add(self._contributionsChart)
