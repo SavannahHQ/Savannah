@@ -105,6 +105,7 @@
                   {% for member in view.all_members %}
                     <div class="mb-3">
                       <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{view.member.get_role_display}}"></i> {{member}}</a>
+                      {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                       <br/><small class="muted">{{member.first_seen|date|default:''}} - {{member.last_seen|date|default:''}}</small>
                       {% if member.default_level %}
                       <br/>
