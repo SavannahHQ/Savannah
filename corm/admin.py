@@ -85,7 +85,7 @@ class CommunityAdmin(admin.ModelAdmin):
     def download_owners(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="community_owners.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Name', 'Email', 'Last Seen', 'Community', 'Status'])
+        writer = csv.DictWriter(response, fieldnames=['Name', 'Role', 'Email', 'Last Seen', 'Community', 'Community Status'])
         writer.writeheader()
         for community in queryset.all():
             name = community.owner.username
@@ -98,7 +98,7 @@ class CommunityAdmin(admin.ModelAdmin):
                 last_seen = manager_profile.last_seen or last_seen
             except:
                 pass
-            writer.writerow({'Name': name, 'Email':email, 'Last Seen':last_seen, 'Community':community.name, 'Status':Community.STATUS_NAMES[community.status]})
+            writer.writerow({'Name': name, 'Role': 'Owner', 'Email':email, 'Last Seen':last_seen, 'Community':community.name, 'Community Status':Community.STATUS_NAMES[community.status]})
         return response
     download_owners.short_description = "Download Owners"
 
@@ -434,13 +434,16 @@ class ManagersAdmin(admin.ModelAdmin):
     def download_managers(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="community_managers.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Name', 'Email', 'Last Seen', 'Community', 'Status'])
+        writer = csv.DictWriter(response, fieldnames=['Name', 'Role', 'Email', 'Last Seen', 'Community', 'Community Status'])
         writer.writeheader()
         for manager_profile in queryset.all():
             name = str(manager_profile)
             email = manager_profile.email
             last_seen = manager_profile.last_seen or manager_profile.user.last_login
-            writer.writerow({'Name': name, 'Email':email, 'Last Seen':last_seen, 'Community':manager_profile.community.name, 'Status':Community.STATUS_NAMES[manager_profile.community.status]})
+            role = 'Manager'
+            if manager_profile.user == manager_profile.community.owner:
+                role = 'Owner'
+            writer.writerow({'Name': name, 'Role':role, 'Email':email, 'Last Seen':last_seen, 'Community':manager_profile.community.name, 'Community Status':Community.STATUS_NAMES[manager_profile.community.status]})
         return response
     download_managers.short_description = "Download Managers"
 admin.site.register(ManagerProfile, ManagersAdmin)
