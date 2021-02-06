@@ -1,3 +1,6 @@
+import csv
+from django.http import HttpResponse
+    
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.safestring import mark_safe
@@ -78,6 +81,27 @@ class CommunityAdmin(admin.ModelAdmin):
     list_display_links = ("name",)
     list_filter = ("status", "created")
     search_fields = ("name", "owner")
+    actions = ('download_owners',)
+    def download_owners(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="community_owners.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Name', 'Email', 'Last Seen', 'Community', 'Status'])
+        writer.writeheader()
+        for community in queryset.all():
+            name = community.owner.username
+            email = community.owner.email
+            last_seen = community.owner.last_login
+            try:
+                manager_profile = ManagerProfile.objects.get(community=community, user=community.owner)
+                name = str(manager_profile)
+                email = manager_profile.email
+                last_seen = manager_profile.last_seen or last_seen
+            except:
+                pass
+            writer.writerow({'Name': name, 'Email':email, 'Last Seen':last_seen, 'Community':community.name, 'Status':Community.STATUS_NAMES[community.status]})
+        return response
+    download_owners.short_description = "Download Owners"
+
     def logo_icon(self, community):
         return mark_safe("<img src=\"%s\" />" % community.icon_path)
     logo_icon.short_description = "Icon"
@@ -406,6 +430,19 @@ class ManagersAdmin(admin.ModelAdmin):
     list_display = ('user', 'community', 'member', 'last_seen', 'realname', 'contact_email', 'send_notifications')
     list_filter = ('community', 'last_seen', 'send_notifications')
     raw_id_fields = ('member',)
+    actions = ('download_managers',)
+    def download_managers(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="community_managers.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Name', 'Email', 'Last Seen', 'Community', 'Status'])
+        writer.writeheader()
+        for manager_profile in queryset.all():
+            name = str(manager_profile)
+            email = manager_profile.email
+            last_seen = manager_profile.last_seen or manager_profile.user.last_login
+            writer.writerow({'Name': name, 'Email':email, 'Last Seen':last_seen, 'Community':manager_profile.community.name, 'Status':Community.STATUS_NAMES[manager_profile.community.status]})
+        return response
+    download_managers.short_description = "Download Managers"
 admin.site.register(ManagerProfile, ManagersAdmin)
 
 class CompanyDomainInline(admin.TabularInline):
