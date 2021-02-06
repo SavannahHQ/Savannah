@@ -30,7 +30,7 @@
                 {% csrf_token %}
                 {{ view.form|crispy }}
                 <button class="btn btn-primary" type="submit">Save</button>
-                <a class="btn btn-secondary" href="{% url 'companies' view.community.id %}">Cancel</a>
+                <a class="btn btn-secondary" href="{% url 'company_profile' view.edit_company.id %}">Cancel</a>
                 </form>
                 </div>            
 

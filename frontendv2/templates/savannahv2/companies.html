@@ -32,41 +32,21 @@
                 <thead>
                   <tr>
                     <th scope="col" width="30%">Name</th>
-                    <th scope="col">Tag</th>
                     <th scope="col">Members</th>
-                    <th class="text-center" width="100px" scope="col"></th>
+                    <th scope="col">Last Active</th>
+                    <th width="100px" scope="col"></th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for company in view.all_companies %}
                 <tr>
-                  <td class="text-nowrap text-gray-800" >
-                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
-                  </td>
                   <td>
-                      <span class="tag_form_dropdown dropdown no-arrow">
-                        <a class="dropdown-toggle tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        {% if company.tag %}
-                          <span class="tag-pill" style="background-color: #{{company.tag.color}};"><span class="tag-text" style="color: #{{company.tag.color}}aa;">{{company.tag.name}}</span></span>
-                        {% else %}
-                          <i class="fas fa-tag text-gray-500"> </i>
-                        {% endif %}
-                        </a>
-                        <div class="mb-0 dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
-                          <div class="dropdown-header">Tags:</div>
-                          <form action="#" method="POST" class="form tag_form">
-                          {% csrf_token %}
-                          <input type="hidden" name="company_id" value="{{company.id}}"/>
-                          <div class="dropdown-item" style=""><input id="company_{{company.id}}_tag_clear" name="tag_select" value="" class="p-2 tag_select form-check-input" type="radio" {% if not company.tag %}checked="1"{% endif %}><label class="form-check-label" for="company_{{company.id}}_tag_clear">None</label></div>
-                          {% for tag in view.community.tag_set.all %}
-                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="company_{{company.id}}_tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="radio" {% if tag.id == company.tag.id %}checked="1"{% endif %}><label class="form-check-label" for="company_{{company.id}}_tag_{{tag.id}}"><span style="color:#{{tag.color}}aa;" class="tag-text">{{tag.name}}</span></label></div>
-                          {% endfor %}
-                          </form>
-                        </div>
-                      </span>
+                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
-                  <td>{{company.member_count|intcomma}}</td>
-                  <td class="text-center text-nowrap">
+                  <td >{{company.member_count|intcomma}}</td>
+                  <td >{{company.last_seen|date}}</td>
+                  <td class="text-center pr-1">
                     <form class="inline-form" action="{% url 'companies' view.community.id %}" method="POST">
                     {% csrf_token %}
                     <button class="btn btn-sm btn-danger" type="submit" name="delete_company" value="{{company.id}}" title="Delete Company"><i class="fas fa-trash"> </i></button>
@@ -131,30 +111,5 @@
 {% endblock %}
 
 {% block page_scripts %}
-  <script>
-$('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
-    var tags = e.relatedTarget.parentElement.getElementsByClassName("tag_select");
-    var tags_html = "";
-    for (var i = 0; i < tags.length; i++){
-        var tag = tags[i];
-        if (tag.checked) {
-          var tag_name = tag.labels[0].textContent;
-          if (tag.value == '') {
-            tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
-          } else {
-            tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span class="tag-text" style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
-          }
-
-        }
-    }
-    var tag_form = e.relatedTarget.parentElement.getElementsByClassName('tag_form')[0];
-    $.post( "{% url 'company_tag_form' view.community.id %}", $(tag_form).serialize(), function(data) {
-        var tag_row = e.relatedTarget.parentElement.getElementsByClassName("tag_row")[0];
-        tag_row.innerHTML = tags_html
-      },
-      'json' // I expect a JSON response
-    );
-});
-  </script>
 
 {% endblock %}

@@ -26,7 +26,7 @@ class CompanyProfile(SavannahView):
 
     @property
     def all_members(self):
-        return Member.objects.filter(community=self.community, company=self.company).prefetch_related('tags').order_by('name')
+        return Member.objects.filter(community=self.community, company=self.company).prefetch_related('tags').order_by('-last_seen')
 
     @property
     def sources_chart(self):
@@ -234,14 +234,14 @@ class AddCompany(SavannahView):
     def as_view(request, community_id):
         view = AddCompany(request, community_id)
         if request.method == "POST" and view.form.is_valid():
-            view.form.save()
+            new_company = view.form.save()
             if 'for_member' in request.POST and request.POST.get('for_member'):
                 for_member = request.POST.get('for_member')
                 member = Member.objects.get(community=view.community, id=request.POST.get('for_member'))
                 member.company = view.edit_company
                 member.save()
                 return redirect('member_profile', member_id=member.id)
-            return redirect('companies', community_id=community_id)
+            return redirect('company_profile', company_id=new_company.id)
 
         if 'for_member' in request.GET and request.GET.get('for_member'):
             try: 
@@ -283,7 +283,7 @@ class EditCompany(SavannahView):
                         else:
                             member.role = Member.COMMUNITY
                         member.save()
-            return redirect('companies', community_id=view.community.id)
+            return redirect('company_profile', company_id=edited_company.id)
 
         return render(request, "savannahv2/company_edit.html", view.context)
 
