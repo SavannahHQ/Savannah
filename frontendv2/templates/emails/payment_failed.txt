@@ -4,8 +4,10 @@ We were unable to process your subscription payment of {{price}} for {{community
 
 You can view and pay your invoice at {{invoice_url}}
 
-Otherwise will automatically attempt to reprocess this payment on {{next_attempt|date}}.
+{% if next_attempt %}
+Otherwise we will automatically attempt to reprocess this payment on {{next_attempt|date}}.
 
+{% endif %}
 --
 You can change your billing information or cancel your subscription at: {{SITE_ROOT}}{% url 'billing:manage_account' community.id %}
 

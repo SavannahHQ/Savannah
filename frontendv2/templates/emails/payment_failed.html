@@ -3,8 +3,9 @@
 <p>We were unable to process your subscription payment of {{price}} for {{community.name}} on {{SITE_NAME}}.</p>
 
 <p>You can view and pay your invoice at <a href="{{invoice_url}}">{{invoice_url}}</a>.</p>
-
-<p>Otherwise will automatically attempt to reprocess this payment on {{next_attempt|date}}.</p>
+{% if next_attempt %}
+<p>Otherwise we will automatically attempt to reprocess this payment on {{next_attempt|date}}.</p>
+{% endif %}
 
 <hr/>
 <p><a href="{{SITE_ROOT}}{% url 'billing:manage_account' community.id %}">Manage your billing information</a></p>

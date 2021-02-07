@@ -230,16 +230,20 @@ def payment_failed(event, **kwargs):
     invoice = event.data["object"]
     mgmt = Management.objects.get(subscription__id=invoice['subscription'])
     community = mgmt.community
-    if invoice["attempt_count"] >= 3:
-        Management.suspend(invoice['subscription'])
     msg = PaymentFailedEmail(community)
     msg.context.update({
         "invoice_date": datetime.datetime.fromtimestamp(invoice["created"]),
-        "next_attempt": datetime.datetime.fromtimestamp(invoice["next_payment_attempt"]),
         "price":   (invoice["amount_due"]/100),
         "invoice_url": invoice["hosted_invoice_url"],
 
     })
+    if invoice["attempt_count"] >= 3:
+        Management.suspend(invoice['subscription'])
+        msg.context["suspended"] = True
+        
+    elif "next_payment_attempt" in invoice:
+        msg.context["next_attempt"] = datetime.datetime.fromtimestamp(invoice["next_payment_attempt"])
+        
     msg.send(community.owner.email)
 
 @login_required
