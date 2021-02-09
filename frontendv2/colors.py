@@ -11,6 +11,9 @@ class MEMBER(object):
     STAFF = "11AAC7"
     BOT = "aeaeae"
     LIGHT = "A8B0E2"
+    JOINED = '4987BB'
+    ACTIVE = "1CB6BD"
+    RETURNING = '3bdb61'
 
     def __str__(self):
         return self.BASE

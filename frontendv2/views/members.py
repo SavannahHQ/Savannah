@@ -108,6 +108,18 @@ class Members(SavannahFilterView):
         (months, counts, monthly_active) = self.getMembersChart()
         return [monthly_active.get(month, 0) for month in self.timespan_chart_keys(months)]
 
+    @property
+    def members_chart_monthly_returning(self):
+        (months, joined, active) = self.getMembersChart()
+        data = []
+        month_keys = self.timespan_chart_keys(months)
+        for i, month in enumerate(month_keys):
+            returned = active.get(month, 0) - joined.get(month, 0)
+            if returned < 0:
+                returned = 0
+            data.append(returned)
+        return data
+
     def sources_chart(self):
         if not self._sourcesChart:
             counts = dict()
