@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static simple_math %}
+{% load static simple_math simple_dates %}
 
 {% block page_title %} | {{view.company.name}}{% endblock %}
 
@@ -157,22 +157,22 @@
                 <table class="table">
                 <thead>
                   <tr>
+                    <th scope="col">Date</th>
                     <th scope="col">Channel</th>
                     <th scope="col">Speaker</th>
                     <th scope="col">Content</th>
-                    <th scope="col">Date</th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for conversation in view.all_conversations %}
                 <tr>
+                  <td class="text-nowrap">{{conversation.timestamp|dateortime}}</td>
                   <td class="text-nowrap"><i class="{{conversation.channel.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
                   <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker.id %}">{{conversation.speaker.name}}</a>{% endif %}</td>
                   <td>
                     <a target="_blank" href="{{conversation.location|default:'#'}}" data-toggle="tooltip" data-placement="right" title="{{conversation.content}}">{{ conversation }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}
                   </td>
-                  <td class="text-nowrap">{{conversation.timestamp}}</td>
                   <td>
                   {% for participant in conversation.participants.all %}
                     {% if participant.id != conversation.speaker.id %}

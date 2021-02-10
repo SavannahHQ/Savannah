@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static simple_math %}
+{% load static simple_math simple_dates %}
 
 {% block page_title %} | {{view.member.name}}{% endblock %}
 
@@ -393,8 +393,8 @@
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col">Channel</th>
                     <th scope="col">Date</th>
+                    <th scope="col">Channel</th>
                     <th scope="col">Content</th>
                     <th scope="col"><span class="short-text">#</span><span class="full-text">Participants</span></th>
                   </tr>
@@ -402,8 +402,8 @@
                 <tbody>
                 {% for conversation in view.all_conversations %}
                 <tr>
+                  <td>{{conversation.timestamp|dateortime}}</td>
                   <td class="text-nowrap"><i class="{{conversation.channel_icon}}"></i> {{conversation.channel_name}}</td>
-                  <td>{{conversation.timestamp}}</td>
                   <td>
                     <a target="_blank" href="{{conversation.location|default:"#"}}" title="{{conversation.content}}">{{ conversation }}</a>
                     {% if conversation.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}{% endif %}
