@@ -113,7 +113,7 @@ class Command(BaseCommand):
             print("%s has no #greeting tag" % community)
 
         # From Chat-style sources
-        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord'))
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit'))
         convos = convos.filter(channel__source__in=chat_sources)
 
         # Involving only the speaker and one other participant
@@ -121,7 +121,7 @@ class Command(BaseCommand):
         convos = convos.select_related('channel').order_by('channel', '-timestamp')
 
         print("%s potential support contributions in %s" % (convos.count(), community))
-        positive_words = ('!', ':)', 'smile', 'smiling', 'fixed', 'solved', 'helped', 'wasn\'t working', 'answer')
+        positive_words = ('!', ':)', 'smile', 'smiling', 'fixed', 'solved', 'helped', 'worked', 'wasn\'t working', 'answer')
         negative_words = ('?', ':(', 'sad', 'frown', 'broken', 'fail', 'help me', 'helpful', 'error', 'not working', 'isn\t working', 'question', 'please', 'welcome', 'but')
         last_helped = None
         last_channel = None
@@ -155,7 +155,7 @@ class Command(BaseCommand):
             if score < 2:
                 continue
 
-            # Exclude conversations that are part or another contribution's thread
+            # Exclude conversations that are part of another contribution's thread
             if convo.thread_start:
                 if convo.thread_start.contribution_set.all().count() > 0:
                     continue
@@ -170,9 +170,10 @@ class Command(BaseCommand):
                 source_id=convo.channel.source_id,
                 name="Support",
             )
+            supporter = convo.participants.exclude(id=convo.speaker.id)[0]
             suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
                 community=community,
-                reason="Thanks from %s" % convo.speaker,
+                reason="%s gave support to %s" % (supporter, convo.speaker),
                 conversation=convo,
                 contribution_type=helped,
                 source_id=convo.channel.source_id,
