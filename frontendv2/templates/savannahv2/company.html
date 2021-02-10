@@ -131,7 +131,88 @@
             </div>
           </div>
 
+          <!-- Content Row -->
+          <div class="row">
 
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- Most Active Users-->
+              <a name="conversations" />
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Conversations</h6>
+          <form class="d-none d-sm-inline-block form-inline" action="#conversations" method="GET">
+            <div class="input-group">
+              <input name="conversation_search" type="text" class="form-control small" placeholder="Search..." value="{{view.conversation_search|default:''}}" aria-label="Search" aria-describedby="basic-addon2">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search fa-sm"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Channel</th>
+                    <th scope="col">Speaker</th>
+                    <th scope="col">Content</th>
+                    <th scope="col">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for conversation in view.all_conversations %}
+                <tr>
+                  <td class="text-nowrap"><i class="{{conversation.channel.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
+                  <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker.id %}">{{conversation.speaker.name}}</a>{% endif %}</td>
+                  <td>
+                    <a target="_blank" href="{{conversation.location|default:'#'}}" data-toggle="tooltip" data-placement="right" title="{{conversation.content}}">{{ conversation }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}
+                  </td>
+                  <td class="text-nowrap">{{conversation.timestamp}}</td>
+                  <td>
+                  {% for participant in conversation.participants.all %}
+                    {% if participant.id != conversation.speaker.id %}
+                      <a href="{% url 'member_profile' participant.id %}">{{participant.name}}</a><br/>
+                    {% endif %}
+                  {% endfor %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                {% if view.has_pages %}
+                <nav aria-label="Conversations table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.conversation_search %}conversation_search={{view.conversation_search}}&{% endif %}page=1#conversations" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.conversation_search %}conversation_search={{view.conversation_search}}&{% endif %}page={{page}}#conversations">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.conversation_search %}conversation_search={{view.conversation_search}}&{% endif %}page={{view.last_page}}#conversations" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+
+                </div>
+              </div>
+
+            </div>
+
+          </div>
         </div>
         <!-- /.container-fluid -->
 {% endblock %}

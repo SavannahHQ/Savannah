@@ -24,6 +24,18 @@ class CompanyProfile(SavannahView):
         self._engagementChart = None
         self.timespan=90
 
+        self.RESULTS_PER_PAGE = 25
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+        if 'conversation_search' in request.GET:
+            self.conversation_search = request.GET.get('conversation_search', "").lower()
+        else:
+            self.conversation_search = None
+        self.result_count = 0
+
     @property
     def all_members(self):
         return Member.objects.filter(community=self.community, company=self.company).prefetch_related('tags').order_by('-last_seen')
@@ -98,6 +110,39 @@ class CompanyProfile(SavannahView):
         date_list = [base - datetime.timedelta(days=x) for x in range(90)]
         date_list.reverse()
         return [activity_counts.get(str(day)[:10], 0) for day in date_list]
+
+    @property
+    def all_conversations(self):
+        conversations = Conversation.objects.filter(channel__source__community=self.community)
+        conversations = conversations.filter(participants__company=self.company)
+        if self.conversation_search:
+            conversations = conversations.filter(content__icontains=self.conversation_search)
+
+        self.result_count = conversations.count()
+        conversations = conversations.select_related('channel', 'channel__source', 'speaker').prefetch_related('tags').order_by('-timestamp')
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return conversations[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        return pages
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        offset=1
+        if self.page > 5:
+            offset = self.page - 5
+        if offset + 9 > pages:
+            offset = pages - 9
+        if offset < 1:
+            offset = 1
+        return [page+offset for page in range(min(10, pages))]
 
     @login_required
     def as_view(request, company_id):
