@@ -277,11 +277,15 @@ class MemberMergeRecord(models.Model):
 
     @classmethod
     def _serialize(self, member):
+        if member.last_seen is not None:
+            last_seen = member.last_seen.strftime('%Y-%m-%dT%H:%M:%S.%f')
+        else:
+            last_seen = None
         data = {
             'name': member.name,
             'email_address': member.email_address,
             'first_seen': member.first_seen.strftime('%Y-%m-%dT%H:%M:%S.%f'),
-            'last_seen': member.last_seen.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+            'last_seen': last_seen,
             'mailing_address': member.mailing_address,
             'phone_number': member.phone_number,
             'avatar_url': member.avatar_url,
