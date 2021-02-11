@@ -141,8 +141,17 @@
                 <tbody>
                 {% for supporter in view.top_supporters %}
                 <tr>
-                  <td>
-                    <a href="{% url 'member_profile' supporter.member_id %}">{{ supporter.member_name }}</a>
+                  <td class="text-nowrap">
+                    <a href="{% url 'member_profile' supporter.member_id %}">
+                      {% if supporter.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif supporter.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                      {{ supporter.member_name }}
+                    </a>
                   </td>
                   <td>{{supporter.conversations}}</td>
                 </tr>
@@ -173,8 +182,17 @@
                 <tbody>
                 {% for member in view.top_contributors %}
                 <tr>
-                  <td>
-                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
+                  <td class="text-nowrap">
+                    <a href="{% url 'member_profile' member.member_id %}">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                      {{ member.member_name }}
+                    </a>
                   </td>
                   <td>{{member.contributions}}</td>
                 </tr>

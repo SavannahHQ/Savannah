@@ -158,13 +158,13 @@ class GrowthReporter(Reporter):
     def get_new_members(self):
         members = Member.objects.filter(community=self.community)
         members = members.filter(first_seen__gte=self.start, first_seen__lte=self.end).order_by('first_seen')
-        return [{'member_id': member.id, 'member_name': member.name, 'joined': member.first_seen} for member in members]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'joined': member.first_seen} for member in members]
 
     def get_new_contributors(self):
         members = Member.objects.filter(community=self.community)
         members = members.annotate(first_contrib=Min('contribution__timestamp'))
         members = members.filter(first_contrib__gte=self.start, first_contrib__lte=self.end).order_by('first_contrib')
-        return [{'member_id': member.id, 'member_name': member.name, 'first_contrib': member.first_contrib} for member in members]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'first_contrib': member.first_contrib} for member in members]
 
     def get_top_contributors(self):
         activity_counts = dict()
@@ -177,7 +177,7 @@ class GrowthReporter(Reporter):
                 activity_counts[m] = m.contribution_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
-        return [{'member_id': member.id, 'member_name': member.name, 'contributions': count} for member, count in most_active[:20]]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'contributions': count} for member, count in most_active[:20]]
 
 
     def get_top_supporters(self):
@@ -191,7 +191,7 @@ class GrowthReporter(Reporter):
                 activity_counts[m] = m.conversation_count
         most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
         most_active.reverse()
-        return [{'member_id': member.id, 'member_name': member.name, 'conversations': count} for member, count in most_active[:20]]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'conversations': count} for member, count in most_active[:20]]
 
     def get_top_enablers(self):
         members = Member.objects.filter(community=self.community)
@@ -203,7 +203,7 @@ class GrowthReporter(Reporter):
                 connection_counts[m] = m.connection_count
         most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
         most_connected.reverse()
-        return [{'member_id': member.id, 'member_name': member.name, 'connections': count} for member, count in most_connected[:20]]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'connections': count} for member, count in most_connected[:20]]
 
     def get_member_activity(self):
         months = list()
@@ -288,7 +288,7 @@ class AnnualReporter(Reporter):
         contrib_filter = Q(contribution__timestamp__gte=self.start, contribution__timestamp__lte=self.end)
 
         members = members.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0).order_by('-contribution_count')[:20]
-        return [{'member_id': member.id, 'member_name': member.name, 'contributions': member.contribution_count} for member in members]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'contributions': member.contribution_count} for member in members]
 
 
     def get_top_supporters(self):
@@ -297,7 +297,7 @@ class AnnualReporter(Reporter):
         convo_filter = Q(speaker_in__timestamp__gte=self.start, speaker_in__timestamp__lte=self.end)
 
         members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).filter(conversation_count__gt=0).order_by('-conversation_count')[:20]
-        return [{'member_id': member.id, 'member_name': member.name, 'conversations': member.conversation_count} for member in members]
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'conversations': member.conversation_count} for member in members]
 
     def get_member_activity(self):
         months = list()

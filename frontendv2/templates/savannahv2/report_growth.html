@@ -68,8 +68,17 @@
                 <tbody>
                 {% for supporter in view.top_supporters %}
                 <tr>
-                  <td>
-                    <a href="{% url 'member_profile' supporter.member_id %}">{{ supporter.member_name }}</a>
+                  <td class="text-nowrap">
+                    <a href="{% url 'member_profile' supporter.member_id %}">
+                      {% if supporter.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif supporter.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ supporter.member_name }}
+                  </a>
                   </td>
                   <td>{{supporter.conversations}}</td>
                 </tr>
@@ -100,8 +109,17 @@
                 <tbody>
                 {% for member in view.top_contributors %}
                 <tr>
-                  <td>
-                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
+                  <td class="text-nowrap">
+                    <a href="{% url 'member_profile' member.member_id %}">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </a>
                   </td>
                   <td>{{member.contributions}}</td>
                 </tr>
@@ -116,6 +134,47 @@
           </div>
          <!-- Content Row -->
           <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- New Contributors -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.new_contributor_count}} New Contributors {% if view.new_contributor_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_contributor_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.new_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                    <a href="{% url 'member_profile' member.member_id %}">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </a>
+                  </td>
+                  <td>{{member.first_contrib}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
 
             <!-- Content Column -->
             <div class="col-lg-6 mb-4">
@@ -136,8 +195,17 @@
                 <tbody>
                 {% for member in view.new_members %}
                 <tr>
-                  <td>
-                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
+                  <td class="text-nowrap">
+                    <a href="{% url 'member_profile' member.member_id %}">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </a>
                   </td>
                   <td>{{member.joined}}</td>
                 </tr>
@@ -148,38 +216,6 @@
               </div>
 
             </div>
-            <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
-
-              <!-- New Contributors -->
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">{{view.new_contributor_count}} New Contributors {% if view.new_contributor_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_contributor_diff|abs|floatformat:-2}}%)</span></h6>
-                </div>
-                <div class="card-body p-0">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Member</th>
-                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for member in view.new_contributors %}
-                <tr>
-                  <td>
-                    <a href="{% url 'member_profile' member.member_id %}">{{ member.member_name }}</a>
-                  </td>
-                  <td>{{member.first_contrib}}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                </div>
-              </div>
-
-            </div>
-
           </div>
        </div>
         <!-- /.container-fluid -->
