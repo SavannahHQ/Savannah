@@ -82,6 +82,19 @@ class GrowthReport(SavannahView):
         diff = len(self.data['new_members']) - len(self.previous_data['new_members'])
         return 100 * diff / len(self.previous_data['new_members'])
 
+    @property 
+    def active_member_diff(self):
+        if self.previous is None:
+            return 0
+        previous_activity = 0
+        for activity in self.previous_data['member_activity']['active']:
+            previous_activity += activity
+        new_activity = 0
+        for activity in self.data['member_activity']['active']:
+            new_activity += activity
+        diff = new_activity - previous_activity
+        return 100 * diff / previous_activity
+
     @property
     def new_contributor_count(self):
         return len(self.data['new_contributors'])

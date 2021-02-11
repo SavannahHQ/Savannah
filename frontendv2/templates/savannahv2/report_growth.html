@@ -18,7 +18,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">New Members</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">New Members {% if view.new_member_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_member_diff|abs|floatformat:-2}}%)</span></h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -34,7 +34,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Active Members</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Active Members {% if view.active_member_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.active_member_diff|abs|floatformat:-2}}%)</span></h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
