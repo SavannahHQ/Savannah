@@ -231,7 +231,7 @@ class StackExchangeImporter(PluginImporter):
     def __init__(self, source):
         super().__init__(source)
         self.TIMESTAMP_FORMAT = '%s'
-        self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Answer")
+        self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Support")
 
     def strftime(self, dtime):
         return int(dtime.timestamp())

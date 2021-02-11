@@ -126,7 +126,7 @@ class DiscourseImporter(PluginImporter):
             'Api-Username': source.auth_id,
         }
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
-        self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Answer")
+        self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Support")
 
     def update_identity(self, identity):
         resp = self.api_call(DISCOURSE_USER_URL % {'username':identity.detail})
