@@ -204,12 +204,21 @@ class SavannahFilterView(SavannahView):
             request.session['role'] = None
             request.session['timespan'] = self.MAX_TIMESPAN
         super().__init__(request, community_id)
+        self.filter = {
+            'timespan': False,
+            'custom_timespan': False,
+            'member_role': False,
+            'member_tag': False,
+            'tag': False,
+            'source': False,
+            'contrib_type': False,
+        }
 
         self.tag = None
         try:
             if 'tag' in request.GET:
                 if request.GET.get('tag') == '':
-                    equest.session['tag'] = None
+                    request.session['tag'] = None
                 else:
                     self.tag = Tag.objects.get(community=self.community, name=request.GET.get('tag'))
                     request.session['tag'] = request.GET.get('tag')
@@ -246,6 +255,20 @@ class SavannahFilterView(SavannahView):
         except:
             self.role = None
             request.session['role'] = None
+
+        self.contrib_type = None
+        try:
+            if 'type' in request.GET:
+                if request.GET.get('type') == '':
+                    request.session['type'] = None
+                else:
+                    self.contrib_type = request.GET.get('type')
+                    request.session['type'] = request.GET.get('type')
+            elif 'type' in request.session:
+                self.contrib_type = request.session.get('type')
+        except:
+            self.contrib_type = None
+            request.session['type'] = None
 
         self.rangestart = None
         self.rangeend = None

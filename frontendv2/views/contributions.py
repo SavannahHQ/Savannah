@@ -17,6 +17,15 @@ class Contributions(SavannahFilterView):
         self.active_tab = "contributions"
         self._membersChart = None
         self._channelsChart = None
+        self.filter = {
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
+            'tag': True,
+            'source': False,
+            'contrib_type': True,
+        }
 
         self.RESULTS_PER_PAGE = 25
 
@@ -35,6 +44,9 @@ class Contributions(SavannahFilterView):
     def all_contributions(self):
         contributions = Contribution.objects.filter(community=self.community)
         contributions = contributions.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contributions = contributions.filter(contribution_type__name=self.contrib_type)
+
         if self.tag:
             contributions = contributions.filter(tags=self.tag)
 
@@ -73,9 +85,11 @@ class Contributions(SavannahFilterView):
     @property
     def new_contributors(self):
         members = Member.objects.filter(community=self.community)
-        contrib_filter = None
+        contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contrib_filter = contrib_filter &Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
-            contrib_filter = Q(contribution__tags=self.tag)
+            contrib_filter = contrib_filter &Q(contribution__tags=self.tag)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -96,6 +110,8 @@ class Contributions(SavannahFilterView):
     def recent_contributors(self):
         members = Member.objects.filter(community=self.community)
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.member_tag:
@@ -117,6 +133,8 @@ class Contributions(SavannahFilterView):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.member_tag:
@@ -138,6 +156,8 @@ class Contributions(SavannahFilterView):
         contributor_ids = set()
         contributors = Member.objects.filter(community=self.community)
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.member_tag:
@@ -167,6 +187,8 @@ class Contributions(SavannahFilterView):
         contributor_ids = set()
         contributors = Member.objects.filter(community=self.community)
         contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.member_tag:
@@ -196,6 +218,10 @@ class Contributions(SavannahFilterView):
             counts = dict()
 
             contributions = Contribution.objects.filter(community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+
+            if self.contrib_type:
+                contributions = contributions.filter(contribution_type__name=self.contrib_type)
+
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
 
@@ -234,6 +260,8 @@ class Contributions(SavannahFilterView):
 
             channels = Channel.objects.filter(source__community=self.community)
             contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+            if self.contrib_type:
+                contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             if self.member_tag:
@@ -264,6 +292,15 @@ class Contributors(SavannahFilterView):
         super().__init__(request, community_id)
         self.active_tab = "contributions"
         self.sort_by = request.session.get("sort_contributors", "name")
+        self.filter = {
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
+            'tag': True,
+            'source': False,
+            'contrib_type': True,
+        }
 
         self.RESULTS_PER_PAGE = 25
 
@@ -286,9 +323,13 @@ class Contributors(SavannahFilterView):
     def all_contributors(self):
         members = Member.objects.filter(community=self.community)
         contrib_filter = None
+        contrib_filter = Q()
         contrib_range_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        if self.contrib_type:
+            contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
+            contrib_range_filter = contrib_range_filter & contrib_filter
         if self.tag:
-            contrib_filter = Q(contribution__tags=self.tag)
+            contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             contrib_range_filter = contrib_range_filter & contrib_filter
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
@@ -298,6 +339,7 @@ class Contributors(SavannahFilterView):
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
         members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))
         members = members.annotate(contrib_count=Count('contribution', filter=contrib_range_filter))
+        members = members.prefetch_related('tags')
         members = members.order_by(self.sort_by)
         
         return members
@@ -343,8 +385,14 @@ class Contributors(SavannahFilterView):
         view = Contributors(request, community_id)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="contributors.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Member', 'First Contrib', 'Last Contrib', 'Contrib Count'])
+        writer = csv.DictWriter(response, fieldnames=['Member', 'First Contrib', 'Last Contrib', 'Contrib Count', 'Tags'])
         writer.writeheader()
         for member in view.all_contributors:
-            writer.writerow({'Member': member.name, 'First Contrib':member.first_contrib, 'Last Contrib':member.last_contrib, 'Contrib Count':member.contrib_count})
+            writer.writerow({
+                'Member': member.name, 
+                'First Contrib':member.first_contrib, 
+                'Last Contrib':member.last_contrib, 
+                'Contrib Count':member.contrib_count,
+                'Tags': ",".join([tag.name for tag in member.tags.all()])
+            })
         return response

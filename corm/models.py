@@ -1,5 +1,6 @@
 import datetime, pytz
 from django.db import models
+from django.db.models import F, Q, Count, Max
 from django.contrib.auth.models import User, Group
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
@@ -94,7 +95,20 @@ class Community(models.Model):
         Tag.objects.get_or_create(name="thankful", community=self, defaults={'color':"aff5ab", 'keywords':"thanks, thank you, thx, thank yo"})
         Tag.objects.get_or_create(name="greeting", community=self, defaults={'color':"abdef5", 'keywords':"welcome, hi, hello"})
         Project.objects.get_or_create(community=self, default_project=True, defaults={'name': self.name, 'owner':None, 'threshold_user':1, 'threshold_participant':10, 'threshold_contributor':1, 'threshold_core':10})
-            
+
+    @property    
+    def contribution_type_names(self):
+        ctype_query = self.contributiontype_set.all().order_by('name')
+        ctype_query = ctype_query.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0)
+        try:
+            return [ctype.name for ctype in ctype_query.distinct('name')]
+        except:
+            ctypes = []
+            for ctype in ctype_query:
+                if ctype.name not in ctypes:
+                    ctypes.append(ctype.name)
+            return ctypes
+
     def __str__(self):
         return self.name
 
