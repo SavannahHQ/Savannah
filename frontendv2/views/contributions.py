@@ -17,6 +17,7 @@ class Contributions(SavannahFilterView):
         self.active_tab = "contributions"
         self._membersChart = None
         self._channelsChart = None
+
         self.filter = {
             'timespan': True,
             'custom_timespan': True,
@@ -60,6 +61,18 @@ class Contributions(SavannahFilterView):
         self.result_count = contributions.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
         return contributions[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
 
     @property
     def has_pages(self):

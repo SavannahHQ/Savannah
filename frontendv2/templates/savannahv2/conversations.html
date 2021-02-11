@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static simple_dates %}
+{% load static humanize simple_dates %}
 
 {% block page_title %} | {{view.community.name}} Conversations{% endblock %}
 
@@ -19,7 +19,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Conversations
+                  <h6 class="m-0 font-weight-bold text-primary">Conversations by {{view.trunc_span}}
                   {% if view.tag %}{% include 'savannahv2/tag_list.html' with tag=view.tag %}{% endif %}
                   </h6>
                 </div>
@@ -262,7 +262,9 @@
                   </ul>
                 </nav>
                 {% endif %}
-
+                <div class="d-flex justify-content-center mb-2">
+                {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Conversations
+                </div>
                 </div>
               </div>
 
