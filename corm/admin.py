@@ -80,7 +80,7 @@ class CommunityAdmin(admin.ModelAdmin):
     list_display = ("logo_icon", "name", "link", "member_count", "source_count", "channel_count", "owner", "created", "status")
     list_display_links = ("name",)
     list_filter = ("status", "created")
-    search_fields = ("name", "owner")
+    search_fields = ("name", "owner__username", "owner__email")
     actions = ('download_owners',)
     def download_owners(self, request, queryset):
         response = HttpResponse(content_type='text/csv')

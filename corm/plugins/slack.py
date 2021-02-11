@@ -19,7 +19,7 @@ USER_PROFILE_URL = 'https://slack.com/api/users.info?user=%(user)s'
 USERS_LIST = 'https://slack.com/api/users.list?cursor=%(cursor)s'
 
 def authenticate(request):
-    community = get_object_or_404(Community, id=request.session['community'])
+    community = get_object_or_404(Community, id=request.session.get('community'))
     client_id = settings.SLACK_CLIENT_ID
     slack_auth_scope = [
         'channels:history',
@@ -45,7 +45,7 @@ def callback(request):
     client_secret = settings.SLACK_CLIENT_SECRET
     callback_uri = request.build_absolute_uri(reverse('slack_callback'))
     client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
-    community = get_object_or_404(Community, id=request.session['community'])
+    community = get_object_or_404(Community, id=request.session.get('community'))
 
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
