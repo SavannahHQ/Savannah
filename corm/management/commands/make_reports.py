@@ -280,7 +280,7 @@ class AnnualReporter(Reporter):
     def get_contribution_types(self):
         types = ContributionType.objects.filter(source__community=self.community).select_related('source')
         contrib_filter = Q(contribution__timestamp__gte=self.start, contribution__timestamp__lte=self.end)
-        types = types.annotate(contribution_count=Count('contribution'), filter=contrib_filter).filter(contribution_count__gt=0)
+        types = types.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0)
         return list(types.values('name', 'source__name', 'source__connector', 'source__icon_name', 'contribution_count').order_by('-contribution_count'))
 
     def get_top_contributors(self):
