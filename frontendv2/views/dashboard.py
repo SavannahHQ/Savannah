@@ -141,6 +141,7 @@ class Overview(SavannahFilterView):
         self._channelsChart = None
         self._levelsChart = None
         self.charts = set()
+        self.filter['custom_timespan'] = False
     
     @property 
     def member_count(self):

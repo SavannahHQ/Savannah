@@ -199,16 +199,19 @@ class SavannahView:
 class SavannahFilterView(SavannahView):
     def __init__(self, request, community_id):
         self.MAX_TIMESPAN = 365
-        if community_id != request.session.get("community"):
-            request.session['tag'] = None
-            request.session['role'] = None
+        if community_id != request.session.get("community") or ('clear' in request.GET and request.GET.get('clear') == 'all'):
+            request.session['timefilter'] = 'timespan'
             request.session['timespan'] = self.MAX_TIMESPAN
+            request.session['tag'] = None
+            request.session['member_tag'] = None
+            request.session['role'] = None
+            request.session['type'] = None
         super().__init__(request, community_id)
         self.filter = {
-            'timespan': False,
-            'custom_timespan': False,
-            'member_role': False,
-            'member_tag': False,
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
             'tag': False,
             'source': False,
             'contrib_type': False,
@@ -322,6 +325,18 @@ class SavannahFilterView(SavannahView):
         else:
             self.timespan = 1+(self.rangeend - self.rangestart).days
 
+    @property
+    def is_filtered(self):
+        if self.filter['timespan'] and self.timespan != self.MAX_TIMESPAN:
+            return True
+        if self.filter['member_role'] and self.role is not None:
+            return True
+        if self.filter['member_tag'] and self.member_tag is not None:
+            return True
+        if self.filter['tag'] and self.tag is not None:
+            return True
+        if self.filter['contrib_type'] and self.contrib_type is not None:
+            return True
 
     @property
     def timespan_display(self):

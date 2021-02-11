@@ -1,4 +1,5 @@
           <span id="filter-bar" class="">
+          {% if view.filter.timespan %}
             <span class="dropdown">
             {% if view.timefilter == 'timespan' and view.timespan == view.MAX_TIMESPAN %}
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-calendar"></i> Past Year</button>
@@ -14,6 +15,7 @@
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=30"><i class="fas fa-calendar-alt"></i> 30 Days</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=7"><i class="fas fa-calendar-week"></i> Last Week</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=1"><i class="fas fa-calendar-day"></i> Today</a>
+                    {% if view.filter.custom_timespan %}
                     <div class="dropdown-divider"></div>
                     <div class="dropdown-header">Custom Range</div>
                     <form method="GET" action="" class="input-group input-daterange pr-1 pl-1">
@@ -22,8 +24,12 @@
                         <input type="text" class="form-control" name="rangeend" value="{% if view.timefilter == 'range'%}{{view.rangeend|date:'Y-m-d'}}{% endif %}">
                         <div class="input-group-append"><button class="btn btn-primary btn-sm input-group-text" type="submit"><i class="fas fa-chevron-right"> </i></button></div>
                     </form>             
+                    {% endif %}
               </div>
             </span>
+          {% endif %}
+          {% if view.filter.member_role %}
+          <!-- Member -->
             <span class="dropdown">
             {% if view.member_tag %}
               {% if view.role %}
@@ -44,14 +50,19 @@
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=community"><i class="fas fa-user"></i> Community</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=staff"><i class="fas fa-user-tie"></i> Staff</a>
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=bot"><i class="fas fa-robot"></i> Bots</a>
+                    {% if view.filter.member_tag %}
                     <div class="dropdown-divider">Member Tag</div>
                     <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag="><i class="fas fa-tags"></i> Any Tags</a>
                     {% for tag in view.community.tag_set.all %}
                     <a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{tag.name}}</span></a>
                     {% endfor %}
+                    {% endif %}
               </div>
             </span>
-          {% if not members_only %}
+          {% endif %}
+
+          {% if view.filter.tag %}
+          <!-- Tag -->
             <span class="dropdown">
             {% if view.tag %}
               <button style="white-space:nowrap; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span style="color: #{{view.tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{view.tag.name}}</span></button>
@@ -86,7 +97,7 @@
             </span>
             {% endif %}
             
-            {% if view.tag or view.member_tag or view.role or view.timespan != view.MAX_TIMESPAN %}
-            <a class="align-baseline text-secondary" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan=&role=&tag=&member_tag=" title="Clear filters"><i class="fas fa-times"> </i></a>
+            {% if view.is_filtered %}
+            <a class="align-baseline text-secondary" href="?{% if view.search %}search={{view.search}}&{% endif %}clear=all" title="Clear filters"><i class="fas fa-times"> </i></a>
             {% endif %}
           <span>

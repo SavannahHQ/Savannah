@@ -15,6 +15,15 @@ class Conversations(SavannahFilterView):
         super().__init__(request, community_id)
         self.active_tab = "conversations"
         self.charts = set()
+        self.filter = {
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
+            'tag': True,
+            'source': False,
+            'contrib_type': False,
+        }
 
         self._membersChart = None
         self._channelsChart = None
