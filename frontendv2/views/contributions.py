@@ -98,7 +98,7 @@ class Contributions(SavannahFilterView):
     @property
     def new_contributors(self):
         members = Member.objects.filter(community=self.community)
-        contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+        contrib_filter = Q()
         if self.contrib_type:
             contrib_filter = contrib_filter &Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
@@ -335,7 +335,6 @@ class Contributors(SavannahFilterView):
     @property
     def all_contributors(self):
         members = Member.objects.filter(community=self.community)
-        contrib_filter = None
         contrib_filter = Q()
         contrib_range_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
         if self.contrib_type:
