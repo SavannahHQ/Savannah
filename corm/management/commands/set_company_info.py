@@ -51,7 +51,7 @@ class Command(BaseCommand):
 
         # Ensure that all members with a company have their role and tag set
         for member in Member.objects.filter(community=community, company__isnull=False):
-            if member.company.is_staff:
+            if member.company.is_staff and member.role == Member.COMMUNITY:
                 member.role = Member.STAFF
                 member.save()
             if member.company.tag:
