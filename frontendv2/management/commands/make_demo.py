@@ -73,7 +73,7 @@ class Command(BaseCommand):
         now = datetime.datetime.utcnow()
         year = now.year
         month = now.month
-        for i in range(12):
+        for i in range(6):
             if month < 1:
                 month = 12
                 year -= 1
@@ -97,7 +97,7 @@ class Command(BaseCommand):
         sources = list()
 
         ambassadors = Tag.objects.get(name="ambassador", community=self.community)
-        slack = self.community.source_set.create(name="%s Chat"%self.community_name, connector="corm.plugins.slack", icon_name="fab fa-slack")
+        slack = self.community.source_set.create(name="%s Chat"%self.community_name, connector="corm.plugins.slack", icon_name="fab fa-slack", enabled=False)
         slack.channel_set.create(name="general")
         slack.channel_set.create(name="random")
         slack.channel_set.create(name="community", tag=ambassadors)
@@ -106,14 +106,14 @@ class Command(BaseCommand):
 
         featurex = Tag.objects.get(name="feature-x", community=self.community)
         featurey = Tag.objects.get(name="feature-y", community=self.community)
-        github = self.community.source_set.create(name="%s Org"%self.community_name, connector="corm.plugins.github", icon_name="fab fa-github")
+        github = self.community.source_set.create(name="%s Org"%self.community_name, connector="corm.plugins.github", icon_name="fab fa-github", enabled=False)
         github.channel_set.create(name="Demo Src")
         github.channel_set.create(name="Demo Docs")
         github.channel_set.create(name="Feature X Src", tag=featurex)
         github.channel_set.create(name="Feature Y Src", tag=featurey)
         sources.append(github)
 
-        discourse = self.community.source_set.create(name="%s Forum"%self.community_name, connector="corm.plugins.discourse", icon_name="fab fa-discourse")
+        discourse = self.community.source_set.create(name="%s Forum"%self.community_name, connector="corm.plugins.discourse", icon_name="fab fa-discourse", enabled=False)
         discourse.channel_set.create(name="General")
         discourse.channel_set.create(name="Features")
         discourse.channel_set.create(name="Help")
@@ -268,7 +268,7 @@ class Command(BaseCommand):
         print("Making Connections...")
         max_con = int(self.member_count / 5)
         convar = int(max_con/10)
-        hero_count = max(2, int(math.log10(max_con)))
+        hero_count = max(2, int(math.log10(self.member_count)))
         connect = dict()
         print("Making %s heros with %s connections..." % (hero_count, max_con))
         for hero in random.sample(self.members, k=hero_count):
