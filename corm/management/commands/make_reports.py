@@ -20,15 +20,25 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--date', dest='date', type=str)
+        parser.add_argument('--community', dest='community_id', type=int)
 
     def handle(self, *args, **options):
         for_date = options.get('date')
+        community_id = options.get('community_id')
+        self.verbosity = options.get('verbosity')
+
+        if community_id:
+            community = Community.objects.get(id=community_id)
+            print("Using Community: %s" % community.name)
+            communities = [community]
+        else:
+            communities = Community.objects.all()
         if for_date:
             self.tstamp = dateutil.parser.parse(for_date)
         else:
             self.tstamp = datetime.datetime.utcnow()
 
-        for community in Community.objects.all():
+        for community in communities:
             self.make_growth_report(community)
             self.make_annual_report(community)
 

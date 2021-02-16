@@ -14,8 +14,18 @@ LEVEL_RELEVANCY_DAYS = 180
 class Command(BaseCommand):
     help = 'Checks member activity and assigns them levels in a project'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--community', dest='community_id', type=int)
+
     def handle(self, *args, **options):
-        for community in Community.objects.all():
+        community_id = options.get('community_id')
+        if community_id:
+            communities = [Community.objects.get(id=community_id)]
+        else:
+            communities = Community.objects.filter(status=Community.ACTIVE)
+
+
+        for community in communities:
             default_project, created = Project.objects.get_or_create(community=community, default_project=True, defaults={'name': community.name, 'owner':None, 'threshold_user':1, 'threshold_participant':10, 'threshold_contributor':1, 'threshold_core':10})
             other_projects = Project.objects.filter(community=community, default_project=False)
 

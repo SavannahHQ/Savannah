@@ -41,7 +41,7 @@
                 {% for company in view.all_companies %}
                 <tr>
                   <td>
-                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
+                    <a href="{% url 'company_profile' company.id %}"><i class="{% if company.is_staff %}fas fa-user-tie{% else %}fas fa-building{% endif %}" title="{% if company.is_staff %}Staff{% endif %}"> </i> {{ company.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
                   <td >{{company.member_count|intcomma}}</td>
