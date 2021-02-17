@@ -378,7 +378,7 @@
                     <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=connection.to_member.tags.all %}
                   </td>
-                  <td class="text-right">{{connection.last_connected|dateortime}}</td>
+                  <td class="text-nowrap text-right">{{connection.last_connected|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
