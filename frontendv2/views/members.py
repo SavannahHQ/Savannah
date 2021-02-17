@@ -561,7 +561,11 @@ def watch_member(request, member_id):
     if request.method == "POST":
         action = request.POST.get('action')
         if action == 'watch':
-            MemberWatch.objects.get_or_create(manager=request.user, member=member)
+            try:
+                last_convo = Conversation.objects.filter(speaker=member).order_by('-timestamp')[0]
+                MemberWatch.objects.get_or_create(manager=request.user, member=member, last_seen=last_convo.timestamp, last_channel=last_convo.channel)
+            except:
+                MemberWatch.objects.get_or_create(manager=request.user, member=member)
             messages.success(request, "You will be notified whenever %s is active in your community" % member.name)
         else:
             MemberWatch.objects.filter(manager=request.user, member=member).delete()
