@@ -3,12 +3,24 @@
 
 {% block page_title %} | {{view.member.name}}{% endblock %}
 
+{% block page_styles %}
+<style>
+@media (min-width: 992px) {
+
+.nav-float {
+  margin-top: -4em;
+}
+
+}
+</style>
+{% endblock %}
+
 {% block page_content %}
-          <!-- Page Heading -->
+        <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">{{view.member.name}}</h1>
-            <span>
-            <form class="d-none d-sm-inline-block form-inline" action="{% url 'member_followup_form' view.member.id %}" method="POST">
+            <h1 class="text-nowrap h3 mb-0 text-gray-800">{{view.member.name}}</h1>
+            <span class="d-flex">
+            <form class="d-sm-inline-block form-inline" action="{% url 'member_followup_form' view.member.id %}" method="POST">
               {% csrf_token %}
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-user-clock"></i> Follow-up</button>
               <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
@@ -25,7 +37,7 @@
               </div>
             </form>
 
-            <form class="d-none d-sm-inline-block form-inline" action="{% url 'member_watch_form' view.member.id %}" method="POST">
+            <form class="d-sm-inline-block form-inline" action="{% url 'member_watch_form' view.member.id %}" method="POST">
             {% csrf_token %}
             {% if view.is_watched %}
               <input type="hidden" name="action" value="unwatch">
@@ -37,7 +49,17 @@
             </form>
             </span>
           </div>
-
+          <div class="container-fluid p-0">
+            <ul class="nav nav-tabs justify-content-center nav-float mb-2">
+              <li class="nav-item">
+                <a class="nav-link active" href="{% url 'member_profile' view.member.id %}">Profile</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'member_activity' view.member.id %}">Activity</a>
+              </li>
+            </ul>
+          </div>
+  
           <!-- Content Row -->
 
           <div class="row">
@@ -173,6 +195,7 @@
                   <a href="{% url 'task_add' view.member.id %}" class="text-gray-500"><i class="fas fa-plus"></i> Task</a>
                 </div>
                 <div class="card-body p-0">
+                {% if view.open_tasks.count %}
                 <form action="{% url 'task_done' member_id=view.member.id %}" method="POST">
                 {% csrf_token %}
                 <table class="table">
@@ -198,6 +221,7 @@
                 </tbody>
                 </table>
                 </form>
+                {% endif %}
                 </div>
               </div>
 
@@ -207,6 +231,7 @@
                   <a href="{% url 'gift_add' view.member.id %}" class="text-gray-500"><i class="fas fa-gifts"></i> Send</a>
                 </div>
                 <div class="card-body p-0">
+                {% if view.all_gifts.count %}
                 <table class="table">
                 <thead>
                   <tr>
@@ -227,6 +252,7 @@
                 {% endfor %}
                 </tbody>
                 </table>
+                {% endif %}
                 </div>
               </div>
 
@@ -296,44 +322,8 @@
           <!-- Content Row -->
           <div class="row">
 
-            <!-- Area Chart -->
-            <div class="col-xl-8 col-lg-7">
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Activity</h6>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body">
-                  <div class="chart-area">
-                    <canvas id="engagementChart"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pie Chart -->
-            <div class="col-xl-4 col-lg-5">
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">{{view.channels_chart.title}}</h6>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body">
-                  <div class="chart-pie pt-4 pb-2">
-                    <canvas id="{{view.channels_chart.id}}"></canvas>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Content Row -->
-          <div class="row">
-
             <!-- Content Column -->
-            <div class="col-lg-12 mb-4">
+            <div class="col-lg-8 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
@@ -344,30 +334,20 @@
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col">Channel</th>
                     <th scope="col">Date</th>
+                    <th scope="col">Channel</th>
                     <th scope="col">Content</th>
-                    <th scope="col"><span class="short-text">#</span><span class="full-text">Participants</span></th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for contrib in view.all_contributions %}
                 <tr>
+                  <td class="text-nowrap">{{contrib.timestamp|dateortime}}</td>
                   <td class="text-nowrap"><i class="{{contrib.channel_icon}}"></i> {{contrib.channel_name}}</td>
-                  <td>{{contrib.timestamp}}</td>
                   <td>
                     <a target="_blank" href="{{contrib.location|default:"#"}}" title="{{contrib.title}}">{{ contrib.title }}</a>
                     {% if contrib.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=contrib.tags.all %}{% endif %}
                   </td>
-                  <td>
-                  {% if contrib.conversation %}
-                  {% for participant in contrib.conversation.participants.all %}
-                    {% if participant.id != view.member.id %}
-                      <a href="{% url 'member_profile' participant.id %}">{{participant.name}}</a><br/>
-                    {% endif %}
-                  {% endfor %}
-                  {% endif %}
-                  </td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -376,55 +356,39 @@
               </div>
 
             </div>
-          </div>
 
-          <!-- Content Row -->
-          <div class="row">
-
-            <!-- Content Column -->
-            <div class="col-lg-12 mb-4">
-
-              <!-- Most Active Users-->
+            <div class="col-lg-4">
+              <!-- Recent Connections-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Recent Conversations</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Connections</h6>
                 </div>
-                <div class="card-body p-0 table-responsive">
-                <table class="table">
+                <div class="card-body p-0">
+                <table class="table mb-0">
                 <thead>
                   <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Channel</th>
-                    <th scope="col">Content</th>
-                    <th scope="col"><span class="short-text">#</span><span class="full-text">Participants</span></th>
+                    <th scope="col">Member</th>
+                    <th class="text-right" scope="col">Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                {% for conversation in view.all_conversations %}
+                {% for connection in view.recent_connections %}
                 <tr>
-                  <td>{{conversation.timestamp|dateortime}}</td>
-                  <td class="text-nowrap"><i class="{{conversation.channel_icon}}"></i> {{conversation.channel_name}}</td>
                   <td>
-                    <a target="_blank" href="{{conversation.location|default:"#"}}" title="{{conversation.content}}">{{ conversation }}</a>
-                    {% if conversation.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}{% endif %}
+                    <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=connection.to_member.tags.all %}
                   </td>
-                  <td>
-                  {% for participant in conversation.participants.all %}
-                    {% if participant.id != view.member.id %}
-                      <a href="{% url 'member_profile' participant.id %}">{{participant.name}}</a><br/>
-                    {% endif %}
-                  {% endfor %}
-                  </td>
+                  <td class="text-right">{{connection.last_connected|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
                 </div>
               </div>
-
             </div>
 
           </div>
+
         </div>
         <!-- /.container-fluid -->
 {% endblock %}

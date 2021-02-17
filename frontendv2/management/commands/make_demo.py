@@ -366,12 +366,13 @@ class Command(BaseCommand):
         support, created = ContributionType.objects.get_or_create(community=self.community, source=slack, name="Support")
         for contributor in random.sample(self.members, k=random.randint(int(self.member_count/11), int(self.member_count/9))):
             contribution_count = random.choices([10, 8, 6, 4, 2], cum_weights=[5, 10, 20, 50, 90], k=1)[0]
-            random.choices(contributor.speaker_in.all(), k=contribution_count)
             from_conversations = contributor.speaker_in.filter(channel__source=slack, tags__name='thankful').all()
             for convo in random.choices(from_conversations, k=min(from_conversations.count(), contribution_count)):
                 contribution_date = datetime.datetime.utcnow() - datetime.timedelta(days=random.randrange(1, self.max_history_days))
                 contribution_channel = random.choice(slack.channel_set.all())
                 contribution_title = "Helped in %s" % contribution_channel.name
-                contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp, conversation=convo)
+                contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
                 contribution.tags.set(convo.tags.all())
+                convo.contribution = contribution
+                convo.save()
 

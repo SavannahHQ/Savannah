@@ -250,25 +250,23 @@ class GithubImporter(PluginImporter):
                 github_user_id = 'github.com/%s' % issue['user']['login']
                 member = self.make_member(github_user_id, channel=channel, detail=issue['user']['login'], tstamp=tstamp, name=issue['user']['login'], speaker=True)
 
-                # Pull Requests are an Activity
-                if 'pull_request' in issue:
-                    activity, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
-                    # Not all comments should get the channel tag, but all PRs should
-                    if channel.tag:
-                        activity.tags.add(channel.tag)
-                else:
-                    activity = None
-
                 # If there are comments it's a Conversation
-                if issue.get('comments', 0) > 0:
+                if issue.get('comments', 0) >= 0:
                     issue_body = issue['body']
                     if issue_body is not None:
                         issue_body = issue_body.replace("\x00", "\uFFFD")
                     convo, created = Conversation.objects.update_or_create(origin_id=github_convo_link, channel__source=source, defaults={'channel':channel, 'speaker':member, 'content':issue_body, 'timestamp':tstamp, 'location':issue['html_url']})
                     conversations.add(convo)
-                    if activity:
-                        activity.conversation = convo
-                        activity.save()
+                    # Pull Requests are Contributions
+                    if 'pull_request' in issue:
+                        contrib, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
+                        # Not all comments should get the channel tag, but all PRs should
+                        if channel.tag:
+                            contrib.tags.add(channel.tag)
+                            convo.tags.add(channel.tag)
+                        convo.contribution = contrib
+                        convo.save()
+
 
                     participants.add(member)
 

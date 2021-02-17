@@ -242,10 +242,13 @@ class GitlabImporter(PluginImporter):
             gitlab_user_id = author.get('web_url')
             submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), channel=channel, tstamp=thread_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
             
-            activity, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':thread_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link, 'conversation':thread})
+            activity, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':thread_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link})
             # Not all comments should get the channel tag, but all PRs should
             if channel.tag:
                 activity.tags.add(channel.tag)
+                thread.tags.add(channel.tag)
+            thread.contribution = activity
+            thread.save()
         else:
             activity = None
 

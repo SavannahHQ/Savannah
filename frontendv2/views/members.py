@@ -230,17 +230,6 @@ class MemberProfile(SavannahView):
         self.member = get_object_or_404(Member, id=member_id)
         super().__init__(request, self.member.community_id)
         self.active_tab = "members"
-
-        self.RESULTS_PER_PAGE = 100
-        self._engagementChart = None
-        self._channelsChart = None
-        try:
-            self.page = int(request.GET.get('page', 1))
-        except:
-            self.page = 1
-        self.tag = None
-        self.member_tage = None
-        self.role = None
         
     @property
     def has_merge_history(self):
@@ -262,26 +251,106 @@ class MemberProfile(SavannahView):
         return Gift.objects.filter(community=self.community, member=self.member)
 
     @property
-    def all_conversations(self):
-        conversations = Conversation.objects.filter(channel__source__community=self.member.community, speaker=self.member)
-        if self.tag:
-            conversations = conversations.filter(tags=self.tag)
-        if self.role:
-            conversations = conversations.filter(participants__role=self.role)
-
-        conversations = conversations.annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
-        return conversations[:20]
-
-    @property
     def all_contributions(self):
         contributions = Contribution.objects.filter(community=self.member.community, author=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
-        if self.tag:
-            contributions = contributions.filter(tags=self.tag)
-        if self.role:
-            contributions = contributions.filter(author__role=self.role)
 
         contributions = contributions.annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         return contributions[:10]
+
+    @property 
+    def recent_connections(self):
+        if self.user_member:
+            connections = MemberConnection.objects.filter(from_member=self.member).order_by('-last_connected')[:10]
+            connections.select_related('to_member').prefetch_related('to_member__tags')
+            return connections
+        else:
+            return []
+
+
+    @login_required
+    def as_view(request, member_id):
+        view = MemberProfile(request, member_id)
+        if request.method == 'POST':
+            if 'delete_note' in request.POST:
+                note = get_object_or_404(Note, id=request.POST.get('delete_note'))
+                context = view.context
+                context.update({
+                    'object_type':"Note", 
+                    'object_name': str(note), 
+                    'object_id': note.id,
+                })
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                note = get_object_or_404(Note, id=request.POST.get('object_id'))
+                note.delete()
+                messages.success(request, "Note deleted")
+
+                return redirect('member_profile', member_id=member_id)
+        return render(request, 'savannahv2/member_profile.html', view.context)
+
+class MemberActivity(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+        self.RESULTS_PER_PAGE = 20
+        self._engagementChart = None
+        self._sourcesChart = None
+        self._channelsChart = None
+        self._tagsChart = None
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+        self.tag = None
+        self.member_tag = None
+        self.role = None
+        
+    @property
+    def is_watched(self):
+        return MemberWatch.objects.filter(manager=self.request.user, member=self.member).count() > 0
+        
+    @property
+    def all_activity(self):
+        conversations = Conversation.objects.filter(channel__source__community=self.member.community, speaker=self.member)
+        self.result_count = conversations.count()
+        conversations = conversations.annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return conversations[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
+            
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        return pages
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        offset=1
+        if self.page > 5:
+            offset = self.page - 5
+        if offset + 9 > pages:
+            offset = pages - 9
+        if offset < 1:
+            offset = 1
+        return [page+offset for page in range(min(10, pages))]
 
     def getEngagementChart(self):
         if not self._engagementChart:
@@ -368,41 +437,44 @@ class MemberProfile(SavannahView):
         self.charts.add(self._channelsChart)
         return self._channelsChart
 
-    @property
-    def channel_names(self):
-        chart = self.getChannelsChart()
-        return str([channel[0] for channel in chart])
+    def sources_chart(self):
+        source_names = dict()
+        if not self._sourcesChart:
+            sources = list()
+            counts = dict()
+            sources = Source.objects.filter(community=self.member.community)
+            convo_filter = Q(channel__conversation__speaker=self.member, channel__conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
 
-    @property
-    def channel_counts(self):
-        chart = self.getChannelsChart()
-        return [channel[1] for channel in chart]
+            sources = sources.annotate(conversation_count=Count('channel__conversation', filter=convo_filter)).filter(conversation_count__gt=0).order_by('-conversation_count')
+ 
+            self._sourcesChart = PieChart("sourcesChart", title="Conversations by Source", limit=8)
+            for source in sources:
+                self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), source.conversation_count)
 
-    @property
-    def channel_colors(self):
-        chart = self.getChannelsChart()
-        return ['#'+channel[2] for channel in chart]
+        self.charts.add(self._sourcesChart)
+        return self._sourcesChart
+
+    def tags_chart(self):
+        if not self._tagsChart:
+            counts = dict()
+            tags = Tag.objects.filter(community=self.community)
+            convo_filter = Q(conversation__speaker=self.member, conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=180))
+
+            tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
+
+            for t in tags:
+                counts[t] = t.conversation_count
+            self._tagsChart = PieChart("tagsChart", title="Conversations by Tag", limit=12)
+            for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                if count > 0:
+                    self._tagsChart.add(tag.name, count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
 
     @login_required
     def as_view(request, member_id):
-        view = MemberProfile(request, member_id)
-        if request.method == 'POST':
-            if 'delete_note' in request.POST:
-                note = get_object_or_404(Note, id=request.POST.get('delete_note'))
-                context = view.context
-                context.update({
-                    'object_type':"Note", 
-                    'object_name': str(note), 
-                    'object_id': note.id,
-                })
-                return render(request, "savannahv2/delete_confirm.html", context)
-            elif 'delete_confirm' in request.POST:
-                note = get_object_or_404(Note, id=request.POST.get('object_id'))
-                note.delete()
-                messages.success(request, "Note deleted")
-
-                return redirect('member_profile', member_id=member_id)
-        return render(request, 'savannahv2/member_profile.html', view.context)
+        view = MemberActivity(request, member_id)
+        return render(request, 'savannahv2/member_activity.html', view.context)
 
 class MemberMergeHistory(SavannahView):
     def __init__(self, request, member_id):

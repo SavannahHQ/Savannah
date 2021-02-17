@@ -272,7 +272,7 @@ class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
     search_fields = ("content",)
-    raw_id_fields = ('speaker', 'participants', 'thread_start')
+    raw_id_fields = ('speaker', 'participants', 'thread_start', 'contribution')
     def link(self, conversation):
         if conversation.location is not None:
             return mark_safe("<a href=\"%s\">Open</a>" % conversation.location)
@@ -290,7 +290,7 @@ admin.site.register(Conversation, ConversationAdmin)
 class TaskAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "due", "community", "project", "stakeholder_list", "is_done")
     list_filter = (isNotNull("done"), "community", "owner", "project", "tags", "stakeholders")
-    raw_id_fields = ('stakeholders','conversation')
+    raw_id_fields = ('stakeholders', 'conversation')
     actions = ('mark_done',"mark_notdone")
     def stakeholder_list(self, task):
         return ", ".join([member.name for member in task.stakeholders.all()[:10]])
@@ -316,7 +316,7 @@ admin.site.register(ContributionType, ContributionTypeAdmin)
 class ContributionAdmin(admin.ModelAdmin):
     list_display = ("title", "contribution_type", "channel", "timestamp", "author", "tag_list")
     list_filter = ("contribution_type__source__connector", "community", "contribution_type__name", "timestamp")
-    raw_id_fields = ('conversation', 'author')
+    raw_id_fields = ('author',)
     def tag_list(self, contribution):
         return ", ".join([tag.name for tag in contribution.tags.all()[:10]])
     tag_list.short_description = "Tags"

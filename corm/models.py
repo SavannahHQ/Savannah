@@ -541,6 +541,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     timestamp = models.DateTimeField(db_index=True)
     location = models.URLField(max_length=512, null=True, blank=True)
     thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
+    contribution = models.OneToOneField('Contribution', related_name='conversation', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         if self.content is not None:
@@ -659,7 +660,6 @@ class Contribution(TaggableModel, ImportedDataModel):
     timestamp = models.DateTimeField(db_index=True)
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
     location = models.URLField(max_length=512, null=True, blank=True)
-    conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
@@ -808,10 +808,11 @@ class SuggestConversationAsContribution(Suggestion):
                 timestamp=self.conversation.timestamp,
                 author=supporter,
                 location=self.conversation.location,
-                conversation=self.conversation
             )
             if self.conversation.channel.tag is not None:
                 contrib.tags.add(self.conversation.channel.tag)
+            self.conversation.contribution = contrib
+            self.conversation.save()
         self.delete()
         return False
 
