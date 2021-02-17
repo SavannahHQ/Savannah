@@ -17,7 +17,7 @@
 
 {% block page_content %}
         <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+          <div class="d-sm-flex align-items-center justify-content-between pb-2 mb-4">
             <h1 class="text-nowrap h3 mb-0 text-gray-800">{{view.member.name}}</h1>
             <span class="d-flex">
             <form class="d-sm-inline-block form-inline" action="{% url 'member_followup_form' view.member.id %}" method="POST">
@@ -458,113 +458,6 @@ function edit_note_dialog(event) {
     $('#noteDialog').modal('show');
 }
 $('.note_edit').on('click', edit_note_dialog);
-  </script>
-  <script>
-// Area Chart Example
-var ctx = document.getElementById("engagementChart");
-var myLineChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: {{view.engagement_chart_months|safe}},
-    datasets: [{
-      label: "Conversations",
-      lineTension: 0.3,
-      backgroundColor: "#{{colors.CONVERSATION}}22",
-      borderColor: "#{{colors.CONVERSATION}}",
-      pointRadius: 1,
-      pointBackgroundColor: "#{{colors.CONVERSATION}}",
-      pointBorderColor: "#{{colors.CONVERSATION}}",
-      pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#{{colors.CONVERSATION}}",
-      pointHoverBorderColor: "#{{colors.CONVERSATION}}",
-      pointHitRadius: 10,
-      pointBorderWidth: 2,
-      data: {{view.engagement_chart_conversations|safe}},
-    },
-    {
-      label: "Contributions",
-      lineTension: 0.3,
-      backgroundColor: "#{{colors.CONTRIBUTION}}22",
-      borderColor: "#{{colors.CONTRIBUTION}}",
-      pointRadius: 1,
-      pointBackgroundColor: "#{{colors.CONTRIBUTION}}",
-      pointBorderColor: "#{{colors.CONTRIBUTION}}",
-      pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#{{colors.CONTRIBUTION}}",
-      pointHoverBorderColor: "#{{colors.CONTRIBUTION}}",
-      pointHitRadius: 10,
-      pointBorderWidth: 2,
-      data: {{view.engagement_chart_activities|safe}},
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    layout: {
-      padding: {
-        left: 10,
-        right: 25,
-        top: 25,
-        bottom: 0
-      }
-    },
-    scales: {
-      xAxes: [{
-        time: {
-          unit: 'date'
-        },
-        gridLines: {
-          display: false,
-          drawBorder: false
-        },
-        ticks: {
-          maxTicksLimit: 7
-        }
-      }],
-      yAxes: [{
-        ticks: {
-          maxTicksLimit: 5,
-          padding: 10,
-          beginAtZero: true,
-          // Include a dollar sign in the ticks
-          callback: function(value, index, values) {
-            return value;
-          }
-        },
-        gridLines: {
-          color: "rgb(234, 236, 244)",
-          zeroLineColor: "rgb(234, 236, 244)",
-          drawBorder: false,
-          borderDash: [2],
-          zeroLineBorderDash: [2]
-        }
-      }],
-    },
-    legend: {
-      display: true
-    },
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      titleMarginBottom: 10,
-      titleFontColor: '#6e707e',
-      titleFontSize: 14,
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: false,
-      intersect: false,
-      mode: 'index',
-      caretPadding: 10,
-      callbacks: {
-        label: function(tooltipItem, chart) {
-          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-          return datasetLabel + ': ' + tooltipItem.yLabel;
-        }
-      }
-    }
-  }
-});
   </script>
 
 {% endblock %}
