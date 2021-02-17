@@ -117,7 +117,11 @@
                     {% include 'savannahv2/tag_list.html' with tags=watch.member.tags.all %}
                   </td>
                   <td>{{watch.last_seen|default:''}}</td>
-                  <td><i class="{{watch.last_channel.source.icon_name}}"></i>&nbsp;{{watch.last_channel|default:''}}</td>
+                  <td>
+                    <a href="{% url 'member_activity' watch.member.id %}#timeline">
+                    <i class="{{watch.last_channel.source.icon_name}}"></i>&nbsp;{{watch.last_channel|default:''}}
+                    </a>
+                  </td>
                 </tr>
                 {% endfor %}
                 </tbody>
