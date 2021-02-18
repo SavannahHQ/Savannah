@@ -90,7 +90,7 @@
                 {% for convo in view.all_activity %}
                 <div class="row">
                   <div class="col-10">
-                    {% if convo.contribution %}<i class="fas fa-shield-alt" title="{{convo.contribution.contribution_type.name}}"> </i>{% else %}<i class="fas fa-comments" title="Conversation"> </i>{% endif %}
+                    {% if convo.contribution %}<i class="fas fa-shield-alt mr-1" title="Contribution"> </i>{% else %}<i class="fas fa-comments mr-1" title="Conversation"> </i>{% endif %}
                   <b>{% if convo.contribution %}{{convo.contribution.contribution_type.name}}{% else %}Commented{% endif %}</b>
                   in <a class="pr-2" target="_blank" href="{{convo.location|default:"#"}}"><i class="{{convo.channel_icon}}"></i> {{convo.channel_name}}</a>
                     {% if convo.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=convo.tags.all %}{% endif %}
@@ -102,7 +102,7 @@
                     {% if convo.contribution %}
                     <span title="{{convo.contribution.title}}">{{ convo.contribution.title }}</span>
                     {% else %}
-                    <span style="white-space: pre-wrap;">{{ convo.content }}</span>
+                    <span style="white-space: pre-wrap;">{{ convo.brief }}</span>
                     {% endif %}
                   </div>
                   <div class="col-2 text-right">

@@ -543,6 +543,24 @@ class Conversation(TaggableModel, ImportedDataModel):
     thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
     contribution = models.OneToOneField('Contribution', related_name='conversation', on_delete=models.SET_NULL, null=True, blank=True)
 
+    @property
+    def brief(self):
+        truncated = False
+        if self.content is not None:
+            content = self.content.strip()
+            if content.count('\n') >= 2:
+                if content.count('\n') >= 3:
+                    truncated = True
+                content = "\n".join(content.split('\n')[:3])
+
+            if len(content) > 250:
+                truncated = True
+                content = content[:250]
+            if truncated:
+                content = content+"..."
+            return content
+        return ""
+
     def __str__(self):
         if self.content is not None:
             content = self.content.strip()
