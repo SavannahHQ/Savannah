@@ -1,0 +1,6 @@
+
+{% block email_body%}{% endblock %}
+
+<hr />
+<p><a href="{{SITE_ROOT}}{% url 'dashboard' community.id %}">View your Community</a></p>
+<p><a href="{{SITE_ROOT}}{% url 'manager_preferences' community.id %}">Change your email settings</a></p>

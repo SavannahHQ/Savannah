@@ -39,7 +39,7 @@ class Command(BaseCommand):
                 target=community,
                 level='success',
                 icon_name="fas fa-mail-bulk",
-                link=reverse('member_profile', kwargs={'member_id':member.id})
+                link=reverse('member_activity', kwargs={'member_id':member.id})
             )
 
     def check_for_inactivity(self, community):
@@ -72,5 +72,5 @@ class Command(BaseCommand):
                     target=community,
                     level='success',
                     icon_name="fas fa-user-check",
-                    link=reverse('member_profile', kwargs={'member_id':member.id})
+                    link=reverse('member_activity', kwargs={'member_id':member.id})
                 )

@@ -1,11 +1,44 @@
-<h2>You last looked at {{community.name}} in {{SITE_NAME}} on {{last_seen}}</h2>
+{% extends "emails/base.html"%}
+
+{% block email_body %}
+<h3>You last checked {{SITE_NAME}} on {{last_seen|date}}</h3>
+
+{% if upcoming_tasks.count > 0 or past_due_tasks.count > 0 %}
+{% if upcoming_tasks.count > 0 and past_due_tasks.count > 0 %}
+<p>You have {{upcoming_tasks.count}} upcoming task{{upcoming_tasks.count|pluralize}} and {{past_due_tasks.count}} past due task{{past_due_tasks.count|pluralize}}:</p>
+{% elif upcoming_tasks.count > 0 %}
+<p>You have {{upcoming_tasks.count}} upcoming task{{upcoming_tasks.count|pluralize}}:</p>
+{% elif past_due_tasks.count > 0 %}
+<p>You have {{past_due_tasks.count}} past due task{{past_due_tasks.count|pluralize}}:</p>
+{% endif %}
+
+{% if past_due_tasks.count > 0 %}
+<h4>Past Due</h4>
+<ul>
+{% for task in past_due_tasks %}
+<li>{{task.due|date}} <a href="{{SITE_ROOT}}{% url 'manager_task_edit' community.id task.id %}">{{task.name}}</a>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if upcoming_tasks.count > 0 %}
+<h4>Upcoming</h4>
+<ul>
+{% for task in upcoming_tasks %}
+<li>{{task.due|date}} <a href="{{SITE_ROOT}}{% url 'manager_task_edit' community.id task.id %}">{{task.name}}</a>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% endif %}
+{% if new_contributors.count > 0 or new_members.count > 0 %}
 
 {% if new_contributors.count > 0 and new_members.count > 0 %}
-<p>Since then you have gained {{new_contributors.count}} new Contributors and {{new_members.count}} new Members.</p>
+<p>You have gained {{new_contributors.count}} new Contributor{{new_contributors.count|pluralize}} and {{new_members.count}} new Member{{new_members.count|pluralize}}:</p>
 {% elif new_contributors.count > 0 %}
-<p>Since then you have gained {{new_contributors.count}} new Contributors.</p>
+<p>You have gained {{new_contributors.count}} new Contributor{{new_contributors.count|pluralize}}:</p>
 {% elif new_members.count > 0 %}
-<p>Since then you have gained {{new_members.count}} new Members.</p>
+<p>You have gained {{new_members.count}} new Member{{new_members.count|pluralize}}:</p>
 {% endif %}
 
 {% if new_contributors.count > 0 %}
@@ -26,5 +59,5 @@
 </ul>
 {% endif %}
 
-<p><a href="{{SITE_ROOT}}{% url 'dashboard' community.id %}">View your Community</a></p>
-<p><a href="{{SITE_ROOT}}{% url 'manager_preferences' community.id %}">Change your email settings</a></p>
+{% endif %}
+{% endblock %}

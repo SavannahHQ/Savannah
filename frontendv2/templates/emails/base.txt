@@ -1,0 +1,5 @@
+{% block email_body%}{% endblock %}
+---
+View your Community: {{SITE_ROOT}}{% url 'dashboard' community.id %}
+
+Change your email settings: {{SITE_ROOT}}{% url 'manager_preferences' community.id %}

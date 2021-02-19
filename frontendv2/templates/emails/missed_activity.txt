@@ -1,11 +1,39 @@
-# You last looked at {{community.name}} in {{SITE_NAME}} on {{last_seen}}
+{% extends "emails/base.txt"%}
 
+{% block email_body %}
+# You last checked {{SITE_NAME}} on {{last_seen|date}}
+
+{% if upcoming_tasks.count > 0 or past_due_tasks.count > 0 %}
+{% if upcoming_tasks.count > 0 and past_due_tasks.count > 0 %}
+You have {{upcoming_tasks.count}} upcoming task{{upcoming_tasks.count|pluralize}} and {{past_due_tasks.count}} past due task{{past_due_tasks.count|pluralize}}:
+{% elif upcoming_tasks.count > 0 %}
+You have {{upcoming_tasks.count}} upcoming task{{upcoming_tasks.count|pluralize}}:
+{% elif past_due_tasks.count > 0 %}
+You have {{past_due_tasks.count}} past due task{{past_due_tasks.count|pluralize}}:
+{% endif %}
+
+{% if past_due_tasks.count > 0 %}
+## Past Due
+{% for task in past_due_tasks %}
+ * {{task.due|date}} {{task.name}} ({{SITE_ROOT}}{% url 'manager_task_edit' community.id task.id %})
+{% endfor %}
+{% endif %}
+
+{% if upcoming_tasks.count > 0 %}
+## Upcoming
+{% for task in upcoming_tasks %}
+ * {{task.due|date}} {{task.name}} ({{SITE_ROOT}}{% url 'manager_task_edit' community.id task.id %})
+{% endfor %}
+{% endif %}
+
+{% endif %}
+{% if new_contributors.count > 0 or new_members.count > 0 %}
 {% if new_contributors.count > 0 and new_members.count > 0 %}
-Since then you have gained {{new_contributors.count}} new Contributors and {{new_members.count}} new Members.
+You have gained {{new_contributors.count}} new Contributor{{new_contributors.count|pluralize}} and {{new_members.count}} new Member{{new_members.count|pluralize}}:
 {% elif new_contributors.count > 0 %}
-Since then you have gained {{new_contributors.count}} new Contributors.
+You have gained {{new_contributors.count}} new Contributor{{new_contributors.count|pluralize}}:
 {% elif new_members.count > 0 %}
-Since then you have gained {{new_members.count}} new Members.
+You have gained {{new_members.count}} new Member{{new_members.count|pluralize}}:
 {% endif %}
 
 {% if new_contributors.count > 0 %}
@@ -21,7 +49,5 @@ Since then you have gained {{new_members.count}} new Members.
  * {{member.name}} ({{SITE_ROOT}}{% url 'member_profile' member.id %})
 {% endfor %}
 {% endif %}
-
-View your Community: {{SITE_ROOT}}{% url 'dashboard' community.id %}
-
-Change your email settings: {{SITE_ROOT}}{% url 'manager_preferences' community.id %}
+{% endif %}
+{% endblock %}
