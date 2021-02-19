@@ -3,6 +3,14 @@
 
 {% block page_title %} | {{view.community.name}} Contributions{% endblock %}
 
+{% block page_alerts %}
+          {% if view.suggestion_count %}
+          <div class="alerts">
+              <div class="m-3 alert alert-info">You have <b>{{view.suggestion_count }}</b> <a href="{% url 'conversation_as_contribution_suggestions' view.community.id %}">contribution suggestion{{view.suggestion_count|pluralize}}</a></div>
+          </div>
+          {% endif %}
+{% endblock %}
+
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -18,11 +26,17 @@
             <div class="col-xl-8 col-lg-7">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-left">
                   <h6 class="m-0 font-weight-bold text-primary">Contributions by {{view.trunc_span}}
-                  {% if view.tag %}{% include 'savannahv2/tag_list.html' with tag=view.tag %}{% endif %}
                   </h6>
-                  <a class="text-gray-500" href="{% url 'conversation_as_contribution_suggestions' view.community.id %}"><i class="far fa-lightbulb"> </i> Suggestions</a>
+                  <span class="text-muted pl-2">
+                  {% if view.conversation_search %}<span class="tag-pill text-nowrap" style="background-color: #dadadaaa; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas fa-search"> </i> "{{view.conversation_search}}"</span></span>{% endif %}
+                  {% if view.member_tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.member_tag.color}}; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas {% if view.role == "bot" %}fa-robot{% elif view.role == "staff" %}fa-user-tie{% elif view.role == "community" %}fa-user{% else %}fa-users{% endif %}"> </i> {{view.member_tag.name}}</span></span>
+                  {% elif view.role %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas {% if view.role == "bot" %}fa-robot{% elif view.role == "staff" %}fa-user-tie{% else %}fa-user{% endif %}"> </i> {{view.role}}</span></span>
+                  {% endif %}
+                  {% if view.tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.tag.color}}; "><span class="tag-text" style="color: #{{view.tag.color}}aa;"><i class="fas fa-comment"> </i> {{view.tag.name}}</span></span>{% endif %}
+                  {% if view.contrib_type %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas fa-shield-alt"> </i> {{view.contrib_type}}</span></span>{% endif %}
+                  </span>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">

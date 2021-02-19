@@ -41,6 +41,9 @@ class Contributions(SavannahFilterView):
             self.search = None
         self.result_count = 0
 
+    def suggestion_count(self):
+        return SuggestConversationAsContribution.objects.filter(community=self.community, status__isnull=True).count()
+
     @property
     def all_contributions(self):
         contributions = Contribution.objects.filter(community=self.community)

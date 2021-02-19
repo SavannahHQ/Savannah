@@ -22,7 +22,10 @@ class Members(SavannahFilterView):
         self._membersChart = None
         self._tagsChart = None
         self._sourcesChart = None
-    
+
+    def suggestion_count(self):
+        return SuggestMemberMerge.objects.filter(community=self.community, status__isnull=True).count()
+
     @property
     def all_members(self):
         members = Member.objects.filter(community=self.community)
