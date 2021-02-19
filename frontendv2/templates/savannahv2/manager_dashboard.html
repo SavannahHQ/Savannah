@@ -36,7 +36,7 @@
                 </thead>
                 <tbody>
                 {% for task in view.open_tasks %}
-                <tr {% if task.past_due %}style="background: #FF000033;"{% endif %}>
+                <tr {% if task.past_due %}class="font-weight-bold"{% endif %}>
                   <td>{{task.due|date}}</td>
                   <td><a href="{% url 'manager_task_edit' view.community.id task.id %}" title="{{task.detail}}" data-toggle="tooltip">{{task.name}}</a></td>
                   <td>
