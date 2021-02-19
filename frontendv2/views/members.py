@@ -166,7 +166,7 @@ class AllMembers(SavannahFilterView):
             self.page = 1
 
         if 'search' in request.GET:
-            self.search = request.GET.get('search', "").lower()
+            self.search = request.GET.get('search', "").lower().strip()
         else:
             self.search = None
         self.result_count = 0
