@@ -256,6 +256,35 @@
                 </div>
               </div>
 
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Contributions</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Channel</th>
+                    <th scope="col">Content</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for contrib in view.all_contributions %}
+                <tr>
+                  <td class="text-nowrap">{{contrib.timestamp|dateortime}}</td>
+                  <td class="text-nowrap"><i class="{{contrib.channel_icon}}"></i> {{contrib.channel_name}}</td>
+                  <td>
+                    <a target="_blank" href="{{contrib.location|default:"#"}}" title="{{contrib.title}}">{{ contrib.title }}</a>
+                    {% if contrib.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=contrib.tags.all %}{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
 
             </div>
 
@@ -316,48 +345,6 @@
                 </div>
               </div>
 
-            </div>
-          </div>
-
-          <!-- Content Row -->
-          <div class="row">
-
-            <!-- Content Column -->
-            <div class="col-lg-8 mb-4">
-
-              <!-- Most Active Users-->
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Recent Contributions</h6>
-                </div>
-                <div class="card-body p-0">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Channel</th>
-                    <th scope="col">Content</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for contrib in view.all_contributions %}
-                <tr>
-                  <td class="text-nowrap">{{contrib.timestamp|dateortime}}</td>
-                  <td class="text-nowrap"><i class="{{contrib.channel_icon}}"></i> {{contrib.channel_name}}</td>
-                  <td>
-                    <a target="_blank" href="{{contrib.location|default:"#"}}" title="{{contrib.title}}">{{ contrib.title }}</a>
-                    {% if contrib.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=contrib.tags.all %}{% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                </div>
-              </div>
-
-            </div>
-
-            <div class="col-lg-4">
               <!-- Recent Connections-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
@@ -385,8 +372,9 @@
                 </table>
                 </div>
               </div>
-            </div>
 
+
+            </div>
           </div>
 
         </div>
