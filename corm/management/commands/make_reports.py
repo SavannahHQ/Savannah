@@ -163,6 +163,8 @@ class GrowthReporter(Reporter):
             'top_enablers': self.get_top_enablers(),
             'top_contributors': self.get_top_contributors(),
             'new_contributors': self.get_new_contributors(),
+            'top_company_contributions': self.get_top_company_contributions(),
+            'top_company_activity': self.get_top_company_activity(),
         }
 
     def get_new_members(self):
@@ -245,6 +247,18 @@ class GrowthReporter(Reporter):
             'joined': [joined.get(month, 0) for month in months], 
             'active': [active.get(month, 0) for month in months], 
         }
+
+    def get_top_company_contributions(self):
+        contrib_filter = Q(member__contribution__timestamp__gte=self.start, member__contribution__timestamp__lte=self.end)
+        companies = Company.objects.filter(community=self.community, is_staff=False).annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
+        companies = companies[:10]
+        return [{'company_id': company.id, 'company_name': company.name, 'is_staff': company.is_staff, 'contributions':company.contrib_count} for company in companies]
+
+    def get_top_company_activity(self):
+        convo_filter = Q(member__speaker_in__timestamp__gte=self.start, member__speaker_in__timestamp__lte=self.end)
+        companies = Company.objects.filter(community=self.community, is_staff=False).annotate(convo_count=Count('member__speaker_in', filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
+        companies = companies[:10]
+        return [{'company_id': company.id, 'company_name': company.name, 'is_staff': company.is_staff, 'conversations':company.convo_count} for company in companies]
 
 class AnnualReporter(Reporter):
 

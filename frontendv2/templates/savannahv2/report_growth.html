@@ -49,7 +49,7 @@
          <!-- Content Row -->
           <div class="row">
 
-                        <!-- Content Column -->
+            <!-- Content Column -->
             <div class="col-lg-6 mb-4">
 
               <!-- Most Active -->
@@ -132,7 +132,96 @@
             </div>
 
           </div>
-         <!-- Content Row -->
+
+          {% if view.has_company_data %}
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Most Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="60%">Company</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.top_company_activity %}
+                <tr>
+                  <td class="text-nowrap">
+                    <a href="{% url 'company_profile' company.company_id %}">
+                      {% if company.is_staff %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-building">&nbsp;</i>
+                      {% endif %}
+                    {{ company.company_name }}
+                  </a>
+                  </td>
+                  <td>{{company.conversations}}
+                  {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributing Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="60%">Company</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.top_company_contributions %}
+                <tr>
+                  <td class="text-nowrap">
+                    <a href="{% url 'company_profile' company.company_id %}">
+                      {% if company.is_staff %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-building">&nbsp;</i>
+                      {% endif %}
+                    {{ company.company_name }}
+                  </a>
+                  </td>
+                  <td>{{company.contributions}}
+                  {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+          {% endif %}
+          <!-- Content Row -->
           <div class="row">
 
             <!-- Content Column -->
