@@ -138,7 +138,7 @@ class Channels(SavannahView):
 
     def _get_source_channels(self, request):
         channels = []
-        if 'source_channels_cache' in request.session:
+        if not settings.DEBUG and 'source_channels_cache' in request.session:
             if int(request.session.get('source_channels_source')) == self.source.id and request.session.get('source_channels_expiration') >= datetime.datetime.timestamp(datetime.datetime.utcnow()):
                 cached_channels = request.session.get('source_channels_cache')
                 if len(cached_channels) > 0:

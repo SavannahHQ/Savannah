@@ -32,6 +32,7 @@ urlpatterns = [
     path('stackexchange/', include('corm.plugins.stackexchange')),
     path('reddit/', include('corm.plugins.reddit')),
     path('rss/', include('corm.plugins.rss')),
+    path('salesforce/', include('corm.plugins.salesforce')),
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('billing/', include('billing.urls')),
 ] 
