@@ -26,6 +26,9 @@ class Tags(SavannahView):
         if request.method == 'POST':
             if 'delete_tag' in request.POST:
                 tag = get_object_or_404(Tag, id=request.POST.get('delete_tag'))
+                if not tag.editable:
+                    messages.error(request, "Could not delete tag \"%s\", it is managed by the %s plugin." % (tag.name, tag.connector_name))
+                    return render(request, "savannahv2/tags.html", view.context)
                 context = view.context
                 context.update({
                     'object_type':"Tag", 
@@ -98,6 +101,9 @@ class EditTag(SavannahView):
     @login_required
     def as_view(request, tag_id):
         view = EditTag(request, tag_id)
+        if not view.edit_tag.editable:
+            messages.warning(request, "Unable to edit tag \"%s\", it is managed by the %s plugin." % (view.edit_tag.name, view.edit_tag.connector_name))
+            return redirect('tags', community_id=view.community.id)
         keywords = view.edit_tag.keywords
         if request.method == "POST" and view.form.is_valid():
             view.form.save()

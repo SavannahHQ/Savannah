@@ -341,16 +341,7 @@ def tag_company(request, community_id):
             company_id = request.POST.get('company_id')
             company = Company.objects.get(community=community, id=company_id)
             tag_id = request.POST.get('tag_select')
-            if tag_id == '':
-                for member in Member.objects.filter(company=company):
-                    member.tags.remove(company.tag)
-                company.tag = None
-            else:
-                tag = Tag.objects.get(community=community, id=tag_id)
-                for member in Member.objects.filter(company=company):
-                    member.tags.add(tag)
-                company.tag = tag
-            company.save()
+            company.set_tag_by_name(tag_id)
             return JsonResponse({'success': True, 'errors':None})
         except Exception as e:
             return JsonResponse({'success':False, 'errors':str(e)})

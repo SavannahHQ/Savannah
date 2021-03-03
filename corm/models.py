@@ -120,6 +120,15 @@ class Tag(models.Model):
     color = models.CharField(max_length=16)
     keywords = models.CharField(max_length=256, null=True, blank=True, help_text=_("Comma-separated list of words. If found in a conversation, this tag will be applied."))
     last_changed = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    connector = models.CharField(max_length=256, null=True, blank=True, choices=ConnectionManager.CONNECTOR_CHOICES)
+    editable = models.BooleanField(default=True)
+
+    @property
+    def connector_name(self):
+        if self.connector:
+            return ConnectionManager.display_name(self.connector)
+        else:
+            return ""
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.community)
@@ -177,6 +186,19 @@ class Member(TaggableModel):
     company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
+
+    def set_company(self, company):
+        if company is None:
+            if self.company.is_staff and self.role == Member.STAFF:
+                self.role = Member.COMMUNITY
+            self.tags.remove(company.tag)
+            self.company = None
+        else:
+            if company.is_staff and self.role == Member.COMMUNITY:
+                self.role = Member.STAFF
+            self.tags.add(company.tag)
+            self.company = company
+        self.save()
 
     @property
     def default_level(self):
@@ -930,6 +952,21 @@ class Company(models.Model):
     icon_url = models.URLField(max_length=512, null=True, blank=True)
     is_staff = models.BooleanField(default=False, help_text="Treat members as staff")
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE, null=True, blank=True)
+
+    def set_tag(self, tag):
+        if tag != self.tag:
+            for member in Member.objects.filter(company=self):
+                member.tags.remove(self.tag)
+                member.tags.add(tag)
+            self.tag = tag
+            self.save()
+
+    def set_tag_by_name(self, tag_id):
+        if tag_id == '':
+            self.set_tag(None)
+        elif tag_id != self.tag.id:
+            new_tag = Tag.objects.get(community=self.community, id=tag_id)
+            self.set_tag(new_tag)
 
     @property
     def first_seen(self):

@@ -141,8 +141,8 @@ class TagAdminForm(ModelForm):
         return data.replace('#', '')
 
 class TagAdmin(admin.ModelAdmin):
-    list_display = ("name", "color_display", "community", "keywords", "last_changed")
-    list_filter = ("community","last_changed")
+    list_display = ("name", "color_display", "community", "keywords", "last_changed", "connector_name", "editable")
+    list_filter = ("editable", "connector", "community", "last_changed")
     form = TagAdminForm
     def color_display(self, tag):
         return mark_safe("<span style=\"padding: 3px; background-color: #%s\">%s</span>" % (tag.color, tag.color))

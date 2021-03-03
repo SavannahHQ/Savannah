@@ -43,7 +43,13 @@
                   <td class="tag-text">{{tag.member_count|intcomma}}</td>
                   <td class="tag-text">{{tag.channel_count|intcomma}}</td>
                   <td class="tag-text">{{tag.keywords|default:'-'}}</td>
-                  <td class="tag-text text-center text-nowrap"><button style="background-color: #55555533;" class="btn btn-sm" type="submit" name="delete_tag" value="{{tag.id}}" title="Delete Tag"><i class="fas fa-trash"> </i></button></td>
+                  <td class="tag-text text-center text-nowrap">
+                    {% if tag.editable %}
+                    <button style="background-color: #55555577;" class="btn btn-sm" type="submit" name="delete_tag" value="{{tag.id}}" title="Delete Tag"><i class="fas fa-trash"> </i></button>
+                    {% else %}
+                    <span class="btn btn-sm" title="Tag is managed by {{tag.connector_name}}"><i class="fas fa-lock"> </i></span>
+                    {% endif %}
+                  </td>
                 </tr>
                 {% endfor %}
                 </form>
