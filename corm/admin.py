@@ -213,7 +213,7 @@ class LevelAdmin(admin.ModelAdmin):
 admin.site.register(MemberLevel, LevelAdmin)
 
 class MemberConnectionAdmin(admin.ModelAdmin):
-    list_display = ("from_member", "to_member", "via", "first_connected", "last_connected")
+    list_display = ("from_member", "to_member", "connection_count", "via", "first_connected", "last_connected")
     list_filter = ("via__community", "via")
 admin.site.register(MemberConnection, MemberConnectionAdmin)
 
