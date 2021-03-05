@@ -146,6 +146,8 @@ class Overview(SavannahFilterView):
     @property 
     def member_count(self):
         members = self.community.member_set.all()
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -157,6 +159,8 @@ class Overview(SavannahFilterView):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
         if self.tag:
             conversations = conversations.filter(Q(tags=self.tag)|Q(speaker__tags=self.tag))
+        if self.member_company:
+            conversations = conversations.filter(speaker__company=self.member_company)
         if self.member_tag:
             conversations = conversations.filter(speaker__tags=self.member_tag)
         if self.role:
@@ -168,6 +172,8 @@ class Overview(SavannahFilterView):
         contributions = Contribution.objects.filter(community=self.community)
         if self.tag:
             contributions = contributions.filter(tags=self.tag)
+        if self.member_company:
+            contributions = contributions.filter(author__company=self.member_company)
         if self.member_tag:
             contributions = contributions.filter(author__tags=self.member_tag)
         if self.role:
@@ -179,6 +185,8 @@ class Overview(SavannahFilterView):
         contributors = Member.objects.filter(community=self.community)
         if self.tag:
             contributors = contributors.filter(contribution__tags=self.tag)
+        if self.member_company:
+            contributors = contributors.filter(company=self.member_company)
         if self.member_tag:
             contributors = contributors.filter(tags=self.member_tag)
         if self.role:
@@ -191,6 +199,8 @@ class Overview(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         if self.role:
             members = members.filter(role=self.role)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.tag:
@@ -209,6 +219,8 @@ class Overview(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         if self.role:
             members = members.filter(role=self.role)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.tag:
@@ -231,6 +243,9 @@ class Overview(SavannahFilterView):
             total = 0
             members = Member.objects.filter(community=self.community, first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
             total = Member.objects.filter(community=self.community, first_seen__lt=self.rangestart)
+            if self.member_company:
+                members = members.filter(company=self.member_company)
+                total = total.filter(company=self.member_company)
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
                 total = total.filter(tags=self.member_tag)
@@ -275,6 +290,8 @@ class Overview(SavannahFilterView):
             conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
+            if self.member_company:
+                conversations = conversations.filter(speaker__company=self.member_company)
             if self.member_tag:
                 conversations = conversations.filter(speaker__tags=self.member_tag)
             if self.role:
@@ -312,6 +329,8 @@ class Overview(SavannahFilterView):
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=project, level=level)
                 levels = levels.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+                if self.member_company:
+                    levels = levels.filter(member__company=self.member_company)
                 if self.member_tag:
                     levels = levels.filter(member__tags=self.member_tag)
                 if self.role:

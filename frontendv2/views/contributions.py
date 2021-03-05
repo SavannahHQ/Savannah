@@ -18,15 +18,13 @@ class Contributions(SavannahFilterView):
         self._membersChart = None
         self._channelsChart = None
 
-        self.filter = {
+        self.filter.update({
             'timespan': True,
             'custom_timespan': True,
-            'member_role': True,
-            'member_tag': True,
+            'member': True,
             'tag': True,
-            'source': False,
             'contrib_type': True,
-        }
+        })
 
         self.RESULTS_PER_PAGE = 25
 
@@ -53,6 +51,9 @@ class Contributions(SavannahFilterView):
 
         if self.tag:
             contributions = contributions.filter(tags=self.tag)
+
+        if self.member_company:
+            contributions = contributions.filter(author__company=self.member_company)
 
         if self.member_tag:
             contributions = contributions.filter(author__tags=self.member_tag)
@@ -106,6 +107,8 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter &Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter &Q(contribution__tags=self.tag)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -130,6 +133,8 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -153,6 +158,8 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -176,6 +183,8 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_company:
+            contributors = contributors.filter(company=self.member_company)
         if self.member_tag:
             contributors = contributors.filter(tags=self.member_tag)
         if self.role:
@@ -207,6 +216,8 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.member_company:
+            contributors = contributors.filter(company=self.member_company)
         if self.member_tag:
             contributors = contributors.filter(tags=self.member_tag)
         if self.role:
@@ -241,6 +252,8 @@ class Contributions(SavannahFilterView):
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
 
+            if self.member_company:
+                contributions = contributions.filter(author__company=self.member_company)
             if self.member_tag:
                 contributions = contributions.filter(author__tags=self.member_tag)
             if self.role:
@@ -280,6 +293,8 @@ class Contributions(SavannahFilterView):
                 contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+            if self.member_company:
+                contrib_filter = contrib_filter & Q(contribution__author__company=self.member_company)
             if self.member_tag:
                 contrib_filter = contrib_filter & Q(contribution__author__tags=self.member_tag)
             if self.role:
@@ -308,15 +323,17 @@ class Contributors(SavannahFilterView):
         super().__init__(request, community_id)
         self.active_tab = "contributions"
         self.sort_by = request.session.get("sort_contributors", "name")
-        self.filter = {
+        self.filter.update({
             'timespan': True,
             'custom_timespan': True,
+            'member': True,
             'member_role': True,
             'member_tag': True,
+            'member_company': True,
             'tag': True,
             'source': False,
             'contrib_type': True,
-        }
+        })
 
         self.RESULTS_PER_PAGE = 25
 
@@ -346,6 +363,8 @@ class Contributors(SavannahFilterView):
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             contrib_range_filter = contrib_range_filter & contrib_filter
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:

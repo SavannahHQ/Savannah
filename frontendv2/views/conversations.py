@@ -15,15 +15,16 @@ class Conversations(SavannahFilterView):
         super().__init__(request, community_id)
         self.active_tab = "conversations"
         self.charts = set()
-        self.filter = {
+        self.filter.update({
             'timespan': True,
             'custom_timespan': True,
             'member_role': True,
             'member_tag': True,
+            'member_company': True,
             'tag': True,
             'source': False,
             'contrib_type': False,
-        }
+        })
 
         self._membersChart = None
         self._channelsChart = None
@@ -51,6 +52,9 @@ class Conversations(SavannahFilterView):
         conversations = conversations.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
         if self.tag:
             conversations = conversations.filter(tags=self.tag)
+
+        if self.member_company:
+            conversations = conversations.filter(speaker__company=self.member_company)
 
         if self.member_tag:
             conversations = conversations.filter(speaker__tags=self.member_tag)
@@ -105,6 +109,9 @@ class Conversations(SavannahFilterView):
             if self.tag:
                 replies = replies.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
 
+            if self.member_company:
+                replies = replies.filter(replies__speaker__company=self.member_company)
+
             if self.member_tag:
                 replies = replies.filter(replies__speaker__tags=self.member_tag)
 
@@ -151,6 +158,9 @@ class Conversations(SavannahFilterView):
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
 
+            if self.member_company:
+                conversations = conversations.filter(speaker__company=self.member_company)
+
             if self.member_tag:
                 conversations = conversations.filter(speaker__tags=self.member_tag)
 
@@ -190,6 +200,8 @@ class Conversations(SavannahFilterView):
             convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            if self.member_company:
+                convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
             if self.member_tag:
                 convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
             if self.role:
@@ -217,6 +229,8 @@ class Conversations(SavannahFilterView):
             convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
+            if self.member_company:
+                convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
             if self.member_tag:
                 convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
             if self.role:
@@ -247,6 +261,8 @@ class Conversations(SavannahFilterView):
             convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
             if self.tag:
                 convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
+            if self.member_company:
+                members = members.filter(company=self.member_company)
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
             if self.role:
@@ -274,6 +290,8 @@ class Conversations(SavannahFilterView):
         convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -292,6 +310,8 @@ class Conversations(SavannahFilterView):
         connection_filter = Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:

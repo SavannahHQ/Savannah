@@ -29,6 +29,8 @@ class Members(SavannahFilterView):
     @property
     def all_members(self):
         members = Member.objects.filter(community=self.community)
+        if self.member_company:
+            members =members.filter(company=self.member_company)
         if self.member_tag:
             members =members.filter(tags=self.member_tag)
         if self.role:
@@ -39,6 +41,8 @@ class Members(SavannahFilterView):
     @property
     def new_members(self):
         members = Member.objects.filter(community=self.community)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -49,6 +53,8 @@ class Members(SavannahFilterView):
     @property
     def recently_active(self):
         members = Member.objects.filter(community=self.community)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
@@ -71,6 +77,8 @@ class Members(SavannahFilterView):
             monthly_active = dict()
             total = 0
             members = Member.objects.filter(community=self.community)
+            if self.member_company:
+                members = members.filter(company=self.member_company)
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
             if self.role:
@@ -128,6 +136,8 @@ class Members(SavannahFilterView):
             counts = dict()
             other_count = 0
             identity_filter = Q(contact__member__first_seen__gte=self.rangestart, contact__member__last_seen__lte=self.rangeend)
+            if self.member_company:
+                identity_filter = identity_filter & Q(contact__member__company=self.member_company)
             if self.member_tag:
                 identity_filter = identity_filter & Q(contact__member__tags=self.member_tag)
             if self.role:
@@ -179,6 +189,9 @@ class AllMembers(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         if self.search:
             members = members.filter(Q(name__icontains=self.search) | Q(company__name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search) | Q(note__content__icontains=self.search))
+
+        if self.member_company:
+            members = members.filter(company=self.member_company)
 
         if self.member_tag:
             members = members.filter(tags=self.member_tag)

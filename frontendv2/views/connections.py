@@ -30,6 +30,8 @@ class Connections(SavannahFilterView):
             counts = dict()
 
             connections = MemberConnection.objects.filter(via__community=self.community)
+            if self.member_company:
+                connections = connections.filter(Q(from_member__company=self.member_company)|Q(to_member__company=self.member_company))
             if self.member_tag:
                 connections = connections.filter(Q(from_member__tags=self.member_tag)|Q(to_member__tags=self.member_tag))
             if self.role:
@@ -70,6 +72,8 @@ class Connections(SavannahFilterView):
         if not self._sourcesChart:
             counts = dict()
             connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gte=self.rangestart, first_connected__lte=self.rangeend)
+            if self.member_company:
+                connections = connections.filter(Q(from_member__company=self.member_company)|Q(to_member__company=self.member_company))
             if self.member_tag:
                 connections = connections.filter(Q(from_member__tags=self.member_tag)|Q(to_member__tags=self.member_tag))
             if self.role:
@@ -108,6 +112,8 @@ class Connections(SavannahFilterView):
             timespan = 30
         
         connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=view.rangeend - datetime.timedelta(days=timespan), last_connected__lte=view.rangeend)
+        if view.member_company:
+            connections = connections.filter(Q(to_member__company=view.member_company)|Q(from_member__company=view.member_company))
         if view.member_tag:
             connections = connections.filter(Q(to_member__tags=view.member_tag)|Q(from_member__tags=view.member_tag))
         if view.role:

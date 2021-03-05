@@ -204,14 +204,17 @@ class SavannahFilterView(SavannahView):
             request.session['timespan'] = self.MAX_TIMESPAN
             request.session['tag'] = None
             request.session['member_tag'] = None
+            request.session['member_company'] = None
             request.session['role'] = None
             request.session['type'] = None
         super().__init__(request, community_id)
         self.filter = {
             'timespan': True,
             'custom_timespan': True,
+            'member': True,
             'member_role': True,
             'member_tag': True,
+            'member_company': True,
             'tag': False,
             'source': False,
             'contrib_type': False,
@@ -244,6 +247,20 @@ class SavannahFilterView(SavannahView):
         except:
             self.member_tag = None
             request.session['member_tag'] = None
+
+        self.member_company = None
+        try:
+            if 'member_company' in request.GET:
+                if request.GET.get('member_company') == '':
+                    request.session['member_company'] = None
+                else:
+                    self.member_company = Company.objects.get(community=self.community, id=request.GET.get('member_company'))
+                    request.session['member_company'] = request.GET.get('member_company')
+            elif 'member_company' in request.session:
+                self.member_company = Company.objects.get(community=self.community, id=request.session.get('member_company'))
+        except:
+            self.member_company = None
+            request.session['member_company'] = None
 
         self.role = None
         try:
@@ -333,6 +350,8 @@ class SavannahFilterView(SavannahView):
             return True
         if self.filter['member_tag'] and self.member_tag is not None:
             return True
+        if self.filter['member_company'] and self.member_company is not None:
+            return True
         if self.filter['tag'] and self.tag is not None:
             return True
         if self.filter['contrib_type'] and self.contrib_type is not None:
@@ -340,7 +359,9 @@ class SavannahFilterView(SavannahView):
 
     @property
     def timespan_display(self):
-        if self.timespan == 183:
+        if self.timespan == 365:
+            return "Past Year"
+        elif self.timespan == 183:
             return "6 Months"
         elif self.timespan == 30:
             return "30 Days"
