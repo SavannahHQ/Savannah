@@ -51,9 +51,9 @@
 
                 <li class="dropdown-submenu pull-left">
                   {% if view.role %}
-                    <a class="bg-secondary text-light dropdown-item dropstart pl-2" href="#"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {% if view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% else %}Bots{% endif %}</a>
+                    <a class="bg-secondary text-light dropdown-item dropend pl-2" href="#"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {% if view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% else %}Bots{% endif %}</a>
                   {% else %}
-                    <a class="dropdown-item dropstart pl-2" href="#"><i class="fas fa-users"></i> Roles</a>
+                    <a class="dropdown-item dropend pl-2" href="#"><i class="fas fa-users"></i> Roles</a>
                   {% endif %}
                   <ul class="dropdown-menu" >
                     <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role="><i class="fas fa-users"></i> All Roles</a></li>
@@ -67,9 +67,9 @@
                 {% if view.filter.member_tag %}
                 <li class="dropdown-submenu pull-left">
                   {% if view.member_tag %}
-                    <a class="dropdown-item dropstart p-2 pr-4" href="#"style="white-space:nowrap; background-color: #{{view.member_tag.color}};"><span style="color: #{{view.member_tag.color}}aa !important" class="tag-text"><i class="fas fa-tag"></i> {{view.member_tag.name}}</span></a>
+                    <a class="dropdown-item dropend p-2 pr-4" href="#"style="white-space:nowrap; background-color: #{{view.member_tag.color}};"><span style="color: #{{view.member_tag.color}}aa !important" class="tag-text"><i class="fas fa-tag"></i> {{view.member_tag.name}}</span></a>
                   {% else %}
-                    <a class="dropdown-item dropstart p-2 pr-4" href="#"><i class="fas fa-tags"></i> Tags</a>
+                    <a class="dropdown-item dropend p-2 pr-4" href="#"><i class="fas fa-tags"></i> Tags</a>
                   {% endif %}
                   <ul class="dropdown-menu" >
                     <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag="><i class="fas fa-tags"></i> Any Tags</a></li>
@@ -84,9 +84,9 @@
                 {% if view.filter.member_company %}
                 <li class="dropdown-submenu pull-left">
                   {% if view.member_company %}
-                    <a class="bg-secondary text-light dropdown-item dropstart p-2 pr-4" href="#"><i class="fas fa-building"></i> {{view.member_company.name}}</a>
+                    <a class="bg-secondary text-light dropdown-item dropend p-2 pr-4" href="#"><i class="fas fa-building"></i> {{view.member_company.name}}</a>
                   {% else %}
-                    <a class="dropdown-item dropstart p-2 pr-4" href="#"><i class="fas fa-city"></i> Company</a>
+                    <a class="dropdown-item dropend p-2 pr-4" href="#"><i class="fas fa-city"></i> Company</a>
                   {% endif %}
                   <ul class="dropdown-menu" >
                     <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_company="><i class="fas fa-city"></i> Any Company</a></li>

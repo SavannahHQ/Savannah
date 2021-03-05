@@ -39,6 +39,7 @@
     -webkit-border-radius: 0 6px 6px 6px;
     -moz-border-radius: 0 6px 6px;
     border-radius: 0 6px 6px 6px;
+    border-color: #babdc7;
 }
 
 .dropdown-submenu:hover>.dropdown-menu {
@@ -86,8 +87,9 @@
     border-right-color: #fff;
 }
 .dropdown-submenu.pull-left>.dropdown-menu {
-    left: -120%;
-    margin-left: 10px;
+    right: 100%;
+    left: auto;
+    margin-right: 0px;
     -webkit-border-radius: 6px 0 6px 6px;
     -moz-border-radius: 6px 0 6px 6px;
     border-radius: 6px 0 6px 6px;
