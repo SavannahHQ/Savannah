@@ -13,6 +13,11 @@
 {% endblock %}
 
 {% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Member Companies</h1>
+            {% include 'savannahv2/filter_button.html' %}
+          </div>
 
           <!-- Content Row -->
           <div class="row">
@@ -33,7 +38,7 @@
                   <tr>
                     <th scope="col" width="30%">Name</th>
                     <th scope="col">Members</th>
-                    <th scope="col">Last Active</th>
+                    <th scope="col">Last Activity</th>
                     <th width="100px" scope="col"></th>
                   </tr>
                 </thead>
@@ -45,7 +50,7 @@
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
                   <td >{{company.member_count|intcomma}}</td>
-                  <td >{{company.last_seen|date}}</td>
+                  <td >{{company.last_activity|date}}</td>
                   <td class="text-center pr-1">
                     <form class="inline-form" action="{% url 'companies' view.community.id %}" method="POST">
                     {% csrf_token %}

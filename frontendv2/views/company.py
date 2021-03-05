@@ -3,7 +3,7 @@ from functools import reduce
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, Min
 from django.db.models.functions import Trunc
 
 from django.contrib import messages
@@ -12,7 +12,7 @@ from django import forms
 from corm.models import *
 from corm.connectors import ConnectionManager
 
-from frontendv2.views import SavannahView
+from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import PieChart, ChartColors
 
 class CompanyProfile(SavannahView):
@@ -150,7 +150,7 @@ class CompanyProfile(SavannahView):
 
         return render(request, "savannahv2/company.html", view.context)
 
-class Companies(SavannahView):
+class Companies(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "company"
@@ -158,16 +158,42 @@ class Companies(SavannahView):
         self._conversationsChart = None
         self._contributionsChart = None
         self._company_colors = dict()
+        self.filter.update({
+            'timespan': True,
+            'custom_timespan': True,
+            'member': False,
+            'member_role': False,
+            'member_tag': False,
+            'member_company': False,
+            'tag': True,
+            'source': False,
+            'conrib_type': False,
+        })
 
     def suggestion_count(self):
         return SuggestCompanyCreation.objects.filter(community=self.community, status__isnull=True).count()
 
     def all_companies(self):
-        return Company.objects.filter(community=self.community).annotate(member_count=Count('member', distinct=True)).order_by('name')
+        companies = Company.objects.filter(community=self.community)
+        if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
+            convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+        else:
+            convo_filter = Q()
+        companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
+        if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
+            companies = companies.filter(last_activity__isnull=False)
+        if self.tag:
+            companies = companies.filter(tag=self.tag)
+        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
+        return companies.order_by('name')
 
     def members_chart(self):
         if not self._membersChart:
-            companies = Company.objects.filter(community=self.community, is_staff=False).annotate(member_count=Count('member')).filter(member_count__gt=0).order_by('-member_count')
+            companies = Company.objects.filter(community=self.community, is_staff=False)
+            convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+            if self.tag:
+                companies = companies.filter(tag=self.tag)
+            companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0).order_by('-member_count')
 
             chart_colors = ChartColors()
             self._membersChart = PieChart("membersChart", title="Members by Company")
@@ -177,29 +203,37 @@ class Companies(SavannahView):
                     self._company_colors[company.id] = company.tag.color
                 else:
                     self._company_colors[company.id] = chart_colors.next()
-                self._membersChart.add(company.name, company.member_count, data_color=self._company_colors[company.id], data_link=reverse('company_profile', kwargs={'company_id': company.id}))
+                self._membersChart.add(company.name, company.member_count, data_color=self._company_colors[company.id], data_link=reverse('members', kwargs={'community_id': self.community.id})+"?member_company="+str(company.id))
         self.charts.add(self._membersChart)
         return self._membersChart
 
     def conversations_chart(self):
         if not self._conversationsChart:
-            companies = Company.objects.filter(community=self.community, is_staff=False).annotate(convo_count=Count('member__speaker_in')).filter(convo_count__gt=0).order_by('-convo_count')
+            companies = Company.objects.filter(community=self.community, is_staff=False)
+            convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+            if self.tag:
+                companies = companies.filter(tag=self.tag)
+            companies = companies.annotate(convo_count=Count('member__speaker_in', filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
 
             self._conversationsChart = PieChart("conversationsChart", title="Conversations by Company")
             self._conversationsChart.set_show_legend(False)
             for company in companies:
-                self._conversationsChart.add(company.name, company.convo_count, data_color=self._company_colors[company.id], data_link=reverse('company_profile', kwargs={'company_id': company.id}))
+                self._conversationsChart.add(company.name, company.convo_count, data_color=self._company_colors[company.id], data_link=reverse('conversations', kwargs={'community_id': self.community.id})+"?member_company="+str(company.id))
         self.charts.add(self._conversationsChart)
         return self._conversationsChart
 
     def contributions_chart(self):
         if not self._contributionsChart:
-            companies = Company.objects.filter(community=self.community, is_staff=False).annotate(contrib_count=Count('member__contribution')).filter(contrib_count__gt=0).order_by('-contrib_count')
+            companies = Company.objects.filter(community=self.community, is_staff=False)
+            contrib_filter = Q(member__contribution__timestamp__lte=self.rangeend, member__contribution__timestamp__gte=self.rangestart)
+            if self.tag:
+                companies = companies.filter(tag=self.tag)
+            companies = companies.annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
 
             self._contributionsChart = PieChart("contributionsChart", title="Contributions by Company")
             self._contributionsChart.set_show_legend(False)
             for company in companies:
-                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id], data_link=reverse('company_profile', kwargs={'company_id': company.id}))
+                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id], data_link=reverse('contributions', kwargs={'community_id': self.community.id})+"?member_company="+str(company.id))
         self.charts.add(self._contributionsChart)
         return self._contributionsChart
 
