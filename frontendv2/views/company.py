@@ -230,10 +230,11 @@ class Companies(SavannahFilterView):
                 companies = companies.filter(tag=self.tag)
             companies = companies.annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
 
+            chart_colors = ChartColors()
             self._contributionsChart = PieChart("contributionsChart", title="Contributions by Company")
             self._contributionsChart.set_show_legend(False)
             for company in companies:
-                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors[company.id], data_link=reverse('contributions', kwargs={'community_id': self.community.id})+"?member_company="+str(company.id))
+                self._contributionsChart.add(company.name, company.contrib_count, data_color=self._company_colors.get(company.id, chart_colors.next()), data_link=reverse('contributions', kwargs={'community_id': self.community.id})+"?member_company="+str(company.id))
         self.charts.add(self._contributionsChart)
         return self._contributionsChart
 
