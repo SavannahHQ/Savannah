@@ -157,7 +157,7 @@ class Command(BaseCommand):
 
             # Exclude conversations that are part of another contribution's thread
             if convo.thread_start:
-                if convo.thread_start.contribution_set.all().count() > 0:
+                if convo.thread_start.contribution:
                     continue
 
             # Don't count multiple instances in a row helping the same person
