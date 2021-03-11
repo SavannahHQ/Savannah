@@ -4,7 +4,7 @@ import subprocess
 import requests
 from importlib import import_module
 from time import sleep
-from corm.models import Member, MemberWatch, Contact, Conversation, Contribution
+from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant
 from corm.connectors import ConnectionManager
 from django.conf import settings
 from django.shortcuts import reverse
@@ -164,8 +164,34 @@ class PluginImporter:
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
                 if tagged in self._member_cache:
-                    convo.participants.add(self._member_cache[tagged_users])
+                    self.make_participant(convo, self._member_cache[tagged_users])
         return convo
+
+    def add_participants(self, conversation, members, make_connections=True):
+        for member in members:
+            participant, created = Participant.objects.get_or_create(
+                community=self.community, 
+                conversation=conversation,
+                initiator=conversation.speaker,
+                member=member,
+                timestamp=conversation.timestamp
+            )
+            if created and make_connections:
+                for to_member in members:
+                    if member.id != to_member.id:
+                        member.add_connection(to_member, self.source, conversation.timestamp)
+
+    def make_participant(self, conversation, member):
+        participant, created = Participant.objects.get_or_create(
+            community=self.community, 
+            conversation=conversation,
+            initiator=conversation.speaker,
+            member=member,
+            timestamp=conversation.timestamp
+        )
+        if created:
+            if conversation.speaker.id != member.id:
+                member.add_connection(conversation.speaker, self.source, conversation.timestamp)
 
     def api_request(self, url, headers):
         if self.verbosity:

@@ -275,13 +275,15 @@ class MemberProfile(SavannahView):
 
     @property 
     def recent_connections(self):
-        if self.user_member:
-            connections = MemberConnection.objects.filter(from_member=self.member).order_by('-last_connected')[:10]
-            connections.select_related('to_member').prefetch_related('to_member__tags')
-            return connections
-        else:
-            return []
+        connections = MemberConnection.objects.filter(from_member=self.member).order_by('-last_connected')[:10]
+        connections.select_related('to_member').prefetch_related('to_member__tags')
+        return connections
 
+    @property 
+    def top_connections(self):
+        connections = MemberConnection.objects.filter(from_member=self.member).order_by('-connection_count')[:10]
+        connections.select_related('to_member').prefetch_related('to_member__tags')
+        return connections
 
     @login_required
     def as_view(request, member_id):

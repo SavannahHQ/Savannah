@@ -271,14 +271,14 @@ class RedditImporter(PluginImporter):
 
         convo = self.make_conversation(origin_id=reddit_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=reddit_convo_link)
         self._comment_cache[reddit_convo_id] = convo
-        convo.participants.add(speaker)
+        participants = set()
+        participants.add(speaker)
 
         for tagged_user in tagged:
             try:
                 tagged_user_id = "/u/%s" % tagged_user
                 tagged_member = self.make_member(tagged_user_id, tagged_user)
-                convo.participants.add(tagged_member)
-                speaker.add_connection(tagged_member, source, tstamp)
+                participants.add(tagged_member)
             except:
                 print("    Failed to find Contact for %s" % tagged_user)
 
@@ -304,11 +304,12 @@ class RedditImporter(PluginImporter):
                     if comment['data']['created_utc'] < self.from_timestamp:
                         has_more = False
                         break
-                    self.import_comment(channel, convo, comment['data'])
+                    participants = self.import_comment(channel, convo, comment['data'], participants)
             else:
                 print("HTTP %s Error: %s" % (resp.status_code, resp.content))
+        self.add_participants(convo, participants)
 
-    def import_comment(self, channel, post, comment):
+    def import_comment(self, channel, post, comment, post_participants):
         source = channel.source
 
         tstamp = self.strptime(comment['created_utc'])
@@ -325,13 +326,15 @@ class RedditImporter(PluginImporter):
         thread = self.get_comment(comment.get('parent_id')) or post 
         convo = self.make_conversation(origin_id=reddit_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=reddit_convo_link, thread=thread)
         self._comment_cache[reddit_convo_id] = convo
-        convo.participants.add(speaker)
+        convo_participants = set()
+        thread_participants = set(thread.participants.all())
+        convo_participants.add(speaker)
         if thread.id != post.id and thread.speaker != convo.speaker:
-            convo.participants.add(thread.speaker)
-            thread.participants.add(speaker)
+            convo_participants.add(thread.speaker)
+            thread_participants.add(speaker)
         if post.speaker != convo.speaker:
-            convo.participants.add(post.speaker)
-            post.participants.add(speaker)
+            convo_participants.add(post.speaker)
+            post_participants.add(speaker)
             speaker.add_connection(post.speaker, source, tstamp)
 
 
@@ -339,7 +342,9 @@ class RedditImporter(PluginImporter):
             try:
                 tagged_user_id = "/u/%s" % tagged_user
                 tagged_member = self.make_member(tagged_user_id, tagged_user)
-                convo.participants.add(tagged_member)
-                speaker.add_connection(tagged_member, source, tstamp)
+                convo_participants.add(tagged_member)
             except:
                 print("    Failed to find Contact for %s" % tagged_user)
+        self.add_participants(convo, convo_participants)
+        self.add_participants(thread, thread_participants)
+        return post_participants

@@ -258,10 +258,4 @@ class DiscordImporter(PluginImporter):
                 member.save()
 
         convo = self.make_conversation(origin_id=discord_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=discord_convo_link)
-        convo.participants.add(*participants)
-
-        # Connect all participants
-        for from_member in participants:
-            for to_member in participants:
-                if from_member.id != to_member.id:
-                    from_member.add_connection(to_member, source, tstamp)
+        self.add_participants(convo, participants)

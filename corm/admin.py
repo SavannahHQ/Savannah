@@ -218,29 +218,15 @@ class MemberConnectionAdmin(admin.ModelAdmin):
 admin.site.register(MemberConnection, MemberConnectionAdmin)
 
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ("name", "role", "community", "first_seen", "last_seen", "task_count", "conversation_count", "connection_count")
-    list_filter = ("community", "role", "first_seen", "last_seen", "tags")
+    list_display = ("name", "community", "role", "first_seen", "last_seen")
+    list_filter = ("community", "role", "first_seen", "last_seen")
     search_fields = ("name", "email_address", "contact__detail")
-    def task_count(self, member):
-        count = member.task_set.filter(done__isnull=True).count()
-        if count > 0:
-            count = mark_safe("<a href=\"/admin/corm/task/?stakeholders__id__exact=%s\">%s</a>" % (member.id, count))
-        return count
-    task_count.short_description = "Open Tasks"
 
     def user_email(self, member):
         if member.user is not None:
             return member.user.email
         return ""
     user_email.short_description = "Email"
-
-    def conversation_count(self, member):
-        return Conversation.objects.filter(participants=member).count()
-    conversation_count.short_description = "Conversations"
-
-    def connection_count(self, member):
-        return member.connections.count()
-    connection_count.short_description = "Connections"
 
 admin.site.register(Member, MemberAdmin)
 
@@ -272,7 +258,7 @@ class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
     search_fields = ("content",)
-    raw_id_fields = ('speaker', 'participants', 'thread_start', 'contribution')
+    raw_id_fields = ('speaker', 'thread_start', 'contribution')
     def link(self, conversation):
         if conversation.location is not None:
             return mark_safe("<a href=\"%s\">Open</a>" % conversation.location)
@@ -286,6 +272,13 @@ class ConversationAdmin(admin.ModelAdmin):
         return ", ".join([tag.name for tag in conversation.tags.all()[:10]])
     tag_list.short_description = "Tags"
 admin.site.register(Conversation, ConversationAdmin)
+
+class ParticipantAdmin(admin.ModelAdmin):
+    list_display = ('timestamp', 'community', 'conversation', 'member', 'initiator')
+    list_filter = ('community',)
+    raw_id_fields = ('conversation', 'member', 'initiator')
+    search_fields = ('conversation__content', 'member__name', 'initiator__name')
+admin.site.register(Participant, ParticipantAdmin)
 
 class TaskAdmin(admin.ModelAdmin):
     list_display = ("name", "owner", "due", "community", "project", "stakeholder_list", "is_done")

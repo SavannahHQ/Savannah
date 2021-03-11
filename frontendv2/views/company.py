@@ -114,7 +114,7 @@ class CompanyProfile(SavannahView):
     @property
     def all_conversations(self):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
-        conversations = conversations.filter(participants__company=self.company)
+        conversations = conversations.filter(participation__member__company=self.company)
         if self.conversation_search:
             conversations = conversations.filter(content__icontains=self.conversation_search)
 

@@ -348,6 +348,34 @@
               <!-- Recent Connections-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Connections</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th class="text-right" scope="col">Connections</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for connection in view.top_connections %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' connection.to_member.id %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                  </td>
+                  <td class="text-right pr-4">{{connection.connection_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+              <!-- Recent Connections-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Recent Connections</h6>
                 </div>
                 <div class="card-body p-0">

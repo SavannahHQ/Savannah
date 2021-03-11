@@ -4,7 +4,7 @@ import re
 import string
 from django.db.models import Count, Q, F, Value as V, fields, Min
 from django.db.models.functions import Concat
-from corm.models import Conversation, Community, Source, ConnectionManager, MemberConnection
+from corm.models import Conversation, Community, Source, ConnectionManager, MemberConnection, Participant
 
 class Command(BaseCommand):
     help = 'Auto-Connect participants in conversations'
@@ -40,10 +40,12 @@ class Command(BaseCommand):
 
       for community in communities:
         # Remove self-connections
+        print("Removing self-connections")
         selfcon = MemberConnection.objects.filter(via__community=community, from_member_id=F('to_member_id'))
         selfcon.delete()
 
         # Remove duplicates
+        print("Removing duplicates")
         connection_pair = Concat('from_member_id', V('-'), 'to_member_id', output_field=fields.CharField())
         dups = MemberConnection.objects.filter(via__community=community).annotate(min_id=Min('id')).values('min_id', 'from_member_id', 'to_member_id')
         dups = dups.annotate(conpair=connection_pair).annotate(dup_count=Count('conpair')).filter(dup_count__gt=1)
@@ -51,11 +53,19 @@ class Command(BaseCommand):
             MemberConnection.objects.filter(from_member_id=con['from_member_id'], to_member_id=con['to_member_id'], id__gt=con['min_id']).delete()
 
         # Count connection events
-        connections = MemberConnection.objects.filter(via__community=community)
-        connections.update(connection_count=1)
-        from_date = datetime.datetime.utcnow() - datetime.timedelta(days=182)
-        connections = connections.annotate(count=Count('to_member__speaker_in', filter=Q(to_member__speaker_in__timestamp__gt=from_date, to_member__speaker_in__participants=F('from_member'))))
-        for connection in connections.values('from_member_id', 'to_member_id', 'count'):
-            MemberConnection.objects.filter(from_member_id=connection['from_member_id'], to_member_id=connection['to_member_id'], connection_count__lt=connection['count']).update(connection_count=connection['count'])
-            MemberConnection.objects.filter(to_member_id=connection['from_member_id'], from_member_id=connection['to_member_id'], connection_count__lt=connection['count']).update(connection_count=connection['count'])
-
+        print("Calculating number of connection")
+        found = set()
+        participants = Participant.objects.filter(community=community).exclude(member=F('initiator')).order_by('timestamp')
+        participants = participants.values('initiator', 'member').annotate(connection_count=Count('conversation', distinct=True))
+        for connection in participants:
+            from_to = "%s-%s" % (connection['initiator'], connection['member'])
+            to_from = "%s-%s" % (connection['member'], connection['initiator'])
+            if len(found) > 100000:
+                print("Dumping found cache")
+                found.clear()
+            if from_to in found or to_from in found:
+                continue
+            found.add(from_to)
+            found.add(to_from)
+            MemberConnection.objects.filter(from_member_id=connection['initiator'], to_member_id=connection['member'], connection_count__lt=connection['connection_count']).update(connection_count=connection['connection_count'])
+            MemberConnection.objects.filter(to_member_id=connection['initiator'], from_member_id=connection['member'], connection_count__lt=connection['connection_count']).update(connection_count=connection['connection_count'])

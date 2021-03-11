@@ -315,13 +315,7 @@ class GithubImporter(PluginImporter):
 
                 # Add everybody involved as a participant in every conversation
                 for convo in conversations:
-                    convo.participants.add(*participants)
-
-                # Connect all participants
-                for from_member in participants:
-                    for to_member in participants:
-                        if from_member.id != to_member.id:
-                            from_member.add_connection(to_member, source, tstamp)
+                    self.add_participants(convo, participants)
 
 
         # If there are more pages of issues, continue on to the next apge

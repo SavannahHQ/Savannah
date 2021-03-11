@@ -117,7 +117,7 @@ class Command(BaseCommand):
         convos = convos.filter(channel__source__in=chat_sources)
 
         # Involving only the speaker and one other participant
-        convos = convos.annotate(participant_count=Count('participants')).filter(participant_count=2)
+        convos = convos.annotate(participant_count=Count('participation')).filter(participant_count=2)
         convos = convos.select_related('channel').order_by('channel', '-timestamp')
 
         print("%s potential support contributions in %s" % (convos.count(), community))
@@ -170,10 +170,10 @@ class Command(BaseCommand):
                 source_id=convo.channel.source_id,
                 name="Support",
             )
-            supporter = convo.participants.exclude(id=convo.speaker.id)[0]
+            supporter = convo.participation.exclude(member_id=convo.speaker.id)[0]
             suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
                 community=community,
-                reason="%s gave support to %s" % (supporter, convo.speaker),
+                reason="%s gave support to %s" % (supporter.member, convo.speaker),
                 conversation=convo,
                 contribution_type=helped,
                 source_id=convo.channel.source_id,
@@ -190,6 +190,6 @@ class Command(BaseCommand):
                 recipient=recipients, 
                 verb="has %s new contribution %s" % (suggestion_count, pluralize(suggestion_count, "suggestion")),
                 level='info',
-                icon_name="fas fa-mail-bulk",
+                icon_name="fas fa-shield-alt",
                 link=reverse('conversation_as_contribution_suggestions', kwargs={'community_id':community.id})
             )

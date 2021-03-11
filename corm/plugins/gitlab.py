@@ -286,10 +286,4 @@ class GitlabImporter(PluginImporter):
 
         # Add everybody involved as a participant in every conversation
         for convo in conversations:
-            convo.participants.set(participants)
-
-        # Connect all participants
-        for from_member in participants:
-            for to_member in participants:
-                if from_member.id != to_member.id:
-                    from_member.add_connection(to_member, source, connection_tstamp)
+            self.add_participants(convo, participants)

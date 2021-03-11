@@ -193,11 +193,10 @@ class Contributions(SavannahFilterView):
         contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
         contributors = contributors.filter(contribution_count__gt=0).order_by('-contribution_count')
         for c in contributors:
-            if c.contribution_count > 0:
-                contributor_ids.add(c.id)
+            contributor_ids.add(c.id)
 
         members = Member.objects.filter(community=self.community)
-        members = members.annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__participants__in=contributor_ids, speaker_in__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=30))))
+        members = members.annotate(conversation_count=Count('initiator_of', filter=Q(initiator_of__member__in=contributor_ids, initiator_of__timestamp__gte=self.rangestart, initiator_of__timestamp__lte=self.rangeend)))
         members = members.order_by('-conversation_count').filter(conversation_count__gt=0).prefetch_related('tags')
         for m in members[:10]:
             if m.conversation_count > 0:

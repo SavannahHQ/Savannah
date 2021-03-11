@@ -1,4 +1,5 @@
 import datetime, pytz
+import uuid
 from django.db import models
 from django.db.models import F, Q, Count, Max
 from django.contrib.auth.models import User, Group
@@ -287,10 +288,8 @@ class Member(TaggableModel):
         for tag in other_member.tags.all():
             self.tags.add(tag)
 
-        Conversation.objects.filter(speaker=other_member).update(speaker=self)
-        for convo in Conversation.objects.filter(speaker__community=self.community, participants=other_member):
-            convo.participants.add(self)
-            convo.participants.remove(other_member)
+        Participant.objects.filter(initiator=other_member).update(initiator=self)
+        Participant.objects.filter(member=other_member).update(member=self)
 
         for task in Task.objects.filter(project__community=self.community, stakeholders=other_member):
             task.stakeholders.add(self)
@@ -558,18 +557,29 @@ class Contact(ImportedDataModel):
     def __str__(self):
         return "%s (%s)" % (self.detail, self.source.name)
 
+class Participant(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    conversation = models.ForeignKey('Conversation', related_name='participation', on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, related_name='participant_in', on_delete=models.CASCADE)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, null=True)
+    initiator = models.ForeignKey(Member, related_name='initiator_of', on_delete=models.SET_NULL, null=True)
+    timestamp = models.DateTimeField(db_index=True)
+
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     speaker = models.ForeignKey(Member, related_name='speaker_in', on_delete=models.SET_NULL, null=True, blank=True)
-    participants = models.ManyToManyField(Member)
     content = models.TextField(null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
     location = models.URLField(max_length=512, null=True, blank=True)
     thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
     contribution = models.OneToOneField('Contribution', related_name='conversation', on_delete=models.SET_NULL, null=True, blank=True)
 
+    @property
+    def participants(self):
+        return Member.objects.filter(participant_in__conversation=self)
+        
     @property
     def brief(self):
         truncated = False
@@ -843,7 +853,7 @@ class SuggestConversationAsContribution(Suggestion):
 
     def accept_action(self):
         # Anybody in the conversation other than the speaker made this contribution
-        supporters = self.conversation.participants.exclude(id=self.conversation.speaker.id)
+        supporters = self.conversation.participation.exclude(member_id=self.conversation.speaker.id)
         for supporter in supporters:
             contrib, created = Contribution.objects.get_or_create(
                 community=self.contribution_type.community,
@@ -851,7 +861,7 @@ class SuggestConversationAsContribution(Suggestion):
                 channel=self.conversation.channel,
                 title=self.title,
                 timestamp=self.conversation.timestamp,
-                author=supporter,
+                author=supporter.member,
                 location=self.conversation.location,
             )
             if self.conversation.channel.tag is not None:

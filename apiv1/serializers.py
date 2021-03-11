@@ -217,15 +217,15 @@ class ConversationSerializer(serializers.Serializer):
         )
 
         participants = set()
+        participants.add(speaker)
         for participant_origin_id in self.validated_data.get('participants', []):
             participant = importer.make_member(
                 origin_id=participant_origin_id, 
                 detail=participant_origin_id,
                 tstamp=self.validated_data.get('timestamp'), 
                 )
-            speaker.add_connection(participant, source, self.validated_data.get('timestamp'))
             participants.add(participant)
-        convo.participants.set(participants)
+        importer.add_participants(convo, participants)
 
         for tag_name in self.validated_data.get('tags', []):
             tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={

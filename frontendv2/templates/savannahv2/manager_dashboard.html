@@ -1,6 +1,6 @@
 {% extends "savannahv2/base.html"%}
 {% load static %}
-{% load humanize %}
+{% load humanize simple_dates %}
 
 {% block page_title %} | {{view.community.name}}{% endblock %}
 
@@ -206,7 +206,43 @@
           <div class="row">
 
             <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
+
+              <!-- Recent Connections-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Connections</h6>
+                </div>
+                <div class="card-body p-0">
+                {% if view.user_member %}
+                <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Connections</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.top_connections %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                  </td>
+                  <td>{{member.connection_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                {% else %}
+                <div class="alert alert-info m-2">Attach your Member Profile to your <a href="{% url 'manager_preferences' view.community.id %}">account</a> to see your connections.</div>
+                {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
 
               <!-- Recent Connections-->
               <div class="card shadow mb-4">
@@ -229,7 +265,7 @@
                     <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=connection.to_member.tags.all %}
                   </td>
-                  <td>{{connection.last_connected}}</td>
+                  <td>{{connection.last_connected|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -242,7 +278,7 @@
             </div>
 
             <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
@@ -264,7 +300,7 @@
                   <td>
                     <a href="{{location}}" target="_blank"><i class="{{channel.source.icon_name}}"></i>&nbsp;{{ channel.name }}</a>
                   </td>
-                  <td>{{tstamp}}</td>
+                  <td>{{tstamp|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

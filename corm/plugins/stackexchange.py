@@ -329,10 +329,9 @@ class StackExchangeImporter(PluginImporter):
 
                         answer_text = re.sub('<[^<]+?>', '', answer.get('body'))
                         answer_convo = self.make_conversation(origin_id=answer.get('answer_id'), channel=channel, speaker=speaker, content=answer_text, tstamp=tstamp, location=answer_link, thread=question_convo, dedup=True)
-                        answer_convo.participants.add(speaker)
-                        answer_convo.participants.add(question_convo.speaker)
-                        question_convo.participants.add(speaker)
-                        speaker.add_connection(question_convo.speaker, self.source, tstamp)
+                        self.make_participant(answer_convo, speaker)
+                        self.make_participant(answer_convo, question_convo.speaker)
+                        self.make_participant(question_convo, speaker)
 
                         answers.add(answer_convo)
                         if answer.get('is_accepted'):
@@ -390,10 +389,9 @@ class StackExchangeImporter(PluginImporter):
 
                         comment_text = re.sub('<[^<]+?>', '', comment.get('body'))
                         comment_convo = self.make_conversation(origin_id=comment.get('comment_id'), channel=channel, speaker=speaker, content=comment_text, tstamp=tstamp, location=comment_link, thread=post, dedup=True)
-                        comment_convo.participants.add(speaker)
-                        comment_convo.participants.add(post.speaker)
-                        post.participants.add(speaker)
-                        speaker.add_connection(post.speaker, self.source, tstamp)
+                        self.make_participant(comment_convo, speaker)
+                        self.make_participant(comment_convo, post.speaker)
+                        self.make_participant(post, speaker)
 
 
                     if comments_data.get('has_more', False):

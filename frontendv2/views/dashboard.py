@@ -52,10 +52,22 @@ class ManagerDashboard(SavannahView):
         return recently_active[:5]
 
     @property 
+    def top_connections(self):
+        if self.user_member:
+            participants = Participant.objects.filter(initiator=self.user_member).exclude(member=self.user_member)
+            participants = participants.values('member').annotate(connection_count=Count('conversation', distinct=True))
+            for p in participants.order_by('-connection_count')[:10]:
+                m = Member.objects.get(id=p['member'])
+                m.connection_count = p['connection_count']
+                yield m
+        else:
+            return []
+
+    @property 
     def recent_connections(self):
         if self.user_member:
             connections = MemberConnection.objects.filter(from_member=self.user_member).order_by('-last_connected')[:10]
-            connections.select_related('to_member').prefetch_related('to_member__tags')
+            connections = connections.select_related('to_member').prefetch_related('to_member__tags')
             return connections
         else:
             return []
@@ -65,7 +77,7 @@ class ManagerDashboard(SavannahView):
         if self.user_member:
             recent = []
             channels = set()
-            convos = Conversation.objects.filter(participants=self.user_member).order_by('-timestamp')
+            convos = Conversation.objects.filter(participation__member=self.user_member).order_by('-timestamp')
             convos = convos.select_related('channel').select_related('channel__source')
             for con in convos:
                 if con.channel not in channels:
@@ -206,7 +218,7 @@ class Overview(SavannahFilterView):
         if self.tag:
             members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend, conversation__tags=self.tag)))
         else:
-            members = members.filter(community=self.community).annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)))
+            members = members.filter(community=self.community).annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend)))
         members = members.filter(conversation_count__gt=0)
         for m in members:
             activity_counts[m] = m.conversation_count

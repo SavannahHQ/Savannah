@@ -332,8 +332,21 @@ class Command(BaseCommand):
                     participants = random.sample(list(from_member.connections.all()), participant_count)
                 else:
                     participants = from_member.connections.all()
-                conversation.participants.set(participants)
-                conversation.participants.add(from_member)
+                for participant in participants:
+                    Participant.objects.update_or_create(
+                        community=self.community, 
+                        conversation=conversation,
+                        initiator=from_member,
+                        member=participant,
+                        timestamp=conversation_date
+                    )
+                Participant.objects.update_or_create(
+                    community=self.community, 
+                    conversation=conversation,
+                    initiator=from_member,
+                    member=from_member,
+                    timestamp=conversation_date
+                )
 
                 convo_tag = random.choices(self.tags, cum_weights=self.tag_weights, k=1)[0]
                 if convo_tag:
