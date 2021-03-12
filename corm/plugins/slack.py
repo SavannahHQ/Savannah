@@ -302,7 +302,6 @@ class SlackImporter(PluginImporter):
                 convo_participants.add(tagged_member)
                 if thread is not None:
                     thread_participants.add(tagged_member)
-                speaker.add_connection(tagged_member, source, tstamp)
             except:
                 print("    Failed to find Contact for %s" % tagged_user)
 

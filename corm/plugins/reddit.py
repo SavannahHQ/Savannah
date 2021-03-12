@@ -335,7 +335,6 @@ class RedditImporter(PluginImporter):
         if post.speaker != convo.speaker:
             convo_participants.add(post.speaker)
             post_participants.add(speaker)
-            speaker.add_connection(post.speaker, source, tstamp)
 
 
         for tagged_user in tagged:

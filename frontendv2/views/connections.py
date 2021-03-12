@@ -29,7 +29,7 @@ class Connections(SavannahFilterView):
             months = list()
             counts = dict()
 
-            connections = MemberConnection.objects.filter(via__community=self.community)
+            connections = MemberConnection.objects.filter(community=self.community)
             if self.member_company:
                 connections = connections.filter(Q(from_member__company=self.member_company)|Q(to_member__company=self.member_company))
             if self.member_tag:
@@ -71,25 +71,21 @@ class Connections(SavannahFilterView):
         channel_names = dict()
         if not self._sourcesChart:
             counts = dict()
-            connections = MemberConnection.objects.filter(via__community=self.community, first_connected__gte=self.rangestart, first_connected__lte=self.rangeend)
+            participants = Participant.objects.filter(community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.member_company:
-                connections = connections.filter(Q(from_member__company=self.member_company)|Q(to_member__company=self.member_company))
+                participants = participants.filter(Q(initiator__company=self.member_company)|Q(member__company=self.member_company))
             if self.member_tag:
-                connections = connections.filter(Q(from_member__tags=self.member_tag)|Q(to_member__tags=self.member_tag))
+                participants = participants.filter(Q(initiator__tags=self.member_tag)|Q(initiator__tags=self.member_tag))
             if self.role:
-                connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
+                participants = participants.filter(Q(initiator__role=self.role)&Q(initiator__role=self.role))
 
-            connections = connections.annotate(source_name=F('via__name'), source_connector=F('via__connector'), source_icon=F('via__icon_name'))
-            for c in connections:
-                source_name = "%s (%s)" % (c.source_name, ConnectionManager.display_name(c.source_connector))
-                if source_name not in counts:
-                    counts[source_name] = 1
-                else:
-                    counts[source_name] += 1
+            participants = participants.annotate(source_connector=F('conversation__channel__source__connector')).values('source_connector')
+            participants = participants.annotate(connection_count=Count('conversation', distinct=True)).order_by('-connection_count')
 
             self._sourcesChart = PieChart("sourcesChart", title="Connections by Source", limit=8)
-            for source_name, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
-                self._sourcesChart.add(source_name, count)
+            for c in participants.values('source_connector', 'connection_count'):
+                self._sourcesChart.add(ConnectionManager.display_name(c['source_connector']), c['connection_count'])
+
         self.charts.add(self._sourcesChart)
         return self._sourcesChart
 

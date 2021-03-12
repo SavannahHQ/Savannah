@@ -68,6 +68,7 @@ class Command(BaseCommand):
         call_command('set_company_info', community=self.community.id)
         call_command('level_check', community=self.community.id)
         call_command('gift_impact', community=self.community.id)
+        call_command('make_connections', community=self.community.id)
         call_command('make_suggestions', community=self.community.id)
 
         now = datetime.datetime.utcnow()
@@ -309,7 +310,7 @@ class Command(BaseCommand):
                     possible_days = (possible_end-possible_start).days
                     if possible_days > hero_count:# Hack to scale up the required overlap based on membership size
                         connected_date = possible_start +  datetime.timedelta(days=random.randrange(0, possible_days))
-                        from_member.add_connection(to_member, source=random.sample(self.sources, k=1)[0], timestamp=connected_date)
+                        from_member.add_connection(to_member, timestamp=connected_date)
             if connection_count > 8 and random.randint(1, 3) > 2:
                 from_member.tags.add(ambassador_tag)
         return

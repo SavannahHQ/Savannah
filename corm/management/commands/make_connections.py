@@ -39,23 +39,31 @@ class Command(BaseCommand):
           conversations = conversations.filter(channel__source__connector=connector)
 
       for community in communities:
+        print("Connecting %s..." % community.name)
         # Remove self-connections
         print("Removing self-connections")
-        selfcon = MemberConnection.objects.filter(via__community=community, from_member_id=F('to_member_id'))
+        selfcon = MemberConnection.objects.filter(community=community, from_member_id=F('to_member_id'))
         selfcon.delete()
 
         # Remove duplicates
         print("Removing duplicates")
         connection_pair = Concat('from_member_id', V('-'), 'to_member_id', output_field=fields.CharField())
-        dups = MemberConnection.objects.filter(via__community=community).annotate(min_id=Min('id')).values('min_id', 'from_member_id', 'to_member_id')
-        dups = dups.annotate(conpair=connection_pair).annotate(dup_count=Count('conpair')).filter(dup_count__gt=1)
+        dups = MemberConnection.objects.filter(community=community).order_by('from_member_id')
+        dups = dups.annotate(conpair=connection_pair)
+        dups = dups.values('conpair')
+        dups = dups.annotate(dup_count=Count('id'), min_id=Min('id'))
+        dups = dups.filter(dup_count__gt=1)
         for con in dups:
-            MemberConnection.objects.filter(from_member_id=con['from_member_id'], to_member_id=con['to_member_id'], id__gt=con['min_id']).delete()
+            print("Dup: %s" % con)
+            from_member_id, to_member_id = con['conpair'].split('-')
+            from_member_id = int(from_member_id)
+            to_member_id = int(to_member_id)
+            MemberConnection.objects.filter(from_member_id=from_member_id, to_member_id=to_member_id, id__gt=con['min_id']).delete()
 
         # Count connection events
         print("Calculating number of connection")
         found = set()
-        participants = Participant.objects.filter(community=community).exclude(member=F('initiator')).order_by('timestamp')
+        participants = Participant.objects.filter(community=community, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=365)).exclude(member=F('initiator')).order_by('timestamp')
         participants = participants.values('initiator', 'member').annotate(connection_count=Count('conversation', distinct=True))
         for connection in participants:
             from_to = "%s-%s" % (connection['initiator'], connection['member'])
