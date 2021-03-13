@@ -124,3 +124,42 @@ class CompanyCreationSuggestions(SavannahView):
 
             return redirect('company_suggestions', community_id=community_id)
         return render(request, 'savannahv2/company_suggestions.html', view.context)
+
+class TagSuggestions(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "tags"
+    
+    @property
+    def all_suggestions(self):
+        suggestions = SuggestTag.objects.filter(community=self.community, status__isnull=True).order_by("-score")
+        return suggestions
+
+    @login_required
+    def as_view(request, community_id):
+        view = TagSuggestions(request, community_id)
+
+        if request.method == 'POST':
+            if 'reject' in request.POST:
+                suggestion_id = request.POST.get('reject')
+                suggestion = SuggestTag.objects.get(id=suggestion_id)
+                suggestion.reject(request.user)
+                messages.info(request, "Suggestion rejected, you won't see it again")
+            elif 'accept' in request.POST:
+                success_count = 0
+                selected = request.POST.getlist('selected')
+                for suggestion_id in selected:
+                    try:
+                        suggestion = SuggestTag.objects.get(id=suggestion_id)
+                        suggestion.accept(request.user)
+                        success_count += 1
+                    except:
+                        pass
+                if len(selected) > 0:
+                    messages.success(request, "<b>%s</b> %s been added" % (success_count, pluralize(len(selected), "Tag has", "Tags have")))
+                else:
+                    messages.warning(request, "You haven't selected any contribution suggestions")
+
+            return redirect('tag_suggestions', community_id=community_id)
+        return render(request, 'savannahv2/tag_suggestions.html', view.context)
+

@@ -1,10 +1,19 @@
 # dups = Contact.objects.filter(source__community_id=1).values('detail').annotate(dup_count=Count('member_id', distinct=True)).order_by().filter(dup_count__gt=1)
 
 from django.core.management.base import BaseCommand, CommandError
+import os
+import sys
 import datetime
+import operator
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction import text 
+
 from django.db.models import Count
 from django.shortcuts import reverse
-from corm.models import Community, Member, Conversation, Tag, Contact, Source, ContributionType, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag, SuggestConversationAsContribution
+from corm.models import Community, Member, Conversation, Tag, Contact, Source, ContributionType
+from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag, SuggestConversationAsContribution
 from corm.models import pluralize
 from notifications.signals import notify
 
@@ -16,6 +25,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         community_id = options.get('community_id')
+        self.verbosity = options.get('verbosity')
 
         if community_id:
             community = Community.objects.get(id=community_id)
@@ -27,6 +37,7 @@ class Command(BaseCommand):
         for community in communities:
             self.make_merge_suggestions(community)
             self.make_conversation_helped_suggestions(community)
+            self.make_tag_suggestions(community)
 
     def make_merge_suggestions(self, community):
         merge_count = 0
@@ -36,13 +47,16 @@ class Command(BaseCommand):
         i = 0
         for dup in dups:
             if dup['dup_count'] > 1:
-                print("%s: %s" % (i, dup))
+                if self.verbosity >= 3:
+                    print("%s: %s" % (i, dup))
                 i += 1
                 members = Member.objects.filter(community=community, contact__email_address=dup['email_address']).order_by('id').distinct()
                 destination_member = members[0]
-                print("Target member: [%s] %s" % (destination_member.id, destination_member))
+                if self.verbosity >= 3:
+                    print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
-                    print("    <- [%s] %s" % (source_member.id, source_member))
+                    if self.verbosity >= 3:
+                        print("    <- [%s] %s" % (source_member.id, source_member))
                     suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Email match: %s' % dup['email_address']})
                     if created:
                         merge_count += 1
@@ -53,13 +67,16 @@ class Command(BaseCommand):
         i = 0
         for dup in dups:
             if dup['dup_count'] > 1:
-                print("%s: %s" % (i, dup))
+                if self.verbosity >= 3:
+                    print("%s: %s" % (i, dup))
                 i += 1
                 members = Member.objects.filter(community=community, contact__detail=dup['detail']).order_by('id').distinct()
                 destination_member = members[0]
-                print("Target member: [%s] %s" % (destination_member.id, destination_member))
+                if self.verbosity >= 3:
+                    print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
-                    print("    <- [%s] %s" % (source_member.id, source_member))
+                    if self.verbosity >= 3:
+                        print("    <- [%s] %s" % (source_member.id, source_member))
                     suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Username match: %s' % dup['detail']})
                     if created:
                         merge_count += 1
@@ -71,13 +88,16 @@ class Command(BaseCommand):
         for dup in dups:
             names = dup['name'].split(' ')
             if dup['dup_count'] > 1 and len(names) > 1:
-                print("%s: %s" % (i, dup))
+                if self.verbosity >= 3:
+                    print("%s: %s" % (i, dup))
                 i += 1
                 members = Member.objects.filter(community=community, name=dup['name']).order_by('id').distinct()
                 destination_member = members[0]
-                print("Target member: [%s] %s" % (destination_member.id, destination_member))
+                if self.verbosity >= 3:
+                    print("Target member: [%s] %s" % (destination_member.id, destination_member))
                 for source_member in members[1:]:
-                    print("    <- [%s] %s" % (source_member.id, source_member))
+                    if self.verbosity >= 3:
+                        print("    <- [%s] %s" % (source_member.id, source_member))
                     suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Full name match: %s' % dup['name']})
                     if created:
                         merge_count += 1
@@ -193,3 +213,114 @@ class Command(BaseCommand):
                 icon_name="fas fa-shield-alt",
                 link=reverse('conversation_as_contribution_suggestions', kwargs={'community_id':community.id})
             )
+
+    # Tag Suggestions
+    def sort_coo(self, coo_matrix):
+        tuples = zip(coo_matrix.col, coo_matrix.data)
+        return sorted(tuples, key=lambda x: (x[1], x[0]), reverse=True)
+
+    def extract_topn_from_vector(self, feature_names, sorted_items, topn=10):
+        """get the feature names and tf-idf score of top n items"""
+        
+        #use only topn items from vector
+        sorted_items = sorted_items[:topn]
+
+        score_vals = []
+        feature_vals = []
+        
+        # word index and corresponding tf-idf score
+        for idx, score in sorted_items:
+            
+            #keep track of feature name and its corresponding score
+            score_vals.append(round(score, 3))
+            feature_vals.append(feature_names[idx])
+
+        #create a tuples of feature,score
+        #results = zip(feature_vals,score_vals)
+        results= {}
+        for idx in range(len(feature_vals)):
+            results[feature_vals[idx]]=score_vals[idx]
+        
+        return results
+
+    def make_tag_suggestions(self, community):
+        print("Calculating tags for %s" % community.name)
+        tagged = []
+        untagged = []
+
+        conversations = Conversation.objects.filter(channel__source__community=community, content__isnull=False)
+        conversations = conversations.filter(timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=60))
+        conversations = conversations.exclude(speaker__role=Member.BOT)
+        for c in conversations:
+
+            if c.tags.all().count() > 0:
+                tagged.append(c.content)
+            else:
+                untagged.append(c.content)
+
+        used_keywords = set(('http', 'https', 'com', 'github', 'open', 'closed', 'merge', 'pr', 'issue', 'pull', 'issue', 'problem', 'help'))
+        # exclude keywords already in tags
+        for tag in community.tag_set.filter(keywords__isnull=False):
+            for word in tag.keywords.split(","):
+                for w in word.split(" "):
+                    used_keywords.add(w.lower().strip())
+        # exclude usernames
+        for ident in Contact.objects.filter(source__community=community):
+            used_keywords.add(ident.detail.lower().strip())
+        #exclude rejected keywords
+        #for s in SuggestTag.objects.filter(community=community, status=SuggestTag.REJECTED):
+        #    used_keywords.add(s.keyword)
+
+        stop_words = text.ENGLISH_STOP_WORDS.union(list(used_keywords))
+
+        cv = CountVectorizer(max_df=0.10,stop_words=stop_words,max_features=10000)
+        word_count_vector = cv.fit_transform(tagged)
+        transformer = TfidfTransformer(smooth_idf=True,use_idf=True)
+        transformer.fit(word_count_vector)
+
+        feature_names = cv.get_feature_names()
+
+        convo_count = len(untagged)
+        tagwords = dict()
+        for c in untagged:
+            tf_idf_vector = transformer.transform(cv.transform([c]))
+            sorted_items = self.sort_coo(tf_idf_vector.tocoo())
+            keywords = self.extract_topn_from_vector(feature_names ,sorted_items, 20)
+            for k, v in keywords.items():
+                if len(k) <= 3:
+                    continue
+                if k not in tagwords:
+                    tagwords[k] = 0
+                tagwords[k] += (v * v)
+
+        suggestion_count = 0
+        if self.verbosity >= 3:
+            print("\n===Tag Words===")
+        for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True):
+            percent = 100 * v / convo_count
+            if percent >= 0.25:
+                if self.verbosity >= 3:
+                    print("%s (%0.2f%%)" % (k, percent))
+                suggestion, created = SuggestTag.objects.get_or_create(
+                    community=community,
+                    keyword=k,
+                    defaults={
+                        'score': 100* percent,
+                        'reason': "Frequent keyword found: %s" % k,
+                    },
+                )
+                if created:
+                    suggestion_count += 1
+
+
+        print("Suggested %s tags" % suggestion_count)
+        if suggestion_count > 0:
+            recipients = community.managers or community.owner
+            notify.send(community, 
+                recipient=recipients, 
+                verb="has %s new tag %s" % (suggestion_count, pluralize(suggestion_count, "suggestion")),
+                level='info',
+                icon_name="fas fa-tags",
+                link=reverse('conversation_as_contribution_suggestions', kwargs={'community_id':community.id})
+            )
+

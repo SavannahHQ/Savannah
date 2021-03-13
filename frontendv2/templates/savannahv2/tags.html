@@ -4,6 +4,14 @@
 
 {% block page_title %} | {{view.community.name}} Tags{% endblock %}
 
+{% block page_alerts %}
+          {% if view.suggestion_count %}
+          <div class="alerts">
+              <div class="m-3 alert alert-info">You have <b>{{view.suggestion_count }}</b> <a href="{% url 'tag_suggestions' view.community.id %}">tag suggestion{% if view.suggestion_count > 1 %}s{% endif %}</a></div>
+          </div>
+          {% endif %}
+{% endblock %}
+
 {% block page_content %}
 
           <!-- Content Row -->

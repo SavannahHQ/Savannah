@@ -345,6 +345,27 @@ class GiftAdmin(admin.ModelAdmin):
     list_filter = ("community", "gift_type", "sent_date")
 admin.site.register(Gift, GiftAdmin)
 
+class SuggestTagAdmin(admin.ModelAdmin):
+    list_display = ("keyword", "score", "community", "reason", "created_at", "actioned_at", "status")
+    list_filter = ("community", "status", "actioned_at", "created_at")
+    actions = ("accept", "ignore", "reject")
+    def accept(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.accept(request.user)
+    accept.short_description = "Accept Suggestions"
+
+    def reject(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.reject(request.user)
+    reject.short_description = "Reject Suggestions"
+
+    def ignore(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.ignore(request.user)
+    ignore.short_description = "Ignore Suggestions"
+
+admin.site.register(SuggestTag, SuggestTagAdmin)
+
 class SuggestMemberMergeAdmin(admin.ModelAdmin):
     list_display = ("destination_member", "source_member", "community", "reason", "created_at", "actioned_at", "status")
     list_filter = ("community", "status", "actioned_at", "created_at")
@@ -365,7 +386,6 @@ class SuggestMemberMergeAdmin(admin.ModelAdmin):
     ignore.short_description = "Ignore Suggestions"
 
 admin.site.register(SuggestMemberMerge, SuggestMemberMergeAdmin)
-
 class SuggestContributionAdmin(admin.ModelAdmin):
     list_display = ("reason", "contribution_type", "community", "timestamp", "actioned_at", "status")
     list_filter = ("community", "source", "status", "actioned_at", "created_at")

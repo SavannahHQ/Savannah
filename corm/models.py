@@ -827,6 +827,15 @@ class SuggestMemberMerge(Suggestion):
         self.destination_member.merge_with(self.source_member)
         return False
 
+class SuggestTag(Suggestion):
+    keyword = models.CharField(max_length=50)
+    score = models.SmallIntegerField(default=0)
+
+    def accept_action(self):
+        Tag.objects.create(community=self.community, name=self.keyword, keywords=self.keyword, color='dfdfdf')
+        self.delete()
+        return False
+
 class SuggestMemberTag(Suggestion):
     target_member = models.ForeignKey(MemberConnection, related_name='tag_suggestions', on_delete=models.CASCADE)    
     suggested_tag = models.ForeignKey(Tag, related_name='member_suggestions', on_delete=models.CASCADE)

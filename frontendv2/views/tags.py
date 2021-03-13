@@ -17,6 +17,9 @@ class Tags(SavannahView):
         super().__init__(request, community_id)
         self.active_tab = "tags"
 
+    def suggestion_count(self):
+        return SuggestTag.objects.filter(community=self.community, status__isnull=True).count()
+
     def all_tags(self):
         return Tag.objects.filter(community=self.community).annotate(channel_count=Count('channel', distinct=True), member_count=Count('member', distinct=True)).order_by('name')
 
