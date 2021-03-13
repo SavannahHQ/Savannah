@@ -321,6 +321,6 @@ class Command(BaseCommand):
                 verb="has %s new tag %s" % (suggestion_count, pluralize(suggestion_count, "suggestion")),
                 level='info',
                 icon_name="fas fa-tags",
-                link=reverse('conversation_as_contribution_suggestions', kwargs={'community_id':community.id})
+                link=reverse('tag_suggestions', kwargs={'community_id':community.id})
             )
 
