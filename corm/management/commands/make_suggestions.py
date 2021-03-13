@@ -273,26 +273,33 @@ class Command(BaseCommand):
 
         stop_words = text.ENGLISH_STOP_WORDS.union(list(used_keywords))
 
-        cv = CountVectorizer(max_df=0.10,stop_words=stop_words,max_features=10000)
-        word_count_vector = cv.fit_transform(tagged)
-        transformer = TfidfTransformer(smooth_idf=True,use_idf=True)
-        transformer.fit(word_count_vector)
+        try:
+            cv = CountVectorizer(max_df=0.10,stop_words=stop_words,max_features=10000)
+            word_count_vector = cv.fit_transform(tagged)
+            transformer = TfidfTransformer(smooth_idf=True,use_idf=True)
+            transformer.fit(word_count_vector)
+        except ValueError:
+            # Not enough content
+            return
 
         feature_names = cv.get_feature_names()
 
         convo_count = len(untagged)
         tagwords = dict()
         for c in untagged:
-            tf_idf_vector = transformer.transform(cv.transform([c]))
-            sorted_items = self.sort_coo(tf_idf_vector.tocoo())
-            keywords = self.extract_topn_from_vector(feature_names ,sorted_items, 20)
-            for k, v in keywords.items():
-                if len(k) <= 3:
-                    continue
-                if k not in tagwords:
-                    tagwords[k] = 0
-                tagwords[k] += (v * v)
-
+            try:
+                tf_idf_vector = transformer.transform(cv.transform([c]))
+                sorted_items = self.sort_coo(tf_idf_vector.tocoo())
+                keywords = self.extract_topn_from_vector(feature_names ,sorted_items, 20)
+                for k, v in keywords.items():
+                    if len(k) <= 3:
+                        continue
+                    if k not in tagwords:
+                        tagwords[k] = 0
+                    tagwords[k] += (v * v)
+            except:
+                pass
+            
         suggestion_count = 0
         if self.verbosity >= 3:
             print("\n===Tag Words===")
