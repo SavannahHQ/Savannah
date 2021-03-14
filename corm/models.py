@@ -653,6 +653,8 @@ class MemberLevel(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=USER, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    conversation_count = models.IntegerField(default=0)
+    contribution_count = models.IntegerField(default=0)
 
     @property
     def level_name(self):
@@ -799,7 +801,7 @@ class Suggestion(models.Model):
     actioned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     actioned_at = models.DateTimeField(null=True, blank=True)
 
-    def accept_action(self):
+    def accept_action(self, user):
         raise NotImplementedError
 
     def act_on_suggestion(self, user, action):
@@ -809,7 +811,7 @@ class Suggestion(models.Model):
         self.save()
 
     def accept(self, user):
-        update_suggestion = self.accept_action()
+        update_suggestion = self.accept_action(user)
         if update_suggestion is not False:
             self.act_on_suggestion(user, Suggestion.ACCEPTED)
 
@@ -823,7 +825,7 @@ class SuggestMemberMerge(Suggestion):
     source_member = models.ForeignKey(Member, related_name='merge_to_suggestions', on_delete=models.CASCADE)    
     destination_member = models.ForeignKey(Member, related_name='merge_with_suggestions', on_delete=models.CASCADE)
 
-    def accept_action(self):
+    def accept_action(self, user):
         self.destination_member.merge_with(self.source_member)
         return False
 
@@ -831,23 +833,41 @@ class SuggestTag(Suggestion):
     keyword = models.CharField(max_length=50)
     score = models.SmallIntegerField(default=0)
 
-    def accept_action(self):
+    def accept_action(self, user):
         Tag.objects.create(community=self.community, name=self.keyword, keywords=self.keyword, color='dfdfdf')
         self.delete()
         return False
+
+class SuggestTask(Suggestion):
+    stakeholder = models.ForeignKey(Member, related_name='task_suggestions', on_delete=models.CASCADE)    
+    project = models.ForeignKey(Project, related_name='task_suggestions', on_delete=models.CASCADE)
+    due_in_days = models.SmallIntegerField(default=0)
+    name = models.CharField(max_length=256)
+    description = models.TextField()
+
+    def accept_action(self, user):
+        new_task = Task.objects.create(
+            community=self.community, 
+            project=self.project,
+            owner=user,
+            name=self.name,
+            detail=self.description,
+            due=datetime.datetime.utcnow() + datetime.timedelta(days=self.due_in_days),
+        )
+        new_task.stakeholders.add(self.stakeholder)
 
 class SuggestMemberTag(Suggestion):
     target_member = models.ForeignKey(MemberConnection, related_name='tag_suggestions', on_delete=models.CASCADE)    
     suggested_tag = models.ForeignKey(Tag, related_name='member_suggestions', on_delete=models.CASCADE)
 
-    def accept_action(self):
+    def accept_action(self, user):
         self.target_member.tags.add(self.suggested_tag)
 
 class SuggestConversationTag(Suggestion):
     target_conversation = models.ForeignKey(Conversation, related_name='tag_suggestions', on_delete=models.CASCADE)    
     suggested_tag = models.ForeignKey(Tag, related_name='conversation_suggestions', on_delete=models.CASCADE)
 
-    def accept_action(self):
+    def accept_action(self, user):
         self.target_conversation.tags.add(self.suggested_tag)
 
 class SuggestConversationAsContribution(Suggestion):
@@ -860,7 +880,7 @@ class SuggestConversationAsContribution(Suggestion):
     score = models.SmallIntegerField(default=0)
 
 
-    def accept_action(self):
+    def accept_action(self, user):
         # Anybody in the conversation other than the speaker made this contribution
         supporters = self.conversation.participation.exclude(member_id=self.conversation.speaker.id)
         for supporter in supporters:

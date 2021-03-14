@@ -208,7 +208,7 @@ class ProjectAdmin(admin.ModelAdmin):
 admin.site.register(Project, ProjectAdmin)
 
 class LevelAdmin(admin.ModelAdmin):
-    list_display = ("member", "community", "project", "level", "timestamp")
+    list_display = ("member", "community", "project", "level", "conversation_count", "contribution_count", "timestamp")
     list_filter = ("community", "level", "member__role", "project", "timestamp")
 admin.site.register(MemberLevel, LevelAdmin)
 
@@ -365,6 +365,27 @@ class SuggestTagAdmin(admin.ModelAdmin):
     ignore.short_description = "Ignore Suggestions"
 
 admin.site.register(SuggestTag, SuggestTagAdmin)
+
+class SuggestTaskAdmin(admin.ModelAdmin):
+    list_display = ("stakeholder", "due_in_days", "project", "community", "reason", "created_at", "actioned_at", "status")
+    list_filter = ("community", "status", "actioned_at", "created_at")
+    actions = ("accept", "ignore", "reject")
+    def accept(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.accept(request.user)
+    accept.short_description = "Accept Suggestions"
+
+    def reject(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.reject(request.user)
+    reject.short_description = "Reject Suggestions"
+
+    def ignore(self, request, queryset):
+        for suggestion in queryset.all():
+            suggestion.ignore(request.user)
+    ignore.short_description = "Ignore Suggestions"
+
+admin.site.register(SuggestTask, SuggestTaskAdmin)
 
 class SuggestMemberMergeAdmin(admin.ModelAdmin):
     list_display = ("destination_member", "source_member", "community", "reason", "created_at", "actioned_at", "status")

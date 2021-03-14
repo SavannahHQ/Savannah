@@ -20,6 +20,9 @@ class Projects(SavannahView):
         super().__init__(request, community_id)
         self.active_tab = "projects"
 
+    def suggestion_count(self):
+        return SuggestTask.objects.filter(community=self.community, status__isnull=True).count()
+
     def all_projects(self):
         return Project.objects.filter(community=self.community).annotate(contrib_count=Count('memberlevel__id', filter=Q(memberlevel__level__gte=MemberLevel.CONTRIBUTOR), distinct=True), task_count=Count('task', filter=Q(task__done__isnull=True), distinct=True)).order_by('-default_project', '-contrib_count')
 

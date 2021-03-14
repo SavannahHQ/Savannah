@@ -158,8 +158,48 @@ class TagSuggestions(SavannahView):
                 if len(selected) > 0:
                     messages.success(request, "<b>%s</b> %s been added" % (success_count, pluralize(len(selected), "Tag has", "Tags have")))
                 else:
-                    messages.warning(request, "You haven't selected any contribution suggestions")
+                    messages.warning(request, "You haven't selected any tag suggestions")
 
             return redirect('tag_suggestions', community_id=community_id)
         return render(request, 'savannahv2/tag_suggestions.html', view.context)
+
+
+class TaskSuggestions(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "projects"
+    
+    @property
+    def all_suggestions(self):
+        suggestions = SuggestTask.objects.filter(community=self.community, status__isnull=True).order_by("-created_at")
+        return suggestions
+
+    @login_required
+    def as_view(request, community_id):
+        view = TaskSuggestions(request, community_id)
+
+        if request.method == 'POST':
+            if 'reject' in request.POST:
+                suggestion_id = request.POST.get('reject')
+                suggestion = SuggestTask.objects.get(id=suggestion_id)
+                suggestion.reject(request.user)
+                messages.info(request, "Suggestion rejected, you won't see it again")
+            elif 'accept' in request.POST:
+                success_count = 0
+                selected = request.POST.getlist('selected')
+                for suggestion_id in selected:
+                    try:
+                        suggestion = SuggestTask.objects.get(id=suggestion_id)
+                        suggestion.accept(request.user)
+                        success_count += 1
+                    except Exception as e:
+                        print(e)
+                        pass
+                if len(selected) > 0:
+                    messages.success(request, "<b>%s</b> %s been added" % (success_count, pluralize(len(selected), "Task has", "Task have")))
+                else:
+                    messages.warning(request, "You haven't selected any task suggestions")
+
+            return redirect('task_suggestions', community_id=community_id)
+        return render(request, 'savannahv2/task_suggestions.html', view.context)
 

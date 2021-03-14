@@ -12,8 +12,8 @@ from sklearn.feature_extraction import text
 
 from django.db.models import Count
 from django.shortcuts import reverse
-from corm.models import Community, Member, Conversation, Tag, Contact, Source, ContributionType
-from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag, SuggestConversationAsContribution
+from corm.models import Community, Member, Conversation, Tag, Contact, Source, ContributionType, Project, MemberLevel
+from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag, SuggestConversationAsContribution, SuggestTask
 from corm.models import pluralize
 from notifications.signals import notify
 
@@ -35,9 +35,10 @@ class Command(BaseCommand):
             communities = Community.objects.all()
 
         for community in communities:
-            self.make_merge_suggestions(community)
-            self.make_conversation_helped_suggestions(community)
-            self.make_tag_suggestions(community)
+            #self.make_merge_suggestions(community)
+            #self.make_conversation_helped_suggestions(community)
+            #self.make_tag_suggestions(community)
+            self.make_followup_suggestions(community)
 
     def make_merge_suggestions(self, community):
         merge_count = 0
@@ -331,3 +332,50 @@ class Command(BaseCommand):
                 link=reverse('tag_suggestions', kwargs={'community_id':community.id})
             )
 
+    def make_followup_suggestions(self, community):
+        suggestion_count = 0
+        for project in Project.objects.filter(community=community):
+
+            members = MemberLevel.objects.filter(community=community, project=project, member__role=Member.COMMUNITY)
+            for level in members.filter(level=MemberLevel.CONTRIBUTOR, contribution_count=project.threshold_core-1):
+                if self.verbosity >= 3:
+                    print("Suggest followup with potential core contributor: %s" % level.member)
+                core_followup, created = SuggestTask.objects.get_or_create(
+                    community=community,
+                    reason='Ready to level-up to core contributor',
+                    stakeholder=level.member,
+                    project=level.project,
+                    defaults={
+                        'due_in_days':7,
+                        'name':'Level-up to Core in %s' % level.project,
+                        'description': '%s is one contribution away from Core level in %s' % (level.member, level.project),
+                    },
+                )
+                if created:
+                    suggestion_count += 1
+            for level in members.filter(level=MemberLevel.PARTICIPANT, conversation_count__gte=project.threshold_participant * 50):
+                if self.verbosity >= 3:
+                    print("Suggest followup with potential contributor: %s" % level.member)
+                contrib_followup, created = SuggestTask.objects.get_or_create(
+                    community=community,
+                    reason='Ready to make a contribution',
+                    stakeholder=level.member,
+                    project=level.project,
+                    defaults={
+                        'due_in_days':7,
+                        'name':'Help make first contribution to %s' % level.project,
+                        'description':'%s has had %s converesations in %s. Time to help them make a contribution.' % (level.member, level.conversation_count, level.project),
+                    },
+                )
+                if created:
+                    suggestion_count += 1
+        print("Suggested %s tasks" % suggestion_count)
+        if suggestion_count > 0:
+            recipients = community.managers or community.owner
+            notify.send(community, 
+                recipient=recipients, 
+                verb="has %s new task %s" % (suggestion_count, pluralize(suggestion_count, "suggestion")),
+                level='info',
+                icon_name="fas fa-tasks",
+                link=reverse('task_suggestions', kwargs={'community_id':community.id})
+            )

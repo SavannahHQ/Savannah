@@ -4,6 +4,14 @@
 
 {% block page_title %} | {{view.community.name}} Projects{% endblock %}
 
+{% block page_alerts %}
+          {% if view.suggestion_count %}
+          <div class="alerts">
+              <div class="m-3 alert alert-info">You have <b>{{view.suggestion_count }}</b> <a href="{% url 'task_suggestions' view.community.id %}">task suggestion{% if view.suggestion_count > 1 %}s{% endif %}</a></div>
+          </div>
+          {% endif %}
+{% endblock %}
+
 {% block page_content %}
         <!-- Page Heading -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">

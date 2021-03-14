@@ -24,7 +24,7 @@ from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel
 from frontendv2.views.tags import Tags, AddTag, EditTag
-from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions
+from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
 from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager
 from frontendv2.views.projects import Projects, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
 from frontendv2.views.reports import Reports, view_report
@@ -73,6 +73,7 @@ urlpatterns = [
     path('suggest/<int:community_id>/contributions', ContributionSuggestions.as_view, name='conversation_as_contribution_suggestions'),
     path('suggest/<int:community_id>/companies', CompanyCreationSuggestions.as_view, name='company_suggestions'),
     path('suggest/<int:community_id>/tags', TagSuggestions.as_view, name='tag_suggestions'),
+    path('suggest/<int:community_id>/tasks', TaskSuggestions.as_view, name='task_suggestions'),
 
     path('reports/<int:community_id>/', Reports.as_view, name='reports'),
     path('reports/<int:community_id>/view/<int:report_id>/', view_report, name='report_view'),
