@@ -52,7 +52,7 @@
                     <a href="{{suggestion.conversation.location}}" target="_blank" data-toggle="tooltip" data-placement="auto" data-html="true" title="{{suggestion.conversation.content|linebreaksbr|truncatewords_html:"128"}}">{{suggestion.conversation}}</a>
                   </td>
                   <td class="text-nowrap"><i class="{{suggestion.source.icon_name}}"></i> {{suggestion.conversation.channel}}</td>
-                  <td>{{suggestion.conversation.timestamp}}</td>
+                  <td class="text-nowrap">{{suggestion.conversation.timestamp}}</td>
                   <td><button class="btn btn-danger" type="submit" name="reject" value="{{suggestion.id}}" >Reject</button></td>
                 </tr>
                 {% endfor %}
