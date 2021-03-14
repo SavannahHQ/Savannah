@@ -49,7 +49,7 @@
                   <td><input class="action-select" type="checkbox" name="selected" value="{{suggestion.id}}" /></td>
                   <td>{{suggestion.reason}}</td>
                   <td><a href="{% url 'member_profile' suggestion.stakeholder.id %}">{{suggestion.stakeholder}}</a></td>
-                  <td><a href="{% url 'project_overview' suggestion.community.id suggestion.project.id %}" title="{{suggestion.description}}">{{suggestion.project}}</a></td>
+                  <td><a href="{% url 'project_overview' suggestion.community.id suggestion.project.id %}" title="{{suggestion.description}}">{{suggestion.project.name}}</a></td>
                   <td>{{suggestion.created_at}}</td>
                   <td class="text-right"><button class="btn btn-danger" type="submit" name="reject" value="{{suggestion.id}}" >Reject</button></td>
                 </tr>

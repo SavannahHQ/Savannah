@@ -442,7 +442,15 @@ class SavannahFilterView(SavannahView):
 class CommunityForm(forms.ModelForm):
     class Meta:
         model = Community
-        fields = ['name', 'logo']
+        fields = [
+            'name', 
+            'logo', 
+            'suggest_tag',
+            'suggest_company',
+            'suggest_merge',
+            'suggest_contribution',
+            'suggest_task',
+        ]
     
 class CommunityCreationEmail(EmailMessage):
     def __init__(self, community):

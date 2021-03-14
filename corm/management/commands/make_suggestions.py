@@ -35,10 +35,14 @@ class Command(BaseCommand):
             communities = Community.objects.all()
 
         for community in communities:
-            self.make_merge_suggestions(community)
-            self.make_conversation_helped_suggestions(community)
-            self.make_tag_suggestions(community)
-            self.make_followup_suggestions(community)
+            if community.suggest_merge:
+                self.make_merge_suggestions(community)
+            if community.suggest_contribution:
+                self.make_conversation_helped_suggestions(community)
+            if community.suggest_tag:
+                self.make_tag_suggestions(community)
+            if community.suggest_task:
+                self.make_followup_suggestions(community)
 
     def make_merge_suggestions(self, community):
         merge_count = 0
@@ -347,8 +351,8 @@ class Command(BaseCommand):
                     project=level.project,
                     defaults={
                         'due_in_days':7,
-                        'name':'Level-up to Core in %s' % level.project,
-                        'description': '%s is one contribution away from Core level in %s' % (level.member, level.project),
+                        'name':'Level-up to Core in %s' % level.project.name,
+                        'description': '%s is one contribution away from Core level in %s' % (level.member, level.project.name),
                     },
                 )
                 if created:
@@ -363,8 +367,8 @@ class Command(BaseCommand):
                     project=level.project,
                     defaults={
                         'due_in_days':7,
-                        'name':'Help make first contribution to %s' % level.project,
-                        'description':'%s has had %s converesations in %s. Time to help them make a contribution.' % (level.member, level.conversation_count, level.project),
+                        'name':'Help make first contribution to %s' % level.project.name,
+                        'description':'%s has had %s converesations in %s. Time to help them make a contribution.' % (level.member, level.conversation_count, level.project.name),
                     },
                 )
                 if created:

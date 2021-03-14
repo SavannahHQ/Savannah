@@ -102,6 +102,11 @@
                 <p><b>Icon: </b><img src="{{view.community.icon_path}}" /></p>
                 <p><b>Name: </b>{{view.community.name}}</p>
 
+                <p><i class="text-primary {% if view.community.suggest_tag %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tags</p>
+                <p><i class="text-primary {% if view.community.suggest_company %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Companies</p>
+                <p><i class="text-primary {% if view.community.suggest_merge %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Member Merge</p>
+                <p><i class="text-primary {% if view.community.suggest_contribution %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Contributions</p>
+                <p><i class="text-primary {% if view.community.suggest_task %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tasks</p>
                 </div>            
 
                 </div>

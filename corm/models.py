@@ -70,6 +70,12 @@ class Community(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SETUP)
 
+    suggest_tag = models.BooleanField(default=True, help_text="Suggest new Tags based on Conversation text")
+    suggest_company = models.BooleanField(default=True, help_text="Suggest new Companies based on email addresses")
+    suggest_merge = models.BooleanField(default=True, help_text="Suggest merging accounts belonging to the same person")
+    suggest_contribution = models.BooleanField(default=True, help_text="Suggest Contributions based on Conversation text")
+    suggest_task = models.BooleanField(default=True, help_text="Suggest Tasks to help engage with your Members")
+    
     @property
     def email(self):
         if self.owner and self.owner.email:

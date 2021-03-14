@@ -192,6 +192,7 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = ("name", "community", "default_project", "owner", "member_count", "task_count")
     list_filter = ("community","default_project")
     search_fields = ("name",)
+    raw_id_fields = ('owner',)
     def task_count(self, project):
         count = project.task_set.filter(done__isnull=True).count()
         if count > 0:
@@ -210,6 +211,7 @@ admin.site.register(Project, ProjectAdmin)
 class LevelAdmin(admin.ModelAdmin):
     list_display = ("member", "community", "project", "level", "conversation_count", "contribution_count", "timestamp")
     list_filter = ("community", "level", "member__role", "project", "timestamp")
+    raw_id_fields = ('member',)
 admin.site.register(MemberLevel, LevelAdmin)
 
 class MemberConnectionAdmin(admin.ModelAdmin):

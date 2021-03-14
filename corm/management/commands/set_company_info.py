@@ -58,20 +58,21 @@ class Command(BaseCommand):
                 member.tags.add(member.company.tag)
 
         # Suggest company creation
-        recipients = community.managers or community.owner
-        created_count = 0
-        for domain, count in unknown_domain_counts.items():
-            if domain in settings.PUBLIC_EMAIL_DOMAINS:
-                continue
-            if count >= settings.COMPANY_SUGGESTION_MATCHES:
-                suggestion, created = SuggestCompanyCreation.objects.get_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
-                if created:
-                    created_count += 1
-        if created_count > 0:
-            notify.send(community, 
-                recipient=recipients, 
-                verb="has %s new company %s" % (created_count, pluralize(created_count, "suggestion")),
-                level='info',
-                icon_name="fas fa-building",
-                link=reverse('company_suggestions', kwargs={'community_id':community.id})
-            )
+        if community.suggest_company:
+            recipients = community.managers or community.owner
+            created_count = 0
+            for domain, count in unknown_domain_counts.items():
+                if domain in settings.PUBLIC_EMAIL_DOMAINS:
+                    continue
+                if count >= settings.COMPANY_SUGGESTION_MATCHES:
+                    suggestion, created = SuggestCompanyCreation.objects.get_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
+                    if created:
+                        created_count += 1
+            if created_count > 0:
+                notify.send(community, 
+                    recipient=recipients, 
+                    verb="has %s new company %s" % (created_count, pluralize(created_count, "suggestion")),
+                    level='info',
+                    icon_name="fas fa-building",
+                    link=reverse('company_suggestions', kwargs={'community_id':community.id})
+                )
