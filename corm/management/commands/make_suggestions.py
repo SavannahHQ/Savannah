@@ -35,9 +35,9 @@ class Command(BaseCommand):
             communities = Community.objects.all()
 
         for community in communities:
-            #self.make_merge_suggestions(community)
-            #self.make_conversation_helped_suggestions(community)
-            #self.make_tag_suggestions(community)
+            self.make_merge_suggestions(community)
+            self.make_conversation_helped_suggestions(community)
+            self.make_tag_suggestions(community)
             self.make_followup_suggestions(community)
 
     def make_merge_suggestions(self, community):
