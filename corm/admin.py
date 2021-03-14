@@ -372,6 +372,7 @@ class SuggestTaskAdmin(admin.ModelAdmin):
     list_display = ("stakeholder", "due_in_days", "project", "community", "reason", "created_at", "actioned_at", "status")
     list_filter = ("community", "status", "actioned_at", "created_at")
     actions = ("accept", "ignore", "reject")
+    raw_id_fields = ('stakeholder','project')
     def accept(self, request, queryset):
         for suggestion in queryset.all():
             suggestion.accept(request.user)
