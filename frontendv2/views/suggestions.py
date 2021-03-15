@@ -132,7 +132,7 @@ class TagSuggestions(SavannahView):
     
     @property
     def all_suggestions(self):
-        suggestions = SuggestTag.objects.filter(community=self.community, status__isnull=True).order_by("-score")
+        suggestions = SuggestTag.objects.filter(community=self.community, status__isnull=True).order_by("-created_at")
         return suggestions
 
     @login_required

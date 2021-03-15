@@ -38,6 +38,7 @@
                     <th scope="col"><input class="action-toggle"  type="checkbox" name="select_all" value="1" onChange="toggle_all()"/></th>
                     <th scope="col">Reason</th>
                     <th scope="col">Keywords</th>
+                    <th scope="col">Score <i class="fas fa-question-circle" title="Score is a calculated on multiple factors, such as frequency of the word compared to other words and size of the conversations. Higher is better."> </i></th>
                     <th scope="col">Date</th>
                     <th scope="col"></th>
                   </tr>
@@ -50,6 +51,7 @@
                   <td>
                     {{suggestion.keyword}}
                   </td>
+                  <td>{{suggestion.score}}</td>
                   <td>{{suggestion.created_at}}</td>
                   <td class="text-right"><button class="btn btn-danger" type="submit" name="reject" value="{{suggestion.id}}" >Reject</button></td>
                 </tr>
