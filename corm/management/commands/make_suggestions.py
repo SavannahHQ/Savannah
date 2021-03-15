@@ -349,6 +349,7 @@ class Command(BaseCommand):
                     reason='Ready to level-up to core contributor',
                     stakeholder=level.member,
                     project=level.project,
+                    created_at=level.timestamp,
                     defaults={
                         'due_in_days':7,
                         'name':'Level-up to Core in %s' % level.project.name,
