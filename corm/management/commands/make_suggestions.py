@@ -306,14 +306,16 @@ class Command(BaseCommand):
                 pass
             
         suggestion_count = 0
+        now = datetime.datetime.utcnow()
         if self.verbosity >= 3:
             print("\n===Tag Words===")
-        for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True):
+        for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True)[:25]:
             percent = 100 * v / convo_count
             if percent >= 0.25:
                 if self.verbosity >= 3:
                     print("%s (%0.2f%%)" % (k, percent))
                 suggestion, created = SuggestTag.objects.get_or_create(
+                    created_at=now,
                     community=community,
                     keyword=k,
                     defaults={
