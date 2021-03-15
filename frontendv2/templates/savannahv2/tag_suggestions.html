@@ -49,7 +49,7 @@
                   <td><input class="action-select" type="checkbox" name="selected" value="{{suggestion.id}}" /></td>
                   <td>{{suggestion.reason}}</td>
                   <td>
-                    {{suggestion.keyword}}
+                    <a href="{% url 'conversations' view.community.id %}?clear=all&conversation_search={{suggestion.keyword}}">{{suggestion.keyword}}</a>
                   </td>
                   <td>{{suggestion.score}}</td>
                   <td>{{suggestion.created_at}}</td>
