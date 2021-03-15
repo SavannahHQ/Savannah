@@ -929,6 +929,8 @@ class TimezoneChoices:
 
 class ManagerProfile(models.Model):
     " Store profile information about a manager of a community"
+    class Meta:
+        ordering = ('last_seen__isnull', '-last_seen')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, verbose_name=_("Member Profile"), on_delete=models.SET_NULL, blank=True, null=True)
