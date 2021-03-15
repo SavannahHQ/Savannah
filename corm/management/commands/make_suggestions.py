@@ -359,6 +359,8 @@ class Command(BaseCommand):
                     },
                 )
                 if created:
+                    core_followup.created_at = level.timestamp
+                    core_followup.save()
                     suggestion_count += 1
             for level in members.filter(level=MemberLevel.PARTICIPANT, conversation_count__gte=project.threshold_participant * 50):
                 if self.verbosity >= 3:
@@ -369,12 +371,15 @@ class Command(BaseCommand):
                     stakeholder=level.member,
                     project=level.project,
                     defaults={
+                        'created_at':level.timestamp,
                         'due_in_days':7,
                         'name':'Help make first contribution to %s' % level.project.name,
                         'description':'%s has had %s converesations in %s. Time to help them make a contribution.' % (level.member, level.conversation_count, level.project.name),
                     },
                 )
                 if created:
+                    contrib_followup.created_at = level.timestamp
+                    contrib_followup.save()
                     suggestion_count += 1
         print("Suggested %s tasks" % suggestion_count)
         if suggestion_count > 0:
