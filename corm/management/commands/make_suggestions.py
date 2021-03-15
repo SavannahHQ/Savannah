@@ -315,10 +315,10 @@ class Command(BaseCommand):
                 if self.verbosity >= 3:
                     print("%s (%0.2f%%)" % (k, percent))
                 suggestion, created = SuggestTag.objects.get_or_create(
-                    created_at=now,
                     community=community,
                     keyword=k,
                     defaults={
+                        'created_at':now,
                         'score': 100* percent,
                         'reason': "Frequent keyword found: %s" % k,
                     },
@@ -351,8 +351,8 @@ class Command(BaseCommand):
                     reason='Ready to level-up to core contributor',
                     stakeholder=level.member,
                     project=level.project,
-                    created_at=level.timestamp,
                     defaults={
+                        'created_at':level.timestamp,
                         'due_in_days':7,
                         'name':'Level-up to Core in %s' % level.project.name,
                         'description': '%s is one contribution away from Core level in %s' % (level.member, level.project.name),
