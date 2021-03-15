@@ -342,7 +342,7 @@ class Command(BaseCommand):
         suggestion_count = 0
         for project in Project.objects.filter(community=community):
 
-            members = MemberLevel.objects.filter(community=community, project=project, member__role=Member.COMMUNITY)
+            members = MemberLevel.objects.filter(community=community, project=project, member__role=Member.COMMUNITY, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=30))
             for level in members.filter(level=MemberLevel.CONTRIBUTOR, contribution_count=project.threshold_core-1):
                 if self.verbosity >= 3:
                     print("Suggest followup with potential core contributor: %s" % level.member)
