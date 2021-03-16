@@ -82,6 +82,13 @@ class CommunityAdmin(admin.ModelAdmin):
     list_filter = ("status", "created")
     search_fields = ("name", "owner__username", "owner__email")
     actions = ('download_owners',)
+
+    def get_queryset(self, request):
+        qs = super(CommunityAdmin, self).get_queryset(request)
+        qs = qs.annotate(member_count=Count('member', distinct=True))
+        qs = qs.annotate(source_count=Count('source', distinct=True))
+        return qs
+
     def download_owners(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="community_owners.csv"'
@@ -107,19 +114,21 @@ class CommunityAdmin(admin.ModelAdmin):
     logo_icon.short_description = "Icon"
 
     def member_count(self, community):
-        return community.member_set.all().count()
+        return community.member_count
     member_count.short_description = "Members"
+    member_count.admin_order_field = 'member_count'
 
     def source_count(self, community):
-        return community.source_set.all().count()
+        return community.source_count
     source_count.short_description = "Sources"
+    source_count.admin_order_field = 'source_count'
 
     def channel_count(self, community):
         return Channel.objects.filter(source__community=community).count()
     channel_count.short_description = "Channels"
 
     def link(self, community):
-        return mark_safe("<a href=\"/dashboard/%s\">View</a>" % community.id)
+        return mark_safe("<a href=\"/dashboard/%s\" target=\"_blank\">View</a>" % community.id)
     link.short_description = "Dashboard"
 
 admin.site.register(Community, CommunityAdmin)
@@ -464,8 +473,8 @@ class ReportAdmin(admin.ModelAdmin):
 admin.site.register(Report, ReportAdmin)
 
 class ManagersAdmin(admin.ModelAdmin):
-    list_display = ('user', 'community', 'member', 'last_seen', 'realname', 'contact_email', 'send_notifications')
-    list_filter = ('community', 'last_seen', 'send_notifications')
+    list_display = ('user', 'community', 'link', 'last_seen', 'send_notifications', 'member', 'realname', 'contact_email')
+    list_filter = ('last_seen', 'community__status', 'community', 'send_notifications')
     raw_id_fields = ('member',)
     actions = ('download_managers',)
     def download_managers(self, request, queryset):
@@ -483,6 +492,11 @@ class ManagersAdmin(admin.ModelAdmin):
             writer.writerow({'Name': name, 'Role':role, 'Email':email, 'Last Seen':last_seen, 'Community':manager_profile.community.name, 'Community Status':Community.STATUS_NAMES[manager_profile.community.status]})
         return response
     download_managers.short_description = "Download Managers"
+
+    def link(self, profile):
+        return mark_safe("<a href=\"/dashboard/%s\" target=\"_blank\">View</a>" % profile.community.id)
+    link.short_description = "Dashboard"
+
 admin.site.register(ManagerProfile, ManagersAdmin)
 
 class CompanyDomainInline(admin.TabularInline):
