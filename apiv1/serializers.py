@@ -25,6 +25,7 @@ def django_field_value(instance, field_name):
     return getattr(instance, field_stack[-1])
 
 class SourceSerializer(serializers.Serializer):
+    community = serializers.CharField(max_length=256, required=False, allow_null=True)
     name = serializers.CharField(max_length=256, required=False, allow_null=True)
     icon_name = serializers.CharField(max_length=256, required=False, allow_null=True)
     first_import = serializers.DateTimeField()
