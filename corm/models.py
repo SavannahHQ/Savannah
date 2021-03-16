@@ -287,6 +287,7 @@ class Member(TaggableModel):
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
         MemberConnection.objects.filter(to_member=other_member).update(to_member=self)
+        Conversation.objects.filter(speaker=other_member).update(speaker=self)
         Contribution.objects.filter(author=other_member).update(author=self)
         Gift.objects.filter(member=other_member).update(member=self)
         MemberWatch.objects.filter(member=other_member).update(member=self)
