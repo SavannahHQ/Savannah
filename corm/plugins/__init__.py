@@ -174,7 +174,7 @@ class PluginImporter:
 
                     if profile and profile.send_notifications == True:
                         email = MemberWatchEmail(watch)
-                        email.send(watch.manager.email)
+                        email.send(profile.email)
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None, contribution=None, dedup=False):
