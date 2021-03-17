@@ -206,8 +206,10 @@ class SlackImporter(PluginImporter):
                                 self.import_message(channel, message)
                 else:
                     print("Data Error: %s" % resp.content)
+                    raise RuntimeError("Slack error: %s" % data.get('error', "Unknown Error"))
             else:
                 print("HTTP %s Error: %s" % (resp.status_code, resp.content))
+                raise RuntimeError("HTTP %s: %s" % (resp.status_code, resp.content))
         for thread_id, thread_ts in list(self._update_threads.items()):
             self.import_thread(channel, thread_ts, from_timestamp)
             # data = self.get_message(channel, thread_ts)
@@ -236,8 +238,10 @@ class SlackImporter(PluginImporter):
                             self.import_message(channel, message)
                 else:
                     print("Data Error: %s" % data)
+                    raise RuntimeError("Slack error: %s" % data.get('error', "Unknown Error"))
             else:
                 print("HTTP %s Error: %s" % (resp.status_code, resp.content))
+                raise RuntimeError("HTTP %s: %s" % (resp.status_code, resp.content))
          
     def import_message(self, channel, message):
         source = channel.source
