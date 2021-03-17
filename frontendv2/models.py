@@ -7,46 +7,9 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
 from corm.models import Community, Member, ManagerProfile
+from corm.email import EmailMessage, send_message, remaining_emails_allowed
 
 import datetime
-
-class EmailMessage(object):
-    def __init__(self, sender, community=None):
-        self.sender = sender
-        self.community = community
-        self.category = None
-        self.subject = None
-        self.text_body = None
-        self.html_body = None
-        self.member = None
-        self.context = {
-            "community": self.community,
-            "sender": self.sender,
-            "SITE_ROOT": getattr(settings, 'SITE_ROOT', ''),
-            "SITE_NAME": getattr(settings, 'SITE_NAME', ''),
-        }
-
-    def send(self, to):
-        if not isinstance(to, list):
-            to = [to]
-        if self.sender is None or self.category is None or self.subject is None or self.text_body is None or self.html_body is None:
-            raise NotImplementedError
-
-        for email in to:
-            if isinstance(email, tuple) and len(email) > 1:
-                email = email[1]
-            send_message(
-                self.sender,
-                self.category,
-                email,
-                self.subject,
-                self.render_text(self.text_body),
-                self.render_text(self.html_body),
-                self.member
-            )
-
-    def render_text(self, template):
-        return render_to_string(template, self.context)
 
 class EmailRecord(models.Model):
     """
@@ -56,14 +19,14 @@ class EmailRecord(models.Model):
     when = models.DateTimeField(null=False, auto_now_add=True)
     sender = models.ForeignKey(
         User,
-        related_name="sent_messages",
+        related_name="sent_messages_old",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
     )
     member = models.ForeignKey(
         Member,
-        related_name="recv_messages",
+        related_name="recv_messages_old",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -74,39 +37,6 @@ class EmailRecord(models.Model):
     body = models.TextField(null=False, max_length=1024)
     ok = models.BooleanField(null=False, default=True)
 
-def remaining_emails_allowed(user):
-    recently_sent = EmailRecord.objects.filter(
-        sender=user,
-        when__gte=datetime.datetime.now() - datetime.timedelta(hours=24),
-    ).count()
-    if recently_sent < settings.ALLOWED_EMAILS_PER_DAY:
-        return settings.ALLOWED_EMAILS_PER_DAY - recently_sent
-    else:
-        return 0
-
-def send_message(sender, category, to, subject, text_body, html_body, member=None):
-    email_from = getattr(
-        settings, "DEFAULT_FROM_EMAIL", "noreply@savannahhq.com"
-    )
-
-    success = send_mail(
-        from_email=email_from,
-        html_message=html_body,
-        message=text_body,
-        recipient_list=[to],
-        subject=subject,
-        fail_silently=True,
-    )
-
-    EmailRecord.objects.create(
-        sender=sender,
-        member=member,
-        email=to,
-        category=category,
-        subject=subject,
-        body=text_body,
-        ok=success,
-    )
 
 class ManagerInviteEmail(EmailMessage):
     def __init__(self, invite):

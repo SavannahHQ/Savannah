@@ -1090,3 +1090,29 @@ def pluralize(count, singular, plural=None):
     except:
         pass
     return singular
+
+class EmailRecord(models.Model):
+    """
+    Model to store all the outgoing emails.
+    """
+
+    when = models.DateTimeField(null=False, auto_now_add=True)
+    sender = models.ForeignKey(
+        User,
+        related_name="sent_messages",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    member = models.ForeignKey(
+        Member,
+        related_name="recv_messages",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    email = models.EmailField(null=False, blank=False)
+    category = models.CharField(null=False, max_length=128)
+    subject = models.CharField(null=False, max_length=128)
+    body = models.TextField(null=False, max_length=1024)
+    ok = models.BooleanField(null=False, default=True)

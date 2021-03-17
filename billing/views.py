@@ -16,7 +16,7 @@ from djstripe import webhooks
 from corm.models import Community
 from billing.models import Organization, Management
 from frontendv2.views import SavannahView, get_session_community
-from frontendv2.models import EmailMessage
+from corm.email import EmailMessage
 
 from simple_ga import api as ga
 
