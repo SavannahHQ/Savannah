@@ -6,4 +6,5 @@
 {{watch.member.name}} was active in {{watch.last_channel}} on {{watch.last_channel.connector_name}} at {{watch.last_seen}}
 
 View member activity: {{SITE_ROOT}}{% url 'member_activity' watch.member.id %}
+
 {% endblock %}

@@ -3,8 +3,12 @@
 {% block email_body %}
 <h3>Watched Member</h3>
 
+<p>
 <b>{{watch.member.name}}</b> was active in <b>{{watch.last_channel}}</b> on <b>{{watch.last_channel.connector_name}}</b> at {{watch.last_seen}}
+</p>
 
+<p>
 <a href="{{SITE_ROOT}}{% url 'member_activity' watch.member.id %}">View member activity</a>
+</p>
 
 {% endblock %}
