@@ -4,8 +4,9 @@ import subprocess
 import requests
 from importlib import import_module
 from time import sleep
-from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant
+from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile
 from corm.connectors import ConnectionManager
+from corm.email import EmailMessage
 from django.conf import settings
 from django.shortcuts import reverse
 from django.contrib.contenttypes.models import ContentType
@@ -22,6 +23,18 @@ def install_plugins():
             ConnectionManager.add_plugin(plugin_module, plugin_class())
         else:
             print("Failed to load plugin: %s" % plugin)
+
+class MemberWatchEmail(EmailMessage):
+    def __init__(self, watch):
+        super(MemberWatchEmail, self).__init__(watch.manager, watch.member.community)
+        self.subject = "Watched member %s has been active" % watch.member.name
+        self.category = "member_watch"
+        self.context.update({
+            'watch': watch,
+        })
+
+        self.text_body = "emails/watched_member_seen.txt"
+        self.html_body = "emails/watched_member_seen.html"
 
 class BasePlugin:
 
@@ -151,6 +164,17 @@ class PluginImporter:
                         link=reverse('member_profile', kwargs={'member_id':member.id}),
                         source=self.source.id,
                     )
+                    try:
+                        profile = ManagerProfile.objects.get(user=watch.manager, community=watch.member.community)
+                    except ManagerProfile.DoesNotExist:
+                        continue
+                    except Exception as e:
+                        print(e)
+                        continue
+
+                    if profile and profile.send_notifications == True:
+                        email = MemberWatchEmail(watch)
+                        email.send(watch.manager.email)
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None, contribution=None, dedup=False):
