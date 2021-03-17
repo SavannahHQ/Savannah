@@ -307,8 +307,11 @@ class Member(TaggableModel):
                 self_level = MemberLevel.objects.get(community=self.community, project=level.project, member=self)
                 if level.level > self_level.level:
                     self_level.level = level.level
+                if level.timestamp > self_level.timestamp:
                     self_level.timestamp = level.timestamp
-                    self_level.save()
+                self_level.conversation_count += level.conversation_count
+                self_level.contribution_count += level.contribution_count
+                self_level.save()
             except MemberLevel.DoesNotExist:
                 level.member = self
                 level.save()
