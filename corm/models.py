@@ -1065,7 +1065,7 @@ class SourceGroup(ImportedDataModel):
 class SuggestCompanyCreation(Suggestion):
     domain = models.CharField(max_length=256)
 
-    def accept_action(self):
+    def accept_action(self, user):
         default_domain = self.domain
         default_website = 'https://'+self.domain
         default_name = self.domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
