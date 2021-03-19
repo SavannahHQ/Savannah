@@ -20,6 +20,7 @@ from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView
 from frontendv2.models import ManagerInvite
 from frontendv2.views.charts import PieChart
+from frontendv2 import colors
 
 class Reports(SavannahView):
     def __init__(self, request, community_id):
@@ -52,6 +53,7 @@ class GrowthReport(SavannahView):
         self.active_tab = "reports"
         self.report = report
         self.data = json.loads(self.report.data)
+        self.charts = set()
         self.previous_company_activity = dict()
         self.previous_company_contributions = dict()
         try:
@@ -184,6 +186,40 @@ class GrowthReport(SavannahView):
             return []
         activity = self.previous_data['member_activity']
         return activity['active']
+
+    @property
+    def has_support_data(self):
+        return 'top_supporters' in self.data or 'supporter_roles' in self.data
+
+    @property
+    def top_support_contributors(self):
+        return self.data['top_support_contributors']
+
+    @property
+    def supporters_by_role(self):
+        role_counts = self.data['supporter_roles']
+        chart = PieChart("supporterRoles", title="Supporters by Role")
+        chart.add('Community', role_counts['community'], colors.MEMBER.COMMUNITY)
+        chart.add('Staff', role_counts['staff'], colors.MEMBER.STAFF)
+        chart.add('Bot', role_counts['bot'], colors.MEMBER.BOT)
+        self.charts.add(chart)
+        return chart
+
+    @property
+    def supported_companies(self):
+        chart = PieChart("supportedCompanies", title="Supported Companies")
+        for company in self.data['supported_companies']:
+            chart.add(company['company_name'], company['count'])
+        self.charts.add(chart)
+        return chart
+
+    @property
+    def supported_members_by_tag(self):
+        chart = PieChart("supportedMemberTags", title="Supported Members by Tag")
+        for tag in self.data['supported_by_member_tag']:
+            chart.add(tag['tag_name'], tag['count'], tag['tag_color'])
+        self.charts.add(chart)
+        return chart
 
     @login_required
     def as_view(request, community_id, report):

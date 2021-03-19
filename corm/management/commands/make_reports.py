@@ -48,6 +48,7 @@ class Command(BaseCommand):
         end = datetime.datetime(self.tstamp.year, self.tstamp.month, 1, 23, 59, 59) - datetime.timedelta(days=1)
 
         reporter = GrowthReporter(community, start, end)
+        reporter.verbosity = self.verbosity
         data = json.dumps(reporter.data(), cls=DjangoJSONEncoder)
 
         report, created = Report.objects.update_or_create(community=community, report_type=Report.GROWTH, generated=end, defaults={'title':"Monthly Report for %s %s" % (calendar.month_name[start.month], start.year), 'data':data})
@@ -68,6 +69,7 @@ class Command(BaseCommand):
         end = datetime.datetime(year, 12, 31, 23, 59, 59)
 
         reporter = AnnualReporter(community, start, end)
+        reporter.verbosity = self.verbosity
         data = json.dumps(reporter.data(), cls=DjangoJSONEncoder)
 
         report, created = Report.objects.update_or_create(community=community, report_type=Report.ANNUAL, generated=end + datetime.timedelta(days=1), defaults={'title':"Annual Report for %s" % start.year, 'data':data})
@@ -88,6 +90,7 @@ class Reporter():
         self.community = community
         self.start = start
         self.end = end
+        self.verbosity = 0
 
     @property
     def time_range(self):
@@ -165,7 +168,62 @@ class GrowthReporter(Reporter):
             'new_contributors': self.get_new_contributors(),
             'top_company_contributions': self.get_top_company_contributions(),
             'top_company_activity': self.get_top_company_activity(),
+            'top_support_contributors': self.get_top_support_contributors(),
+            'supporter_roles': self.get_supporter_roles(),
+            'supported_by_member_tag': self.get_supported_by_member_tag(),
+            'supported_companies': self.get_supported_companies(),
         }
+
+    def get_top_support_contributors(self):
+        members = Member.objects.filter(community=self.community)
+        support_filter = Q(contribution__contribution_type__name='Support', contribution__timestamp__gte=self.start, contribution__timestamp__lte=self.end)
+        members = members.annotate(contrib_count=Count('contribution', filter=support_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
+        return [{'member_id': member.id, 'member_name': member.name, 'member_role':member.role, 'contributions': member.contrib_count} for member in members[:20]]
+
+    def get_supporter_roles(self):
+        supporter_roles = {
+            'community': 0,
+            'staff': 0,
+            'bot': 0
+        }
+        members = Member.objects.filter(community=self.community)
+        support_filter = Q(contribution__contribution_type__name='Support', contribution__timestamp__gte=self.start, contribution__timestamp__lte=self.end)
+        members = members.annotate(contrib_count=Count('contribution', filter=support_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
+        for member in members:
+            supporter_roles[member.role] += 1
+        if self.verbosity >= 3:
+            print("Roles: %s" % supporter_roles)
+        return supporter_roles
+
+    def get_supported_by_member_tag(self):
+        tag_counts = dict()
+        supported = Participant.objects.filter(community=self.community, conversation__contribution__contribution_type__name="Support")
+        supported = supported.filter(timestamp__gte=self.start, timestamp__lte=self.end)
+        supported = supported.exclude(initiator=F('member'))
+        for participant in supported:
+            for tag in participant.member.tags.all():
+                if tag in tag_counts:
+                    tag_counts[tag] += 1
+                else:
+                    tag_counts[tag] = 1
+        if self.verbosity >= 3:
+            print("Tags: %s" % tag_counts)
+        return [{'tag_id': tag.id, 'tag_name': tag.name, 'tag_color': tag.color, 'count':count} for tag, count in sorted(tag_counts.items(), key=operator.itemgetter(1), reverse=True)]
+
+    def get_supported_companies(self):
+        company_counts = dict()
+        supported = Participant.objects.filter(community=self.community, conversation__contribution__contribution_type__name="Support")
+        supported = supported.filter(timestamp__gte=self.start, timestamp__lte=self.end)
+        supported = supported.filter(member__company__isnull=False, member__company__is_staff=False)
+        supported = supported.exclude(initiator=F('member'))
+        for participant in supported:
+            if participant.member.company in company_counts:
+                company_counts[participant.member.company] += 1
+            else:
+                company_counts[participant.member.company] = 1
+        if self.verbosity >= 3:
+            print("Companies: %s" % company_counts)
+        return [{'company_id': company.id, 'company_name': company.name, 'count':count} for company, count in sorted(company_counts.items(), key=operator.itemgetter(1), reverse=True)]
 
     def get_new_members(self):
         members = Member.objects.filter(community=self.community)
