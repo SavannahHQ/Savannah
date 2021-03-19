@@ -197,10 +197,14 @@ class GrowthReporter(Reporter):
 
     def get_supported_by_member_tag(self):
         tag_counts = dict()
+        counted = set()
         supported = Participant.objects.filter(community=self.community, conversation__contribution__contribution_type__name="Support")
         supported = supported.filter(timestamp__gte=self.start, timestamp__lte=self.end)
         supported = supported.exclude(member=F('conversation__contribution__author'))
         for participant in supported:
+            if participant.member.id in counted:
+                continue
+            counted.add(participant.member.id)
             for tag in participant.member.tags.all():
                 if tag in tag_counts:
                     tag_counts[tag] += 1
