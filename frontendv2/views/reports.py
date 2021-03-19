@@ -189,7 +189,7 @@ class GrowthReport(SavannahView):
 
     @property
     def has_support_data(self):
-        return 'top_supporters' in self.data or 'supporter_roles' in self.data
+        return 'supporter_roles' in self.data
 
     @property
     def top_support_contributors(self):
