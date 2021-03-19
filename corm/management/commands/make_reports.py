@@ -199,7 +199,7 @@ class GrowthReporter(Reporter):
         tag_counts = dict()
         supported = Participant.objects.filter(community=self.community, conversation__contribution__contribution_type__name="Support")
         supported = supported.filter(timestamp__gte=self.start, timestamp__lte=self.end)
-        supported = supported.exclude(initiator=F('member'))
+        supported = supported.exclude(member=F('conversation__contribution__author'))
         for participant in supported:
             for tag in participant.member.tags.all():
                 if tag in tag_counts:
@@ -215,7 +215,7 @@ class GrowthReporter(Reporter):
         supported = Participant.objects.filter(community=self.community, conversation__contribution__contribution_type__name="Support")
         supported = supported.filter(timestamp__gte=self.start, timestamp__lte=self.end)
         supported = supported.filter(member__company__isnull=False, member__company__is_staff=False)
-        supported = supported.exclude(initiator=F('member'))
+        supported = supported.exclude(member=F('conversation__contribution__author'))
         for participant in supported:
             if participant.member.company in company_counts:
                 company_counts[participant.member.company] += 1
