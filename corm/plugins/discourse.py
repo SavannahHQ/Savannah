@@ -228,7 +228,7 @@ class DiscourseImporter(PluginImporter):
                             if channel.tag:
                                 activity.tags.add(channel.tag)
                                 post_convo.tags.add(channel.tag)
-                            if activity.conversation is None:
+                            if getattr(activity, 'conversation', None) is None:
                                 post_convo.contribution = activity
                                 post_convo.save()
 
