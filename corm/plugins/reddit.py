@@ -103,6 +103,9 @@ def refresh_auth(source):
 
 class RedditPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return authenticate
+
     def get_identity_url(self, contact):
         if contact.origin_id:
             reddit_id = contact.origin_id.split("/")[-1]

@@ -49,6 +49,7 @@ class SourceAdd(SavannahView):
             if form.is_valid():
                 # TODO: attempt API call to validate
                 source = form.save()
+                messages.success(request, 'Your Discourse forums have been connected! Pick which categories you want to track from the list below.')
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
 
         form = DiscourseForm(instance=new_source)
@@ -66,6 +67,9 @@ urlpatterns = [
 ]
 
 class DiscoursePlugin(BasePlugin):
+
+    def get_add_view(self):
+        return SourceAdd.as_view
 
     def get_identity_url(self, contact):
         return "%s/u/%s" % (contact.source.server, contact.detail)

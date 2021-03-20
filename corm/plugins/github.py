@@ -147,6 +147,9 @@ urlpatterns = [
 
 class GithubPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
     def get_identity_url(self, contact):
         return "https://github.com/%s" % contact.detail
 

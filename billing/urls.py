@@ -28,6 +28,7 @@ urlpatterns = [
     path("signup/new/", signup_community, name="signup"),
     path("signup/<int:community_id>/", signup_org, name="signup_org"),
     path("signup/<int:community_id>/subscribe", signup_subscribe, name="signup_subscribe"),
+    path("signup/<int:community_id>/upgrade", signup_subscribe, name="upgrade"),
     path("signup/<int:community_id>/session", signup_subscribe_session, name="signup_subscribe_session"),
     path("signup/<int:community_id>/success", subscription_success, name="subscription_success"),
     path("signup/<int:community_id>/cancel", subscription_cancel, name="subscription_cancel"),

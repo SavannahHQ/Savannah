@@ -142,6 +142,9 @@ urlpatterns = [
 
 class GitlabPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
     def get_identity_url(self, contact):
         return contact.origin_id
 

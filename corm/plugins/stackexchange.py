@@ -150,6 +150,9 @@ urlpatterns = [
 
 class StackExchangePlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
     def get_identity_url(self, contact):
         if contact.origin_id:
             stackexchange_id = contact.origin_id.split("/")[-1]

@@ -83,7 +83,7 @@ class AddTag(SavannahView):
     def as_view(request, community_id):
         view = AddTag(request, community_id)
         if not view.community.management.can_add_tag():
-            messages.warning(request, "You've reached your maximum allowed Tags. Upgrade your plan to add more.")
+            view.community.management.upgrade_message(request, "You've reached your maximum allowed Tags")
             return redirect('tags', community_id=community_id)
         if request.method == "POST" and view.form.is_valid():
             view.form.save()

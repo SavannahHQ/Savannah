@@ -74,6 +74,9 @@ urlpatterns = [
 
 class RssPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
     def get_icon_name(self):
         return 'fas fa-globe'
 

@@ -80,6 +80,7 @@ class SourceAdd(SavannahView):
                 source = form.save(commit=False)
                 source.name = org_map[source.auth_id]
                 source.save()
+                messages.success(request, 'Your Discord server has been connected! Pick which channels you want to track from the list below.')
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
 
         form = DiscordOrgForm(instance=new_source)
@@ -126,7 +127,7 @@ def callback(request):
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
         cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, connector="corm.plugins.discord", server=request.session['oauth_discord_instance'], defaults={"auth_secret": token['access_token']})
         source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.discord", icon_name="fab fa-discord", server=request.session['oauth_discord_instance'], auth_id=token['guild']['id'], defaults={'name':token['guild'].get('name', token['guild']['id']), "auth_secret": settings.DISCORD_BOT_SECRET})
-
+        messages.success(request, 'Your Discord server has been connected! Pick which channels you want to track from the list below.')
         return redirect('channels', community_id=community.id, source_id=source.id)
 
 
@@ -141,6 +142,9 @@ urlpatterns = [
 ]
 
 class DiscordPlugin(BasePlugin):
+
+    def get_add_view(self):
+        return SourceAdd.as_view
 
     def get_identity_url(self, contact):
         if contact.origin_id:

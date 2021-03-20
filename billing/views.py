@@ -90,7 +90,7 @@ def signup_org(request, community_id):
 
         management, created = Management.objects.get_or_create(org=org, community=community)
         ga.add_event(request, 'org_creation', category='signup')
-        return redirect('billing:signup_subscribe', community_id=community.id)
+        return redirect('sources', community_id=community.id)
     except Exception as e:
         messages.error(request, "Failed to find or create a billing organization for %s" % community.name)
         messages.error(request, e)

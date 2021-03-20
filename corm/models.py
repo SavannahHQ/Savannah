@@ -3,6 +3,8 @@ import uuid
 from django.db import models
 from django.db.models import F, Q, Count, Max
 from django.contrib.auth.models import User, Group
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404, reverse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.messages.constants import DEFAULT_TAGS, WARNING
@@ -39,6 +41,9 @@ class UserAuthCredentials(models.Model):
 
 class ManagementPermissionMixin(object):
 
+    def upgrade_message(self, request, msg):
+        messages.info(request, "%s. <a class=\"btn btn-sm btn-success\" href=\"%s\">Upgrade your plan</a> to add more." % (msg, reverse('billing:upgrade', kwargs={"community_id":self.community.id})))
+        
     @property
     def name(self):
         return "Unknown Plan"
@@ -78,8 +83,8 @@ class ManagementPermissionMixin(object):
         return 3
 
     def can_add_project(self):
-        if self.metadata.get('projects', 0) > 0:
-            return self.community.project_set.filter(default_project=False).count() < self.metadata.get('projects', 0)
+        if self.projects > 0:
+            return self.community.project_set.filter(default_project=False).count() < self.projects
         else:
             return True
 

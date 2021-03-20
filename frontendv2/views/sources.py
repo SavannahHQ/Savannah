@@ -25,8 +25,8 @@ class Sources(SavannahView):
         if self.request.method == "GET":
             if self.community.source_set.all().count() == 0:
                 messages.info(self.request, "Add a source for your community activity using the <div class=\"btn btn-success btn-sm\"><i class=\"fas fa-plus\"></i> Add</div> button below.")
-            elif self.community.status == Community.SETUP:
-                messages.warning(self.request, "Your activity will begin importing once you finish your <a class=\"\" href=\"%s\">community setup</a>." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+            else:
+                super()._add_sources_message()
        
     def available_plugins(self):
         return ConnectionManager.CONNECTOR_PLUGINS.values()
@@ -115,7 +115,7 @@ class Sources(SavannahView):
 def add_source(request, community_id, connector):
     community = get_object_or_404(Community, id=community_id)
     if not community.management.can_add_source():
-        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        community.management.upgrade_message(request, "You have reach your maximum number of Sources")
         return redirect('sources', community_id=community.id)
 
     plugin = ConnectionManager.CONNECTOR_PLUGINS[connector]

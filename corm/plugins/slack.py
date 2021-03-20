@@ -52,7 +52,7 @@ def callback(request):
         cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={"auth_id": token['user_id'], "auth_secret": token['access_token']})
         source, created = Source.objects.update_or_create(community=community, auth_id=token['team_id'], connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':token['team_name'], 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
         if created:
-            messages.success(request, 'Your Slack workspace has been connected!')
+            messages.success(request, 'Your Slack workspace has been connected! Pick which channels you want to track from the list below.')
         else:
             messages.info(request, 'Your Slack source has been updated.')
 
@@ -68,6 +68,9 @@ urlpatterns = [
 
 class SlackPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return authenticate
+        
     def get_identity_url(self, contact):
         if contact.origin_id:
             slack_id = contact.origin_id.split("/")[-1]

@@ -236,7 +236,7 @@ class ProjectAdd(SavannahView):
     def as_view(request, community_id):
         view = ProjectAdd(request, community_id)
         if not view.community.management.can_add_project():
-            messages.warning(request, "You've reached your maximum allowed Projects. Upgrade your plan to add more.")
+            view.community.management.upgrade_message(request, "You've reached your maximum allowed Projects")
             return redirect('projects', community_id=community_id)
         if view.project.default_project:
             messages.warning(request, "You can not add a default project")
