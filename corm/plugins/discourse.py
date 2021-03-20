@@ -228,8 +228,9 @@ class DiscourseImporter(PluginImporter):
                             if channel.tag:
                                 activity.tags.add(channel.tag)
                                 post_convo.tags.add(channel.tag)
-                            post_convo.contribution = activity
-                            post_convo.save()
+                            if activity.conversation is None:
+                                post_convo.contribution = activity
+                                post_convo.save()
 
                     # post_ids = "&post_ids[]=".join([str(post_id) for post_id in posts_by_id.keys()])
                     # content_resp = self.api_call(DISCOURSE_POST_URL%{'id':topic['id']} + "post_ids[]="+post_ids)
