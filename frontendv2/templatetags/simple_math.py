@@ -3,6 +3,10 @@ from django import template
 register = template.Library()
 
 @register.filter
+def as_int(value):
+    return int(value or 0)
+
+@register.filter
 def add(value, arg):
     return value + arg
 
@@ -12,6 +16,7 @@ def subtract(value, arg):
 
 @register.filter
 def day_duration(value, arg=None):
+    value = int(value or 0)
     count = value
     interval = 'day'
     if value > 366*2 or arg == 'year':

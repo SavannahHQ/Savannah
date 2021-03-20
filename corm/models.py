@@ -39,23 +39,73 @@ class UserAuthCredentials(models.Model):
 
 class ManagementPermissionMixin(object):
 
+    @property
+    def name(self):
+        return "Unknown Plan"
+
+    @property
+    def managers(self):
+        return 1
+
     def can_add_manager(self):
-        return False
+        if self.managers > 0:
+            return self.community.managers.user_set.all().count() < self.managers
+        else:
+            return True
+
+    @property
+    def sources(self):
+        return 3
 
     def can_add_source(self):
-        return False
+        if self.sources > 0:
+            return self.community.source_set.all().count() < self.sources
+        else:
+            return True
+
+    @property
+    def tags(self):
+        return 3
 
     def can_add_tag(self):
-        return False
+        if self.tags > 0:
+            return self.community.tag_set.all().count() < self.tags
+        else:
+            return True
+
+    @property
+    def projects(self):
+        return 3
 
     def can_add_project(self):
-        return False
+        if self.metadata.get('projects', 0) > 0:
+            return self.community.project_set.filter(default_project=False).count() < self.metadata.get('projects', 0)
+        else:
+            return True
+
+    @property
+    def import_days(self):
+        return 1
 
     def max_import_date(self):
-        return datetime.datetime.utcnow()
+        if self.import_days > 0:
+            return self.community.created - datetime.timedelta(days=import_days)
+        else:
+            return self.community.created - datetime.timedelta(years=5)
+
+    @property
+    def retention_days(self):
+        return 1
 
     def max_retention_date(self):
-        return datetime.datetime.utcnow()
+        if self.retention_days > 0:
+            return datetime.datetime.utcnow() - datetime.timedelta(days=retention_days)
+        else:
+            return self.community.created - datetime.timedelta(years=3)
+
+    @property
+    def sales_itegration(self):
+        return False
 
 class NoManagement(ManagementPermissionMixin):
     def __init__(self, community, metadata={}):

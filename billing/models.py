@@ -27,7 +27,7 @@ class Management(models.Model, ManagementPermissionMixin):
     def metadata(self):
         if not hasattr(self, '_metadata'):
             if self.subscription is not None:
-                self._metadata = settings.STRIPE_PLANS.get(self.subscription.plan.id, {})
+                self._metadata = self.subscription.plan.metadata or {}
             else:
                 self._metadata = {'name': 'No Plan'}
         return self._metadata
@@ -63,40 +63,40 @@ class Management(models.Model, ManagementPermissionMixin):
         except Exception as e:
             raise Exception("Failed to suspend %s: %s" % (subscription_id, e))
 
-    def can_add_manager(self):
-        if self.metadata.get('managers', 0) > 0:
-            print('Limit: %s Managers' % self.metadata.get('managers', 0))
-            return self.community.managers.user_set.all().count() < self.metadata.get('managers', 0)
+    @property
+    def name(self):
+        if 'name' in self.metadata:
+            return self.metadata.get('name')
+        elif self.subscription is not None:
+            return self.subscription.plan.nickname
         else:
-            print('Unlimited Managers')
-            return True
+            return "None"
 
-    def can_add_source(self):
-        if self.metadata.get('sources', 0) > 0:
-            return self.community.source_set.all().count() < self.metadata.get('sources', 0)
-        else:
-            return True
+    @property
+    def managers(self):
+        return int(self.metadata.get('managers', 0))
 
-    def can_add_tag(self):
-        if self.metadata.get('tags', 0) > 0:
-            return self.community.tag_set.all().count() < self.metadata.get('tags', 0)
-        else:
-            return True
+    @property
+    def sources(self):
+        return int(self.metadata.get('sources', 0))
 
-    def can_add_project(self):
-        if self.metadata.get('projects', 0) > 0:
-            return self.community.project_set.filter(default_project=False).count() < self.metadata.get('projects', 0)
-        else:
-            return True
+    @property
+    def tags(self):
+        return int(self.metadata.get('tags', 0))
 
-    def max_import_date(self):
-        if self.metadata.get('import_days', 0) > 0:
-            return self.community.created - datetime.timedelta(days=self.metadata.get('import_days', 0))
-        else:
-            return self.community.created - datetime.timedelta(years=5)
+    @property
+    def projects(self):
+        return int(self.metadata.get('projects', 0))
 
-    def max_retention_date(self):
-        if self.metadata.get('retention_days', 0) > 0:
-            return datetime.datetime.utcnow() - datetime.timedelta(days=self.metadata.get('retention_days', 0))
-        else:
-            return self.community.created - datetime.timedelta(years=3)
+    @property
+    def import_days(self):
+        return int(self.metadata.get('import_days', 0))
+
+    @property
+    def retention_days(self):
+        return int(self.metadata.get('retention_days', 0))
+
+    @property
+    def sales_itegration(self):
+        return bool(self.metadata.get('sales_itegration', False))
+

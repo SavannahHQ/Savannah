@@ -89,6 +89,25 @@
 
             <!-- Profile  -->
             <div class="col-xl-4 col-lg-3">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Subscription</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                {% if view.community.status != view.community.SETUP %}
+                <p><b>Plan: </b>{{view.community.management.name}}</p>
+                {% else %}
+                <p><b>Plan: </b><a class="btn btn-success btn-sm" href="{% url 'billing:signup_subscribe' view.community.id  %}">Signup Now</a></p>
+                {% endif %}
+                </div>            
+                </div>
+              </div>
+
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -101,7 +120,7 @@
 
                 <p><b>Icon: </b><img src="{{view.community.icon_path}}" /></p>
                 <p><b>Name: </b>{{view.community.name}}</p>
-                <p><b>Plan: </b>{{view.community.management.metadata.name}}</p>
+                <p><b>Plan: </b>{{view.community.management.name}}</p>
 
                 <p><i class="text-primary {% if view.community.suggest_tag %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tags</p>
                 <p><i class="text-primary {% if view.community.suggest_company %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Companies</p>
@@ -112,6 +131,7 @@
 
                 </div>
               </div>
+
             </div>
             
           </div>

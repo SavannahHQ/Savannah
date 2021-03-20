@@ -34,6 +34,9 @@ class Managers(SavannahView):
     def invitations(self):
         return ManagerInvite.objects.filter(community=self.community)
 
+    def plan(self):
+        return self.community.management.name
+        
     @login_required
     def as_view(request, community_id):
         view = Managers(request, community_id)

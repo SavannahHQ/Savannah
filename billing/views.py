@@ -124,9 +124,6 @@ def signup_subscribe_session(request, community_id,):
                     "quantity": 1
                 }
             ],
-            subscription_data={
-                "trial_period_days": 30,
-            },
             customer=org.customer.id,
             success_url=settings.SITE_ROOT + reverse('billing:subscription_success', kwargs={'community_id': community.id}) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url= settings.SITE_ROOT + reverse('billing:subscription_cancel', kwargs={'community_id': community.id}), # The cancel_url is typically set to the original product page
@@ -143,12 +140,12 @@ def signup_subscribe(request, community_id):
     community = management.community
     org = management.org
 
+    savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
     context = {
         "community": community,
         "org": org,
-        "plans": djstripe.models.Plan.objects.all().order_by('amount'),
+        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
-        "STRIPE_PLAN": settings.STRIPE_DEFAULT_PLAN,
     }
     ga.add_event(request, 'subcription_options_viewed', category='signup')
     return render(request, 'billing/signup_subscribe.html', context)
