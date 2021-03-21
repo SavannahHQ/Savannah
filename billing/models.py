@@ -54,6 +54,27 @@ class Management(models.Model, ManagementPermissionMixin):
         except Exception as e:
             raise Exception("Failed to unsubscribe %s: %s" % (subscription_id, e))
 
+    def can_change_to(self, plan):
+        plan_data = plan.metadata
+
+        managers = int(plan_data.get('managers', 0))
+        if managers > 0 and self.community.managers.user_set.all().count() > managers:
+            return False
+
+        sources = int(plan_data.get('sources', 0))
+        if sources > 0 and self.community.source_set.all().count() > sources:
+            return False
+
+        tags = int(plan_data.get('tags', 0))
+        if tags > 0 and self.community.tag_set.all().count() > tags:
+            return False
+
+        projects = int(plan_data.get('projects', 0))
+        if projects > 0 and self.community.project_set.filter(default_project=False).count() > projects:
+            return False
+
+        return True
+
     @classmethod
     def suspend(self, subscription_id):
         try:
