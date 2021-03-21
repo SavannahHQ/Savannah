@@ -286,7 +286,7 @@ def change_plan(request, community_id):
 
     management = get_object_or_404(Management, community=community)
     if management.subscription is None:
-        redirect('billing:signup_subscribe')
+        redirect('billing:signup_subscribe', community_id=community.id)
 
     org = management.org
 
