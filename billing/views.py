@@ -152,37 +152,6 @@ def signup_subscribe(request, community_id):
 
 
 @login_required
-def change_plan(request, community_id):
-    # If community has a subscription
-        # Redirect to Stripe customer portal
-
-    management = get_object_or_404(Management, community_id=community_id)
-    if management.subscription is None:
-        redirect('billing:signup_subscribe')
-
-    community = management.community
-    org = management.org
-
-    if request.method == 'POST':
-        target_plan = djstripe.models.Plan.objects.get(id=request.POST.get('plan_id'))
-        if management.can_change_to(target_plan):
-            management.subscription.update(plan=target_plan)
-            messages.success(request, "Your subscription has been changed to <b>%s</b>. You will be billed the new amount on your next billing cycle." % target_plan.nickname)
-            return redirect('managers', community.id)
-        else:
-            messages.error(request, "Your subscription can not be changed do this plan.<br/> Please contact <a href=\"mailto:info@savannahhq.com\">info@savannahhq.com</a> for assistance changing your plan.")
-
-    savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
-    context = {
-        "community": community,
-        "org": org,
-        "current_plan" : management.subscription.plan,
-        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
-        "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
-    }
-    return render(request, 'billing/change_plan.html', context)
-
-@login_required
 def create_checkout_session(request, community_id):
     # Create Stripe.checkout.Session
         # Use community_id as client_reference_id
@@ -307,4 +276,36 @@ def manage_account(request, community_id):
     else:
         message.error(request, "Unable to launch Stripe Customer Portal")
         return redirect('dashboard', community_id=community_id)
+
+@login_required
+def change_plan(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if community.owner != request.user:
+        messages.warning(request, "Only the owner of this community can change the subscription information")
+        return redirect('managers', community_id=community_id)
+
+    management = get_object_or_404(Management, community=community)
+    if management.subscription is None:
+        redirect('billing:signup_subscribe')
+
+    org = management.org
+
+    if request.method == 'POST':
+        target_plan = djstripe.models.Plan.objects.get(id=request.POST.get('plan_id'))
+        if management.can_change_to(target_plan):
+            management.subscription.update(plan=target_plan)
+            messages.success(request, "Your subscription has been changed to <b>%s</b>. You will be billed the new amount on your next billing cycle." % target_plan.nickname)
+            return redirect('managers', community.id)
+        else:
+            messages.error(request, "Your subscription can not be changed do this plan.<br/> Please contact <a href=\"mailto:info@savannahhq.com\">info@savannahhq.com</a> for assistance changing your plan.")
+
+    savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
+    context = {
+        "community": community,
+        "org": org,
+        "current_plan" : management.subscription.plan,
+        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
+        "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
+    }
+    return render(request, 'billing/change_plan.html', context)
 
