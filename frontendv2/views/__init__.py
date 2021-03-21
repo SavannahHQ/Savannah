@@ -178,7 +178,7 @@ class SavannahView:
             if self.community.status == Community.SUSPENDED:
                 messages.warning(self.request, "Updates to this community have been suspended due to a billing problem. Please update your <a href=\"%s\">billing information</a> to resume updates." % reverse('billing:manage_account', kwargs={'community_id':self.community.id}))
             elif self.community.status == Community.DEACTIVE:
-                messages.error(self.request, "This community has been deactivated and will not recieve updates. You may reactive is by <a href=\"%s\">renewing your subcription</a> or <a href=\"%s\">starting a new one</a>." % (reverse('billing:manage_account', kwargs={'community_id':self.community.id}), reverse('billing:signup_org', kwargs={'community_id':self.community.id})))
+                messages.error(self.request, "This community has been deactivated and will not recieve updates. You may reactive is by <a href=\"%s\">starting a new subscription</a>." % (reverse('billing:signup_subscribe', kwargs={'community_id':self.community.id}),))
             elif self.community.status == Community.ARCHIVED:
                 messages.info(self.request, "This community has been archived and will no longer receive updates.")
             elif self.community.source_set.all().count() == 0:

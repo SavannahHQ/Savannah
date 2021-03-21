@@ -106,6 +106,9 @@ class SourceAdd(SavannahView):
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
+    if not community.management.can_add_source():
+        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        return redirect('sources', community_id=community.id)
     client_id = settings.STACKEXCHANGE_CLIENT_ID
     stackexchange_auth_scope = [
         'no_expiry',
@@ -147,6 +150,9 @@ urlpatterns = [
 
 class StackExchangePlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
     def get_identity_url(self, contact):
         if contact.origin_id:
             stackexchange_id = contact.origin_id.split("/")[-1]
@@ -154,8 +160,11 @@ class StackExchangePlugin(BasePlugin):
         else:
             return None
 
-    def get_auth_url(self):
-        return reverse('stackexchange_auth')
+    def get_icon_name(self):
+        return 'fab fa-stack-overflow'
+
+    def get_add_view(self):
+        return SourceAdd.as_view
 
     def get_source_type_name(self):
         return "Stack Exchange"

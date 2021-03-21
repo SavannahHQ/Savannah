@@ -3,6 +3,8 @@ import uuid
 from django.db import models
 from django.db.models import F, Q, Count, Max
 from django.contrib.auth.models import User, Group
+from django.contrib import messages
+from django.shortcuts import redirect, get_object_or_404, reverse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.messages.constants import DEFAULT_TAGS, WARNING
@@ -36,6 +38,84 @@ class UserAuthCredentials(models.Model):
 
     def __str__(self):
         return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
+
+class ManagementPermissionMixin(object):
+
+    def upgrade_message(self, request, msg):
+        messages.info(request, "%s. <a class=\"btn btn-sm btn-success\" href=\"%s\">Upgrade your plan</a> to add more." % (msg, reverse('billing:upgrade', kwargs={"community_id":self.community.id})))
+        
+    @property
+    def name(self):
+        return "Unknown Plan"
+
+    @property
+    def managers(self):
+        return 1
+
+    def can_add_manager(self):
+        if self.managers > 0:
+            return self.community.managers.user_set.all().count() < self.managers
+        else:
+            return True
+
+    @property
+    def sources(self):
+        return 3
+
+    def can_add_source(self):
+        if self.sources > 0:
+            return self.community.source_set.all().count() < self.sources
+        else:
+            return True
+
+    @property
+    def tags(self):
+        return 3
+
+    def can_add_tag(self):
+        if self.tags > 0:
+            return self.community.tag_set.all().count() < self.tags
+        else:
+            return True
+
+    @property
+    def projects(self):
+        return 3
+
+    def can_add_project(self):
+        if self.projects > 0:
+            return self.community.project_set.filter(default_project=False).count() < self.projects
+        else:
+            return True
+
+    @property
+    def import_days(self):
+        return 1
+
+    def max_import_date(self):
+        if self.import_days > 0:
+            return self.community.created - datetime.timedelta(days=import_days)
+        else:
+            return self.community.created - datetime.timedelta(years=5)
+
+    @property
+    def retention_days(self):
+        return 1
+
+    def max_retention_date(self):
+        if self.retention_days > 0:
+            return datetime.datetime.utcnow() - datetime.timedelta(days=retention_days)
+        else:
+            return self.community.created - datetime.timedelta(years=3)
+
+    @property
+    def sales_itegration(self):
+        return False
+
+class NoManagement(ManagementPermissionMixin):
+    def __init__(self, community, metadata={}):
+        self.community = community
+        self.metadata = metadata
 
 class Community(models.Model):
     SETUP = 0
@@ -76,6 +156,15 @@ class Community(models.Model):
     suggest_contribution = models.BooleanField(default=True, help_text="Suggest Contributions based on Conversation text")
     suggest_task = models.BooleanField(default=True, help_text="Suggest Tasks to help engage with your Members")
     
+    @property
+    def management(self):
+        try:
+            return self._management
+        except:
+            return NoManagement(community=self, metadata={
+                'name': 'No Plan'
+            })
+
     @property
     def email(self):
         if self.owner and self.owner.email:

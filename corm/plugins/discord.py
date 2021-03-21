@@ -80,6 +80,7 @@ class SourceAdd(SavannahView):
                 source = form.save(commit=False)
                 source.name = org_map[source.auth_id]
                 source.save()
+                messages.success(request, 'Your Discord server has been connected! Pick which channels you want to track from the list below.')
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
 
         form = DiscordOrgForm(instance=new_source)
@@ -95,6 +96,10 @@ class SourceAdd(SavannahView):
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
+    if not community.management.can_add_source():
+        messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+        return redirect('sources', community_id=community.id)
+
     client_id = settings.DISCORD_CLIENT_ID
     discord_auth_scope = [
         'bot',
@@ -122,7 +127,7 @@ def callback(request):
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
         cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, connector="corm.plugins.discord", server=request.session['oauth_discord_instance'], defaults={"auth_secret": token['access_token']})
         source, created = Source.objects.update_or_create(community=community, connector="corm.plugins.discord", icon_name="fab fa-discord", server=request.session['oauth_discord_instance'], auth_id=token['guild']['id'], defaults={'name':token['guild'].get('name', token['guild']['id']), "auth_secret": settings.DISCORD_BOT_SECRET})
-
+        messages.success(request, 'Your Discord server has been connected! Pick which channels you want to track from the list below.')
         return redirect('channels', community_id=community.id, source_id=source.id)
 
 
@@ -138,6 +143,9 @@ urlpatterns = [
 
 class DiscordPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
     def get_identity_url(self, contact):
         if contact.origin_id:
             discord_id = contact.origin_id.split("/")[-1]
@@ -145,6 +153,9 @@ class DiscordPlugin(BasePlugin):
         else:
             return None
 
+    def get_icon_name(self):
+        return 'fab fa-discord'
+        
     def get_auth_url(self):
         return reverse('discord_auth')
 

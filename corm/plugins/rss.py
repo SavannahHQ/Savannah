@@ -46,6 +46,10 @@ class SourceAdd(SavannahView):
 
     def as_view(request):
         view = SourceAdd(request, community_id=request.session['community'])
+        if not view.community.management.can_add_source():
+            messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+            return redirect('sources', community_id=view.community.id)
+
         new_source = Source(community=view.community, connector="corm.plugins.rss", icon_name="fas fa-globe")
         if request.method == "POST":
             form = RssForm(data=request.POST, instance=new_source)
@@ -70,11 +74,20 @@ urlpatterns = [
 
 class RssPlugin(BasePlugin):
 
+    def get_add_view(self):
+        return SourceAdd.as_view
+
+    def get_icon_name(self):
+        return 'fas fa-globe'
+
     def get_source_type_name(self):
         return "RSS"
 
     def get_import_command_name(self):
         return "rss"
+
+    def get_auth_url(self):
+        return reverse('rss_auth')
 
     def get_source_importer(self, source):
         return RssImporter(source)

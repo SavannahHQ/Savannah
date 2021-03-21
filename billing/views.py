@@ -90,7 +90,7 @@ def signup_org(request, community_id):
 
         management, created = Management.objects.get_or_create(org=org, community=community)
         ga.add_event(request, 'org_creation', category='signup')
-        return redirect('billing:signup_subscribe', community_id=community.id)
+        return redirect('sources', community_id=community.id)
     except Exception as e:
         messages.error(request, "Failed to find or create a billing organization for %s" % community.name)
         messages.error(request, e)
@@ -99,12 +99,13 @@ def signup_org(request, community_id):
         return redirect('billing:signup')
 
 @login_required
-def signup_subscribe_session(request, community_id):
+def signup_subscribe_session(request, community_id,):
  
     management = get_object_or_404(Management, community_id=community_id)
     community = management.community
     org = management.org
-
+    plan_id = request.GET.get('plan', None)
+    plan = get_object_or_404(djstripe.models.Plan, id=plan_id)
 
     if request.method == 'POST':
  
@@ -119,13 +120,10 @@ def signup_subscribe_session(request, community_id):
             allow_promotion_codes=True,
             line_items=[
                 {
-                    "price": settings.STRIPE_DEFAULT_PLAN,
+                    "price": plan_id,
                     "quantity": 1
                 }
             ],
-            subscription_data={
-                "trial_period_days": 30,
-            },
             customer=org.customer.id,
             success_url=settings.SITE_ROOT + reverse('billing:subscription_success', kwargs={'community_id': community.id}) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url= settings.SITE_ROOT + reverse('billing:subscription_cancel', kwargs={'community_id': community.id}), # The cancel_url is typically set to the original product page
@@ -142,14 +140,47 @@ def signup_subscribe(request, community_id):
     community = management.community
     org = management.org
 
+    savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
     context = {
         "community": community,
         "org": org,
+        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
-        "STRIPE_PLAN": settings.STRIPE_DEFAULT_PLAN,
     }
     ga.add_event(request, 'subcription_options_viewed', category='signup')
     return render(request, 'billing/signup_subscribe.html', context)
+
+
+@login_required
+def change_plan(request, community_id):
+    # If community has a subscription
+        # Redirect to Stripe customer portal
+
+    management = get_object_or_404(Management, community_id=community_id)
+    if management.subscription is None:
+        redirect('billing:signup_subscribe')
+
+    community = management.community
+    org = management.org
+
+    if request.method == 'POST':
+        target_plan = djstripe.models.Plan.objects.get(id=request.POST.get('plan_id'))
+        if management.can_change_to(target_plan):
+            management.subscription.update(plan=target_plan)
+            messages.success(request, "Your subscription has been changed to <b>%s</b>. You will be billed the new amount on your next billing cycle." % target_plan.nickname)
+            return redirect('managers', community.id)
+        else:
+            messages.error(request, "Your subscription can not be changed do this plan.<br/> Please contact <a href=\"mailto:info@savannahhq.com\">info@savannahhq.com</a> for assistance changing your plan.")
+
+    savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
+    context = {
+        "community": community,
+        "org": org,
+        "current_plan" : management.subscription.plan,
+        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
+        "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
+    }
+    return render(request, 'billing/change_plan.html', context)
 
 @login_required
 def create_checkout_session(request, community_id):
