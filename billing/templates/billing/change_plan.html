@@ -55,7 +55,7 @@
                     <form class="inline-form" action="{% url 'billing:upgrade' community.id %}" method="POST">
                       {% csrf_token%}
                       <input type="hidden" name="plan_id" value="{{plan.id}}"/>
-                      {% if plan.amount > current_plan.amount %}
+                      {% if plan.amount >= current_plan.amount %}
                       <button class="btn btn-success" type="submit">Upgrade</button>
                       {% else %}
                       <button class="btn btn-danger" type="submit">Downgrade</button>

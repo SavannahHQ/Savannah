@@ -303,7 +303,7 @@ def change_plan(request, community_id):
     context = {
         "community": community,
         "org": org,
-        "current_plan" : management.subscription.plan,
+        "current_plan" : getattr(management.subscription, 'plan', {'id': 0, 'amount': 0}),
         "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
     }
