@@ -5,8 +5,10 @@
 // Bootstrap Color Overrides
 
 $savannah-blue: #0a45a4;
+$savannah-light: #2abbdc;
 $savannah-yellow: #fce092;
 $savannah-orange: #fd6022;
+$savannah-green: #3dbd5d;
 
 $member: #3D58C4;
 $member-community: #1D6ACD;
@@ -26,6 +28,8 @@ $level-participant: #3579BF;
 $level-visitor: #3D58C4;
 
 $primary: lighten($savannah-blue, 5%);
+$success: $savannah-green;
+$info: $savannah-light;
 $warning: $savannah-yellow;
 $danger: $savannah-orange;
 
