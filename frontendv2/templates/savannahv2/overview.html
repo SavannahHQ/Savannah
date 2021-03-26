@@ -16,12 +16,12 @@
 
             <!-- Members Card -->
             <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card border-left-primary shadow h-100 py-2">
+              <div class="card border-left-member shadow h-100 py-2">
                 <a href="{% url 'members' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Members</div>
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">Members</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.member_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
@@ -35,12 +35,12 @@
 
             <!-- Conversations Card -->
             <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card border-left-success shadow h-100 py-2">
+              <div class="card border-left-conversation shadow h-100 py-2">
               <a href="{% url 'conversations' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Conversations</div>
+                      <div class="text-xs font-weight-bold text-conversation text-uppercase mb-1">Conversations</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.conversation_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
@@ -54,12 +54,12 @@
 
             <!-- Contributors Card -->
             <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card border-left-info shadow h-100 py-2">
+              <div class="card border-left-contributor shadow h-100 py-2">
               <a href="{% url 'contributors' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Contributors</div>
+                      <div class="text-xs font-weight-bold text-contributor text-uppercase mb-1">Contributors</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.contributor_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
@@ -74,12 +74,12 @@
            
           <!-- Contributions Card -->
             <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card border-left-warning shadow h-100 py-2">
+              <div class="card border-left-contribution shadow h-100 py-2">
               <a href="{% url 'contributions' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Contributions</div>
+                      <div class="text-xs font-weight-bold text-contribution text-uppercase mb-1">Contributions</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.contribution_count|intcomma}}</div>
                     </div>
                     <div class="col-auto">
@@ -215,7 +215,8 @@ var myLineChart = new Chart(ctx, {
       lineTension: 0.3,
       backgroundColor: "#{{colors.MEMBER}}22",
       borderColor: "#{{colors.MEMBER}}",
-      pointRadius: 3,
+      borderWidth: 1,
+      pointRadius: 0,
       pointBackgroundColor: "#{{colors.MEMBER}}",
       pointBorderColor: "#{{colors.MEMBER}}",
       pointHoverRadius: 3,
@@ -243,7 +244,7 @@ var myLineChart = new Chart(ctx, {
         },
         gridLines: {
           display: false,
-          drawBorder: false
+          drawBorder: true
         },
         ticks: {
           maxTicksLimit: 7
@@ -261,7 +262,7 @@ var myLineChart = new Chart(ctx, {
         gridLines: {
           color: "rgb(234, 236, 244)",
           zeroLineColor: "rgb(234, 236, 244)",
-          drawBorder: false,
+          drawBorder: true,
           borderDash: [2],
           zeroLineBorderDash: [2]
         }
@@ -280,7 +281,7 @@ var myLineChart = new Chart(ctx, {
       borderWidth: 1,
       xPadding: 15,
       yPadding: 15,
-      displayColors: false,
+      displayColors: true,
       intersect: false,
       mode: 'index',
       caretPadding: 10,

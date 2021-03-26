@@ -9,6 +9,7 @@ from django.contrib import messages
 from django import forms
 
 from corm.models import *
+from frontendv2 import colors
 from frontendv2.models import EmailMessage, PasswordResetRequest
 
 # Create your views here.
@@ -464,6 +465,12 @@ class CommunityCreationEmail(EmailMessage):
 def new_community(request):
     return redirect('billing:signup')
     
+def branding(request):
+    context = {
+        "colors": colors
+    }
+    return render(request, 'savannahv2/branding.html', context)
+
 # @login_required
 # def new_community(request):
 #     community = Community(owner=request.user)

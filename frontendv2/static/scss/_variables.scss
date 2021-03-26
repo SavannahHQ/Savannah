@@ -4,6 +4,31 @@
 // Color Variables
 // Bootstrap Color Overrides
 
+$savannah-blue: #0a45a4;
+$savannah-yellow: #fce092;
+$savannah-orange: #fd6022;
+
+$member: #3D58C4;
+$member-community: #1D6ACD;
+$member-staff: #11AAC7;
+$member-bot: #aeaeae;
+$member-light: #A8B0E2;
+$member-joined: #4987BB;
+$member-active: #1CB6BD;
+$member-returning: #3bdb61;
+$conversation: #1CC88B;
+$conversation-light: #98E2C8;
+$contribution: #f6c23e;
+$contribution-light: #FFE093;
+$level-core: #00C287;
+$level-contributor: #01B0B8;
+$level-participant: #3579BF;
+$level-visitor: #3D58C4;
+
+$primary: lighten($savannah-blue, 5%);
+$warning: $savannah-yellow;
+$danger: $savannah-orange;
+
 $white: #fff !default;
 $gray-100: #f8f9fc !default;
 $gray-200: #eaecf4 !default;
@@ -30,6 +55,14 @@ $cyan: #36b9cc !default;
 // Custom Colors
 $brand-google: #ea4335;
 $brand-facebook: #3b5998;
+
+$theme-colors: (
+    "savannah-blue":    $savannah-blue,
+    "member": $member,
+    "conversation": $conversation,
+    "contributor": $level-contributor,
+    "contribution": $contribution,
+);
 
 // Set Contrast Threshold
 $yiq-contrasted-threshold: 195 !default;

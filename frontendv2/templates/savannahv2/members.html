@@ -149,7 +149,8 @@ var myLineChart = new Chart(ctx, {
       lineTension: 0.3,
       backgroundColor: "#{{colors.MEMBER.ACTIVE}}22",
       borderColor: "#{{colors.MEMBER.ACTIVE}}",
-      pointRadius: 3,
+      borderWidth: 1,
+      pointRadius: 0,
       pointBackgroundColor: "#{{colors.MEMBER.ACTIVE}}",
       pointBorderColor: "#{{colors.MEMBER.ACTIVE}}",
       pointHoverRadius: 3,
@@ -164,7 +165,8 @@ var myLineChart = new Chart(ctx, {
       lineTension: 0.3,
       backgroundColor: "#{{colors.MEMBER.JOINED}}22",
       borderColor: "#{{colors.MEMBER.JOINED}}",
-      pointRadius: 3,
+      borderWidth: 1,
+      pointRadius: 0,
       pointBackgroundColor: "#{{colors.MEMBER.JOINED}}",
       pointBorderColor: "#{{colors.MEMBER.JOINED}}",
       pointHoverRadius: 3,
@@ -179,7 +181,8 @@ var myLineChart = new Chart(ctx, {
       lineTension: 0.3,
       backgroundColor: "#{{colors.MEMBER.RETURNING}}22",
       borderColor: "#{{colors.MEMBER.RETURNING}}",
-      pointRadius: 3,
+      borderWidth: 1,
+      pointRadius: 0,
       pointBackgroundColor: "#{{colors.MEMBER.RETURNING}}",
       pointBorderColor: "#{{colors.MEMBER.RETURNING}}",
       pointHoverRadius: 3,
@@ -208,7 +211,7 @@ var myLineChart = new Chart(ctx, {
         },
         gridLines: {
           display: false,
-          drawBorder: false
+          drawBorder: true
         },
         ticks: {
           maxTicksLimit: 7
@@ -227,7 +230,7 @@ var myLineChart = new Chart(ctx, {
         gridLines: {
           color: "rgb(234, 236, 244)",
           zeroLineColor: "rgb(234, 236, 244)",
-          drawBorder: false,
+          drawBorder: true,
           borderDash: [2],
           zeroLineBorderDash: [2]
         }
@@ -246,7 +249,7 @@ var myLineChart = new Chart(ctx, {
       borderWidth: 1,
       xPadding: 15,
       yPadding: 15,
-      displayColors: false,
+      displayColors: true,
       intersect: false,
       mode: 'index',
       caretPadding: 10,

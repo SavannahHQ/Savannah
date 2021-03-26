@@ -6,8 +6,11 @@ var {{chart.id}} = new Chart(ctx, {
     labels: {{chart.get_data_names|safe}},
     datasets: [{
       data: {{chart.get_data_values|safe}},
-      backgroundColor: {{chart.get_data_colors|safe}},
+      backgroundColor: [{% for color in chart.get_data_colors %}"{{color}}dd",{% endfor %}],
+      borderColor: [{% for color in chart.get_data_colors %}"{{color}}",{% endfor %}],
       hoverBorderColor: "rgba(234, 236, 244, 1)",
+      borderWidth: 1,
+      borderAlign: 'inner',
     }],
   },
   options: {

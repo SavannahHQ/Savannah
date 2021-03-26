@@ -19,7 +19,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-left">
-                  <h6 class="m-0 font-weight-bold text-primary">Conversations by {{view.trunc_span}}
+                  <h6 class="m-0 font-weight-bold text-primary">Conversations
                   </h6>
                   <span class="text-muted pl-2">
                   {% if view.conversation_search %}<span class="tag-pill text-nowrap" style="background-color: #dadadaaa; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas fa-search"> </i> "{{view.conversation_search}}"</span></span>{% endif %}
@@ -295,7 +295,8 @@ var myLineChart = new Chart(ctx, {
       lineTension: 0.3,
       backgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}22",
       borderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
-      pointRadius: 3,
+      borderWidth: 1,
+      pointRadius: 0,
       pointBackgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
       pointBorderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
       pointHoverRadius: 3,
@@ -308,6 +309,7 @@ var myLineChart = new Chart(ctx, {
   },
   options: {
     maintainAspectRatio: false,
+    responsive: true,
     layout: {
       padding: {
         left: 10,
@@ -323,7 +325,7 @@ var myLineChart = new Chart(ctx, {
         },
         gridLines: {
           display: false,
-          drawBorder: false
+          drawBorder: true
         },
         ticks: {
           maxTicksLimit: 7
@@ -342,7 +344,7 @@ var myLineChart = new Chart(ctx, {
         gridLines: {
           color: "rgb(234, 236, 244)",
           zeroLineColor: "rgb(234, 236, 244)",
-          drawBorder: false,
+          drawBorder: true,
           borderDash: [2],
           zeroLineBorderDash: [2]
         }
@@ -361,7 +363,7 @@ var myLineChart = new Chart(ctx, {
       borderWidth: 1,
       xPadding: 15,
       yPadding: 15,
-      displayColors: false,
+      displayColors: true,
       intersect: false,
       mode: 'index',
       caretPadding: 10,
