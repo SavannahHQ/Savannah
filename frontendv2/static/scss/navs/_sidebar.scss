@@ -324,13 +324,13 @@
     border-top: 1px solid fade-out($white, 0.85);
   }
   .sidebar-heading {
-    color: fade-out($white, 0.6);
+    color: fade-out($white, 0.1);
   }
   .nav-item {
     .nav-link {
       color: fade-out($white, 0.2);
       i {
-        color: fade-out($white, 0.7);
+        color: fade-out($white, 0.3);
       }
       &:active,
       &:focus,
