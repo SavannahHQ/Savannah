@@ -226,6 +226,7 @@ admin.site.register(MemberLevel, LevelAdmin)
 class MemberConnectionAdmin(admin.ModelAdmin):
     list_display = ("from_member", "to_member", "connection_count", "community", "first_connected", "last_connected")
     list_filter = ("community", "last_connected")
+    raw_id_fields = ("from_member", "to_member")
 admin.site.register(MemberConnection, MemberConnectionAdmin)
 
 class MemberAdmin(admin.ModelAdmin):
