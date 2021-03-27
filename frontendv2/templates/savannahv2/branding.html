@@ -14,7 +14,7 @@
         <div class="align-items-center mb-3">
             <h1>Savannah Brand</h1>
             <div class="text-left">
-              <h3>Icon</h3>
+              <h3>Savannah CRM Icon</h3>
               <div class="row justify-content-left align-items-end mb-3">
                 <div class="text-center p-2 col"><img src="{% static 'savannah/Savannah256.png' %}"><br/>256x256</div>
                 <div class="text-center p-2 col"><img src="{% static 'savannah/Savannah128.png' %}"><br/>128x128</div>
@@ -22,13 +22,16 @@
                 <div class="text-center p-2 col"><img src="{% static 'savannah/Savannah32.png' %}"><br/>32x32</div>
               </div>
 
-              <h3>Chart Colors</h3>
+              <h3>Savannah CRM Colors</h3>
               <div class="row justify-content-left mb-3">
-                {% for color_hex in colors.CHART_COLORS %}
-                <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #{{color_hex}};">#{{color_hex}}</div>
-                {% endfor %}
+                <div class="text-center p-2 col-2 text-nowrap text-gray-500" style="background: #0a45a4;">Blue<br/>#0a45a4</div>
+                <div class="text-center p-2 col-2 text-nowrap text-gray-500" style="background: #063072;">Dark<br/>#063072</div>
+                <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #2abbdc;">Light<br/>#2abbdc</div>
+                <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #3dbd5d;">Green<br/>#3dbd5d</div>
+                <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #fce092;">Yellow<br/>#fce092</div>
+                <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #fd6022;">Orange<br/>#fd6022</div>
               </div>
-              
+
               <h3>Member Colors</h3>
               <div class="row justify-content-left mb-3">
                 <div class="text-center p-2 col-2 text-nowrap text-gray-500" style="background: #{{colors.MEMBER.BASE}};">BASE<br/>#{{colors.MEMBER.BASE}}</div>
@@ -69,6 +72,13 @@
               <div class="row justify-content-left mb-3">
                 <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #{{colors.ACTIVITY.BASE}};">BASE<br/>#{{colors.ACTIVITY.BASE}}</div>
                 <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #{{colors.ACTIVITY.LIGHT}};">LIGHT<br/>#{{colors.ACTIVITY.LIGHT}}</div>
+              </div>
+              
+              <h3>Default Chart Colors</h3>
+              <div class="row justify-content-left mb-3">
+                {% for color_hex in colors.CHART_COLORS %}
+                <div class="text-center p-2 col-2 text-nowrap text-gray-900" style="background: #{{color_hex}};">#{{color_hex}}</div>
+                {% endfor %}
               </div>
               
             </div>
