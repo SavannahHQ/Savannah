@@ -274,7 +274,7 @@
                       <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conributions">{{page}}</a></li>
                     {% endfor %}
                     <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
-                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}#conributions" aria-label="Last">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}#contributions" aria-label="Last">
                         <span aria-hidden="true">&raquo;</span>
                         <span class="sr-only">{{Next}}</span>
                       </a>

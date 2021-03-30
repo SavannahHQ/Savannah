@@ -208,6 +208,7 @@ class SavannahFilterView(SavannahView):
             request.session['member_company'] = None
             request.session['role'] = None
             request.session['type'] = None
+            request.session['source'] = None
         super().__init__(request, community_id)
         self.filter = {
             'timespan': True,
@@ -219,6 +220,7 @@ class SavannahFilterView(SavannahView):
             'tag': False,
             'source': False,
             'contrib_type': False,
+            'source': False,
         }
 
         self.tag = None
@@ -290,6 +292,20 @@ class SavannahFilterView(SavannahView):
         except:
             self.contrib_type = None
             request.session['type'] = None
+
+        self.source = None
+        try:
+            if 'source' in request.GET:
+                if request.GET.get('source') == '':
+                    request.session['source'] = None
+                else:
+                    self.source = Source.objects.get(community=self.community, id=request.GET.get('source'))
+                    request.session['source'] = request.GET.get('source')
+            elif 'source' in request.session:
+                self.source = Source.objects.get(community=self.community, id=request.GET.get('source'))
+        except:
+            self.source = None
+            request.session['source'] = None
 
         self.rangestart = None
         self.rangeend = None

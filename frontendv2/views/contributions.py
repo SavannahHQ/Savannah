@@ -61,6 +61,9 @@ class Contributions(SavannahFilterView):
         if self.role:
             contributions = contributions.filter(author__role=self.role)
 
+        if self.source:
+            contributions = contributions.filter(channel__source=self.source)
+
         contributions = contributions.annotate(author_name=F('author__name'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).prefetch_related('tags').order_by('-timestamp')
         self.result_count = contributions.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
@@ -107,6 +110,9 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter &Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter &Q(contribution__tags=self.tag)
+        if self.source:
+            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+
         if self.member_company:
             members = members.filter(company=self.member_company)
         if self.member_tag:
@@ -133,6 +139,9 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.source:
+            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+
         if self.member_company:
             members = members.filter(company=self.member_company)
         if self.member_tag:
@@ -158,6 +167,9 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.source:
+            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+
         if self.member_company:
             members = members.filter(company=self.member_company)
         if self.member_tag:
@@ -183,6 +195,9 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.source:
+            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+
         if self.member_company:
             contributors = contributors.filter(company=self.member_company)
         if self.member_tag:
@@ -215,6 +230,9 @@ class Contributions(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+        if self.source:
+            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+
         if self.member_company:
             contributors = contributors.filter(company=self.member_company)
         if self.member_tag:
@@ -250,6 +268,8 @@ class Contributions(SavannahFilterView):
 
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
+            if self.source:
+                contributions = contributions.filter(channel__source=self.source)
 
             if self.member_company:
                 contributions = contributions.filter(author__company=self.member_company)
@@ -292,6 +312,8 @@ class Contributions(SavannahFilterView):
                 contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+            if self.source:
+                contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
             if self.member_company:
                 contrib_filter = contrib_filter & Q(contribution__author__company=self.member_company)
             if self.member_tag:
