@@ -57,6 +57,7 @@ class CompanyProfile(SavannahView):
             convo_filter = convo_filter & Q(conversation__speaker__company=self.company)
 
             tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
+            tags = tags.filter(conversation_count__gt=0)
 
             for t in tags:
                 counts[t] = t.conversation_count
@@ -77,6 +78,8 @@ class CompanyProfile(SavannahView):
             convo_filter = convo_filter & Q(channel__conversation__speaker__company=self.company)
 
             sources = sources.annotate(conversation_count=Count('channel__conversation', filter=convo_filter))
+            sources = sources.filter(conversation_count__gt=0)
+
             for s in sources:
                 counts[s] = s.conversation_count
 
