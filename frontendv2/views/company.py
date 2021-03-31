@@ -22,7 +22,8 @@ class CompanyProfile(SavannahView):
         self.active_tab = "company"
         self._sourcesChart = None
         self._engagementChart = None
-        self.timespan=90
+        self._tagsChart = None
+        self.timespan=366
 
         self.RESULTS_PER_PAGE = 25
         try:
@@ -38,21 +39,48 @@ class CompanyProfile(SavannahView):
 
     @property
     def all_members(self):
-        return Member.objects.filter(community=self.community, company=self.company).prefetch_related('tags').order_by('-last_seen')
+        members = Member.objects.filter(community=self.community, company=self.company)
+        members = members.prefetch_related('tags')
+        members = members.prefetch_related('collaborations')
+        return members.order_by('-last_seen')
 
     @property
-    def sources_chart(self):
+    def all_notes(self):
+        return Note.objects.filter(member__company=self.company).select_related('member').order_by('-timestamp')
+
+    @property
+    def tagsChart(self):
+        if not self._tagsChart:
+            counts = dict()
+            tags = Tag.objects.filter(community=self.community)
+            convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            convo_filter = convo_filter & Q(conversation__speaker__company=self.company)
+
+            tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
+
+            for t in tags:
+                counts[t] = t.conversation_count
+            self._tagsChart = PieChart("tagsChart", title="Conversation Tags", limit=12)
+            for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                if count > 0:
+                    self._tagsChart.add(tag.name, count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
+
+    @property
+    def sourcesChart(self):
         if not self._sourcesChart:
             counts = dict()
             other_count = 0
-            identity_filter = Q(contact__member__company=self.company)
-            sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact', filter=identity_filter))
-            for source in sources:
-                if source.identity_count == 0:
-                    continue
-                counts[source] = source.identity_count
+            sources = Source.objects.filter(community=self.community)
+            convo_filter = Q(channel__conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            convo_filter = convo_filter & Q(channel__conversation__speaker__company=self.company)
 
-            self._sourcesChart = PieChart("sourcesChart", title="Member Sources", limit=8)
+            sources = sources.annotate(conversation_count=Count('channel__conversation', filter=convo_filter))
+            for s in sources:
+                counts[s] = s.conversation_count
+
+            self._sourcesChart = PieChart("sourcesChart", title="Converation Sources", limit=8)
             for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
                 self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), count)
         self.charts.add(self._sourcesChart)

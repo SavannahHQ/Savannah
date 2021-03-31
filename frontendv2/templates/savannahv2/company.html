@@ -63,9 +63,60 @@
                       </span>
                     </div>
                   </div>
+                  {% if view.all_notes.count > 0 %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Notes</div>
+                    <div class="mb-2 col-lg-10">
+                      {% for note in view.all_notes %}
+                        <div id="id_note_div_{{note.id}}" class="mb-2">
+                        <span class="small font-weight-bold text-nowrap"><a href="{% url 'member_profile' note.member.id %}">{{note.member}}</a> - {{note.timestamp.date}}</span>
+                        <br/>
+                        <span id="id_note_{{note.id}}" data-note_id="{{note.id}}">{{note.content|linebreaksbr}}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
 
                 </div>
                 </div>
+              </div>
+
+              <!-- Content Row -->
+              <div class="row">
+
+                <!-- Tags Chart -->
+                <div class="col-lg-6">
+                  <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                      <h6 class="m-0 font-weight-bold text-primary">{{view.tagsChart.title}}</h6>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                      <div class="chart-area">
+                        <canvas id="{{view.tagsChart.id}}"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sources Chart -->
+                <div class="col-lg-6">
+                  <div class="card shadow mb-4">
+                    <!-- Card Header - Dropdown -->
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                      <h6 class="m-0 font-weight-bold text-primary">{{view.sourcesChart.title}}</h6>
+                    </div>
+                    <!-- Card Body -->
+                    <div class="card-body">
+                      <div class="chart-area">
+                        <canvas id="{{view.sourcesChart.id}}"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
 
               <!-- Content Row -->
@@ -76,7 +127,7 @@
                   <div class="card shadow mb-4">
                     <!-- Card Header - Dropdown -->
                     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                      <h6 class="m-0 font-weight-bold text-primary">Activity</h6>
+                      <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
                     </div>
                     <!-- Card Body -->
                     <div class="card-body">
@@ -89,6 +140,7 @@
 
 
               </div>
+
             </div>
 
             <!-- Contacts List -->
@@ -109,7 +161,7 @@
                       <br/><small class="muted">{{member.first_seen|date|default:''}} - {{member.last_seen|date|default:''}}</small>
                       {% if member.default_level %}
                       <br/>
-                      <a href="{% url 'project_overview' view.community.id view.community.default_project.id %}" title="{{member.default_level.level_name}}">
+                      <a href="{% url 'project_overview' view.community.id member.default_level.project_id %}" title="{{member.default_level.level_name}}">
                       {% if member.default_level.level == member.default_level.CORE %}
                       <img src="{% static 'savannah/progression_core.png' %}" />
                       {% elif member.default_level.level == member.default_level.CONTRIBUTOR %}

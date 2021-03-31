@@ -299,8 +299,11 @@ class Member(TaggableModel):
 
     @property
     def default_level(self):
+        if hasattr(self, '_default_project'):
+            return self._default_project
         try:
-            return MemberLevel.objects.get(community=self.community, member=self, project=self.community.default_project)
+            self._default_project = self.collaborations.get(project__default_project=True)
+            return self._default_project
         except Exception as e:
             return None
 
