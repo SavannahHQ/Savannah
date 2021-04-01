@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         if importer_name == 'all':
             verbosity and print("Importing all sources")
-            sources = Source.objects.filter(community__status=Community.ACTIVE).exclude(connector='corm.plugins.api')
+            sources = Source.objects.filter(community__status=Community.ACTIVE, enabled=True).exclude(connector='corm.plugins.api')
         elif importer_name is not None and importer_name in ConnectionManager.CONNECTOR_IMPORTERS:
             verbosity and print("Importing %s data" % importer_name)
             plugin = ConnectionManager.CONNECTOR_IMPORTERS[importer_name]
@@ -40,6 +40,7 @@ class Command(BaseCommand):
 
         if new_only:
             print("Using new sources only")
+            sources = sources.filter(last_import__isnull=True)
 
         if community_id:
             community = Community.objects.get(id=community_id)
