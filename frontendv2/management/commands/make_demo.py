@@ -46,7 +46,7 @@ class Command(BaseCommand):
         else:
             self.owner = User.objects.filter(is_staff=True).order_by('id')[0]
 
-        self.community = Community.objects.create(id=community_id, name=self.community_name+" Demo", owner=self.owner, status=Community.ACTIVE)
+        self.community = Community.objects.create(id=community_id, name=self.community_name+" Demo", owner=self.owner, status=Community.DEMO)
         self.community.bootstrap()
 
         self.tags, self.tag_weights = self.make_tags()

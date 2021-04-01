@@ -96,6 +96,8 @@
                   <h6 class="m-0 font-weight-bold text-primary">Subscription</h6>
                   {% if view.community.status == view.community.SETUP %}
                   <a class="btn btn-sm btn-success" href="{% url 'billing:signup_org' view.community.id %}"><i class="fas fa-file-invoice"> </i> Signup Now</a>
+                  {% elif view.community.status == view.community.DEMO %}
+                  
                   {% elif view.community.status != view.community.ACTIVE %}
                   <a class="btn btn-sm btn-success" href="{% url 'billing:upgrade' view.community.id %}"><i class="fas fa-file-invoice"> </i> Update Info</a>
                   {% else %}
@@ -111,6 +113,8 @@
                   {% if view.community.management.subscription.cancel_at_period_end %}
                   <div class="text-muted small">Ends: {{view.community.management.subscription.current_period_end|date}}</div>
                   {% endif %}
+                {% elif view.community.status == view.community.DEMO %}
+                <p><b>Plan: </b>Demonstration</p>
                 {% else %}
                 <p><b>Plan: </b>None</p>
                 {% endif %}

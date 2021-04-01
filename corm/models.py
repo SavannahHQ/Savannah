@@ -117,12 +117,50 @@ class NoManagement(ManagementPermissionMixin):
         self.community = community
         self.metadata = metadata
 
+class DemoManagement(ManagementPermissionMixin):
+    def __init__(self, community):
+        self.community = community
+        self.metadata = {}
+
+    @property
+    def name(self):
+        return "Demonstration Plan"
+
+    @property
+    def managers(self):
+        return 0
+
+    @property
+    def sources(self):
+        return 0
+
+    @property
+    def tags(self):
+        return 0
+
+    @property
+    def projects(self):
+        return 0
+
+    @property
+    def import_days(self):
+        return 0
+
+    @property
+    def retention_days(self):
+        return 0
+
+    @property
+    def sales_itegration(self):
+        return False
+
 class Community(models.Model):
     SETUP = 0
     ACTIVE = 1
     SUSPENDED = 2
     DEACTIVE = 3
     ARCHIVED = 4
+    DEMO = 5
 
     STATUS_CHOICES = [
         (SETUP, 'Setup'),
@@ -130,13 +168,15 @@ class Community(models.Model):
         (SUSPENDED, 'Suspended'),
         (DEACTIVE, 'Deactive'),
         (ARCHIVED, 'Archived'),
+        (DEMO, 'Demonstration'),
     ]
     STATUS_NAMES = {
         SETUP: "Setup",
         ACTIVE: "Active",
         SUSPENDED: "Suspended",
         DEACTIVE: "Deactive",
-        ARCHIVED: "Archived"
+        ARCHIVED: "Archived",
+        DEMO: "Demonstration",
     }
     class Meta:
         verbose_name = _("Community")
@@ -161,9 +201,12 @@ class Community(models.Model):
         try:
             return self._management
         except:
-            return NoManagement(community=self, metadata={
-                'name': 'No Plan'
-            })
+            if self.status == self.DEMO:
+                return DemoManagement(community=self)
+            else:
+                return NoManagement(community=self, metadata={
+                    'name': 'No Plan'
+                })
 
     @property
     def email(self):
