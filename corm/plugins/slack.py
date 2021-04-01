@@ -130,7 +130,7 @@ class SlackImporter(PluginImporter):
             'Authorization': 'Bearer %s' % source.auth_secret,
         }
         self._users = dict()
-        self.prefetch_users()
+        self._has_prefetched = False
         self._update_threads = dict()
         self.tag_matcher = re.compile(r'\<\@([^>]+)\>')
 
@@ -138,8 +138,11 @@ class SlackImporter(PluginImporter):
         return self.api_request(path, headers=self.API_HEADERS)
 
     def prefetch_users(self):
+        if self._has_prefetched:
+            return
         cursor = ''
         has_more = True
+        self._has_prefetched = True
         while has_more:
             has_more = False
             resp = self.api_call(USERS_LIST % {'cursor': cursor})
@@ -191,6 +194,8 @@ class SlackImporter(PluginImporter):
         return None
 
     def import_channel(self, channel, from_date, full_import=False):
+        self.prefetch_users()
+
         self._update_threads = dict()
         from_timestamp = from_date.timestamp()
         cursor = ''
