@@ -202,6 +202,23 @@ class PluginImporter:
 
     def add_participants(self, conversation, members, make_connections=True):
         for member in members:
+            try:
+                participant, created = Participant.objects.get_or_create(
+                    community=self.community, 
+                    conversation=conversation,
+                    initiator=conversation.speaker,
+                    member=member,
+                    timestamp=conversation.timestamp
+                )
+                if created and make_connections:
+                    for to_member in members:
+                        if member.id != to_member.id:
+                            member.add_connection(to_member, conversation.timestamp)
+            except:
+                pass
+
+    def make_participant(self, conversation, member):
+        try:
             participant, created = Participant.objects.get_or_create(
                 community=self.community, 
                 conversation=conversation,
@@ -209,23 +226,12 @@ class PluginImporter:
                 member=member,
                 timestamp=conversation.timestamp
             )
-            if created and make_connections:
-                for to_member in members:
-                    if member.id != to_member.id:
-                        member.add_connection(to_member, conversation.timestamp)
-
-    def make_participant(self, conversation, member):
-        participant, created = Participant.objects.get_or_create(
-            community=self.community, 
-            conversation=conversation,
-            initiator=conversation.speaker,
-            member=member,
-            timestamp=conversation.timestamp
-        )
-        if created:
-            if conversation.speaker.id != member.id:
-                member.add_connection(conversation.speaker, conversation.timestamp)
-
+            if created:
+                if conversation.speaker.id != member.id:
+                    member.add_connection(conversation.speaker, conversation.timestamp)
+        except:
+            pass
+        
     def api_request(self, url, headers):
         if self.verbosity:
             print("API Call: %s" % url)
