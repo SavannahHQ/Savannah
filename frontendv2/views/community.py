@@ -22,6 +22,7 @@ class Managers(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "community"
+        self.is_owner = False
 
     def all_managers(self):
         managers = []
@@ -40,8 +41,36 @@ class Managers(SavannahView):
     @login_required
     def as_view(request, community_id):
         view = Managers(request, community_id)
+        view.is_owner = request.user == view.community.owner
+
         if request.method == "POST":
-            pass
+            if 'remove_manager' in request.POST:
+                manager = get_object_or_404(ManagerProfile, id=request.POST.get('remove_manager'))
+                if manager.user == request.user:
+                    return redirect('manager_delete', community_id=community_id)
+                if not view.is_owner:
+                    messages.error(request, "Only the owner of this community can remove managers.")
+                    return render(request, "savannahv2/managers.html", view.context)
+
+                if manager.user == view.community.owner:
+                    messages.error(request, "The owner of this community can not be removed.")
+                    return render(request, "savannahv2/managers.html", view.context)
+                context = view.context
+                context.update({
+                    'object_type':"Manager", 
+                    'object_name': str(manager), 
+                    'object_id': manager.id,
+                    'warning_msg': "This manager will no longer have access to your community.",
+                })
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                manager = get_object_or_404(ManagerProfile, id=request.POST.get('object_id'))
+                view.community.managers.user_set.remove(manager.user)
+                manager_name = str(manager)
+                manager.delete()
+                messages.success(request, "Removed manager: <b>%s</b>" % manager_name)
+
+                return redirect('managers', community_id=community_id)
         return render(request, "savannahv2/managers.html", view.context)
 
 class ManagerInviteForm(forms.Form):

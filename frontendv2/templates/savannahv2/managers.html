@@ -24,13 +24,23 @@
                 </div>
                 <div class="card-body p-0">
                 <div class="table-responsive">
+                <form class="inline-form" action="{% url 'managers' view.community.id %}" method="POST">
+                {% csrf_token %}
                 <table class="table">
                 <thead>
                   <tr>
+                  {% if view.is_owner %}
+                    <th scope="col" width="15%">Username</th>
+                    <th scope="col" width="25%">Name</th>
+                    <th scope="col" width="25%">Email</th>
+                    <th scope="col" width="25%">Last Active</th>
+                    <th scope="col" width="10%">Action</th>
+                  {% else %}
                     <th scope="col" width="25%">Username</th>
                     <th scope="col" width="25%">Name</th>
                     <th scope="col" width="25%">Email</th>
                     <th scope="col" width="25%">Last Active</th>
+                  {% endif %}
                   </tr>
                 </thead>
                 <tbody>
@@ -40,10 +50,14 @@
                   <td>{{manager}}</td>
                   <td>{% if manager.email %}<a href="mailto:{{manager.email}}">{{manager.email}}</a>{% endif %}</td>
                   <td>{{manager.last_seen|default:'-'}}</td>
+                  {% if view.is_owner %}
+                  <td><button class="btn btn-danger btn-sm" type="submit" name="remove_manager" value="{{manager.id}}" title="Remove"><i class="fas fa-trash"> </i></button></td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
+                </form>
                 </div>
                 </div>
               </div>
