@@ -325,6 +325,8 @@ class Command(BaseCommand):
                 )
                 if created:
                     suggestion_count += 1
+                    suggestion.created_at=now
+                    suggestion.save()
 
 
         print("Suggested %s tags" % suggestion_count)
