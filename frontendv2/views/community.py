@@ -30,7 +30,7 @@ class Managers(SavannahView):
             for user in self.community.managers.user_set.all():
                 manager, created = ManagerProfile.objects.get_or_create(community=self.community, user=user)
                 managers.append(manager)
-        return managers
+        return sorted(managers, key=lambda m: m.last_seen or datetime.datetime(1970, 1, 1), reverse=True)
 
     def invitations(self):
         return ManagerInvite.objects.filter(community=self.community)
