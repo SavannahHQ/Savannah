@@ -169,8 +169,7 @@ class Overview(SavannahFilterView):
     @property 
     def conversation_count(self):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
-        if self.tag:
-            conversations = conversations.filter(Q(tags=self.tag)|Q(speaker__tags=self.tag))
+
         if self.member_company:
             conversations = conversations.filter(speaker__company=self.member_company)
         if self.member_tag:
@@ -182,8 +181,7 @@ class Overview(SavannahFilterView):
     @property 
     def contribution_count(self):
         contributions = Contribution.objects.filter(community=self.community)
-        if self.tag:
-            contributions = contributions.filter(tags=self.tag)
+
         if self.member_company:
             contributions = contributions.filter(author__company=self.member_company)
         if self.member_tag:
@@ -195,8 +193,7 @@ class Overview(SavannahFilterView):
     @property 
     def contributor_count(self):
         contributors = Member.objects.filter(community=self.community)
-        if self.tag:
-            contributors = contributors.filter(contribution__tags=self.tag)
+
         if self.member_company:
             contributors = contributors.filter(company=self.member_company)
         if self.member_tag:
@@ -215,10 +212,7 @@ class Overview(SavannahFilterView):
             members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
-        if self.tag:
-            members = members.annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend, participant_in__tags=self.tag)))
-        else:
-            members = members.filter(community=self.community).annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend)))
+        members = members.filter(community=self.community).annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend)))
         members = members.filter(conversation_count__gt=0)
         for m in members:
             activity_counts[m] = m.conversation_count
@@ -235,10 +229,7 @@ class Overview(SavannahFilterView):
             members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
-        if self.tag:
-            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend, connections__tags=self.tag)))
-        else:
-            members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)))
+        members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)))
 
         members = members.filter(connection_count__gt=0)
         connection_counts = dict()
@@ -300,8 +291,7 @@ class Overview(SavannahFilterView):
             counts = dict()
             total = 0
             conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
-            if self.tag:
-                conversations = conversations.filter(tags=self.tag)
+
             if self.member_company:
                 conversations = conversations.filter(speaker__company=self.member_company)
             if self.member_tag:
