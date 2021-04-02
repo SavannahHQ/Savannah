@@ -1094,6 +1094,10 @@ class ManagerProfile(models.Model):
         ordering = ("-last_seen",)
 
     def __str__(self):
+        return self.display_name
+
+    @property
+    def display_name(self):
         try:
             if self.realname:
                 return self.realname

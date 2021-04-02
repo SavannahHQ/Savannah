@@ -30,24 +30,26 @@
                 <thead>
                   <tr>
                   {% if view.is_owner %}
-                    <th scope="col" width="15%">Username</th>
-                    <th scope="col" width="25%">Name</th>
-                    <th scope="col" width="25%">Email</th>
+                    <th scope="col" width="30%">User</th>
+                    <th scope="col" width="30%">Email</th>
                     <th scope="col" width="25%">Last Active</th>
-                    <th scope="col" width="10%">Action</th>
+                    <th scope="col" width="15%">Action</th>
                   {% else %}
-                    <th scope="col" width="25%">Username</th>
-                    <th scope="col" width="25%">Name</th>
-                    <th scope="col" width="25%">Email</th>
-                    <th scope="col" width="25%">Last Active</th>
+                    <th scope="col" width="35%">User</th>
+                    <th scope="col" width="35%">Email</th>
+                    <th scope="col" width="30%">Last Active</th>
                   {% endif %}
                   </tr>
                 </thead>
                 <tbody>
                 {% for manager in view.all_managers %}
                 <tr>
-                  <td>{{manager.user.username}}</td>
-                  <td>{{manager}}</td>
+                  <td>
+                    <span class="text-nowrap">{{manager}}</span>
+                    {% if manager.display_name != manager.user.username %}
+                    <span class="text-nowrap">({{manager.user.username}})</span>
+                    {% endif %}
+                  </td>
                   <td>{% if manager.email %}<a href="mailto:{{manager.email}}">{{manager.email}}</a>{% endif %}</td>
                   <td>{{manager.last_seen|default:'-'}}</td>
                   {% if view.is_owner %}
