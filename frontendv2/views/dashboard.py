@@ -216,7 +216,7 @@ class Overview(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.tag:
-            members = members.annotate(conversation_count=Count('conversation', filter=Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend, conversation__tags=self.tag)))
+            members = members.annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend, participant_in__tags=self.tag)))
         else:
             members = members.filter(community=self.community).annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend)))
         members = members.filter(conversation_count__gt=0)
