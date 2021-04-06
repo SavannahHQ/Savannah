@@ -99,6 +99,8 @@ class GrowthReport(SavannahView):
         previous_activity = 0
         for activity in self.previous_data['member_activity']['active']:
             previous_activity += activity
+        if previous_activity == 0:
+            return 0
         new_activity = 0
         for activity in self.data['member_activity']['active']:
             new_activity += activity
