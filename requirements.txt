@@ -6,7 +6,7 @@ botocore==1.17.0
 certifi==2019.11.28
 chardet==3.0.4
 dj-stripe==2.3.0
-Django==3.0.7
+Django==3.0.14
 django-appconf==1.0.4
 django-crispy-forms==1.9.1
 django-debug-toolbar==2.2
