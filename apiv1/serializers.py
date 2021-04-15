@@ -77,7 +77,10 @@ class ImportedModelRelatedField(serializers.Field):
                 self.corm_source = getattr(instance, self.source_from).source
         else:
             self.corm_source = getattr(instance, self.source).source
-        return getattr(instance, self.source)
+        try:
+            return getattr(instance, self.source)
+        except:
+            return None
 
     def to_representation(self, value):
         if self.related_field:
