@@ -52,7 +52,11 @@ class TagsField(serializers.Field):
         return value
 
     def to_internal_value(self, data):
-        return data
+        if isinstance(data, str):
+            return [data]
+        if isinstance(data, list):
+            return data
+        raise serializers.ValidationError('Invalid value for %s. Must be an array or string' % self.source)
 
 class ImportedModelRelatedField(serializers.Field):
     def __init__(self, model, source_from=None, related_field=None, many=False, *args, **kwargs):
