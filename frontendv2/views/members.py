@@ -4,7 +4,7 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
-from django.db.models.functions import Trunc
+from django.db.models.functions import Trunc, Lower
 from django import forms
 from django.http import JsonResponse
 from django.contrib import messages
@@ -201,7 +201,12 @@ class AllMembers(SavannahFilterView):
 
         if self.timespan < 365:
             members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
-        members = members.order_by(self.sort_by)
+        if self.sort_by == 'name':
+            members = members.order_by(Lower('name'))
+        elif self.sort_by == '-name':
+            members = members.order_by(Lower('name').desc())
+        else:
+            members = members.order_by(self.sort_by)
 
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
@@ -599,7 +604,7 @@ class MemberEditForm(forms.ModelForm):
         }
 
     def limit_to(self, community):
-        self.fields['company'].widget.choices = [('', '-----')] + [(company.id, company.name) for company in Company.objects.filter(community=community).order_by('name')]
+        self.fields['company'].widget.choices = [('', '-----')] + [(company.id, company.name) for company in Company.objects.filter(community=community).order_by(Lower('name'))]
 
 
 class MemberEdit(SavannahView):
@@ -756,14 +761,17 @@ class MemberAdd(SavannahView):
         super().__init__(request, community_id)
         self.active_tab = "members"
         self.edit_member = Member(community_id=community_id, first_seen=datetime.datetime.utcnow(), last_seen=datetime.datetime.utcnow())
-
+        self._edit_member_form = None
     @property
     def form(self):
-        if self.request.method == 'POST':
-            return MemberEditForm(instance=self.edit_member, data=self.request.POST)
-        else:
-            return MemberEditForm(instance=self.edit_member)
-
+        if self._edit_member_form is None:
+            if self.request.method == 'POST':
+                self._edit_member_form = MemberEditForm(instance=self.edit_member, data=self.request.POST)
+            else:
+                self._edit_member_form = MemberEditForm(instance=self.edit_member)
+            self._edit_member_form.limit_to(self.community)
+        return self._edit_member_form
+        
     @login_required
     def as_view(request, community_id):
         view = MemberAdd(request, community_id)

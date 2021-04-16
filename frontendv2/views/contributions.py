@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max, Min
+from django.db.models.functions import Lower
 from django.utils.safestring import mark_safe
 
 from corm.models import *
@@ -395,7 +396,12 @@ class Contributors(SavannahFilterView):
         members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))
         members = members.annotate(contrib_count=Count('contribution', filter=contrib_range_filter))
         members = members.prefetch_related('tags')
-        members = members.order_by(self.sort_by)
+        if self.sort_by == 'name':
+            members = members.order_by(Lower('name'))
+        elif self.sort_by == '-name':
+            members = members.order_by(Lower('name').desc())
+        else:
+            members = members.order_by(self.sort_by)
         
         return members
 

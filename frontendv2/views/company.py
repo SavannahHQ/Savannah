@@ -4,7 +4,7 @@ import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max, Min
-from django.db.models.functions import Trunc
+from django.db.models.functions import Trunc, Lower
 
 from django.contrib import messages
 from django import forms
@@ -216,7 +216,7 @@ class Companies(SavannahFilterView):
         if self.tag:
             companies = companies.filter(tag=self.tag)
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
-        return companies.order_by('name')
+        return companies.order_by(Lower('name'))
 
     def members_chart(self):
         if not self._membersChart:
