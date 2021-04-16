@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit
+from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit, ManagerTasksCalendar
 from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
@@ -46,6 +46,7 @@ urlpatterns = [
     path('dashboard/<int:community_id>/', ManagerDashboard.as_view, name='dashboard'),
     path('dashboard/<int:community_id>/task/<int:task_id>/', ManagerTaskEdit.as_view, name='manager_task_edit'),
     path('dashboard/<int:community_id>/task/done', ManagerTaskEdit.mark_task_done, name='manager_task_done'),
+    path('manager/<str:secret_key>/savannah_tasks.ical', ManagerTasksCalendar(), name='manager_task_ical'),
     path('dashboard/<int:community_id>/gift/received', ManagerDashboard.mark_gift_received, name='manager_gift_received'),
     path('overview/<int:community_id>/', Overview.as_view, name='overview'),
     path('members/<int:community_id>/', Members.as_view, name='members'),

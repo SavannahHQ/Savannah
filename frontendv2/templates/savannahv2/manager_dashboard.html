@@ -20,6 +20,7 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks"></i> Open Tasks</h6>
+                  <a title="Add to Calendar" href="{% url 'manager_task_ical' view.manager_profile.secret_key %}"><i class="fas fa-calendar-alt"></i></a>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body p-0">

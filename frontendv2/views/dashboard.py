@@ -12,6 +12,42 @@ from frontendv2.views import SavannahFilterView, SavannahView
 from frontendv2.views.projects import TaskForm
 from frontendv2.views.charts import FunnelChart
 
+from django_ical.views import ICalFeed
+
+class AbstractTaskCalendarFeed(ICalFeed):
+    def item_guid(self, task):
+        return "task-%s@%s" % (task.id, settings.SITE_DOMAIN)
+
+    def item_link(self, task):
+        return reverse('manager_task_edit', kwargs={'community_id':task.community.id, 'task_id':task.id})
+
+    def item_title(self, task):
+        return task.name
+
+    def item_description(self, task):
+        return task.detail
+
+    def item_start_datetime(self, task):
+        return task.due
+
+    def __call__(self, request, *args, **kwargs):
+        response = ICalFeed.__call__(self, request, *args, **kwargs)
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
+
+
+class ManagerTasksCalendar(AbstractTaskCalendarFeed):
+    timezone = "UTC"
+    file_name = "savannah-tasks.ics"
+
+    def get_object(self, request, secret_key):
+        return ManagerProfile.objects.get(secret_key=secret_key)
+
+    def items(self, profile):
+        return Task.objects.filter(
+            owner=profile.user, done__isnull=True
+        ).order_by("-due")
+
 class ManagerDashboard(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)

@@ -1089,6 +1089,7 @@ class ManagerProfile(models.Model):
     send_notifications = models.BooleanField(
         verbose_name=_("Send emails"), default=True
     )
+    secret_key = models.UUIDField(default=uuid.uuid4, editable=True)
 
     class Meta:
         ordering = ("-last_seen",)
