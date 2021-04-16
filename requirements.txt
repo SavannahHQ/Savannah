@@ -9,7 +9,7 @@ dj-stripe==2.3.0
 Django==3.0.7
 django-appconf==1.0.4
 django-crispy-forms==1.9.1
-django-debug-toolbar==2.2
+django-debug-toolbar==2.2.1
 django-imagekit==4.0.2
 django-imagekit-cropper==1.16
 django-model-utils==4.0.0
