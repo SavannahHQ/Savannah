@@ -222,7 +222,7 @@ class Companies(SavannahFilterView):
 
     def assignment_chart(self):
         if not self._assignmentChart:
-            members = Member.objects.filter(community=self.community)
+            members = Member.objects.filter(community=self.community, first_seen__lte=self.rangeend, last_seen__gte=self.rangestart)
             if self.tag:
                 members = members.filter(tag=self.tag)
 
