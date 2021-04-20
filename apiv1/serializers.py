@@ -94,6 +94,8 @@ class ImportedModelRelatedField(serializers.Field):
                     return obj.origin_id
             except self.model.DoesNotExist:
                 return None
+            except self.model.MultipleObjectsReturned:
+                return self.model.objects.filter(**lookup)[0].origin_id
         if self.many:
             return [child.origin_id for child in value.all()]
         return value.origin_id
@@ -149,7 +151,7 @@ class IdentitySerializer(serializers.Serializer):
             member.tags.add(tag)
 
         update_source(source)
-        return Contact.objects.get(source=source, member=member)
+        return Contact.objects.get(source=source, member=member, origin_id=self.validated_data.get('origin_id'))
 
 class ZapierIdentitySerializer(serializers.Serializer):
     id = ZapierIDField(id_field='origin_id', tstamp_field='member__first_seen')
