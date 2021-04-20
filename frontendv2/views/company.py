@@ -14,6 +14,7 @@ from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import PieChart, ChartColors
+from frontendv2 import colors
 
 class CompanyProfile(SavannahView):
     def __init__(self, request, company_id):
@@ -185,6 +186,7 @@ class Companies(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "company"
+        self._assignmentChart = None
         self._membersChart = None
         self._conversationsChart = None
         self._contributionsChart = None
@@ -217,6 +219,21 @@ class Companies(SavannahFilterView):
             companies = companies.filter(tag=self.tag)
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
         return companies.order_by(Lower('name'))
+
+    def assignment_chart(self):
+        if not self._assignmentChart:
+            members = Member.objects.filter(community=self.community)
+            if self.tag:
+                members = members.filter(tag=self.tag)
+
+            chart_colors = ChartColors()
+            self._assignmentChart = PieChart("assignmentChart", title="Members by Association")
+            self._assignmentChart.set_show_legend(True)
+            self._assignmentChart.add("Company", members.filter(company__isnull=False, company__is_staff=False).count(), data_color=colors.MEMBER.COMMUNITY)
+            self._assignmentChart.add("Staff", members.filter(company__isnull=False, company__is_staff=True).count(), data_color=colors.MEMBER.STAFF)
+            self._assignmentChart.add("Unknown", members.filter(company__isnull=True).count(), data_color=colors.MEMBER.BOT)
+        self.charts.add(self._assignmentChart)
+        return self._assignmentChart
 
     def members_chart(self):
         if not self._membersChart:

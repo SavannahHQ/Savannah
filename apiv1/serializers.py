@@ -265,6 +265,7 @@ class ContributionSerializer(serializers.Serializer):
 
     location = serializers.URLField(required=False, allow_null=True)
     conversation = ImportedModelRelatedField(Conversation, source_from='channel', required=False, allow_null=True)
+    tags = TagsField(required=False)
 
     def save(self, source):
         # Get or create speaker Member and Contact
@@ -304,6 +305,12 @@ class ContributionSerializer(serializers.Serializer):
                 'conversation':conversation
             }
         )
+
+        for tag_name in self.validated_data.get('tags', []):
+            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={
+                'color': 'E5E6E8'
+            })
+            contrib.tags.add(tag)
 
         update_channel(channel)
         return contrib
