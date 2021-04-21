@@ -279,7 +279,7 @@ class Command(BaseCommand):
         stop_words = text.ENGLISH_STOP_WORDS.union(list(used_keywords))
 
         try:
-            cv = CountVectorizer(max_df=0.10,stop_words=stop_words,max_features=10000)
+            cv = CountVectorizer(max_df=0.25,stop_words=stop_words,max_features=10000)
             word_count_vector = cv.fit_transform(tagged)
             transformer = TfidfTransformer(smooth_idf=True,use_idf=True)
             transformer.fit(word_count_vector)
@@ -311,7 +311,7 @@ class Command(BaseCommand):
             print("\n===Tag Words===")
         for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True)[:25]:
             percent = 100 * v / convo_count
-            if percent >= 0.25:
+            if percent >= 0.5:
                 if self.verbosity >= 3:
                     print("%s (%0.2f%%)" % (k, percent))
                 suggestion, created = SuggestTag.objects.get_or_create(
