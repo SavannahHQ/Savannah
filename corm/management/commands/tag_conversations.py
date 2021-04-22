@@ -40,5 +40,6 @@ class Command(BaseCommand):
                   if tag.id not in tagged:
                     #print("Tagging \"%s\" with %s because of %s" % (convo, tag.name, keyword))
                     convo.tags.add(tag)
+                    convo.activity.tags.add(tag)
                     tagged.add(tag.id)
           page += 1

@@ -13,7 +13,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
       for community in Community.objects.all():
-        print("Tagging conversations in  %s" % community.name)
+        print("Tagging contributions in  %s" % community.name)
         keywords = dict()
         for tag in community.tag_set.filter(keywords__isnull=False):
           for word in tag.keywords.split(","):
@@ -24,9 +24,13 @@ class Command(BaseCommand):
         #print("Found %s keywords" % len(keywords))
 
         for contrib in Contribution.objects.filter(community=community):
-          if contrib.conversation is not None and contrib.conversation.tags.count() > 0:
-            #print("Tagging: %s" % contrib)
-            contrib.tags.set(contrib.conversation.tags.all())
+          try:
+            if contrib.conversation.tags.count() > 0:
+              #print("Tagging: %s" % contrib)
+              contrib.tags.set(contrib.conversation.tags.all())
+              contrib.activity.tags.add(*contrib.conversation.tags.all())
+          except:
+            pass
           text = " "+contrib.title.lower().translate(table)+" "
           tagged = set()
           for keyword in keywords:
@@ -34,4 +38,5 @@ class Command(BaseCommand):
               for tag in keywords[keyword]:
                 if tag.id not in tagged:
                   contrib.tags.add(tag)
+                  contrib.activity.tags.add(tag)
                   tagged.add(tag.id)

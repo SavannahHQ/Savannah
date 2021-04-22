@@ -261,11 +261,12 @@ class GithubImporter(PluginImporter):
                     issue_body = issue['body']
                     if issue_body is not None:
                         issue_body = issue_body.replace("\x00", "\uFFFD")
-                    convo, created = Conversation.objects.update_or_create(origin_id=github_convo_link, channel__source=source, defaults={'channel':channel, 'speaker':member, 'content':issue_body, 'timestamp':tstamp, 'location':issue['html_url']})
+                    convo = self.make_conversation(origin_id=github_convo_link, channel=channel, speaker=member, content=issue_body, tstamp=tstamp, location=issue['html_url'])
                     conversations.add(convo)
                     # Pull Requests are Contributions
                     if 'pull_request' in issue:
                         contrib, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
+                        contrib.update_activity(convo.activity)
                         # Not all comments should get the channel tag, but all PRs should
                         if channel.tag:
                             contrib.tags.add(channel.tag)
@@ -286,7 +287,7 @@ class GithubImporter(PluginImporter):
                             comment_body = comment['body']
                             if comment_body is not None:
                                 comment_body = comment_body.replace("\x00", "\uFFFD")
-                            comment_convo, created = Conversation.objects.update_or_create(origin_id=comment['url'], defaults={'channel':channel, 'speaker':comment_member, 'content':comment_body, 'timestamp':comment_tstamp, 'location':comment['html_url'], 'thread_start':convo})
+                            comment_convo = self.make_conversation(origin_id=comment['url'], channel=channel, speaker=comment_member, content=comment_body, tstamp=comment_tstamp, location=comment['html_url'], thread=convo)
                             participants.add(comment_member)
                             conversations.add(comment_convo)
                             tagged = set(tag_matcher.findall(comment['body']))

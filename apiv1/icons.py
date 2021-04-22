@@ -1,3 +1,18 @@
+generic_icons = [
+    'calendar',
+    'archive',
+    'book',
+    'building',
+    'cloud',
+    'envelope',
+    'file',
+    'globe',
+    'rss',
+    'shopping-cart',
+    'users',
+    'video',
+]
+
 brand_icons = [
     '500px',
     'accessible-icon',

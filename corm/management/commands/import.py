@@ -16,6 +16,7 @@ class Command(BaseCommand):
         parser.add_argument('--source', dest='source_id', type=int)
         parser.add_argument('--full', dest='full_import', action='store_true', help='Do a full import, not incremental from the previous import')
         parser.add_argument('--new', dest='new_only', action='store_true', help='Import only from new sources')
+        parser.add_argument('--debug', dest='debug', action='store_true', help='Enter debugger on errors')
 
     def handle(self, *args, **options):
 
@@ -25,6 +26,7 @@ class Command(BaseCommand):
         source_id = options.get('source_id')
         full_import = options.get('full_import')
         new_only = options.get('new_only')
+        debug = options.get('debug')
 
         if importer_name == 'all':
             verbosity and print("Importing all sources")
@@ -57,6 +59,7 @@ class Command(BaseCommand):
                 plugin = ConnectionManager.CONNECTOR_PLUGINS[source.connector]
                 importer = plugin.get_source_importer(source)
                 importer.verbosity = verbosity
+                importer.debug = debug
                 importer.full_import = full_import
             except Exception as e:
                 print("Failed to import Source %s: %s" % (source, e))

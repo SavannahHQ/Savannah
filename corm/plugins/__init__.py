@@ -4,7 +4,7 @@ import subprocess
 import requests
 from importlib import import_module
 from time import sleep
-from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile
+from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile, Event, EventAttendee
 from corm.connectors import ConnectionManager
 from corm.email import EmailMessage
 from django.conf import settings
@@ -78,6 +78,7 @@ class PluginImporter:
         self.source = source
         self.community = source.community
         self.verbosity = 0
+        self.debug = False
         self._first_import = False
         self._full_import = False
         self._member_cache = dict()
@@ -100,7 +101,7 @@ class PluginImporter:
     def set_first_import(self, val=None):
         self._first_import = val
     first_import = property(get_first_import, set_first_import)
-        
+
     def make_member(self, origin_id, detail, tstamp=None, channel=None, email_address=None, avatar_url=None, name=None, speaker=False, replace_first_seen=False):
         save_member = False
         if origin_id in self._member_cache:
@@ -114,9 +115,8 @@ class PluginImporter:
                 if first_seen is None:
                     first_seen = datetime.datetime.utcnow()
                 member = Member.objects.create(community=self.community, name=name, first_seen=first_seen, last_seen=None)
-                contact, created = Contact.objects.get_or_create(origin_id=origin_id, source=self.source, defaults={'member':member, 'detail':detail})
-                if created:
-                    self.update_identity(contact)
+                contact = Contact.objects.create(origin_id=origin_id, source=self.source, member=member, detail=detail, name=name, email_address=email_address, avatar_url=avatar_url)
+                self.update_identity(contact)
             else:
                 matched_contact = contact_matches[0]
                 if detail:
@@ -193,6 +193,7 @@ class PluginImporter:
             except:
                 pass
         convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'speaker':speaker, 'content':content, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        convo.update_activity()
         if content is not None:
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
@@ -231,7 +232,45 @@ class PluginImporter:
                     member.add_connection(conversation.speaker, conversation.timestamp)
         except:
             pass
-        
+
+    def make_event(self, origin_id, channel, title, description, start, end, location=None, dedup=False):
+        if dedup:
+            try:
+                return Event.objects.filter(origin_id=origin_id, channel__source__community=self.community)[0]
+            except:
+                pass
+        event, created = Event.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, defaults={'channel':channel, 'title':title, 'description':description, 'start_timestamp':start, 'end_timestamp':end, 'location':location})
+        return event
+
+    def add_event_attendees(self, event, members, make_connections=False):
+        for member in members:
+            try:
+                attendee, created = EventAttendee.objects.get_or_create(
+                    community=self.community, 
+                    event=event,
+                    member=member,
+                    timestamp=event.start_timestamp
+                )
+                attendee.update_activity()
+                tstamp = event.start_timestamp
+                save_member = False
+                if tstamp is not None:
+                    if member.first_seen is None or tstamp < member.first_seen:
+                        member.first_seen = tstamp
+                        save_member = True
+                    if member.last_seen is None or tstamp > member.last_seen:
+                        member.last_seen = tstamp
+                        save_member = True
+                if save_member:
+                    member.save()
+
+                if created and make_connections:
+                    for to_member in members:
+                        if member.id != to_member.id:
+                            member.add_connection(to_member, event.start_timestamp)
+            except:
+                pass
+
     def api_request(self, url, headers):
         if self.verbosity:
             print("API Call: %s" % url)
@@ -343,6 +382,9 @@ class PluginImporter:
                 )
                 if self.verbosity:
                     print("Failed to import %s: %s" %(channel.name, e))
+                if self.debug:
+                    # Drop into PDB to debug the import exception
+                    import pdb; pdb.post_mortem()
             if self.full_import:
                 sleep(5)
         self.source.last_import = datetime.datetime.utcnow()

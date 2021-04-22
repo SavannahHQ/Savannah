@@ -12,11 +12,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from corm.models import Source, Channel, Member, Contact, Conversation, Contribution
+from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, Event
 from frontendv2.views import SavannahView
 
-from .serializers import SourceSerializer, IdentitySerializer, ConversationSerializer, ContributionSerializer, ZapierIdentitySerializer
-from .icons import brand_icons
+from .serializers import SourceSerializer, IdentitySerializer, ConversationSerializer, ContributionSerializer, ZapierIdentitySerializer, EventSerializer, EventAttendeeSerializer
+from .icons import generic_icons, brand_icons
 
 # Create your views here.
 class APISourceForm(forms.ModelForm):
@@ -47,9 +47,11 @@ class SourceAdd(SavannahView):
                 messages.success(request, 'Your API Integration source has been created. You can <a href="https://docs.savannahhq.com/api/" target="savannah_docs">start using it</a> with the authentication token below.')
                 return redirect('channels', community_id=view.community.id, source_id=source.id)
 
-        icon_choices = [('fas fa-cogs', 'Custom Integration')]
-        for brand in brand_icons:
-            icon_choices.append(('fab fa-%s' % brand, brand.title()))
+        icon_choices = [
+            ('fas fa-cogs', 'Custom Integration'),
+            ('Generic Icons', [('fas fa-%s' % icon, icon.title()) for icon in generic_icons]),
+            ('Brand Icons', [('fas fa-%s' % icon, icon.title()) for icon in brand_icons]),
+        ]
 
         form = APISourceForm(instance=new_source)
         form.fields['icon_name'].widget.choices = icon_choices
@@ -190,3 +192,41 @@ class ContributionsList(SavannahIntegrationView):
             contrib = serializer.save(source=request.source)
             return Response(ContributionSerializer(contrib).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class EventsList(SavannahIntegrationView):
+    """
+    Create new Event records
+    """
+
+    def get(self, request, format=None):
+        events = Event.objects.filter(source=request.source)
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = EventSerializer(data=request.data)
+        if serializer.is_valid():
+            event = serializer.save(source=request.source)
+            return Response(EventSerializer(event).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class EventAttendeesList(SavannahIntegrationView):
+    """
+    Create new Event records
+    """
+
+    def get(self, request, event_id, format=None):
+        event = Event.objects.get(source=request.source, origin_id=event_id)
+        contacts = Contact.objects.filter(source=request.source, member__event_attendance__event=event)
+        contacts = contacts.select_related('member').prefetch_related('member__tags')
+        serializer = EventAttendeeSerializer(contacts, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, event_id, format=None):
+        event = Event.objects.get(source=request.source, origin_id=event_id)
+        serializer = EventAttendeeSerializer(data=request.data)
+        if serializer.is_valid():
+            attendee_contact = serializer.save(source=request.source, event=event)
+            return Response(EventAttendeeSerializer(attendee_contact).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

@@ -207,3 +207,4 @@ class RssImporter(PluginImporter):
             if channel.tag:
                 contrib.tags.add(channel.tag)
                 convo.tags.add(channel.tag)
+        contrib.update_activity(convo.activity)

@@ -3,7 +3,7 @@ import hashlib
 from collections import OrderedDict
 from rest_framework import serializers
 
-from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType, Tag
+from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType, Tag, Event
 from corm.plugins import PluginImporter
 from django.db import models
 
@@ -17,11 +17,9 @@ def update_channel(channel):
     update_source(channel.source)
 
 def django_field_value(instance, field_name):
-    print("Looking up %s in %s" % (field_name, instance))
     field_stack = field_name.split('__')
     for field_name in field_stack[:-1]:
         instance = getattr(instance, field_name)
-    print("Returning %s from %s" % (field_stack[-1], instance))
     return getattr(instance, field_stack[-1])
 
 class SourceSerializer(serializers.Serializer):
@@ -317,3 +315,62 @@ class ContributionSerializer(serializers.Serializer):
         update_channel(channel)
         return contrib
 
+class EventSerializer(serializers.Serializer):
+    origin_id = serializers.CharField(max_length=256)
+    channel = ImportedModelRelatedField(model=Channel)
+    start_timestamp = serializers.DateTimeField()
+    end_timestamp = serializers.DateTimeField()
+    title = serializers.CharField()
+    description = serializers.CharField(required=False, allow_null=True)
+    location = serializers.URLField(required=False, allow_null=True)
+    attendees = ImportedModelRelatedField(model=Contact, related_field='member', source_from='self', many=True, required=False)
+    tag = serializers.CharField(required=False, allow_null=True, source="tag.name")
+
+    def save(self, source):
+        # Get or create speaker Member and Contact
+        importer = PluginImporter(source)
+        # Get or create Channel
+        channel = get_or_create_channel(origin_id=self.validated_data.get('channel'), source=source)
+
+        event = importer.make_event(
+            origin_id=self.validated_data.get('origin_id'), 
+            title=self.validated_data.get('title'),
+            description=self.validated_data.get('description'),
+            channel=channel,
+            start=self.validated_data.get('start_timestamp'), 
+            end=self.validated_data.get('end_timestamp'), 
+            location=self.validated_data.get('location'),
+        )
+
+        tag = None
+        tag_data = self.validated_data.get('tag', None)
+        if tag_data:
+            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_data['name'], defaults={
+                'color': 'E5E6E8'
+            })
+            event.tag = tag
+            event.save()
+
+        attendees = set()
+        for attendee_origin_id in self.validated_data.get('attendees', []):
+            attendee = importer.make_member(
+                origin_id=attendee_origin_id, 
+                detail=attendee_origin_id,
+                tstamp=self.validated_data.get('timestamp'), 
+                )
+            attendees.add(attendee)
+        importer.add_event_attendees(event, attendees)
+
+        update_channel(channel)
+        return event
+
+class EventAttendeeSerializer(IdentitySerializer):
+    
+    def save(self, source, event):
+        importer = PluginImporter(source)
+
+        # Save identity using parent class, then add them as an attendee        
+        new_contact = super().save(source)
+        importer.add_event_attendees(event, [new_contact.member])
+
+        return new_contact

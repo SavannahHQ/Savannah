@@ -266,6 +266,19 @@ class ContactAdmin(admin.ModelAdmin):
 
 admin.site.register(Contact, ContactAdmin)
 
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ("short_description", "member", "channel", "timestamp", "link")
+    list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
+    search_fields = ("short_description","long_description")
+    raw_id_fields = ('member', 'conversation', 'contribution', 'event_attendance')
+    def link(self, conversation):
+        if conversation.location is not None:
+            return mark_safe("<a href=\"%s\">Open</a>" % conversation.location)
+        else:
+            return ""
+    link.short_description = "Location"
+admin.site.register(Activity, ActivityAdmin)
+
 class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
@@ -337,9 +350,16 @@ class PromotionAdmin(admin.ModelAdmin):
 admin.site.register(Promotion, PromotionAdmin)
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "channel", "start_timestamp", "end_timestamp", "tag")
+    list_display = ("title", "source", "channel", "start_timestamp", "end_timestamp", "tag")
     list_filter = ("source__connector", "community", "start_timestamp")
+    raw_id_fields = ("source", "channel")
 admin.site.register(Event, EventAdmin)
+
+class EventAttendeeAdmin(admin.ModelAdmin):
+    list_display = ("member", "event", "community", "timestamp")
+    list_filter = ("event__source__connector", "community", "timestamp")
+    raw_id_fields = ("member",)
+admin.site.register(EventAttendee, EventAttendeeAdmin)
 
 class NoteAdmin(admin.ModelAdmin):
     list_display = ("__str__", "member", "author", "timestamp")

@@ -336,11 +336,11 @@ class MemberActivity(SavannahView):
         
     @property
     def all_activity(self):
-        conversations = Conversation.objects.filter(channel__source__community=self.member.community, speaker=self.member)
-        self.result_count = conversations.count()
-        conversations = conversations.annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
+        activity = Activity.objects.filter(channel__source__community=self.member.community, member=self.member)
+        self.result_count = activity.count()
+        activity = activity.annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
         start = (self.page-1) * self.RESULTS_PER_PAGE
-        return conversations[start:start+self.RESULTS_PER_PAGE]
+        return activity[start:start+self.RESULTS_PER_PAGE]
 
     @property
     def page_start(self):

@@ -87,27 +87,23 @@
                 <div class="card-body p-0">
 
                 <div class="container-fluid p-3">
-                {% for convo in view.all_activity %}
+                {% for activity in view.all_activity %}
                 <div class="row">
                   <div class="col-10">
-                    {% if convo.contribution %}<i class="fas fa-shield-alt mr-1" title="Contribution"> </i>{% else %}<i class="fas fa-comments mr-1" title="Conversation"> </i>{% endif %}
-                  <b>{% if convo.contribution %}{{convo.contribution.contribution_type.name}}{% else %}Commented{% endif %}</b>
-                  in <a class="pr-2" target="_blank" href="{{convo.location|default:"#"}}"><i class="{{convo.channel_icon}}"></i> {{convo.channel_name}}</a>
-                    {% if convo.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=convo.tags.all %}{% endif %}
+                    <i class="{{activity.icon_name}} mr-1" > </i>
+                  <b>{{activity.short_description}}</b>
+                  in <a class="pr-2" target="_blank" href="{{activity.location|default:"#"}}"><i class="{{activity.channel_icon}}"></i> {{activity.channel_name}}</a>
+                    {% if activity.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=activity.tags.all %}{% endif %}
                   </div>
-                  <div class="col-2 text-right">{{convo.timestamp|date}}</div>
+                  <div class="col-2 text-right">{{activity.timestamp|date}}</div>
                 </div>
                 <div class="row mb-4">
                   <div class="col-10 pl-5">
-                    {% if convo.contribution %}
-                    <span title="{{convo.contribution.title}}">{{ convo.contribution.title }}</span>
-                    {% else %}
-                    <span style="white-space: pre-wrap;">{{ convo.brief }}</span>
-                    {% endif %}
+                    <span style="white-space: pre-wrap;">{{ activity.long_description }}</span>
                   </div>
                   <div class="col-2 text-right">
-                  {% if convo.participants.all.count > 0 %}
-                    {% for participant in convo.participants.all %}
+                  {% if activity.participants.all.count > 0 %}
+                    {% for participant in activity.participants.all %}
                       {% if participant.id != view.member.id %}
                         <a href="{% url 'member_profile' participant.id %}">{{participant.name}}</a><br/>
                       {% endif %}

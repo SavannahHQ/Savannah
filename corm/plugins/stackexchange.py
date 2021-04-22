@@ -352,8 +352,7 @@ class StackExchangeImporter(PluginImporter):
                                 contrib.tags.add(channel.tag)
                                 answer_convo.tags.add(channel.tag)
                             # Make contrib
-                            answer_convo.contribution = contrib
-                            answer_convo.save()
+                            contrib.update_activity(answer_convo.activity)
                             pass
 
                     if answer_data.get('has_more', False):

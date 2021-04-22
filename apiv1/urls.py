@@ -26,4 +26,6 @@ urlpatterns = [
     path('identity/<str:origin_id>/', views.IdentityDetail.as_view()),
     path('conversation/', views.ConversationsList.as_view()),
     path('contribution/', views.ContributionsList.as_view()),
+    path('event/', views.EventsList.as_view()),
+    path('event/<str:event_id>/attendee/', views.EventAttendeesList.as_view()),
 ]

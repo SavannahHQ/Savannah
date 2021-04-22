@@ -138,7 +138,7 @@ class Command(BaseCommand):
             print("%s has no #greeting tag" % community)
 
         # From Chat-style sources
-        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit'))
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss'))
         convos = convos.filter(channel__source__in=chat_sources)
 
         # Involving only the speaker and one other participant
@@ -146,7 +146,7 @@ class Command(BaseCommand):
         convos = convos.select_related('channel').order_by('channel', '-timestamp')
 
         print("%s potential support contributions in %s" % (convos.count(), community))
-        positive_words = ('!', ':)', 'smile', 'smiling', 'fixed', 'solved', 'helped', 'worked', 'wasn\'t working', 'answer')
+        positive_words = ('!', ':)', 'smile', 'smiling', 'fixed', 'solved', 'helped', 'worked', 'wasn\'t working', 'answer', 'answered')
         negative_words = ('?', ':(', 'sad', 'frown', 'broken', 'fail', 'help me', 'helpful', 'error', 'not working', 'isn\t working', 'question', 'please', 'welcome', 'but')
         last_helped = None
         last_channel = None
@@ -167,7 +167,7 @@ class Command(BaseCommand):
                 score -= 1
             for word in positive_words:
                 if word in content:
-                    score += 1
+                    score += 2
             for word in negative_words:
                 if word in content:
                     score -= 1
@@ -284,6 +284,7 @@ class Command(BaseCommand):
             transformer = TfidfTransformer(smooth_idf=True,use_idf=True)
             transformer.fit(word_count_vector)
         except ValueError:
+            print("Not enough content to suggest tags")
             # Not enough content
             return
 

@@ -422,6 +422,7 @@ class Member(TaggableModel):
         Note.objects.filter(member=other_member).update(member=self)
         MemberConnection.objects.filter(from_member=other_member).update(from_member=self)
         MemberConnection.objects.filter(to_member=other_member).update(to_member=self)
+        Activity.objects.filter(member=other_member).update(member=self)
         Conversation.objects.filter(speaker=other_member).update(speaker=self)
         Contribution.objects.filter(author=other_member).update(author=self)
         Gift.objects.filter(member=other_member).update(member=self)
@@ -480,8 +481,10 @@ class MemberMergeRecord(models.Model):
             'tags': [tag.id for tag in member.tags.all()],
             'notes': [note.id for note in Note.objects.filter(member=member)],
             'gifts': [gift.id for gift in Gift.objects.filter(member=member)],
+            'activity': [c.id for c in Activity.objects.filter(member=member)],
             'conversations': [c.id for c in Conversation.objects.filter(speaker=member)],
             'contributions': [c.id for c in Contribution.objects.filter(author=member)],
+            'event_attendance': [c.id for c in EventAttendee.objects.filter(member=member)],
             'watches': [w.id for w in MemberWatch.objects.filter(member=member)],
             'tasks': [t.id for t in Task.objects.filter(stakeholders=member)],
             'levels': dict([(level.project_id, (level.level, level.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'))) for level in MemberLevel.objects.filter(member=member)])
@@ -523,8 +526,10 @@ class MemberMergeRecord(models.Model):
         Contact.objects.filter(id__in=removed.get('identities', [])).update(member=member)
         Note.objects.filter(id__in=removed.get('notes', [])).update(member=member)
         Gift.objects.filter(id__in=removed.get('gifts', [])).update(member=member)
+        Activity.objects.filter(id__in=removed.get('activity', [])).update(member=member)
         Conversation.objects.filter(id__in=removed.get('conversations', [])).update(speaker=member)
         Contribution.objects.filter(id__in=removed.get('contributions', [])).update(author=member)
+        EventAttendee.objects.filter(id__in=removed.get('event_attendance', [])).update(member=member)
 
         member.tags.set(Tag.objects.filter(id__in=removed.get('tags', [])).all())
 
@@ -546,7 +551,8 @@ class MemberMergeRecord(models.Model):
             original_first_seen = datetime.datetime.strptime(original.get('first_seen'), '%Y-%m-%dT%H:%M:%S.%f')
             original_last_seen = datetime.datetime.strptime(original.get('last_seen'), '%Y-%m-%dT%H:%M:%S.%f')
             removed_first_seen = datetime.datetime.strptime(removed.get('first_seen'), '%Y-%m-%dT%H:%M:%S.%f')
-            removed_last_seen = datetime.datetime.strptime(removed.get('last_seen'), '%Y-%m-%dT%H:%M:%S.%f')
+            if removed.get('last_seen'):
+                removed_last_seen = datetime.datetime.strptime(removed.get('last_seen'), '%Y-%m-%dT%H:%M:%S.%f')
 
             if original.get('name') != self.merged_with.name and removed.get('name') == self.merged_with.name:
                 self.merged_with.name = original.get('name')
@@ -710,6 +716,30 @@ class Participant(models.Model):
     initiator = models.ForeignKey(Member, related_name='initiator_of', on_delete=models.SET_NULL, null=True)
     timestamp = models.DateTimeField(db_index=True)
 
+class Activity(TaggableModel):
+    class Meta:
+        ordering = ("-timestamp",)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, related_name='activity', on_delete=models.SET_NULL, null=True, blank=True)
+    timestamp = models.DateTimeField(db_index=True)
+    icon_name = models.CharField(max_length=256, null=True, blank=True)
+    short_description = models.CharField(max_length=256)
+    long_description = models.CharField(max_length=256)
+    location = models.URLField(max_length=512, null=True, blank=True)
+
+    conversation = models.OneToOneField("Conversation", null=True, blank=True, on_delete=models.CASCADE)
+    contribution = models.OneToOneField("Contribution", null=True, blank=True, on_delete=models.CASCADE)
+    event_attendance = models.OneToOneField("EventAttendee", null=True, blank=True, on_delete=models.CASCADE)
+
+    @property
+    def participants(self):
+        if self.conversation:
+            return Member.objects.filter(participant_in__conversation=self.conversation)
+        else:
+            return Member.objects.none()
+        
+
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)
@@ -743,6 +773,30 @@ class Conversation(TaggableModel, ImportedDataModel):
             return content
         return ""
 
+    def update_activity(self, from_activity=None):
+        if from_activity:
+            try :
+                from_activity.conversation = self
+                from_activity.save()
+            except:
+                # Contribution already has an activity
+                pass        
+        activity, created = Activity.objects.get_or_create(
+            conversation=self,
+            defaults = {
+                'channel':self.channel,
+                'member':self.speaker,
+                'timestamp':self.timestamp,
+                'icon_name':'fas fa-comments',
+                'short_description':'Commented',
+                'long_description':self.brief,
+                'location':self.location
+            }
+        )
+        if self.tags:
+            activity.tags.add(*self.tags.all())
+        return activity
+        
     def __str__(self):
         if self.content is not None:
             content = self.content.strip()
@@ -863,6 +917,30 @@ class Contribution(TaggableModel, ImportedDataModel):
     author = models.ForeignKey(Member, on_delete=models.SET_NULL, null=True)
     location = models.URLField(max_length=512, null=True, blank=True)
 
+    def update_activity(self, from_activity=None):
+        if from_activity:
+            try :
+                from_activity.contribution = self
+                from_activity.save()
+            except:
+                # Contribution already has an activity
+                pass
+        activity, created = Activity.objects.update_or_create(
+            contribution=self,
+            defaults = {
+                'channel':self.channel,
+                'member':self.author,
+                'timestamp':self.timestamp,
+                'icon_name':'fas fa-shield-alt',
+                'short_description':self.contribution_type.name,
+                'long_description':self.title,
+                'location':self.location
+            }
+        )
+        if self.tags:
+            activity.tags.add(*self.tags.all())
+        return activity
+        
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
 
@@ -879,6 +957,7 @@ class Promotion(TaggableModel, ImportedDataModel):
     content = models.TextField(null=True, blank=True)
     promoters = models.ManyToManyField(Member)
     conversation = models.ForeignKey(Conversation, on_delete=models.SET_NULL, null=True, blank=True)
+    impact = models.IntegerField(default=0, null=False, blank=False)
 
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
@@ -897,9 +976,48 @@ class Event(ImportedDataModel):
     location = models.URLField(max_length=512, null=True, blank=True)
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     promotions = models.ManyToManyField(Promotion, blank=True)
+    impact = models.IntegerField(default=0, null=False, blank=False)
+
+    @property
+    def attendees(self):
+        return Member.objects.filter(event_attendance__event=self)
 
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
+
+class EventAttendee(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, related_name="rsvp", on_delete=models.CASCADE)
+    member = models.ForeignKey(Member, related_name='event_attendance', on_delete=models.CASCADE)
+    timestamp = models.DateTimeField()
+
+    def update_activity(self, from_activity=None):
+        if from_activity:
+            try :
+                from_activity.event_attendance = self
+                from_activity.save()
+            except:
+                # Contribution already has an activity
+                pass        
+        activity, created = Activity.objects.get_or_create(
+            event_attendance=self,
+            defaults = {
+                'channel':self.event.channel,
+                'member':self.member,
+                'timestamp':self.timestamp,
+                'icon_name':'fas fa-calendar-alt',
+                'short_description':'Attended Event',
+                'long_description':self.event.title,
+                'location':self.event.location
+            }
+        )
+        if self.event.tag:
+            activity.tags.add(self.event.tag)
+        return activity
+
+    def __str__(self):
+        return "%s at %s" % (self.member, self.event)
 
 class Note(TaggableModel):
     class Meta:
@@ -1014,6 +1132,7 @@ class SuggestConversationTag(Suggestion):
 
     def accept_action(self, user):
         self.target_conversation.tags.add(self.suggested_tag)
+        self.target_conversation.activity.tags.add(self.suggested_tag)
 
 class SuggestConversationAsContribution(Suggestion):
     class Meta:
@@ -1040,8 +1159,7 @@ class SuggestConversationAsContribution(Suggestion):
             )
             if self.conversation.channel.tag is not None:
                 contrib.tags.add(self.conversation.channel.tag)
-            self.conversation.contribution = contrib
-            self.conversation.save()
+            contrib.update_activity()
         self.delete()
         return False
 
