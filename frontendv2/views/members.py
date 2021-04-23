@@ -60,7 +60,7 @@ class Members(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
             
-        members = members.annotate(last_active=Max('speaker_in__timestamp', filter=Q(speaker_in__timestamp__isnull=False)))
+        members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__isnull=False)))
         members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
         actives = dict()
         for m in members:
@@ -93,7 +93,7 @@ class Members(SavannahFilterView):
                     months.append(month)
                 counts[month] = m['member_count']
 
-            active = members.annotate(month=Trunc('speaker_in__timestamp', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+            active = members.annotate(month=Trunc('activity__timestamp', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for a in active:
                 if a['month'] is not None:
                     month = self.trunc_date(a['month'])
