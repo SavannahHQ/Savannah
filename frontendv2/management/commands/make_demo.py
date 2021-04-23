@@ -7,6 +7,7 @@ import names
 import lorem
 import math, random
 from django.contrib.auth.models import User, Group
+from django.db.models import Min
 from corm.models import *
 
 class Command(BaseCommand):
@@ -391,3 +392,6 @@ class Command(BaseCommand):
                 contribution.tags.set(convo.tags.all())
                 contribution.update_activity(convo.activity)
 
+        for from_member in self.members:
+            from_member.first_seen = from_member.activity.all().aggregate(first=Min('timestamp'))['first']
+            from_member.save()
