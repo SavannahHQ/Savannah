@@ -356,6 +356,8 @@ class Command(BaseCommand):
                         tag_counts[convo_tag] += 1
                     else:
                         tag_counts[convo_tag] = 1
+                conversation.update_activity()
+
             for tag, count in tag_counts.items():
                 if tag.name in ('greeting', 'thankful'):
                     continue
@@ -371,10 +373,10 @@ class Command(BaseCommand):
                 contribution_date = datetime.datetime.utcnow() - datetime.timedelta(days=random.randrange(1, self.max_history_days))
                 contribution_channel = random.choice(github.channel_set.all())
                 contribution = Contribution.objects.create(community=self.community, contribution_type=pr, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=contribution_date)
-
                 feature_tag = random.choices(self.tags, cum_weights=self.tag_weights, k=1)[0]
                 if feature_tag:
                     contribution.tags.add(feature_tag)
+                contribution.update_activity()
 
         slack = self.community.source_set.get(connector="corm.plugins.slack")
         support, created = ContributionType.objects.get_or_create(community=self.community, source=slack, name="Support")
@@ -387,6 +389,5 @@ class Command(BaseCommand):
                 contribution_title = "Helped in %s" % contribution_channel.name
                 contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
                 contribution.tags.set(convo.tags.all())
-                convo.contribution = contribution
-                convo.save()
+                contribution.update_activity(convo.activity)
 
