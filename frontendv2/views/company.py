@@ -224,7 +224,7 @@ class Companies(SavannahFilterView):
         if not self._assignmentChart:
             members = Member.objects.filter(community=self.community, first_seen__lte=self.rangeend, last_seen__gte=self.rangestart)
             if self.tag:
-                members = members.filter(tag=self.tag)
+                members = members.filter(tags=self.tag)
 
             chart_colors = ChartColors()
             self._assignmentChart = PieChart("assignmentChart", title="Members by Association")
