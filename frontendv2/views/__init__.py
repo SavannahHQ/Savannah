@@ -302,7 +302,7 @@ class SavannahFilterView(SavannahView):
                     self.source = Source.objects.get(community=self.community, id=request.GET.get('source'))
                     request.session['source'] = request.GET.get('source')
             elif 'source' in request.session:
-                self.source = Source.objects.get(community=self.community, id=request.GET.get('source'))
+                self.source = Source.objects.get(community=self.community, id=request.session.get('source'))
         except:
             self.source = None
             request.session['source'] = None
