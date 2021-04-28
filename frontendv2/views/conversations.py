@@ -50,6 +50,9 @@ class Conversations(SavannahFilterView):
     def all_conversations(self):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
         conversations = conversations.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+        if self.source:
+            conversations = conversations.filter(channel__source=self.source)
+
         if self.tag:
             conversations = conversations.filter(tags=self.tag)
 
@@ -106,6 +109,8 @@ class Conversations(SavannahFilterView):
     def getResponseTimes(self):
         if not self._responseTimes:
             replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+            if self.source:
+                replies = replies.filter(channel__source=self.source)
             if self.tag:
                 replies = replies.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
 
@@ -155,6 +160,9 @@ class Conversations(SavannahFilterView):
             counts = dict()
 
             conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+            if self.source:
+                conversations = conversations.filter(channel__source=self.source)
+
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
 
@@ -198,6 +206,8 @@ class Conversations(SavannahFilterView):
             counts = dict()
             channels = Channel.objects.filter(source__community=self.community)
             convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
+            if self.source:
+                channels = channels.filter(source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.member_company:
@@ -227,6 +237,8 @@ class Conversations(SavannahFilterView):
             counts = dict()
             tags = Tag.objects.filter(community=self.community)
             convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
+            if self.source:
+                convo_filter = convo_filter & Q(conversation__channel__source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.member_company:
@@ -259,6 +271,8 @@ class Conversations(SavannahFilterView):
             }
             members = Member.objects.filter(community=self.community)
             convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
+            if self.source:
+                convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
             if self.member_company:
@@ -288,6 +302,8 @@ class Conversations(SavannahFilterView):
         activity_counts = dict()
         members = Member.objects.filter(community=self.community)
         convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
+        if self.source:
+            convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.member_company:
@@ -308,6 +324,8 @@ class Conversations(SavannahFilterView):
             return []
         members = Member.objects.filter(community=self.community)
         connection_filter = Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)
+        if self.source:
+            members = members.filter(contact__source=self.source)
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.member_company:
