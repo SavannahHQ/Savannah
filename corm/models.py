@@ -1278,7 +1278,7 @@ class Company(models.Model):
     def set_tag_by_name(self, tag_id):
         if tag_id == '':
             self.set_tag(None)
-        elif tag_id != self.tag.id:
+        elif self.tag is None or tag_id != self.tag.id:
             new_tag = Tag.objects.get(community=self.community, id=tag_id)
             self.set_tag(new_tag)
 
