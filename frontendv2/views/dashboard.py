@@ -18,6 +18,9 @@ class ManagerTasksCalendar(AbstractTaskCalendarFeed):
     timezone = "UTC"
     file_name = "savannah-tasks.ics"
 
+    def title(self, profile):
+        return "%s Community Tasks" % profile.community.name
+
     def get_object(self, request, secret_key):
         return ManagerProfile.objects.get(secret_key=secret_key)
 
