@@ -23,7 +23,7 @@ class ManagerTasksCalendar(AbstractTaskCalendarFeed):
 
     def items(self, profile):
         return Task.objects.filter(
-            owner=profile.user, done__isnull=True
+            community=profile.community, owner=profile.user, done__isnull=True
         ).order_by("-due")
 
 class ManagerDashboard(SavannahView):
