@@ -177,16 +177,13 @@ class Members(SavannahFilterView):
                 members = members.filter(role=self.role)
                 
             members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
-            print("Members: %s" % members.count())
 
             daily_active = members.annotate(day=Trunc('activity__timestamp', 'day')).values('day').annotate(member_count=Count('id', distinct=True)).order_by('day')
-            print("Daily Active: %s" % daily_active)
             daily = daily_active.aggregate(avg=Avg('member_count'))
-            print("Daily: %s" % daily)
+
             monthly_active = members.annotate(month=Trunc('activity__timestamp', 'month')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
-            print("Monthly Active: %s" % monthly_active)
             monthly = monthly_active.aggregate(avg=Avg('member_count'))
-            print("Monthly: %s" % monthly)
+
             if monthly['avg'] and monthly['avg'] > 0:
                 self._dauPercent = 100 * (daily['avg'] / monthly['avg'])
             else:
