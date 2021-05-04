@@ -252,7 +252,7 @@ class Members(SavannahFilterView):
         if not self._tagsChart:
             counts = dict()
             tags = Tag.objects.filter(community=self.community)
-            member_filter = Q(member__activity__timestamp__gte=self.rangestart, member__activity__timestamp__lte=self.rangeend)
+            member_filter = Q(member__community=self.community, member__activity__timestamp__gte=self.rangestart, member__activity__timestamp__lte=self.rangeend)
             if self.member_company:
                 member_filter = member_filter & Q(member__company=self.member_company)
             if self.member_tag:
