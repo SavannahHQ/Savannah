@@ -3,7 +3,7 @@ from functools import reduce
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, Avg
 from django.db.models.functions import Trunc, Lower
 from django import forms
 from django.http import JsonResponse
@@ -14,6 +14,7 @@ from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import PieChart
 from savannah.utils import safe_int
+from frontendv2 import colors as savannah_colors
 
 class Members(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -22,6 +23,9 @@ class Members(SavannahFilterView):
         self._membersChart = None
         self._tagsChart = None
         self._sourcesChart = None
+        self._tagsChart = None
+        self._rolesChart = None
+        self._dauPercent = None
 
     def suggestion_count(self):
         return SuggestMemberMerge.objects.filter(community=self.community, status__isnull=True).count()
@@ -48,6 +52,8 @@ class Members(SavannahFilterView):
         if self.role:
             members = members.filter(role=self.role)
         members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
+        members = members.prefetch_related('tags')
+
         return members.order_by("-first_seen")[:10]
 
     @property
@@ -62,13 +68,9 @@ class Members(SavannahFilterView):
             
         members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__isnull=False)))
         members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
-        actives = dict()
-        for m in members:
-            if m.last_active is not None:
-                actives[m] = m.last_active
-        recently_active = [(member, tstamp) for member, tstamp in sorted(actives.items(), key=operator.itemgetter(1), reverse=True)]
-        
-        return recently_active[:10]
+        members = members.prefetch_related('tags')
+ 
+        return members.order_by('-last_active')[:10]
 
     def getMembersChart(self):
         if not self._membersChart:
@@ -131,6 +133,66 @@ class Members(SavannahFilterView):
             data.append(returned)
         return data
 
+    @property 
+    def member_count(self):
+        members = self.community.member_set.all()
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            members = members.filter(role=self.role)
+
+        members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
+        return members.count()
+
+    @property
+    def conversations_per_member(self):
+        members = self.community.member_set.all()
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            members = members.filter(role=self.role)
+
+        members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
+        member_count = members.count()
+
+        convo_count = Conversation.objects.filter(speaker__in=members, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend).count()
+        if member_count > 0:
+            return convo_count / member_count
+        else:
+            return 0
+
+    @property
+    def dau_to_mau(self):
+        if not self._dauPercent:
+            members = Member.objects.filter(community=self.community)
+            if self.member_company:
+                members = members.filter(company=self.member_company)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
+            if self.role:
+                members = members.filter(role=self.role)
+                
+            members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
+            print("Members: %s" % members.count())
+
+            daily_active = members.annotate(day=Trunc('activity__timestamp', 'day')).values('day').annotate(member_count=Count('id', distinct=True)).order_by('day')
+            print("Daily Active: %s" % daily_active)
+            daily = daily_active.aggregate(avg=Avg('member_count'))
+            print("Daily: %s" % daily)
+            monthly_active = members.annotate(month=Trunc('activity__timestamp', 'month')).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
+            print("Monthly Active: %s" % monthly_active)
+            monthly = monthly_active.aggregate(avg=Avg('member_count'))
+            print("Monthly: %s" % monthly)
+            if monthly['avg'] and monthly['avg'] > 0:
+                self._dauPercent = 100 * (daily['avg'] / monthly['avg'])
+            else:
+                self._dauPercent = 0
+        return self._dauPercent
+
     def sources_chart(self):
         if not self._sourcesChart:
             counts = dict()
@@ -150,9 +212,67 @@ class Members(SavannahFilterView):
 
             self._sourcesChart = PieChart("sourcesChart", title="Member Sources", limit=8)
             for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
-                self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), count)
+                if source.connector == 'corm.plugins.api':
+                    self._sourcesChart.add("%s (API)" % source.name, count)
+                elif Source.objects.filter(community=self.community, connector=source.connector).count() == 1:
+                    self._sourcesChart.add(ConnectionManager.display_name(source.connector), count)
+                else:
+                    self._sourcesChart.add("%s (%s)" % (ConnectionManager.display_name(source.connector), source.name), count)
         self.charts.add(self._sourcesChart)
         return self._sourcesChart
+
+    def rolesChart(self):
+        if not self._rolesChart:
+            counts = dict()
+            colors = {
+                Member.COMMUNITY: savannah_colors.MEMBER.COMMUNITY,
+                Member.STAFF: savannah_colors.MEMBER.STAFF,
+                Member.BOT: savannah_colors.MEMBER.BOT
+            }
+            members = Member.objects.filter(community=self.community)
+
+            if self.member_company:
+                members = members.filter(company=self.member_company)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
+            if self.role:
+                members = members.filter(role=self.role)
+
+            members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
+
+            for m in members:
+                if m.role in counts:
+                    counts[m.role] += 1
+                else:
+                    counts[m.role] = 1
+            self._rolesChart = PieChart("rolesChart", title="Members by Role")
+            for role, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._rolesChart.add(Member.ROLE_NAME[role], count, colors[role])
+        self.charts.add(self._rolesChart)
+        return self._rolesChart
+
+    def tagsChart(self):
+        if not self._tagsChart:
+            counts = dict()
+            tags = Tag.objects.filter(community=self.community)
+            member_filter = Q(member__activity__timestamp__gte=self.rangestart, member__activity__timestamp__lte=self.rangeend)
+            if self.member_company:
+                member_filter = member_filter & Q(member__company=self.member_company)
+            if self.member_tag:
+                member_filter = member_filter & Q(member__tags=self.member_tag)
+            if self.role:
+                member_filter = member_filter & Q(member__role=self.role)
+
+            tags = tags.annotate(member_count=Count('member', filter=member_filter))
+
+            for t in tags:
+                counts[t] = t.member_count
+            self._tagsChart = PieChart("tagsChart", title="Members by Tag", limit=12)
+            for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                if count > 0:
+                    self._tagsChart.add(tag.name, count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
 
     @login_required
     def as_view(request, community_id):

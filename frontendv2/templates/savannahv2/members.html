@@ -1,5 +1,6 @@
 {% extends "savannahv2/base.html"%}
 {% load static %}
+{% load humanize %}
 
 {% block page_title %} | {{view.community.name}} Members{% endblock %}
 
@@ -24,7 +25,7 @@
           <div class="row">
 
             <!-- Area Chart -->
-            <div class="col-xl-8 col-lg-7">
+            <div class="col-xl-9 col-lg-8">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-left">
@@ -45,6 +46,62 @@
             </div>
 
             <!-- Pie Chart -->
+            <div class="col-xl-3 col-lg-4">
+
+            <!-- Count cards -->
+
+            <!-- Members Card -->
+              <div class="card border-left-member shadow py-2 mb-3">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">Active Members</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.member_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+            <!-- Activity/Member Card -->
+              <div class="card border-left-conversation shadow py-2 mb-3">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">Conversations / Member</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.conversations_per_member|floatformat:2}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-comments fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            <!-- DAU/MAU Card -->
+              <div class="card border-left-activity shadow py-2 mb-3">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">DAU / MAU</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.dau_to_mau|floatformat:2}}%</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+         <!-- Piecharts Row -->
+          <div class="row">
+
             <div class="col-xl-4 col-lg-5">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
@@ -59,6 +116,37 @@
                 </div>
               </div>
             </div>
+
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.tagsChart.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.tagsChart.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.rolesChart.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.rolesChart.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
          <!-- Content Row -->
@@ -113,13 +201,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for member, date in view.recently_active %}
+                {% for member in view.recently_active %}
                 <tr>
                   <td>
                     <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td>{{date}}</td>
+                  <td>{{member.last_active}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
