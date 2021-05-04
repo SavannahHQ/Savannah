@@ -261,13 +261,11 @@ class Members(SavannahFilterView):
                 member_filter = member_filter & Q(member__role=self.role)
 
             tags = tags.annotate(member_count=Count('member', filter=member_filter))
+            tags = tags.filter(member_count__gt=0).order_by('-member_count')
 
-            for t in tags:
-                counts[t] = t.member_count
             self._tagsChart = PieChart("tagsChart", title="Members by Tag", limit=12)
-            for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
-                if count > 0:
-                    self._tagsChart.add(tag.name, count, tag.color)
+            for tag in tags:
+                self._tagsChart.add(tag.name, tag.member_count, tag.color)
         self.charts.add(self._tagsChart)
         return self._tagsChart
 
