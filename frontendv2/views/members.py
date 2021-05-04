@@ -210,7 +210,7 @@ class Members(SavannahFilterView):
             self._sourcesChart = PieChart("sourcesChart", title="Member Sources", limit=8)
             for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
                 if source.connector == 'corm.plugins.api':
-                    self._sourcesChart.add("%s (API)" % source.name, count)
+                    self._sourcesChart.add(source.name, count)
                 elif Source.objects.filter(community=self.community, connector=source.connector).count() == 1:
                     self._sourcesChart.add(ConnectionManager.display_name(source.connector), count)
                 else:
