@@ -38,7 +38,10 @@ class Members(SavannahFilterView):
         if self.member_tag:
             members =members.filter(tags=self.member_tag)
         if self.role:
-            members =members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         return members
 
@@ -50,7 +53,10 @@ class Members(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
         members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
         members = members.prefetch_related('tags')
 
@@ -64,7 +70,10 @@ class Members(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
             
         members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__isnull=False)))
         members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
@@ -84,7 +93,10 @@ class Members(SavannahFilterView):
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
             if self.role:
-                members = members.filter(role=self.role)
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)
 
             seen = members.annotate(month=Trunc('first_seen', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for m in seen:
@@ -141,7 +153,10 @@ class Members(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
         return members.count()
@@ -154,7 +169,10 @@ class Members(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
         member_count = members.count()
@@ -174,7 +192,10 @@ class Members(SavannahFilterView):
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
             if self.role:
-                members = members.filter(role=self.role)
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)
             if self.source:
                 members = members.filter(contact__source=self.source)
                 
@@ -202,7 +223,10 @@ class Members(SavannahFilterView):
             if self.member_tag:
                 identity_filter = identity_filter & Q(contact__member__tags=self.member_tag)
             if self.role:
-                identity_filter = identity_filter & Q(contact__member__role=self.role)
+                if self.role == Member.BOT:
+                    identity_filter = identity_filter & ~Q(contact__member__role=self.role)
+                else:
+                    identity_filter = identity_filter & Q(contact__member__role=self.role)
             if self.source:
                 identity_filter = identity_filter & Q(contact__source=self.source)
             sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact', filter=identity_filter))
@@ -237,7 +261,10 @@ class Members(SavannahFilterView):
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
             if self.role:
-                members = members.filter(role=self.role)
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)
 
             members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
 
@@ -262,7 +289,10 @@ class Members(SavannahFilterView):
             if self.member_tag:
                 member_filter = member_filter & Q(member__tags=self.member_tag)
             if self.role:
-                member_filter = member_filter & Q(member__role=self.role)
+                if self.role == Member.BOT:
+                    member_filter = member_filter & ~Q(member__role=self.role)
+                else:
+                    member_filter = member_filter & Q(member__role=self.role)
 
             tags = tags.annotate(member_count=Count('member', distinct=True, filter=member_filter))
             tags = tags.filter(member_count__gt=0).order_by('-member_count')
@@ -316,7 +346,10 @@ class AllMembers(SavannahFilterView):
             members = members.filter(tags=self.member_tag)
 
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         if self.timespan < 365:
             members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
@@ -502,7 +535,10 @@ class MemberActivity(SavannahView):
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
             if self.role:
-                conversations = conversations.filter(speaker__role=self.role)
+                if self.role == Member.BOT:
+                    conversations = conversations.exclude(speaker__role=self.role)
+                else:
+                    conversations = conversations.filter(speaker__role=self.role)
 
             conversations = conversations.order_by("timestamp")
             for c in conversations:
@@ -516,7 +552,10 @@ class MemberActivity(SavannahView):
             if self.tag:
                 activity = activity.filter(tags=self.tag)
             if self.role:
-                activity = activity.filter(author__role=self.role)
+                if self.role == Member.BOT:
+                    activity = activity.exclude(author__role=self.role)
+                else:
+                    activity = activity.filter(author__role=self.role)
 
             activity = activity.order_by("timestamp")
 
@@ -564,7 +603,10 @@ class MemberActivity(SavannahView):
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.role:
-                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
+                if self.role == Member.BOT:
+                    convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
+                else:
+                    convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
 
             channels = channels.annotate(conversation_count=Count('conversation', filter=convo_filter))
             channels = channels.annotate(source_icon=F('source__icon_name'), source_connector=F('source__connector'), color=F('tag__color'))

@@ -63,7 +63,10 @@ class Conversations(SavannahFilterView):
             conversations = conversations.filter(speaker__tags=self.member_tag)
 
         if self.role:
-            conversations = conversations.filter(speaker__role=self.role)
+            if self.role == Member.BOT:
+                conversations = conversations.exclude(speaker__role=self.role)
+            else:
+                conversations = conversations.filter(speaker__role=self.role)
 
         if self.conversation_search:
             conversations = conversations.filter(content__icontains=self.conversation_search)
@@ -121,7 +124,10 @@ class Conversations(SavannahFilterView):
                 replies = replies.filter(replies__speaker__tags=self.member_tag)
 
             if self.role:
-                replies = replies.filter(replies__speaker__role=self.role)
+                if self.role == Member.BOT:
+                    replies = replies.exclude(replies__speaker__role=self.role)
+                else:
+                    replies = replies.filter(replies__speaker__role=self.role)
 
             if self.conversation_search:
                 replies = replies.filter(Q(content__icontains=self.conversation_search) | Q(replies__content__icontains=self.conversation_search))
@@ -173,7 +179,10 @@ class Conversations(SavannahFilterView):
                 conversations = conversations.filter(speaker__tags=self.member_tag)
 
             if self.role:
-                conversations = conversations.filter(speaker__role=self.role)
+                if self.role == Member.BOT:
+                    conversations = conversations.exclude(speaker__role=self.role)
+                else:
+                    conversations = conversations.filter(speaker__role=self.role)
 
             if self.conversation_search:
                 conversations = conversations.filter(content__icontains=self.conversation_search)
@@ -215,7 +224,10 @@ class Conversations(SavannahFilterView):
             if self.member_tag:
                 convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
             if self.role:
-                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
+                if self.role == Member.BOT:
+                    convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
+                else:
+                    convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
             if self.conversation_search:
                 convo_filter = convo_filter & Q(conversation__content__icontains=self.conversation_search)
 
@@ -246,7 +258,10 @@ class Conversations(SavannahFilterView):
             if self.member_tag:
                 convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
             if self.role:
-                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
+                if self.role == Member.BOT:
+                    convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
+                else:
+                    convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
             if self.conversation_search:
                 convo_filter = convo_filter & Q(conversation__content__icontains=self.conversation_search)
 
@@ -280,7 +295,10 @@ class Conversations(SavannahFilterView):
             if self.member_tag:
                 members = members.filter(tags=self.member_tag)
             if self.role:
-                members = members.filter(role=self.role)
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)
             if self.conversation_search:
                 convo_filter = convo_filter & Q(speaker_in__content__icontains=self.conversation_search)
             #convo_filter = convo_filter & Q(speaker_in__speaker_id=F('id'))
@@ -311,7 +329,10 @@ class Conversations(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
         if self.conversation_search:
             convo_filter = convo_filter & Q(speaker_in__content__icontains=self.conversation_search)
 
@@ -333,7 +354,10 @@ class Conversations(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
         members = members.annotate(connection_count=Count('connections', filter=connection_filter)).filter(connection_count__gt=0).prefetch_related('tags').order_by('-connection_count')
         return members[:20]
 

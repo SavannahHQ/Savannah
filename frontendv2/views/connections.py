@@ -35,7 +35,10 @@ class Connections(SavannahFilterView):
             if self.member_tag:
                 connections = connections.filter(Q(from_member__tags=self.member_tag)|Q(to_member__tags=self.member_tag))
             if self.role:
-                connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
+                if self.role == Member.BOT:
+                    connections = connections.exclude(Q(from_member__role=self.role)|Q(from_member__role=self.role))
+                else:
+                    connections = connections.filter(Q(from_member__role=self.role)&Q(from_member__role=self.role))
 
 
             counts['prev'] = connections.filter(first_connected__lt=self.rangestart).count()
@@ -77,7 +80,10 @@ class Connections(SavannahFilterView):
             if self.member_tag:
                 participants = participants.filter(Q(initiator__tags=self.member_tag)|Q(initiator__tags=self.member_tag))
             if self.role:
-                participants = participants.filter(Q(initiator__role=self.role)&Q(initiator__role=self.role))
+                if self.role == Member.BOT:
+                    participants = participants.exclude(Q(initiator__role=self.role))
+                else:
+                    participants = participants.filter(Q(initiator__role=self.role))
 
             participants = participants.annotate(source_connector=F('conversation__channel__source__connector')).values('source_connector')
             participants = participants.annotate(connection_count=Count('conversation', distinct=True)).order_by('-connection_count')
@@ -113,7 +119,10 @@ class Connections(SavannahFilterView):
         if view.member_tag:
             connections = connections.filter(Q(to_member__tags=view.member_tag)|Q(from_member__tags=view.member_tag))
         if view.role:
-            connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
+            if self.role == Member.BOT:
+                connections = connections.exclude(Q(to_member__role=view.role)|Q(from_member__role=view.role))
+            else:
+                connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
         connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected')
 
         for connection in connections:

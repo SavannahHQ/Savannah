@@ -41,7 +41,7 @@
           <!-- Member -->
             <span class="dropdown">
             {% if view.role or view.member_tag or view.member_company %}
-                <button class="btn {% if view.member_tag %}{% else %}btn-secondary{% endif %} dropdown-toggle" {% if view.member_tag %}style="white-space:nowrap; background-color: #{{view.member_tag.color}};"{% endif %} type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span {% if view.member_tag %}style="color: #{{view.member_tag.color}}aa" class="tag-text"{% endif %}><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% elif view.role == "bot" %}fas fa-robot{% elif view.member_company %}fas fa-building{% else %}fas fa-users{% endif %}"></i> {% if view.member_company %}{{view.member_company.name}}{% elif view.member_tag %}{{view.member_tag.name}}{% elif view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% elif view.role == "bot" %}Bots{% else %}Members{% endif %}</span></button>
+                <button class="btn {% if view.member_tag %}{% else %}btn-secondary{% endif %} dropdown-toggle" {% if view.member_tag %}style="white-space:nowrap; background-color: #{{view.member_tag.color}};"{% endif %} type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span {% if view.member_tag %}style="color: #{{view.member_tag.color}}aa" class="tag-text"{% endif %}><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% elif view.role == "bot" %}fas fa-ban{% elif view.member_company %}fas fa-building{% else %}fas fa-users{% endif %}"></i> {% if view.member_company %}{{view.member_company.name}}{% elif view.member_tag %}{{view.member_tag.name}}{% elif view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% elif view.role == "bot" %}Bots{% else %}Members{% endif %}</span></button>
             {% else %}
                 <button class="btn btn-light text-muted dropdown-toggle" type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-users"></i> Members</button>
             {% endif %}
@@ -51,16 +51,16 @@
 
                 <li class="dropdown-submenu pull-left">
                   {% if view.role %}
-                    <a class="bg-secondary text-light dropdown-item dropend p-2" href="#"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-robot{% endif %}"></i> {% if view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% else %}Bots{% endif %}</a>
+                    <a class="bg-secondary text-light dropdown-item dropend p-2" href="#"><i class="{% if view.role == "community"%}fas fa-user{% elif view.role == "staff" %}fas fa-user-tie{% else %}fas fa-ban{% endif %}"></i> {% if view.role == "community"%}Community{% elif view.role == "staff" %}Staff{% else %}Bots{% endif %}</a>
                   {% else %}
                     <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-users"></i> Roles</a>
                   {% endif %}
                   <ul class="dropdown-menu" >
                     <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role="><i class="fas fa-users"></i> All Roles</a></li>
                     <li class="dropdown-divider p-0"></li>
-                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=community"><i class="fas fa-user"></i> Community</a></li>
-                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=staff"><i class="fas fa-user-tie"></i> Staff</a></li>
-                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=bot"><i class="fas fa-robot"></i> Bots</a></li>
+                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=community"><i class="fas fa-user"></i> Community Only</a></li>
+                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=staff"><i class="fas fa-user-tie"></i> Staff Only</a></li>
+                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=bot"><i class="fas fa-ban"></i> Exclude Bots</a></li>
                   </ul>
                 </li>
 

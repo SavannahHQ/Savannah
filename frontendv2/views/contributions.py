@@ -60,7 +60,10 @@ class Contributions(SavannahFilterView):
             contributions = contributions.filter(author__tags=self.member_tag)
 
         if self.role:
-            contributions = contributions.filter(author__role=self.role)
+            if self.role == Member.BOT:
+                contributions = contributions.exclude(author__role=self.role)
+            else:
+                contributions = contributions.filter(author__role=self.role)
 
         if self.source:
             contributions = contributions.filter(channel__source=self.source)
@@ -119,7 +122,10 @@ class Contributions(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
         members = members.filter(first_contrib__gte=self.rangestart, first_contrib__lte=self.rangeend)
@@ -148,7 +154,10 @@ class Contributions(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         members = members.annotate(last_active=Max('contribution__timestamp', filter=contrib_filter)).filter(last_active__isnull=False).prefetch_related('tags')
         actives = dict()
@@ -176,7 +185,10 @@ class Contributions(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         members = members.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0).prefetch_related('tags')
         for m in members:
@@ -204,7 +216,10 @@ class Contributions(SavannahFilterView):
         if self.member_tag:
             contributors = contributors.filter(tags=self.member_tag)
         if self.role:
-            contributors = contributors.filter(role=self.role)
+            if self.role == Member.BOT:
+                contributors = contributors.exclude(role=self.role)
+            else:
+                contributors = contributors.filter(role=self.role)
 
         contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter))
         contributors = contributors.filter(contribution_count__gt=0).order_by('-contribution_count')
@@ -239,7 +254,10 @@ class Contributions(SavannahFilterView):
         if self.member_tag:
             contributors = contributors.filter(tags=self.member_tag)
         if self.role:
-            contributors = contributors.filter(role=self.role)
+            if self.role == Member.BOT:
+                contributors = contributors.exclude(role=self.role)
+            else:
+                contributors = contributors.filter(role=self.role)
 
         contributors = contributors.annotate(contribution_count=Count('contribution', filter=contrib_filter)).filter(contribution_count__gt=0)
 
@@ -277,7 +295,10 @@ class Contributions(SavannahFilterView):
             if self.member_tag:
                 contributions = contributions.filter(author__tags=self.member_tag)
             if self.role:
-                contributions = contributions.filter(author__role=self.role)
+                if self.role == Member.BOT:
+                    contributions = contributions.exclude(author__role=self.role)
+                else:
+                    contributions = contributions.filter(author__role=self.role)
             contributions = contributions.order_by("timestamp")
 
             for m in contributions:
@@ -314,13 +335,16 @@ class Contributions(SavannahFilterView):
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             if self.source:
-                contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
             if self.member_company:
                 contrib_filter = contrib_filter & Q(contribution__author__company=self.member_company)
             if self.member_tag:
                 contrib_filter = contrib_filter & Q(contribution__author__tags=self.member_tag)
             if self.role:
-                contrib_filter = contrib_filter & Q(contribution__author__role=self.role)
+                if self.role == Member.BOT:
+                    contrib_filter = contrib_filter & ~Q(contribution__author__role=self.role)
+                else:
+                    contrib_filter = contrib_filter & Q(contribution__author__role=self.role)
 
             channels = channels.annotate(contribution_count=Count('contribution', filter=contrib_filter))
             channels = channels.annotate(source_icon=F('source__icon_name'), source_connector=F('source__connector'), color=F('tag__color'))
@@ -390,7 +414,10 @@ class Contributors(SavannahFilterView):
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
         if self.role:
-            members = members.filter(role=self.role)
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
 
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
         members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))

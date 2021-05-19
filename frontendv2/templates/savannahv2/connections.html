@@ -25,7 +25,7 @@
                   <h6 class="m-0 font-weight-bold text-primary">Community Network{% if view.timespan > 31 %} (30 Days){% endif %}</h6>
                   <span class="text-muted pl-2">
                   {% if view.member_tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.member_tag.color}}; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas {% if view.role == "bot" %}fa-robot{% elif view.role == "staff" %}fa-user-tie{% elif view.role == "community" %}fa-user{% else %}fa-users{% endif %}"> </i> {{view.member_tag.name}}</span></span>
-                  {% elif view.role %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas {% if view.role == "bot" %}fa-robot{% elif view.role == "staff" %}fa-user-tie{% else %}fa-user{% endif %}"> </i> {{view.role}}</span></span>
+                  {% elif view.role %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas {% if view.role == "bot" %}fa-ban{% elif view.role == "staff" %}fa-user-tie{% else %}fa-user{% endif %}"> </i> {{view.role}}</span></span>
                   {% endif %}
                   {% if view.member_company %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas fa-building"> </i> {{view.member_company.name}}</span></span>{% endif %}
                   </span>
