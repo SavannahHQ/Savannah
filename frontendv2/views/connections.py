@@ -119,7 +119,7 @@ class Connections(SavannahFilterView):
         if view.member_tag:
             connections = connections.filter(Q(to_member__tags=view.member_tag)|Q(from_member__tags=view.member_tag))
         if view.role:
-            if self.role == Member.BOT:
+            if view.role == Member.BOT:
                 connections = connections.exclude(Q(to_member__role=view.role)|Q(from_member__role=view.role))
             else:
                 connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
