@@ -39,11 +39,16 @@ def fix_support_contribs(apps, schema_editor):
                 continue
         activity = get_support_activity(convo)
         if activity is not None:
-            if not contrib.activity.conversation:
-                contrib.activity.delete()
-            else:
-                contrib.activity.contribution_id = None
-                contrib.activity.save()
+            try:
+                if not contrib.activity.conversation:
+                    contrib.activity.delete()
+                else:
+                    contrib.activity.contribution_id = None
+                    contrib.activity.save()
+            except:
+                # No contrib.activity
+                print(e)
+                pass
             activity.contribution_id = contrib.id
             activity.icon_name = "fas fa-shield-alt"
             activity.short_description = contrib.contribution_type.name
