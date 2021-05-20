@@ -195,6 +195,9 @@ class PluginImporter:
         convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'speaker':speaker, 'content':content, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
         convo.update_activity()
         if content is not None:
+            if convo.content is None:
+                convo.content = content
+                convo.save()
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
                 if tagged in self._member_cache:
@@ -209,7 +212,9 @@ class PluginImporter:
                     conversation=conversation,
                     initiator=conversation.speaker,
                     member=member,
-                    timestamp=conversation.timestamp
+                    defaults={
+                        'timestamp':conversation.timestamp,
+                    }
                 )
                 if created and make_connections:
                     for to_member in members:
@@ -225,7 +230,9 @@ class PluginImporter:
                 conversation=conversation,
                 initiator=conversation.speaker,
                 member=member,
-                timestamp=conversation.timestamp
+                defaults={
+                    'timestamp':conversation.timestamp,
+                }
             )
             if created:
                 if conversation.speaker.id != member.id:
