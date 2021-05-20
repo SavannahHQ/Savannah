@@ -45,7 +45,7 @@ def fix_support_contribs(apps, schema_editor):
                 else:
                     contrib.activity.contribution_id = None
                     contrib.activity.save()
-            except:
+            except Exception as e:
                 # No contrib.activity
                 print(e)
                 pass
