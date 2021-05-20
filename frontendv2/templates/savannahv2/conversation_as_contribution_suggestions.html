@@ -49,7 +49,11 @@
                   <td><input class="action-select" type="checkbox" name="selected" value="{{suggestion.id}}" /></td>
                   <td>{{suggestion.reason}}</td>
                   <td>
-                    <a href="{{suggestion.conversation.location}}" target="_blank" data-toggle="tooltip" data-placement="auto" data-html="true" title="{{suggestion.conversation.content|linebreaksbr|truncatewords_html:"128"}}">{{suggestion.conversation}}</a>
+                    {% if suggestion.activity %}
+                    <b><a href="{% url 'member_activity' suggestion.activity.member.id %}">{{suggestion.activity.member}}</a>:</b> <a href="{{suggestion.activity.location}}" target="_blank" data-toggle="tooltip" data-placement="auto" data-html="true" title="{{suggestion.activity.conversation|linebreaksbr|truncatewords_html:"128"}}">{{suggestion.activity.conversation}}</a>
+                    <br/>
+                    {% endif %}
+                    <b><a href="{% url 'member_activity' suggestion.conversation.speaker.id %}">{{suggestion.conversation.speaker}}</a>:</b> <a href="{{suggestion.conversation.location}}" target="_blank" data-toggle="tooltip" data-placement="auto" data-html="true" title="{{suggestion.conversation.content|linebreaksbr|truncatewords_html:"128"}}">{{suggestion.conversation}}</a>
                   </td>
                   <td class="text-nowrap"><i class="{{suggestion.source.icon_name}}"></i> {{suggestion.conversation.channel}}</td>
                   <td class="text-nowrap">{{suggestion.conversation.timestamp}}</td>

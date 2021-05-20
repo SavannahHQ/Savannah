@@ -443,7 +443,7 @@ admin.site.register(SuggestMemberMerge, SuggestMemberMergeAdmin)
 class SuggestContributionAdmin(admin.ModelAdmin):
     list_display = ("reason", "contribution_type", "community", "timestamp", "actioned_at", "status")
     list_filter = ("community", "source", "status", "actioned_at", "created_at")
-    raw_id_fields = ("conversation",)
+    raw_id_fields = ("conversation","activity")
     actions = ("accept", "ignore", "reject")
     def accept(self, request, queryset):
         for suggestion in queryset.all():

@@ -1138,6 +1138,7 @@ class SuggestConversationAsContribution(Suggestion):
     class Meta:
         ordering = ('-conversation__timestamp',)
     conversation = models.ForeignKey(Conversation, related_name='contribution_suggestions', on_delete=models.CASCADE)    
+    activity = models.ForeignKey(Activity, related_name='contribution_suggestions', on_delete=models.CASCADE, null=True)    
     contribution_type = models.ForeignKey(ContributionType, related_name='contribution_suggestions', on_delete=models.CASCADE)
     source = models.ForeignKey(Source, related_name='contribution_suggestions', on_delete=models.CASCADE)
     title = models.CharField(max_length=256, null=False, blank=False)
@@ -1159,7 +1160,10 @@ class SuggestConversationAsContribution(Suggestion):
             )
             if self.conversation.channel.tag is not None:
                 contrib.tags.add(self.conversation.channel.tag)
-            contrib.update_activity()
+            self.activity.contribution = contrib
+            self.activity.icon_name = 'fas fa-shield-alt'
+            self.activity.short_description = contrib.contribution_type.name
+            self.activity.save()
         self.delete()
         return False
 

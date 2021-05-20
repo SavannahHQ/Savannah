@@ -10,12 +10,39 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction import text 
 
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import reverse
-from corm.models import Community, Member, Conversation, Tag, Contact, Source, ContributionType, Project, MemberLevel
+from corm.models import Activity, Community, Member, Conversation, Tag, Contact, Source, ContributionType, Project, MemberLevel
 from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, SuggestConversationTag, SuggestConversationAsContribution, SuggestTask
 from corm.models import pluralize
 from notifications.signals import notify
+
+
+def get_support_activity(thankful_convo):
+    try:
+        supporter = thankful_convo.participation.exclude(member_id=thankful_convo.speaker.id)[0]
+    except:
+        # No other participants
+        return None
+
+    try:
+        conversations = Conversation.objects.filter(speaker_id=supporter.member_id, channel_id=thankful_convo.channel_id, timestamp__lt=thankful_convo.timestamp)
+        if conversations.count() == 0:
+            # No matching conversations
+            return None
+        if thankful_convo.thread_start:
+            thread_convos = conversations.filter(Q(thread_start_id=thankful_convo.thread_start_id) | Q(id=thankful_convo.thread_start_id))
+            if thread_convos.count() > 0:
+                conversations = thread_convos
+        convo = conversations.order_by("-timestamp")[0]
+        return convo.activity
+    except IndexError as e:
+        # No matching convo in channel
+        return None
+    except Exception as e:
+        # No matching convo in channel
+        return None
+
 
 class Command(BaseCommand):
     help = 'Create suggested maintenance actions'
@@ -127,8 +154,11 @@ class Command(BaseCommand):
             print("%s has no #thankful tag" % community)
             return
 
+        # Get potential conversations
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None)
+
         # Only look at thankful converstions
-        convos = Conversation.objects.filter(speaker__community=community, tags=thankful, contribution=None, contribution_suggestions=None)
+        convos = convos.filter(tags=thankful)
 
         # Exclude greetings as they are usually the start of a conversation
         try:
@@ -151,6 +181,9 @@ class Command(BaseCommand):
         last_helped = None
         last_channel = None
         for convo in convos:
+            activity = get_support_activity(convo)
+            if activity is None or activity.contribution is not None:
+                continue
             if convo.content is None:
                 continue
             if last_channel != convo.channel:
@@ -200,6 +233,7 @@ class Command(BaseCommand):
                 community=community,
                 reason="%s gave support to %s" % (supporter.member, convo.speaker),
                 conversation=convo,
+                activity=activity,
                 contribution_type=helped,
                 source_id=convo.channel.source_id,
                 score=score,
