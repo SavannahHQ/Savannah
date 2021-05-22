@@ -287,7 +287,7 @@ class SlackImporter(PluginImporter):
             slack_thread_id = "%s/archives/%s/p%s" % (server, channel.origin_id, message.get('thread_ts').replace(".", ""))
             slack_thread_link = slack_thread_id + "?thread_ts=%s&cid=%s" % (message.get('thread_ts'), channel.origin_id)
             thread_tstamp = datetime.datetime.fromtimestamp(float(message.get('thread_ts')))
-            thread = self.make_conversation(origin_id=slack_thread_id, channel=channel, speaker=speaker, tstamp=thread_tstamp, location=slack_thread_link)
+            thread = self.make_conversation(origin_id=slack_thread_id, channel=channel, speaker=None, tstamp=thread_tstamp, location=slack_thread_link)
             thread_participants = set(thread.participants.all())
             thread_participants.add(speaker)
             self._update_threads[thread.id] = message.get('thread_ts')

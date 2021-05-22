@@ -192,12 +192,16 @@ class PluginImporter:
                 return Conversation.objects.filter(origin_id=origin_id, channel__source__community=self.community)[0]
             except:
                 pass
-        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'speaker':speaker, 'content':content, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+
+        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        if content is not None and (convo.content is None or len(convo.content) < len(content)):
+            convo.content = content
+        if speaker is not None:
+            convo.speaker = speaker
+        convo.save()
         convo.update_activity()
+
         if content is not None:
-            if convo.content is None:
-                convo.content = content
-                convo.save()
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
                 if tagged in self._member_cache:

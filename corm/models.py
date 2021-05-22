@@ -777,9 +777,15 @@ class Conversation(TaggableModel, ImportedDataModel):
         if from_activity:
             try :
                 from_activity.conversation = self
+                if self.speaker:
+                    from_activity.member = self.speaker
+                if self.content:
+                    from_activity.long_description = self.content
+                if self.location:
+                    from_activity.location = self.location
                 from_activity.save()
             except:
-                # Contribution already has an activity
+                # Conversation already has an activity
                 pass        
         activity, created = Activity.objects.get_or_create(
             conversation=self,
@@ -793,6 +799,13 @@ class Conversation(TaggableModel, ImportedDataModel):
                 'location':self.location
             }
         )
+        if self.speaker:
+            activity.member = self.speaker
+        if self.content:
+            activity.long_description = self.content
+        if self.location:
+            activity.location = self.location
+        activity.save()
         if self.tags:
             activity.tags.add(*self.tags.all())
         return activity
