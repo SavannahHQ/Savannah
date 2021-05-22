@@ -755,22 +755,28 @@ class Conversation(TaggableModel, ImportedDataModel):
     def participants(self):
         return Member.objects.filter(participant_in__conversation=self)
         
+    @classmethod
+    def truncate(cls, content):
+        if content is None:
+            return ""
+        truncated = False
+        content = content.strip()
+        if content.count('\n') >= 2:
+            if content.count('\n') >= 3:
+                truncated = True
+            content = "\n".join(content.split('\n')[:3])
+
+        if len(content) > 250:
+            truncated = True
+            content = content[:250]
+        if truncated:
+            content = content+"..."
+        return content
+  
     @property
     def brief(self):
-        truncated = False
         if self.content is not None:
-            content = self.content.strip()
-            if content.count('\n') >= 2:
-                if content.count('\n') >= 3:
-                    truncated = True
-                content = "\n".join(content.split('\n')[:3])
-
-            if len(content) > 250:
-                truncated = True
-                content = content[:250]
-            if truncated:
-                content = content+"..."
-            return content
+            return Conversation.truncate(self.content)
         return ""
 
     def update_activity(self, from_activity=None):
@@ -780,7 +786,7 @@ class Conversation(TaggableModel, ImportedDataModel):
                 if self.speaker:
                     from_activity.member = self.speaker
                 if self.content:
-                    from_activity.long_description = self.content
+                    from_activity.long_description = Conversation.truncate(self.content)
                 if self.location:
                     from_activity.location = self.location
                 from_activity.save()
@@ -802,7 +808,7 @@ class Conversation(TaggableModel, ImportedDataModel):
         if self.speaker:
             activity.member = self.speaker
         if self.content:
-            activity.long_description = self.content
+            activity.long_description = Conversation.truncate(self.content)
         if self.location:
             activity.location = self.location
         activity.save()
