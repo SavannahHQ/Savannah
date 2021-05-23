@@ -354,10 +354,13 @@ class Member(TaggableModel):
     def suggest_company(self):
         if self.company or not self.email_address:
             return False
-        user, domain = self.email_address.split('@', maxsplit=1)
-        if domain not in settings.PUBLIC_EMAIL_DOMAINS:
-            return True
-
+        try:
+            user, domain = self.email_address.split('@', maxsplit=1)
+            if domain not in settings.PUBLIC_EMAIL_DOMAINS:
+                return True
+        except:
+            return False
+            
     def is_connected(self, other):
         return MemberConnection.objects.filter(from_member=self, to_member=other).count() > 0
 
