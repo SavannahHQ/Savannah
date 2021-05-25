@@ -22,7 +22,7 @@
           <div class="row">
 
             <!-- Content Column -->
-            <div class="col-lg-12 mb-4">
+            <div class="col-lg-8 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
@@ -54,7 +54,9 @@
                     <a href="https://{{domain}}" target="_blank" >{{domain}}</a>
                     {% if warning %}<i data-toggle="tooltip" class="fas fa-exclamation-triangle text-danger" title="{{warning}}">&nbsp;</i>{% endif %}
                   </td>
-                  <td>{{members}}</td>
+                  <td>
+                    <a href="{% url 'all_members' view.community.id %}?search={{domain}}" title="Find Members" target="_blank">{{members}}</a>
+                    </td>
                   <td class="text-right"><button class="btn btn-success" type="submit" name="accept" value="{{domain}}" >Create</button></td>
                 </tr>
                 {% endfor %}
