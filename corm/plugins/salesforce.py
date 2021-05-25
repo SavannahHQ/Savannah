@@ -89,6 +89,9 @@ def refresh_auth(source):
 
 class SalesforcePlugin(BasePlugin):
 
+    def get_add_view(self):
+        return authenticate
+        
     def get_identity_url(self, contact):
         return contact.source.server  + "/lightning/r/Contact/" + contact.origin_id + "/view"
 
