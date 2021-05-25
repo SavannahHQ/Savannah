@@ -29,7 +29,10 @@
               <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Companies</h6>
-                  <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'company_add' view.community.id %}"><i class="fas fa-plus"></i> Add</a>
+                  <div>
+                    <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'company_add' view.community.id %}"><i class="fas fa-plus"></i> Add</a>
+                    <a class="m-0 btn btn-sm btn-secondary text-white" href="{% url 'company_lookup' view.community.id %}"><i class="fas fa-search"></i> Lookup</a>
+                  </div>
                 </div>
                 <div class="card-body p-0">
                 <div>

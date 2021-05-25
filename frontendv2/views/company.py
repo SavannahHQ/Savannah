@@ -430,3 +430,75 @@ def tag_company(request, community_id):
             return JsonResponse({'success':False, 'errors':str(e)})
     return JsonResponse({'success':False, 'errors':'Only POST method supported'})
     
+class CompanyLookup(SavannahFilterView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "companies"
+    
+    @property
+    def all_domains(self):
+        members = Member.objects.filter(community=self.community, company__isnull=True)
+        domain_cache = dict([(d.domain, d.company) for d in CompanyDomains.objects.filter(company__community=self.community)])
+        unknown_domain_counts = dict()
+
+        if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
+            members = members.filter(last_seen__lte=self.rangeend, last_seen__gte=self.rangestart)
+
+        if self.member_company:
+            members =members.filter(company=self.member_company)
+        if self.member_tag:
+            members =members.filter(tags=self.member_tag)
+        if self.role:
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
+
+        for member in members:
+            # Assign company based on email domain matching
+            if member.email_address is not None:
+                try:
+                    (identity, domain) = member.email_address.split('@', maxsplit=1)
+                except:
+                    # Failed to identify domain component of the email address
+                    continue
+                if domain in settings.PUBLIC_EMAIL_DOMAINS:
+                    continue
+                if domain not in domain_cache:
+                    # Domain doesn't belong to a defined company
+                    if domain not in unknown_domain_counts:
+                        unknown_domain_counts[domain] = 1
+                    else:
+                        unknown_domain_counts[domain] += 1
+
+        return [(domain, domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title(), count) for domain, count in sorted(unknown_domain_counts.items(), key=operator.itemgetter(1), reverse=True)]
+
+    @login_required
+    def as_view(request, community_id):
+        view = CompanyLookup(request, community_id)
+
+        if request.method == 'POST':
+            if 'accept_selected' in request.POST:
+                success_count = 0
+                selected = request.POST.getlist('selected')
+                for domain in selected:
+                    default_name = domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
+                    default_website = 'https://%s' % domain
+                    new_company = Company.objects.create(community=view.community, name=default_name, website=default_website)
+                    new_domain = CompanyDomains.objects.create(company=new_company, domain=domain)
+                    success_count += 1
+                if len(selected) > 0:
+                    messages.success(request, "<b>%s</b> %s been created" % (success_count, pluralize(len(selected), "Company has", "Companies have")))
+                else:
+                    messages.warning(request, "You haven't selected any potential company")
+            if 'accept' in request.POST:
+                success_count = 0
+                domain = request.POST.get('accept')
+                default_name = domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
+                default_website = 'https://%s' % domain
+                new_company = Company.objects.create(community=view.community, name=default_name, website=default_website)
+                new_domain = CompanyDomains.objects.create(company=new_company, domain=domain)
+                messages.success(request, "<b>%s</b> been created" % (default_name,))
+
+            return redirect('company_lookup', community_id=community_id)
+        return render(request, 'savannahv2/company_lookup.html', view.context)

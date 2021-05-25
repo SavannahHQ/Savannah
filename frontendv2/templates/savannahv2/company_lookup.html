@@ -1,0 +1,81 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_title %} | {{view.community.name}} Company Lookup{% endblock %}
+
+{% block page_styles %}
+<style>
+.tooltip-inner {
+    min-width: 8rem;
+    max-width: 32rem;
+    max-height: 80%;
+}</style>
+{% endblock %}
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'companies' view.community.id %}"><i class="fas fa-arrow-left"></i></a> Company Lookup</h1>
+            {% include 'savannahv2/filter_button.html' %}
+          </div>
+
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <form class="inline-form" action="{% url 'company_lookup' view.community.id %}" method="POST">
+                {% csrf_token %}
+                <div class="card-header d-sm-flex align-items-center justify-content-between py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Companies</h6>
+                  <button class="btn btn-success" type="submit" name="accept_selected" value="1">Create Selected</button>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col"><input class="action-toggle"  type="checkbox" name="select_all" value="1" onChange="toggle_all()"/></th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Domain</th>
+                    <th scope="col">Members</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for domain, name, members in view.all_domains %}
+                <tr>
+                  <td><input class="action-select" type="checkbox" name="selected" value="{{domain}}" /></td>
+                  <td>{{name}}</td>
+                  <td>
+                    <a href="https://{{domain}}" target="_blank" >{{domain}}</a>
+                  </td>
+                  <td>{{members}}</td>
+                  <td class="text-right"><button class="btn btn-success" type="submit" name="accept" value="{{domain}}" >Create</button></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+                </form>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+function toggle_all() {
+    var toggle = document.getElementsByClassName('action-toggle');
+    var checkboxes = document.getElementsByClassName('action-select');
+    for (var i = 0; i < checkboxes.length; i++){
+        checkboxes[i].checked = toggle[0].checked;
+    }
+}
+</script>
+{% endblock %}
