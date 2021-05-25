@@ -439,6 +439,7 @@ class CompanyLookup(SavannahFilterView):
     def all_domains(self):
         members = Member.objects.filter(community=self.community, company__isnull=True)
         domain_cache = dict([(d.domain, d.company) for d in CompanyDomains.objects.filter(company__community=self.community)])
+        rejected_domains = [suggestion['domain'] for suggestion in SuggestCompanyCreation.objects.filter(community=self.community, status=Suggestion.REJECTED).values('domain')]
         unknown_domain_counts = dict()
 
         if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
@@ -471,7 +472,14 @@ class CompanyLookup(SavannahFilterView):
                     else:
                         unknown_domain_counts[domain] += 1
 
-        return [(domain, domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title(), count) for domain, count in sorted(unknown_domain_counts.items(), key=operator.itemgetter(1), reverse=True)]
+        domains = list()
+        for domain, count in sorted(unknown_domain_counts.items(), key=operator.itemgetter(1), reverse=True):
+            company_name = domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
+            warning = None
+            if domain in rejected_domains:
+                warning = 'Domain has previously been rejected'
+            domains.append((domain, company_name, count, warning))
+        return domains
 
     @login_required
     def as_view(request, community_id):

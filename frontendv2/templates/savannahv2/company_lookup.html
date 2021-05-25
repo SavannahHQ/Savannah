@@ -44,12 +44,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                {% for domain, name, members in view.all_domains %}
+                {% for domain, name, members, warning in view.all_domains %}
                 <tr>
                   <td><input class="action-select" type="checkbox" name="selected" value="{{domain}}" /></td>
-                  <td>{{name}}</td>
+                  <td>
+                    {{name}}
+                  </td>
                   <td>
                     <a href="https://{{domain}}" target="_blank" >{{domain}}</a>
+                    {% if warning %}<i data-toggle="tooltip" class="fas fa-exclamation-triangle text-danger" title="{{warning}}">&nbsp;</i>{% endif %}
                   </td>
                   <td>{{members}}</td>
                   <td class="text-right"><button class="btn btn-success" type="submit" name="accept" value="{{domain}}" >Create</button></td>
