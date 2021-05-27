@@ -214,9 +214,9 @@ class PluginImporter:
                 participant, created = Participant.objects.get_or_create(
                     community=self.community, 
                     conversation=conversation,
-                    initiator=conversation.speaker,
                     member=member,
                     defaults={
+                        'initiator': conversation.speaker,
                         'timestamp':conversation.timestamp,
                     }
                 )
@@ -232,9 +232,9 @@ class PluginImporter:
             participant, created = Participant.objects.get_or_create(
                 community=self.community, 
                 conversation=conversation,
-                initiator=conversation.speaker,
                 member=member,
                 defaults={
+                    'initiator': conversation.speaker,
                     'timestamp':conversation.timestamp,
                 }
             )
