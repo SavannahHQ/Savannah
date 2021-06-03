@@ -160,7 +160,7 @@
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td class="text-nowrap">{{member.first_seen}}</td>
+                  <td class="text-nowrap">{{member.first_seen|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 <tr>
@@ -194,7 +194,7 @@
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
-                  <td class="text-nowrap">{{tstamp}}</td>
+                  <td class="text-nowrap">{{tstamp|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 <tr>
