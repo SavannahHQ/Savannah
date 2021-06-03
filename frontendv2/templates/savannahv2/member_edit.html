@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static %}
+{% load static member_utils %}
 {% load crispy_forms_tags %}
 
 {% block page_title %} | Edit {{view.member.name}}{% endblock %}
@@ -51,10 +51,15 @@
                 <div class="container-fluid">
 
                 {% for identity in view.identities %}
-                <div class="mb-3">
+                <div class="row mb-3">
+                  <div class="col-2">
+                  {{identity.avatar_url|avatar_icon}}
+                  </div>
+                  <div class="col-8">
                   <div><a href="{{identity.link_url}}" target="_blank"><i class="{{identity.source.icon_name}}"></i> {{identity.detail}}</a></div>
                   {% if identity.name and identity.name != identity.detail %}<div>{{identity.name}}</div>{% endif %}
                   {% if identity.email_address %}<div>{{identity.email_address}}</div>{% endif %}
+                  </div>
                 </div>
                 {% endfor %}
                 </div>            

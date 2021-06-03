@@ -104,3 +104,8 @@
     -moz-border-radius: 6px 0 6px 6px;
     border-radius: 6px 0 6px 6px;
 }
+
+.avatar-icon {
+    font-size: 1.5rem;
+    padding: 0.1rem;
+}

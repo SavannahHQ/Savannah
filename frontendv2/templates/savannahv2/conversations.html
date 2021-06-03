@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static humanize simple_dates %}
+{% load static humanize simple_dates member_utils %}
 
 {% block page_title %} | {{view.community.name}} Conversations{% endblock %}
 
@@ -41,38 +41,38 @@
 
             <!-- Members Card -->
             <div class="col-xl-3 col-md-6 mb-4">
-              <div class="card border-left-primary shadow py-2 mb-3">
+              <div class="card border-left-conversation shadow py-2 mb-3">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Average Response Time</div>
+                      <div class="text-xs font-weight-bold text-conversation text-uppercase mb-1">Conversations</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.conversation_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-comments fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card border-left-member shadow py-2 mb-3">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">Speakers</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.speaker_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card border-left-info shadow py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Response Time</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.avg_response_time}}</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-clock fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card border-left-info shadow py-2 mb-3">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Min Response Time</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.min_response_time}}</div>
-                    </div>
-                    <div class="col-auto">
-                      <i class="fas fa-clock fa-2x text-gray-300"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="card border-left-danger shadow py-2">
-                <div class="card-body">
-                  <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Max Response Time</div>
-                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.max_response_time}}</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-clock fa-2x text-gray-300"></i>
@@ -154,7 +154,8 @@
                 {% for member in view.most_active %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.conversation_count}}</td>
@@ -186,7 +187,8 @@
                 {% for member in view.most_connected %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.connection_count}}</td>

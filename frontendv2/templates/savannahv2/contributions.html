@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static humanize %}
+{% load static humanize member_utils %}
 
 {% block page_title %} | {{view.community.name}} Contributions{% endblock %}
 
@@ -88,7 +88,8 @@
                 {% for member, date in view.new_contributors %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{date}}</td>
@@ -126,7 +127,8 @@
                 {% for member, count in view.top_contributors %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -169,7 +171,8 @@
                 {% for member, convo_count in view.top_supporters %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{convo_count}}</td>
@@ -202,7 +205,8 @@
                 {% for member, convo_count in view.top_enablers %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{convo_count}}</td>

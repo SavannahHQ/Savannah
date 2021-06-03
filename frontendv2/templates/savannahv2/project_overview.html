@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static simple_dates %}
+{% load static simple_dates member_utils %}
 
 {% block page_title %} | {{view.project.name}} Project{% endblock %}
 
@@ -169,11 +169,12 @@
                 {% for level in view.core_levels %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i>&nbsp;{{level.member}}</a>
+                    {{level.member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
                   </td>
                   <td>{{level.contribution_count}}</td>
-                  <td>{{level.timestamp|dateortime}}</td>
+                  <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -206,11 +207,12 @@
                 {% for level in view.contrib_levels %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' level.member.id %}"><i class="{{level.member.icon_name}}"></i>&nbsp;{{level.member}}</a>
+                    {{level.member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
                   </td>
                   <td>{{level.contribution_count}}</td>
-                  <td>{{level.timestamp|dateortime}}</td>
+                  <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>

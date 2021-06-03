@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static simple_math simple_dates %}
+{% load static simple_math simple_dates member_utils %}
 
 {% block page_title %} | {{view.member.name}}{% endblock %}
 
@@ -18,7 +18,7 @@
 {% block page_content %}
         <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between pb-2 mb-4">
-            <h1 class="text-nowrap h3 mb-0 text-gray-800">{{view.member.name}}</h1>
+            <h1 class="text-nowrap h3 mb-0 text-gray-800">{{view.member.avatar_url|avatar_icon}}{{view.member.name}}</h1>
             <span class="d-flex">
             <form class="d-sm-inline-block form-inline" action="{% url 'member_followup_form' view.member.id %}" method="POST">
               {% csrf_token %}
@@ -362,7 +362,8 @@
                 {% for connection in view.top_connections %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' connection.to_member.id %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
+                    {{connection.to_member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' connection.to_member.id %}">{{ connection.to_member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td class="text-right pr-4">{{connection.connection_count}}</td>
@@ -390,7 +391,8 @@
                 {% for connection in view.recent_connections %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{connection.to_member.icon_name}}" title="{{connection.to_member.get_role_display}}"></i>&nbsp;{{ connection.to_member.name }}</a>
+                    {{connection.to_member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' connection.to_member.id %}">{{ connection.to_member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=connection.to_member.tags.all %}
                   </td>
                   <td class="text-nowrap text-right">{{connection.last_connected|dateortime}}</td>

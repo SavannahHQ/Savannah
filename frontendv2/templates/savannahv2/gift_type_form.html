@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static simple_math %}
+{% load static simple_math simple_dates member_utils %}
 {% load crispy_forms_tags %}
 
 {% block page_title %} | {% if view.gift.id %}Edit {{view.gift.name}}{% else %}Add Gift{% endif %}{% endblock %}
@@ -52,16 +52,16 @@
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col" width="25%">Name</th>
-                    <th scope="col" width="25%">Sent</th>
-                    <th scope="col" width="25%">Impact</th>
+                    <th scope="col" width="40%">Name</th>
+                    <th scope="col" width="20%">Sent</th>
+                    <th scope="col" width="15%">Impact</th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for gift in view.sent_gifts %}
                 <tr>
-                  <td><a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
-                  <td>{{gift.sent_date}}</td>
+                  <td>{{gift.member.avatar_url|avatar_icon}}<a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
+                  <td>{{gift.sent_date|dateortime}}</td>
                   <td>{% if gift.impact == 0 %}--{% else %}{% if gift.impact > 0 %}<span class="text-success"><i class="fas fa-caret-up"></i> {% else %}<span class="text-danger"><i class="fas fa-caret-down"></i> {% endif %}{{gift.impact|abs|floatformat:-2}}%{% endif %}</td>
                 </tr>
                 {% endfor %}
