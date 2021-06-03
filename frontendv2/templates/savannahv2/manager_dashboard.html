@@ -235,7 +235,6 @@
                   <td>
                     {{member.avatar_url|avatar_icon}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.connection_count}}</td>
                 </tr>
@@ -272,7 +271,6 @@
                   <td>
                     {{connection.to_member.avatar_url|avatar_icon}}
                     <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ connection.to_member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=connection.to_member.tags.all %}
                   </td>
                   <td class="text-nowrap">{{connection.last_connected|dateortime}}</td>
                 </tr>

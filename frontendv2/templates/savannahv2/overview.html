@@ -1,6 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static %}
-{% load humanize %}
+{% load static humanize member_utils %}
 
 {% block page_title %} | {{view.community.name}}{% endblock %}
 
@@ -157,7 +156,8 @@
                 {% for member, count in view.most_active %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
@@ -189,7 +189,8 @@
                 {% for member, count in view.most_connected %}
                 <tr>
                   <td>
-                    <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}"><i class="{{member.icon_name}}" title="{{member.get_role_display}}"></i>&nbsp;{{ member.name }}</a>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{count}}</td>
