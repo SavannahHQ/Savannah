@@ -1,0 +1,26 @@
+{% extends "savannahv2/blank.html"%}
+{% load static %}
+
+
+{% block page_title %} | Not Available{% endblock %}
+
+{% block page_content %}
+
+<!-- Members Card -->
+<div class="row mt-5 justify-content-center">
+<div class="col-xl-8 col-md-8 mb-8 mt-8 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="align-items-center">
+            <h3>{{feature_name}} is not available</h3>
+            <p>{{feature_msg}}</p>
+            <p><a href="{{feature_signup}}" target="{{signup_target|default:'_blank'}}">Signup now</a> to get informed when new features become available.</p>
+            {% if back_url %}<a class="btn btn-secondary" href="{{back_url}}"><i class="fas fa-chevron-left"></i> Back</a>{% endif %}
+        </div>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+{% endblock %}

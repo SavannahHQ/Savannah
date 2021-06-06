@@ -6,10 +6,18 @@ from urllib.parse import urlparse, parse_qs, urlencode
 from requests.auth import HTTPBasicAuth
 from requests_oauthlib import OAuth2Session
 from django.conf import settings
-from django.shortcuts import redirect, get_object_or_404, reverse
+from django.shortcuts import redirect, get_object_or_404, reverse, render
+from django.contrib.auth.decorators import login_required
 from django.urls import path
 from django.contrib import messages
 import requests
+
+from rest_framework import serializers, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from apiv1.serializers import TagsField
 
 AUTHORIZATION_BASE_URL = 'https://login.salesforce.com/services/oauth2/authorize'
 TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
@@ -18,6 +26,101 @@ REFRESH_URL = 'https://login.salesforce.com/services/oauth2/token'
 CHANNELS_URL = '/services/data/v50.0/limits/recordCount'
 ACCOUNTS_URL = '/services/data/v50.0/sobjects/Account'
 CONTACTS_URL = '/services/data/v50.0/sobjects/Contact'
+
+@login_required
+def not_available_view(request):
+    context = {
+        'feature_name': 'Salesforce Integration',
+        'feature_msg': 'Salesforce integration will allow you to connect your Salesforce and Savannah data.',
+        'feature_signup': settings.SAVANAH_NEWSLETTER,
+        'back_url': reverse('sources', kwargs={'community_id': request.session['community']})
+    }
+    return render(request, 'savannahv2/feature_not_available.html', context=context)
+
+class SalesforceAuthentication(BaseAuthentication):
+    def authenticate_header(self, request):
+        return "Authorization"
+
+    def authenticate(self, request):
+        try:
+            token = request.GET['auth_token']
+        except KeyError:
+            auth = request.META.get('HTTP_AUTHORIZATION', '').split(" ")
+            if not auth or auth[0].lower() != 'token':
+                return None
+
+            if len(auth) == 1:
+                msg = 'Invalid token header. No credentials provided.'
+                raise AuthenticationFailed(msg)
+            elif len(auth) > 2:
+                msg = 'Invalid token header. Token string should not contain spaces.'
+                raise AuthenticationFailed(msg)
+
+            try:
+                token = str(auth[1])
+            except UnicodeError:
+                msg = 'Invalid token header. Token string should not contain invalid characters.'
+                raise AuthenticationFailed(msg)
+
+        source = None
+        try:
+            source = Source.objects.get(connector="corm.plugins.salesforce", auth_secret=token, enabled=True)
+        except Source.DoesNotExist:
+            msg = 'Invalid token. Token is not associated with any API Integration'
+            raise AuthenticationFailed(msg)
+
+        request.source = source
+        return (source.community.owner, token)
+
+class SavannahIntegrationView(APIView):
+    authentication_classes = [SalesforceAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+class MemberDetail(SavannahIntegrationView):
+    """
+    Retrieve a Member identity instance.
+    """
+    def get(self, request, format=None):
+        origin_id = request.GET.get('origin_id')
+        origin_email = request.GET.get('origin_email')
+        try:
+            identity = Contact.objects.get(source=request.source, origin_id=origin_id)
+        except:
+            # no matching origin_id, try email address
+            identity = get_object_or_404(Contact, source=request.source, email_address=origin_email)
+                        
+        serializer = SalesforceMemberSerializer(identity)
+        return Response(serializer.data)
+
+class SalesforceMemberSerializer(serializers.Serializer):
+    member_id = serializers.IntegerField(source='id')
+    origin_id = serializers.CharField(max_length=256)
+    email = serializers.EmailField(source='email_address', required=False, allow_null=True)
+    name = serializers.CharField(source='member.name', max_length=256, required=False, allow_null=True)
+    company = serializers.CharField(source='member.company', required=False)
+    first_seen = serializers.DateTimeField(source='member.first_seen')
+    last_seen = serializers.DateTimeField(source='member.last_seen', required=False)
+    tags = TagsField(through='member', required=False)
+    identities = serializers.SerializerMethodField(source='*')
+    engagement_levels = serializers.SerializerMethodField(source='*')
+    notes = serializers.SerializerMethodField(source='*')
+    top_connections = serializers.SerializerMethodField(source='*')
+    recent_connections = serializers.SerializerMethodField(source='*')
+
+    def get_identities(self, identity):
+        return dict((identity.source.connector_name, identity.link_url) for identity in Contact.objects.filter(member=identity.member))
+
+    def get_engagement_levels(self, identity):
+        return dict((level.project.name, level.level) for level in MemberLevel.objects.filter(member=identity.member).order_by('-project__default_project', '-level', 'timestamp'))
+
+    def get_notes(self, identity):
+        return dict((note.timestamp.isoformat(), '%s: %s' % (note.author.username, note.content)) for note in Note.objects.filter(member=identity.member).order_by('-timestamp'))
+
+    def get_top_connections(self, identity):
+        return dict((c.to_member.name, c.connection_count) for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-connection_count')[:5])
+
+    def get_recent_connections(self, identity):
+        return dict((c.to_member.name, c.last_connected.isoformat()) for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -64,6 +167,7 @@ def callback(request):
 urlpatterns = [
     path('auth', authenticate, name='salesforce_auth'),
     path('callback', callback, name='salesforce_callback'),
+    path('api/member', MemberDetail.as_view(), name='salesforce_api_member'),
 ]
 
 def refresh_auth(source):
@@ -90,7 +194,7 @@ def refresh_auth(source):
 class SalesforcePlugin(BasePlugin):
 
     def get_add_view(self):
-        return authenticate
+        return not_available_view
         
     def get_identity_url(self, contact):
         return contact.source.server  + "/lightning/r/Contact/" + contact.origin_id + "/view"
@@ -250,3 +354,4 @@ class SalesforceImporter(PluginImporter):
                 self.update_identity(contact)
             member.set_company(salesforce_account.company)
             member.save()
+
