@@ -556,6 +556,8 @@ class MemberMergeRecord(models.Model):
             removed_first_seen = datetime.datetime.strptime(removed.get('first_seen'), '%Y-%m-%dT%H:%M:%S.%f')
             if removed.get('last_seen'):
                 removed_last_seen = datetime.datetime.strptime(removed.get('last_seen'), '%Y-%m-%dT%H:%M:%S.%f')
+            else:
+                removed_last_seen = None
 
             if original.get('name') != self.merged_with.name and removed.get('name') == self.merged_with.name:
                 self.merged_with.name = original.get('name')

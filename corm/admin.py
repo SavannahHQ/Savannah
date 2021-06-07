@@ -262,7 +262,7 @@ admin.site.register(MemberWatch, MemberWatchAdmin)
 class ContactAdmin(admin.ModelAdmin):
     list_display = ("detail", "source", "member", "name", "email_address")
     list_filter = ("source__connector", "member__community", "source")
-    search_fields = ("detail",)
+    search_fields = ("detail","email_address")
 
 admin.site.register(Contact, ContactAdmin)
 

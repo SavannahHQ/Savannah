@@ -16,7 +16,7 @@ from rest_framework import serializers, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import APIException, AuthenticationFailed, NotFound
 from apiv1.serializers import TagsField
 
 AUTHORIZATION_BASE_URL = 'https://login.salesforce.com/services/oauth2/authorize'
@@ -83,11 +83,28 @@ class MemberDetail(SavannahIntegrationView):
     def get(self, request, format=None):
         origin_id = request.GET.get('origin_id')
         origin_email = request.GET.get('origin_email')
+        if origin_id is None:
+            raise APIException(detail='origin_id is required')
+        if origin_email is None:
+            raise APIException(detail='origin_email is required')
+        # See if the SFDC ID matches an identity in this souce
         try:
             identity = Contact.objects.get(source=request.source, origin_id=origin_id)
         except:
-            # no matching origin_id, try email address
-            identity = get_object_or_404(Contact, source=request.source, email_address=origin_email)
+            # no matching origin_id
+            # Try matching by email address in this source
+            try:
+                identity = Contact.objects.get(source=request.source, email_address=origin_email)
+            except:
+                # Try matching by email address anywhere in this community
+                try:
+                    members = Member.objects.filter(community=request.source.community, contact__email_address=origin_email)
+                    member = members.distinct().get()
+                    identity, created = member.contact_set.get_or_create(source=request.source, origin_id=origin_id, defaults={'email_address': origin_email, 'detail':origin_email})
+                except Member.DoesNotExist:
+                    raise NotFound(detail="No Member matching ID or Email")
+                except Member.MultipleObjectsReturned:
+                    raise NotFound(detail='More than one matching Member exists')
                         
         serializer = SalesforceMemberSerializer(identity)
         return Response(serializer.data)
