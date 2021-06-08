@@ -383,7 +383,7 @@ class Contributors(SavannahFilterView):
 
         self.RESULTS_PER_PAGE = 25
 
-        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'first_contrib', '-first_contrib', 'last_contrib', '-last_contrib', 'contrib_count', '-contrib_count'):
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'company', '-company', 'first_contrib', '-first_contrib', 'last_contrib', '-last_contrib', 'contrib_count', '-contrib_count'):
             self.sort_by = request.GET.get('sort') 
             request.session['sort_contributors'] = self.sort_by
 
@@ -422,14 +422,18 @@ class Contributors(SavannahFilterView):
         members = members.annotate(first_contrib=Min('contribution__timestamp', filter=contrib_filter))
         members = members.annotate(last_contrib=Max('contribution__timestamp', filter=contrib_range_filter))
         members = members.annotate(contrib_count=Count('contribution', filter=contrib_range_filter))
-        members = members.prefetch_related('tags')
+        members = members.prefetch_related('tags').select_related('company')
         if self.sort_by == 'name':
             members = members.order_by(Lower('name'))
         elif self.sort_by == '-name':
             members = members.order_by(Lower('name').desc())
+        elif self.sort_by == 'company':
+            members = members.order_by(Lower('company__name').asc(nulls_last=True))
+        elif self.sort_by == '-company':
+            members = members.order_by(Lower('company__name').desc(nulls_last=True))
         else:
             members = members.order_by(self.sort_by)
-        
+
         return members
 
     @property
@@ -473,11 +477,15 @@ class Contributors(SavannahFilterView):
         view = Contributors(request, community_id)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="contributors.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Member', 'First Contrib', 'Last Contrib', 'Contrib Count', 'Tags'])
+        writer = csv.DictWriter(response, fieldnames=['Member', 'Company', 'First Contrib', 'Last Contrib', 'Contrib Count', 'Tags'])
         writer.writeheader()
         for member in view.all_contributors:
+            company_name = ''
+            if member.company:
+                company_name = member.company.name
             writer.writerow({
                 'Member': member.name, 
+                'Company':company_name, 
                 'First Contrib':member.first_contrib, 
                 'Last Contrib':member.last_contrib, 
                 'Contrib Count':member.contrib_count,

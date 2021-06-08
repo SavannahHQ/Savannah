@@ -38,6 +38,7 @@ th[scope="col"] > a:hover {
                 <thead>
                   <tr>
                     <th scope="col"><a href="?sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?sort={% if view.sort_by == "company" %}-{% endif %}company">Company&nbsp;<i class="{% if view.sort_by == "company" %}fas fa-sort-down{% elif view.sort_by == "-company" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col"><a href="?sort={% if view.sort_by != "-first_contrib" %}-{% endif %}first_contrib">First Contribution&nbsp;<i class="{% if view.sort_by == "first_contrib" %}fas fa-sort-down{% elif view.sort_by == "-first_contrib" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col"><a href="?sort={% if view.sort_by != "-last_contrib" %}-{% endif %}last_contrib">Last Contribution&nbsp;<i class="{% if view.sort_by == "last_contrib" %}fas fa-sort-down{% elif view.sort_by == "-last_contrib" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col"><a href="?sort={% if view.sort_by != "-contrib_count" %}-{% endif %}contrib_count">Contributions&nbsp;<i class="{% if view.sort_by == "contrib_count" %}fas fa-sort-down{% elif view.sort_by == "-contrib_count" %}fas fa-sort-up{% endif %}"></i></a></th>
@@ -51,6 +52,7 @@ th[scope="col"] > a:hover {
                   <a href="{% url 'member_profile' contributor.id %}">{{contributor.name}}</a>
                   {% include 'savannahv2/tag_list.html' with tags=contributor.tags.all %}
                   </td>
+                  <td>{{contributor.company|default:''}}</td>
                   <td>{{contributor.first_contrib}}</td>
                   <td>{{contributor.last_contrib}}</td>
                   <td>{{contributor.contrib_count}}</td>
