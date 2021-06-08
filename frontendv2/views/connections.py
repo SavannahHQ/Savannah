@@ -108,6 +108,7 @@ class Connections(SavannahFilterView):
         member_map = dict()
         connection_counts = dict()
         connected = set()
+        missing_members = set()
         if view.timespan <= 31:
             timespan = view.timespan
         else:
@@ -134,6 +135,10 @@ class Connections(SavannahFilterView):
 
                 links.append({"source":connection.from_member_id, "target":connection.to_member_id})
                 member_map[connection.from_member_id] = connection.from_member
+                if connection.from_member_id in missing_members:
+                    missing_members.remove(connection.from_member_id)
+                if connection.to_member_id not in member_map:
+                    missing_members.add(connection.to_member_id)
 
                 if not connection_id in connected:
                     connected.add(connection_id)
@@ -143,9 +148,11 @@ class Connections(SavannahFilterView):
                     else:
                         connection_counts[connection.from_member_id] += 1
 
-                    if len(connected) >= 100000:
+                    if len(member_map) >= 10000:
                         break
 
+        for member in Member.objects.filter(id__in=missing_members):
+            member_map[member.id] = member
 
         for member_id, member in member_map.items():
             tag_color = None
