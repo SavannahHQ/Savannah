@@ -85,6 +85,7 @@ class Sources(SavannahView):
             
         contacts = Contact.objects.filter(source__community=view.community, member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
         contacts = contacts.annotate(member_name=F('member__name'), member_role=F('member__role'), tag_count=Count('member__tags'))
+        contacts = contacts.order_by('-member__last_seen')[:1000]
 
         for contact in contacts:
             links.append({"source":'s%s'%contact.source_id, "target":'m%s'%contact.member_id})
