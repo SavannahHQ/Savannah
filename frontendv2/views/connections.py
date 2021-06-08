@@ -148,9 +148,9 @@ class Connections(SavannahFilterView):
                     else:
                         connection_counts[connection.from_member_id] += 1
 
-                    if len(connected) >= 100000:
+                    if len(connected) >= 10000:
                         break
-                    if len(member_map) >= 10000:
+                    if len(member_map) >= 1000:
                         break
 
         for member in Member.objects.filter(id__in=missing_members):
