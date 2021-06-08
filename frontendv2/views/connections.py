@@ -148,6 +148,8 @@ class Connections(SavannahFilterView):
                     else:
                         connection_counts[connection.from_member_id] += 1
 
+                    if len(connected) >= 100000:
+                        break
                     if len(member_map) >= 10000:
                         break
 
