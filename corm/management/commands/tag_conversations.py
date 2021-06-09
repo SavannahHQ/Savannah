@@ -9,28 +9,49 @@ PUNCTUATION = "!\"&'()*+,.:;<=>?@[\]^_`{|}~/\r\n"
 class Command(BaseCommand):
     help = 'Auto-Tag conversations based on Tag keywords'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--community', dest='community_id', type=int)
+        parser.add_argument('--source', dest='source_id', type=int)
+        parser.add_argument('--connector', dest='connector', type=str)
+        
     def handle(self, *args, **options):
 
-      for community in Community.objects.all():
+      community_id = options.get('community_id')
+      source_id = options.get('source_id')
+      connector = options.get('connector')
+
+      if community_id:
+          community = Community.objects.get(id=community_id)
+          print("Using Community: %s" % community.name)
+          communities = [community]
+      else:
+          communities = Community.objects.filter(status=Community.ACTIVE)
+
+      for community in communities:
         print("Tagging conversations in  %s" % community.name)
         keywords = dict()
         for tag in community.tag_set.filter(keywords__isnull=False):
           for word in tag.keywords.split(","):
             word = " "+word.lower().strip()+" "
             if len(word) <= 2:
+              # The word is blank
               continue
             if not word in keywords:
               keywords[word] = set()
             keywords[word].add(tag)
 
         conversations = Conversation.objects.filter(channel__source__community=community)
+        if source_id:
+            conversations = conversations.filter(channel__source_id=source_id)
+        if connector:
+            conversations = conversations.filter(channel__source__connector=connector)
         count = conversations.count()
         page = 0
         chunk = 10000
         while count > (chunk * page):
           start = chunk * page
           end = start + chunk
-          for convo in Conversation.objects.filter(channel__source__community=community)[start:end]:
+          for convo in conversations[start:end]:
             table = str.maketrans(PUNCTUATION, ' '*len(PUNCTUATION))
             if convo.content is None:
               continue
