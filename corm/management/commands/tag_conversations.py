@@ -17,6 +17,8 @@ class Command(BaseCommand):
         for tag in community.tag_set.filter(keywords__isnull=False):
           for word in tag.keywords.split(","):
             word = " "+word.lower().strip()+" "
+            if len(word) <= 2:
+              continue
             if not word in keywords:
               keywords[word] = set()
             keywords[word].add(tag)
