@@ -98,7 +98,7 @@ class MemberDetail(SavannahIntegrationView):
             except:
                 # Try matching by email address anywhere in this community
                 try:
-                    members = Member.objects.filter(community=request.source.community, contact__email_address=origin_email)
+                    members = Member.objects.filter(community=request.source.community).filter(Q(email__address=origin_email) | Q(contact__email_address=origin_email))
                     member = members.distinct().get()
                     identity, created = member.contact_set.get_or_create(source=request.source, origin_id=origin_id, defaults={'email_address': origin_email, 'detail':origin_email})
                 except Member.DoesNotExist:
