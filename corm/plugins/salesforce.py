@@ -131,7 +131,7 @@ class SalesforceMemberSerializer(serializers.Serializer):
         return dict((level.project.name, level.level) for level in MemberLevel.objects.filter(member=identity.member).order_by('-project__default_project', '-level', 'timestamp'))
 
     def get_notes(self, identity):
-        return dict((note.timestamp.isoformat(), '%s: %s' % (note.author.username, note.content)) for note in Note.objects.filter(member=identity.member).order_by('-timestamp'))
+        return list({'date':note.timestamp.isoformat(), 'author': note.author.username, 'content': note.content} for note in Note.objects.filter(member=identity.member).order_by('-timestamp'))
 
     def get_top_connections(self, identity):
         return dict((c.to_member.name, c.connection_count) for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-connection_count')[:5])
