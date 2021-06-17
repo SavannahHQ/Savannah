@@ -17,6 +17,7 @@ class Command(BaseCommand):
         parser.add_argument('--full', dest='full_import', action='store_true', help='Do a full import, not incremental from the previous import')
         parser.add_argument('--new', dest='new_only', action='store_true', help='Import only from new sources')
         parser.add_argument('--debug', dest='debug', action='store_true', help='Enter debugger on errors')
+        parser.add_argument('--limit', dest='limit', type=int, help='Number of possible sources to import')
 
     def handle(self, *args, **options):
 
@@ -27,6 +28,7 @@ class Command(BaseCommand):
         full_import = options.get('full_import')
         new_only = options.get('new_only')
         debug = options.get('debug')
+        limit = options.get('limit')
 
         if importer_name == 'all':
             verbosity and print("Importing all sources")
@@ -40,10 +42,6 @@ class Command(BaseCommand):
             print("Available importers are: %s" % ", ".join(ConnectionManager.CONNECTOR_IMPORTERS.keys()))
             return False
 
-        if new_only:
-            print("Using new sources only")
-            sources = sources.filter(last_import__isnull=True)
-
         if community_id:
             community = Community.objects.get(id=community_id)
             print("Using Community: %s" % community.name)
@@ -54,7 +52,18 @@ class Command(BaseCommand):
             print("Using Source: %s" % source.name)
             sources = sources.filter(id=source.id)
 
+        if new_only:
+            print("Using new sources only")
+            sources = sources.filter(first_import__isnull=True)
+
+        if limit:
+            sources = sources[:limit]
+
         for source in sources:
+            print("Importing %s" % source)
+            if new_only:
+                source.first_import = datetime.datetime.utcnow()
+                source.save()
             try:
                 plugin = ConnectionManager.CONNECTOR_PLUGINS[source.connector]
                 importer = plugin.get_source_importer(source)
@@ -63,6 +72,9 @@ class Command(BaseCommand):
                 importer.full_import = full_import
             except Exception as e:
                 print("Failed to import Source %s: %s" % (source, e))
+                if new_only:
+                    source.first_import = None
+                    source.save()
                 continue
 
             try:
@@ -73,3 +85,6 @@ class Command(BaseCommand):
                     sleep(5)
             except Exception as e:
                 print(e)
+                if new_only:
+                    source.first_import = None
+                    source.save()

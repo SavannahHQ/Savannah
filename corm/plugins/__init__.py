@@ -321,15 +321,14 @@ class PluginImporter:
     def run(self, new_only=False):
         failures = list()
         channels = self.get_channels()
+        channels = channels.filter(enabled=True)
         if new_only:
             channels = channels.filter(first_import__isnull=True)
-        if len(channels) == 0:
+        if channels.count() == 0:
+            print("No channels to import")
             return
+
         for channel in channels:
-            if not channel.enabled:
-                continue
-            if new_only and channel.first_import is not None:
-                continue
             if self.verbosity >= 2:
                 print("Importing channel: %s" % channel.name)
             full_import = self.full_import
@@ -349,7 +348,8 @@ class PluginImporter:
                     full_import = True
                     channel.last_import = datetime.datetime.utcnow()
                     channel.save()
-                print("From %s since %s" % (channel.name, from_date))
+                if self.verbosity >= 2:
+                    print("From %s since %s" % (channel.name, from_date))
 
                 self.import_channel(channel, from_date, full_import)
 

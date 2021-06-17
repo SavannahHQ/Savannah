@@ -310,6 +310,7 @@ class RedditImporter(PluginImporter):
                     cursor = data['after']
                 for comment in data['children']:
                     if comment['kind'] != "t1":
+                        # Unknown comment kind: {'kind': 'more', 'data': {'count': 9, 'name': 't1_h0eunv4', 'id': 'h0eunv4', 'parent_id': 't3_nr71xz', 'depth': 0, 'children': ['h0eunv4', 'h0ev08x', 'h0ev07s']}}
                         print("Unknown comment kind: %s" % comment)
                         continue
                     if comment['data']['created_utc'] < self.from_timestamp:
