@@ -63,7 +63,7 @@ class Command(BaseCommand):
         # Count connection events
         print("Calculating number of connection")
         found = set()
-        participants = Participant.objects.filter(community=community, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=365)).exclude(member=F('initiator')).order_by('timestamp')
+        participants = Participant.objects.filter(community=community, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=365)).exclude(member=F('initiator'))
         participants = participants.values('initiator', 'member').annotate(connection_count=Count('conversation', distinct=True))
         for connection in participants:
             from_to = "%s-%s" % (connection['initiator'], connection['member'])
