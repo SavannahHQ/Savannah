@@ -325,8 +325,7 @@ class PluginImporter:
         if new_only:
             channels = channels.filter(first_import__isnull=True)
         if channels.count() == 0:
-            print("No channels to import")
-            return
+            raise Exception("No channels to import")
 
         for channel in channels:
             if self.verbosity >= 2:
