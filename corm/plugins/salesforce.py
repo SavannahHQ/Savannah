@@ -125,19 +125,19 @@ class SalesforceMemberSerializer(serializers.Serializer):
     recent_connections = serializers.SerializerMethodField(source='*')
 
     def get_identities(self, identity):
-        return dict((identity.source.connector_name, identity.link_url) for identity in Contact.objects.filter(member=identity.member))
+        return list({'source':identity.source.connector_name, 'detail':identity.detail, 'url':identity.link_url} for identity in Contact.objects.filter(member=identity.member))
 
     def get_engagement_levels(self, identity):
-        return dict((level.project.name, level.level) for level in MemberLevel.objects.filter(member=identity.member).order_by('-project__default_project', '-level', 'timestamp'))
+        return list({'project':level.project.name, 'level':level.level_name} for level in MemberLevel.objects.filter(member=identity.member).order_by('-project__default_project', '-level', 'timestamp'))
 
     def get_notes(self, identity):
         return list({'tstamp':note.timestamp.isoformat(), 'author': note.author.username, 'content': note.content} for note in Note.objects.filter(member=identity.member).order_by('-timestamp'))
 
     def get_top_connections(self, identity):
-        return dict((c.to_member.name, c.connection_count) for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-connection_count')[:5])
+        return list({'name':c.to_member.name, 'connections':c.connection_count} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-connection_count')[:5])
 
     def get_recent_connections(self, identity):
-        return dict((c.to_member.name, c.last_connected.isoformat()) for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
+        return list({'name':c.to_member.name, 'tstamp':c.last_connected.isoformat()} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
