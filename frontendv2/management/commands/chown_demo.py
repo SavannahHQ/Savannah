@@ -40,7 +40,15 @@ class Command(BaseCommand):
         community.owner = owner
         community.save()
 
-        ManagerProfile.objects.filter(community=community, user=prev_owner).update(user=owner)
         MemberWatch.objects.filter(member__community=community, manager=prev_owner).update(manager=owner)
         Task.objects.filter(community=community, owner=prev_owner).update(owner=owner)
+        new_profile, created = ManagerProfile.objects.get_or_create(community=community, user=prev_owner)
+        try:
+            prev_profile = ManagerProfile.objects.get(community=community, user=prev_owner)
+            new_profile.member = prev_profile.member
+            new_profile.save()
+        except:
+            # No manager profile for previous owner
+            pass
+
         
