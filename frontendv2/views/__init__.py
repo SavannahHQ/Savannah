@@ -189,7 +189,7 @@ class SavannahView:
         
     @property
     def context(self):
-        communities = Community.objects.filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+        communities = Community.objects.filter(status__lte=Community.SUSPENDED).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
         return {
             "communities": communities,
             "active_community": self.community,
