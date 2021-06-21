@@ -371,6 +371,8 @@ class SavannahFilterView(SavannahView):
             return True
         if self.filter['tag'] and self.tag is not None:
             return True
+        if self.filter['source'] and self.source is not None:
+            return True
         if self.filter['contrib_type'] and self.contrib_type is not None:
             return True
 

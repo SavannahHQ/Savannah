@@ -67,9 +67,9 @@
                 {% if view.filter.member_tag %}
                 <li class="dropdown-submenu pull-left">
                   {% if view.member_tag %}
-                    <a class="dropdown-item dropend p-2" href="#"style="white-space:nowrap; background-color: #{{view.member_tag.color}};"><span style="color: #{{view.member_tag.color}}aa !important" class="tag-text"><i class="fas fa-tag"></i> {{view.member_tag.name}}</span></a>
+                    <a class="dropdown-item dropend p-2" href="#" style="white-space:nowrap; background-color: #{{view.member_tag.color}};"><span style="color: #{{view.member_tag.color}}aa !important" class="tag-text"><i class="fas fa-tag"></i> {{view.member_tag.name}}</span></a>
                   {% else %}
-                    <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-tags"></i> Tags</a>
+                    <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-tags"></i> Tag</a>
                   {% endif %}
                   <ul class="dropdown-menu" >
                     <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag="><i class="fas fa-tags"></i> Any Tags</a></li>
@@ -102,21 +102,55 @@
             </span>
           {% endif %}
 
-          {% if view.filter.tag %}
+          {% if view.filter.source or view.filter.tag %}
           <!-- Tag -->
             <span class="dropdown">
-            {% if view.tag %}
-              <button style="white-space:nowrap; background-color: #{{view.tag.color}};" class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span style="color: #{{view.tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{view.tag.name}}</span></button>
+            {% if view.tag or view.source %}
+                <button class="btn {% if view.tag %}{% else %}btn-secondary{% endif %} dropdown-toggle" {% if view.tag %}style="white-space:nowrap; background-color: #{{view.tag.color}};"{% endif %} type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span {% if view.tag %}style="color: #{{view.tag.color}}aa" class="tag-text"{% endif %}><i class="{% if view.source  %}{{view.source.icon_name}}{% elif view.tag %}fas fa-tag{% else %}fas fa-comment{% endif %}"></i> {% if view.tag %}{{view.tag.name}}{% elif view.source %}{{view.source.name}}{% else %}Content{% endif %}</span></button>
             {% else %}
-              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-tags"></i> Tags</button>
+              <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-comment"></i> Content</button>
             {% endif %}
-              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
-                    <a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag="><i class="fas fa-times"></i> Clear</a>
-                    <div class="dropdown-divider p-0"></div>
+              <ul class="dropdown-menu dropdown-menu-end animated--fade-in p-2" aria-labelledby="memberFilterButton">
+                <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}&tag=&source=&channel="><i class="fas fa-times"></i> All Content</a></li>
+                <li class="dropdown-divider p-0"></li>
+
+                {% if view.filter.tag %}
+                <li class="dropdown-submenu pull-left">
+                  {% if view.tag %}
+                    <a class="dropdown-item dropend p-2" href="#" style="white-space:nowrap; background-color: #{{view.tag.color}};"><span style="color: #{{view.tag.color}}aa !important" class="tag-text"><i class="fas fa-tag"></i> {{view.tag.name}}</span></a>
+                  {% else %}
+                    <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-tags"></i> Tag</a>
+                  {% endif %}
+                  <ul class="dropdown-menu" >
+
+                    <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag="><i class="fas fa-tags"></i> Any Tags</a></li>
+                    <li class="dropdown-divider p-0"></li>
                     {% for tag in view.community.tag_set.all %}
-                    <a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{tag.name}}</span></a>
+                    <li><a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-tag"></i> {{tag.name}}</span></a></li>
                     {% endfor %}
-              </div>
+                  </ul>
+                </li>
+                {% endif %}
+
+                {% if view.filter.source %}
+                <li class="dropdown-submenu pull-left">
+                  {% if view.source %}
+                    <a class="bg-secondary text-light dropdown-item dropend p-2" href="#"><i class="{{view.source.icon_name}}"></i> {{view.source.name}}</a>
+                  {% else %}
+                    <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-filter"></i> Source</a>
+                  {% endif %}
+                  <ul class="dropdown-menu" >
+
+                    <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}source="><i class="fas fa-filter"></i> Any Source</a></li>
+                    <li class="dropdown-divider p-0"></li>
+                    {% for source in view.community.source_set.all %}
+                    <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}source={{source.id}}"><i class="{{source.icon_name}}"></i> {{source.name}}</a></li>
+                    {% endfor %}
+                  </ul>
+                </li>
+                {% endif %}
+
+              </ul>
             </span>
           {% endif %}
 

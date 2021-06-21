@@ -22,7 +22,7 @@ class Conversations(SavannahFilterView):
             'member_tag': True,
             'member_company': True,
             'tag': True,
-            'source': False,
+            'source': True,
             'contrib_type': False,
         })
 
@@ -378,7 +378,7 @@ class Conversations(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         connection_filter = Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)
         if self.source:
-            members = members.filter(contact__source=self.source)
+            members = members.filter(connections__contact__source=self.source)
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.member_company:

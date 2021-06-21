@@ -32,11 +32,11 @@ class Command(BaseCommand):
             other_projects = Project.objects.filter(community=community, default_project=False)
 
             # Check community-wide levels
-            print("Checking member levels for %ss" % community.name)
+            print("Checking member levels for %s" % community.name)
             now = datetime.datetime.utcnow()
             MemberLevel.objects.filter(community=community, project=default_project, timestamp__lt=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).delete()
             if self.verbosity >= 3:
-                print("Default project level deletes: %ss" % (datetime.datetime.utcnow() - now).total_seconds())
+                print("Default project level deletes: %s" % (datetime.datetime.utcnow() - now).total_seconds())
 
             now = datetime.datetime.utcnow()
             speaker_filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period))
@@ -46,7 +46,7 @@ class Command(BaseCommand):
                 elif member.convo_count >= default_project.threshold_user:
                     MemberLevel.objects.update_or_create(community=community, project=default_project, member=member, defaults={'level':MemberLevel.USER, 'timestamp':member.last_convo, 'conversation_count':member.convo_count})
             if self.verbosity >= 3:
-                print("Default project conversation levels: %ss" % (datetime.datetime.utcnow() - now).total_seconds())
+                print("Default project conversation levels: %s" % (datetime.datetime.utcnow() - now).total_seconds())
 
             now = datetime.datetime.utcnow()
             author_filter = Q(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period))
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 elif member.contrib_count >= default_project.threshold_contributor:
                     MemberLevel.objects.update_or_create(community=community, project=default_project, member=member, defaults={'level':MemberLevel.CONTRIBUTOR, 'timestamp':member.last_contrib, 'contribution_count':member.contrib_count})
             if self.verbosity >= 3:
-                print("Default project contribution levels: %ss\n" % (datetime.datetime.utcnow() - now).total_seconds())
+                print("Default project contribution levels: %s\n" % (datetime.datetime.utcnow() - now).total_seconds())
 
             # Check per-project levels
             for project in other_projects:
@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 now = datetime.datetime.utcnow()
                 MemberLevel.objects.filter(community=community, project=project, timestamp__lt=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).delete()
                 if self.verbosity >= 3:
-                    print("%s project level deletes: %ss" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
+                    print("%s project level deletes: %s" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
                 now = datetime.datetime.utcnow()
                 speaker_filter=Q(speaker_in__channel__in=project.channels.all())
@@ -76,7 +76,7 @@ class Command(BaseCommand):
                     elif member.convo_count >= project.threshold_user:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.USER, 'timestamp':member.last_convo, 'conversation_count':member.convo_count})
                 if self.verbosity >= 3:
-                    print("%s project conversation levels: %ss" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
+                    print("%s project conversation levels: %s" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
                 now = datetime.datetime.utcnow()
                 author_filter = Q(contribution__channel__in=project.channels.all())
@@ -88,7 +88,7 @@ class Command(BaseCommand):
                     elif member.contrib_count >= project.threshold_contributor:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.CONTRIBUTOR, 'timestamp':member.last_contrib, 'contribution_count':member.contrib_count})
                 if self.verbosity >= 3:
-                    print("%s project contribition levels: %ss\n" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
+                    print("%s project contribition levels: %s\n" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
             if self.verbosity >= 3:
-                print("Time checking %s: %ss\n" % (community, (datetime.datetime.utcnow() - community_start).total_seconds()))
+                print("Time checking %s: %s\n" % (community, (datetime.datetime.utcnow() - community_start).total_seconds()))

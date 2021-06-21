@@ -24,6 +24,7 @@ class Contributions(SavannahFilterView):
             'custom_timespan': True,
             'member': True,
             'tag': True,
+            'source': True,
             'contrib_type': True,
         })
 
@@ -377,7 +378,7 @@ class Contributors(SavannahFilterView):
             'member_tag': True,
             'member_company': True,
             'tag': True,
-            'source': False,
+            'source': True,
             'contrib_type': True,
         })
 
@@ -408,6 +409,9 @@ class Contributors(SavannahFilterView):
             contrib_range_filter = contrib_range_filter & contrib_filter
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+            contrib_range_filter = contrib_range_filter & contrib_filter
+        if self.source:
+            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
             contrib_range_filter = contrib_range_filter & contrib_filter
         if self.member_company:
             members = members.filter(company=self.member_company)
