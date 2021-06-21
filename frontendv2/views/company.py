@@ -194,12 +194,12 @@ class Companies(SavannahFilterView):
         self.filter.update({
             'timespan': True,
             'custom_timespan': True,
-            'member': False,
-            'member_role': False,
-            'member_tag': False,
+            'member': True,
+            'member_role': True,
+            'member_tag': True,
             'member_company': False,
             'tag': True,
-            'source': False,
+            'source': True,
             'conrib_type': False,
         })
 
@@ -212,19 +212,34 @@ class Companies(SavannahFilterView):
             convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
         else:
             convo_filter = Q()
+        if self.role:
+            if self.role == Member.BOT:
+                convo_filter = convo_filter & ~Q(member__role=self.role)
+            else:
+                convo_filter = convo_filter & Q(member__role=self.role)
+        if self.member_tag:
+            convo_filter = convo_filter & Q(member__tags=self.member_tag)
+        if self.tag:
+            convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
+        if self.source:
+            convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
         companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
             companies = companies.filter(last_activity__isnull=False)
-        if self.tag:
-            companies = companies.filter(tag=self.tag)
-        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
+        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0)
         return companies.order_by(Lower('name'))
 
     def assignment_chart(self):
         if not self._assignmentChart:
             members = Member.objects.filter(community=self.community, first_seen__lte=self.rangeend, last_seen__gte=self.rangestart)
-            if self.tag:
-                members = members.filter(tags=self.tag)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
+
+            if self.role:
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)
 
             chart_colors = ChartColors()
             self._assignmentChart = PieChart("assignmentChart", title="Members by Association")
@@ -239,8 +254,18 @@ class Companies(SavannahFilterView):
         if not self._membersChart:
             companies = Company.objects.filter(community=self.community, is_staff=False)
             convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+            if self.role:
+                if self.role == Member.BOT:
+                    convo_filter = convo_filter & ~Q(member__role=self.role)
+                else:
+                    convo_filter = convo_filter & Q(member__role=self.role)
+            if self.member_tag:
+                convo_filter = convo_filter & Q(member__tags=self.member_tag)
             if self.tag:
-                companies = companies.filter(tag=self.tag)
+                convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
+            if self.source:
+                convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
+
             companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0).order_by('-member_count')
 
             chart_colors = ChartColors()
@@ -259,9 +284,19 @@ class Companies(SavannahFilterView):
         if not self._conversationsChart:
             companies = Company.objects.filter(community=self.community, is_staff=False)
             convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+            if self.role:
+                if self.role == Member.BOT:
+                    convo_filter = convo_filter & ~Q(member__role=self.role)
+                else:
+                    convo_filter = convo_filter & Q(member__role=self.role)
+            if self.member_tag:
+                convo_filter = convo_filter & Q(member__tags=self.member_tag)
             if self.tag:
-                companies = companies.filter(tag=self.tag)
-            companies = companies.annotate(convo_count=Count('member__speaker_in', filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
+                convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
+            if self.source:
+                convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
+
+            companies = companies.annotate(convo_count=Count('member__speaker_in', distinct=True, filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
 
             self._conversationsChart = PieChart("conversationsChart", title="Conversations by Company")
             self._conversationsChart.set_show_legend(False)
@@ -274,8 +309,18 @@ class Companies(SavannahFilterView):
         if not self._contributionsChart:
             companies = Company.objects.filter(community=self.community, is_staff=False)
             contrib_filter = Q(member__contribution__timestamp__lte=self.rangeend, member__contribution__timestamp__gte=self.rangestart)
+            if self.role:
+                if self.role == Member.BOT:
+                    contrib_filter = contrib_filter & ~Q(member__role=self.role)
+                else:
+                    contrib_filter = contrib_filter & Q(member__role=self.role)
+            if self.member_tag:
+                contrib_filter = contrib_filter & Q(member__tags=self.member_tag)
             if self.tag:
-                companies = companies.filter(tag=self.tag)
+                contrib_filter = contrib_filter & Q(member__contribution__tags=self.tag)
+            if self.source:
+                contrib_filter = contrib_filter & Q(member__contribution__channel__source=self.source)
+
             companies = companies.annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
 
             chart_colors = ChartColors()
