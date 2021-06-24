@@ -50,11 +50,26 @@ class ProjectsGraph(SavannahView):
         super().__init__(request, community_id)
         self.active_tab = "projects"
 
+        self.level = MemberLevel.CONTRIBUTOR
+        try:
+            if 'level' in request.GET:
+                if request.GET.get('level') == '':
+                    request.session['level'] = None
+                else:
+                    self.level = int(request.GET.get('level'))
+                    request.session['level'] = self.level
+            elif 'level' in request.session:
+                self.level = request.session.get('level')
+        except:
+            self.level = MemberLevel.CONTRIBUTOR
+            request.session['level'] = MemberLevel.CONTRIBUTOR
+
     @login_required
     def as_view(request, community_id):
         view = ProjectsGraph(request, community_id)
-
-        return render(request, "savannahv2/projects_graph.html", view.context)
+        context = view.context
+        context['level_name'] = MemberLevel.LEVEL_MAP[view.level]
+        return render(request, "savannahv2/projects_graph.html", context)
 
     @login_required
     def as_json(request, community_id):
@@ -66,10 +81,10 @@ class ProjectsGraph(SavannahView):
         projects = dict()
         from_date = datetime.datetime.now() - datetime.timedelta(days=366)
 
-        levels = MemberLevel.objects.filter(project__community=view.community, project__default_project=False, level__gte=MemberLevel.CONTRIBUTOR)
+        levels = MemberLevel.objects.filter(project__community=view.community, project__default_project=False, level__gte=view.level)
         levels = levels.prefetch_related('member', 'project')
         levels.order_by('-timestamp')
-        for level in levels[:10000]:
+        for level in levels[:1000]:
 
             if level.member_id not in connected:
                 if level.member.role == Member.BOT:

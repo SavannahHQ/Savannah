@@ -10,7 +10,7 @@
 {% block page_content %}
         <!-- Page Heading -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'projects' community_id=view.community.id %}"><i class="fas fa-chevron-left"></i></a> Project Contributors</h1>
+        <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'projects' community_id=view.community.id %}"><i class="fas fa-chevron-left"></i></a> Project Graph</h1>
         </div>
 
           {% if view.community.source_set.all.count > 1 %}
@@ -22,7 +22,17 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Contributor Graph</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Level: 
+                  <span class="dropdown">
+                    <button style="white-space:nowrap;" class="btn dropdown-toggle btn-default" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{level_name}}</button>
+                    <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton" style="min-width: 20rem;">
+                          <a class="dropdown-item p-2" href="?level=3">Core</a>
+                          <a class="dropdown-item p-2" href="?level=2">Contributors</a>
+                          <a class="dropdown-item p-2" href="?level=1">Participants</a>
+                          <a class="dropdown-item p-2" href="?level=0">Visitors</a>
+                    </div>
+                  </span>
+                  </h6>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
