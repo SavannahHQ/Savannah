@@ -14,6 +14,7 @@ from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import FunnelChart
+from frontendv2 import colors
 
 class Projects(SavannahView):
     def __init__(self, request, community_id):
@@ -42,6 +43,60 @@ class Projects(SavannahView):
         view = Projects(request, community_id)
 
         return render(request, "savannahv2/projects.html", view.context)
+
+class ProjectsGraph(SavannahView):
+    def __init__(self, request, community_id, json=False):
+        self._is_json = json
+        super().__init__(request, community_id)
+        self.active_tab = "projects"
+
+    @login_required
+    def as_view(request, community_id):
+        view = ProjectsGraph(request, community_id)
+
+        return render(request, "savannahv2/projects_graph.html", view.context)
+
+    @login_required
+    def as_json(request, community_id):
+        view = ProjectsGraph(request, community_id, json=True)
+        nodes = list()
+        links = list()
+
+        connected = set()
+        projects = dict()
+        from_date = datetime.datetime.now() - datetime.timedelta(days=366)
+
+        levels = MemberLevel.objects.filter(project__community=view.community, project__default_project=False, level__gte=MemberLevel.CONTRIBUTOR)
+        levels = levels.prefetch_related('member', 'project')
+        levels.order_by('-timestamp')
+        for level in levels[:10000]:
+
+            if level.member_id not in connected:
+                if level.member.role == Member.BOT:
+                    tag_color = colors.MEMBER.BOT
+                elif level.member.role == Member.STAFF:
+                    tag_color = colors.MEMBER.STAFF
+                else:
+                    tag_color = colors.MEMBER.COMMUNITY
+                link = reverse('member_profile', kwargs={'member_id':level.member_id})
+                nodes.append({"id":'m%s'%level.member_id, "name":level.member.name, "link":link, "color":tag_color, "connections":0})
+                connected.add(level.member_id)
+            if level.project not in projects:
+                projects[level.project] = 1
+            else:
+                projects[level.project] += 1
+            links.append({"source":'prj%s'%level.project_id, "target":'m%s'%level.member_id})
+            
+        for project, count in projects.items():
+            if project.tag:
+                node_color = project.tag.color
+            else:
+                node_color = "8a8a8a"
+            link = reverse('project_overview', kwargs={'community_id':view.community.id, 'project_id':project.id})
+            nodes.append({"id":'prj%s'%project.id, "name":project.name, "link":link, "color":node_color, "connections":count})
+
+                    
+        return JsonResponse({"nodes":nodes, "links":links})
 
 class ProjectOverview(SavannahView):
     def __init__(self, request, community_id, project_id):

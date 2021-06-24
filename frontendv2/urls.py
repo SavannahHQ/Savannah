@@ -26,7 +26,7 @@ from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
 from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager
-from frontendv2.views.projects import Projects, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
+from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
 from frontendv2.views.reports import Reports, view_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup
 from frontendv2 import views
@@ -82,6 +82,8 @@ urlpatterns = [
     path('reports/<int:community_id>/view/<int:report_id>/', view_report, name='report_view'),
 
     path('projects/<int:community_id>/', Projects.as_view, name='projects'),
+    path('projects/<int:community_id>/graph', ProjectsGraph.as_view, name='projects_graph'),
+    path('projects/<int:community_id>/graph.json', ProjectsGraph.as_json, name='projects_json'),
     path('projects/<int:community_id>/add', ProjectAdd.as_view, name='project_add'),
     path('projects/<int:community_id>/overview/<int:project_id>/', ProjectOverview.as_view, name='project_overview'),
     path('projects/<int:community_id>/overview/<int:project_id>/edit', ProjectEdit.as_view, name='project_edit'),

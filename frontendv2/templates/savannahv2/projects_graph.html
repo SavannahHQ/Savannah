@@ -1,0 +1,151 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+{% block page_styles %}
+<script src="https://d3js.org/d3.v5.min.js"></script>
+{% endblock %}
+
+{% block page_title %} | {{view.community.name}} Projects{% endblock %}
+
+{% block page_content %}
+        <!-- Page Heading -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'projects' community_id=view.community.id %}"><i class="fas fa-chevron-left"></i></a> Project Contributors</h1>
+        </div>
+
+          {% if view.community.source_set.all.count > 1 %}
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Contributor Graph</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area" style="height: 500px;">
+                    <div id="networkChart"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          {% endif %}
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+// set the dimensions and margins of the graph
+var chartSpace = d3.select("#networkChart")._groups[0][0];
+var availableWidth = chartSpace.offsetWidth;
+
+var margin = {top: 10, right: 30, bottom: 30, left: 40},
+  width = availableWidth - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom;
+var radius = 5
+
+// append the svg object to the body of the page
+var svg = d3.select("#networkChart")
+.append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+.append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+
+function color() {
+  const scale = d3.scaleOrdinal(d3.schemeCategory10);
+  return d => scale(d.group);
+}
+
+function drag (simulation) {
+  
+  function dragstarted(d) {
+    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+  
+  function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  }
+  
+  function dragended(d) {
+    if (!d3.event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+  
+  return d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended);
+}
+
+d3.json("{% url 'projects_json' view.community.id %}")
+  .then(function( data) {
+
+  console.log(data);
+
+ 
+  const links = data.links.map(d => Object.create(d));
+  const nodes = data.nodes.map(d => Object.create(d));
+
+  const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).distance(50).strength(1.1).id(d => d.id))
+      .force("collision", d3.forceCollide().radius(d => Math.min(15, Math.max(5, 50*(d.connections/nodes.length)))))
+      .force("charge", d3.forceManyBody().strength(Math.max(-50, Math.min(-10, -(100-(nodes.length))))-10))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+//  const svg = d3.select("#my_dataviz").append("svg")
+//      .attr("viewBox", [0, 0, width, height]);
+
+  const link = svg.append("g")
+      .attr("stroke", "#999")
+      .attr("stroke-opacity", 0.6)
+    .selectAll("line")
+    .data(links)
+    .join("line")
+      .attr("stroke-width", d => Math.sqrt(d.value));
+
+  const node = svg.append("g")
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5)
+    .selectAll("circle")
+    .data(nodes)
+    .join("circle")
+      .attr("r", d => Math.min(25, Math.max(5, 50*(d.connections/nodes.length))))
+      .attr("fill", d => '#'+d.color)
+      .call(drag(simulation));
+
+  node.append("title")
+      .text(d => d.name);
+
+  node.on("dblclick", d => window.location = d.link)
+
+  simulation.on("tick", () => {
+    node
+        .attr("cx", d => Math.max(0 - margin.left + radius, Math.min(width + margin.right - radius, d.x)))
+        .attr("cy", d => Math.max(0 - margin.top + radius, Math.min(height + margin.bottom - radius, d.y)));
+
+    link
+        .attr("x1", d => Math.max(0 - margin.left + radius, Math.min(width + margin.right - radius, d.source.x)))
+        .attr("y1", d => Math.max(0 - margin.top + radius, Math.min(height + margin.bottom - radius, d.source.y)))
+        .attr("x2", d => Math.max(0 - margin.left + radius, Math.min(width + margin.right - radius, d.target.x)))
+        .attr("y2", d => Math.max(0 - margin.top + radius, Math.min(height + margin.bottom - radius, d.target.y)));
+
+  });
+
+  return svg.node();
+});
+
+</script>
+{% endblock %}

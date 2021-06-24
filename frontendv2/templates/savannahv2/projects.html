@@ -16,7 +16,10 @@
         <!-- Page Heading -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Projects</h1>
+        <span>
+        <a class="btn btn-secondary" href="{% url 'projects_graph' community_id=view.community.id %}"><i class="fas fa-project-diagram"></i> Graph</a>
         <a class="btn btn-success" href="{% url 'project_add' community_id=view.community.id %}"><i class="fas fa-plus"></i> Project</a>
+        </span>
         </div>
         
           <!-- Content Row -->
