@@ -9,6 +9,7 @@ from django.contrib import messages
 from corm.models import *
 from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView
+from frontendv2.views.tags import random_tag_color
 
 class MemberMergeSuggestions(SavannahView):
     def __init__(self, request, community_id):
@@ -151,12 +152,15 @@ class TagSuggestions(SavannahView):
                 for suggestion_id in selected:
                     try:
                         suggestion = SuggestTag.objects.get(id=suggestion_id)
-                        suggestion.accept(request.user)
+                        suggestion.accept(request.user, random_tag_color(view.community))
                         success_count += 1
-                    except:
+                    except Exception as e:
                         pass
                 if len(selected) > 0:
-                    messages.success(request, "<b>%s</b> %s been added" % (success_count, pluralize(len(selected), "Tag has", "Tags have")))
+                    if success_count > 0:
+                        messages.success(request, "<b>%s</b> %s been added" % (success_count, pluralize(len(selected), "Tag has", "Tags have")))
+                    else:
+                        messages.error(request, "Unable to create tags")
                 else:
                     messages.warning(request, "You haven't selected any tag suggestions")
 

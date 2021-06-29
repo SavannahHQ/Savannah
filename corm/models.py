@@ -1120,10 +1120,10 @@ class SuggestTag(Suggestion):
     keyword = models.CharField(max_length=50)
     score = models.SmallIntegerField(default=0)
 
-    def accept_action(self, user):
-        Tag.objects.create(community=self.community, name=self.keyword, keywords=self.keyword, color='dfdfdf')
+    def accept(self, user, color):
+        Tag.objects.create(community=self.community, name=self.keyword, keywords=self.keyword, color=color)
         self.delete()
-        return False
+
 
 class SuggestTask(Suggestion):
     stakeholder = models.ForeignKey(Member, related_name='task_suggestions', on_delete=models.CASCADE)    

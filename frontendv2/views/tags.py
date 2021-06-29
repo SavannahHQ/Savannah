@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
 import datetime
+import random
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
@@ -11,6 +12,15 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView
+from frontendv2 import colors
+
+def random_tag_color(community=None):
+    if community:
+        used_colors = set(Tag.objects.filter(community=community).values('color').distinct().values_list('color', flat=True))
+        available_colors = list(set(colors.TAG_COLORS) - used_colors)
+        return available_colors[random.randrange(len(available_colors))]
+    else:
+        return colors.TAG_COLORS[random.randrange(len(colors.TAG_COLORS))]
 
 class Tags(SavannahView):
     def __init__(self, request, community_id):
@@ -69,7 +79,7 @@ class TagEditForm(forms.ModelForm):
 class AddTag(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
-        self.edit_tag = Tag(community=self.community, color="E5E6E8", last_changed=datetime.datetime.utcnow())
+        self.edit_tag = Tag(community=self.community, color=random_tag_color(community=self.community), last_changed=datetime.datetime.utcnow())
         self.active_tab = "tags"
 
     @property
