@@ -244,13 +244,11 @@ class Overview(SavannahFilterView):
             members = members.filter(company=self.member_company)
         if self.member_tag:
             members = members.filter(tags=self.member_tag)
-        members = members.filter(community=self.community).annotate(conversation_count=Count('participant_in', filter=Q(participant_in__timestamp__gte=self.rangestart, participant_in__timestamp__lte=self.rangeend)))
+        members = members.filter(community=self.community).annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)))
         members = members.filter(conversation_count__gt=0)
-        for m in members:
-            activity_counts[m] = m.conversation_count
-        most_active = [(member, count) for member, count in sorted(activity_counts.items(), key=operator.itemgetter(1))]
-        most_active.reverse()
-        return most_active[:10]
+        members = members.order_by('-conversation_count')
+
+        return members[:10]
 
     @property
     def most_connected(self):
@@ -267,12 +265,8 @@ class Overview(SavannahFilterView):
         members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)))
 
         members = members.filter(connection_count__gt=0)
-        connection_counts = dict()
-        for m in members:
-            connection_counts[m] = m.connection_count
-        most_connected = [(member, count) for member, count in sorted(connection_counts.items(), key=operator.itemgetter(1))]
-        most_connected.reverse()
-        return most_connected[:10]
+        members = members.order_by('-connection_count')
+        return members[:10]
 
     def getMembersChart(self):
         if not self._membersChart:
