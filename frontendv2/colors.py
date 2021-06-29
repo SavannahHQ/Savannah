@@ -8,7 +8,6 @@ TAG_COLORS = [
  'A52A2A', #brown
  'B22222', #firebrick
  'DC143C', #crimson
- 'FF0000', #red
  'FF6347', #tomato
  'FF7F50', #coral
  'CD5C5C', #indian red
@@ -25,11 +24,8 @@ TAG_COLORS = [
  'EEE8AA', #pale golden rod
  'BDB76B', #dark khaki
  'F0E68C', #khaki
- '808000', #olive
  'FFFF00', #yellow
  '9ACD32', #yellow green
- '556B2F', #dark olive green
- '6B8E23', #olive drab
  '7CFC00', #lawn green
  '7FFF00', #chart reuse
  'ADFF2F', #green yellow
@@ -40,7 +36,6 @@ TAG_COLORS = [
  '32CD32', #lime green
  '90EE90', #light green
  '98FB98', #pale green
- '8FBC8F', #dark sea green
  '00FA9A', #medium spring green
  '00FF7F', #spring green
  '2E8B57', #sea green
@@ -59,7 +54,6 @@ TAG_COLORS = [
  'AFEEEE', #pale turquoise
  '7FFFD4', #aqua marine
  'B0E0E6', #powder blue
- '5F9EA0', #cadet blue
  '4682B4', #steel blue
  '6495ED', #corn flower blue
  '00BFFF', #deep sky blue
@@ -84,7 +78,6 @@ TAG_COLORS = [
  '9932CC', #dark orchid
  'BA55D3', #medium orchid
  '800080', #purple
- 'D8BFD8', #thistle
  'DDA0DD', #plum
  'EE82EE', #violet
  'FF00FF', #magenta / fuchsia
@@ -111,7 +104,6 @@ TAG_COLORS = [
  'F4A460', #sandy brown
  'DEB887', #burly wood
  'D2B48C', #tan
- 'BC8F8F', #rosy brown
  'FFE4B5', #moccasin
  'FFDEAD', #navajo white
  'FFDAB9', #peach puff
@@ -122,8 +114,6 @@ TAG_COLORS = [
  'FFEFD5', #papaya whip
  'FFF5EE', #sea shell
  'F5FFFA', #mint cream
- '708090', #slate gray
- '778899', #light slate gray
  'B0C4DE', #light steel blue
  'E6E6FA', #lavender
  'FFFAF0', #floral white
