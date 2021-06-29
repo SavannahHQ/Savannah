@@ -226,7 +226,6 @@
                 {% for company in view.company_conversations %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
@@ -259,7 +258,6 @@
                 {% for company in view.company_contributions %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
