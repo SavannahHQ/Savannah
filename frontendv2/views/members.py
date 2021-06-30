@@ -352,7 +352,7 @@ class AllMembers(SavannahFilterView):
                 members = members.filter(role=self.role)
 
         if self.timespan < 365:
-            members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
+            members = members.filter(last_seen__gte=self.rangestart, last_seen__lte=self.rangeend)
         if self.sort_by == 'name':
             members = members.order_by(Lower('name'))
         elif self.sort_by == '-name':
