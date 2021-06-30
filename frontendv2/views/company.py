@@ -487,9 +487,10 @@ class CompanyLookup(SavannahFilterView):
         rejected_domains = [suggestion['domain'] for suggestion in SuggestCompanyCreation.objects.filter(community=self.community, status=Suggestion.REJECTED).values('domain')]
         unknown_domain_counts = dict()
 
+        convo_filter = Q()
         if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
             members = members.filter(last_seen__lte=self.rangeend, last_seen__gte=self.rangestart)
-
+            convo_filter = Q(speaker_in__timestamp__lte=self.rangeend, speaker_in__timestamp__gte=self.rangestart)
         if self.member_company:
             members =members.filter(company=self.member_company)
         if self.member_tag:
@@ -499,7 +500,7 @@ class CompanyLookup(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
-        members = members.annotate(convo_count=Count('speaker_in', distinct=True))
+        members = members.annotate(convo_count=Count('speaker_in', filter=convo_filter, distinct=True))
 
         for member in members:
             # Assign company based on email domain matching
