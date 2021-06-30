@@ -40,11 +40,12 @@
                     <th scope="col">Name</th>
                     <th scope="col">Domain</th>
                     <th scope="col">Members</th>
+                    <th scope="col">Activity</th>
                     <th scope="col"></th>
                   </tr>
                 </thead>
                 <tbody>
-                {% for domain, name, members, warning in view.all_domains %}
+                {% for domain, name, members, convos, warning in view.all_domains %}
                 <tr>
                   <td><input class="action-select" type="checkbox" name="selected" value="{{domain}}" /></td>
                   <td>
@@ -56,7 +57,10 @@
                   </td>
                   <td>
                     <a href="{% url 'all_members' view.community.id %}?search={{domain}}" title="Find Members" target="_blank">{{members}}</a>
-                    </td>
+                  </td>
+                  <td>
+                    {{convos}}
+                  </td>
                   <td class="text-right"><button class="btn btn-success" type="submit" name="accept" value="{{domain}}" >Create</button></td>
                 </tr>
                 {% endfor %}

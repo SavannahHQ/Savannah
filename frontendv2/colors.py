@@ -38,7 +38,6 @@ TAG_COLORS = [
  '98FB98', #pale green
  '00FA9A', #medium spring green
  '00FF7F', #spring green
- '2E8B57', #sea green
  '66CDAA', #medium aqua marine
  '3CB371', #medium sea green
  '20B2AA', #light sea green

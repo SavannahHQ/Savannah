@@ -499,6 +499,7 @@ class CompanyLookup(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        members = members.annotate(convo_count=Count('speaker_in', distinct=True))
 
         for member in members:
             # Assign company based on email domain matching
@@ -513,17 +514,18 @@ class CompanyLookup(SavannahFilterView):
                 if domain not in domain_cache:
                     # Domain doesn't belong to a defined company
                     if domain not in unknown_domain_counts:
-                        unknown_domain_counts[domain] = 1
+                        unknown_domain_counts[domain] = [domain, 1, member.convo_count]
                     else:
-                        unknown_domain_counts[domain] += 1
+                        unknown_domain_counts[domain][1] += 1
+                        unknown_domain_counts[domain][2] += member.convo_count
 
         domains = list()
-        for domain, count in sorted(unknown_domain_counts.items(), key=operator.itemgetter(1), reverse=True):
+        for domain, count, convos in sorted(unknown_domain_counts.values(), key=operator.itemgetter(1, 2), reverse=True):
             company_name = domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
             warning = None
             if domain in rejected_domains:
                 warning = 'Domain has previously been rejected'
-            domains.append((domain, company_name, count, warning))
+            domains.append((domain, company_name, count, convos, warning))
         return domains
 
     @login_required
