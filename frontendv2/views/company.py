@@ -358,7 +358,7 @@ class Companies(SavannahFilterView):
 class CompanyEditForm(forms.ModelForm):
     class Meta:
         model = Company
-        fields = ['name', 'website', 'domains', 'is_staff']
+        fields = ['name', 'website', 'icon_url', 'domains', 'is_staff']
         
     domains = forms.CharField(required=False, help_text="Comma-separated list of email domains", label="Email Domains")
     def __init__(self, *args, **kwargs):

@@ -54,7 +54,7 @@
                 <div class="row mb-3">
                   <div class="col-2">
                   {% if identity.avatar_url %}<a data-toggle="tooltip" title="Use as member avatar" onClick="document.getElementById('id_avatar_url').value = '{{identity.avatar_url}}';">{% endif %}
-                  {{identity.avatar_url|avatar_icon}}
+                  {{identity|avatar}}
                   {% if identity.avatar_url %}</a>{% endif %}
                   </div>
                   <div class="col-8">

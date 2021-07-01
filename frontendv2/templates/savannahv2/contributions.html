@@ -90,7 +90,7 @@
                 {% for member, date in view.new_contributors %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
@@ -129,7 +129,7 @@
                 {% for member, count in view.top_contributors %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
@@ -173,7 +173,7 @@
                 {% for member, convo_count in view.top_supporters %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
@@ -207,7 +207,7 @@
                 {% for member, convo_count in view.top_enablers %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>

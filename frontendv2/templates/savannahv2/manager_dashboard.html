@@ -81,7 +81,7 @@
                 {% for gift in view.open_gifts %}
                 <tr>
                   <td>
-                    {{gift.member.avatar_url|avatar_icon}}
+                    {{gift.member|avatar}}
                     <a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>
                   </td>
                   <td class="text-nowrap"><a href="{% url 'gift_edit' gift.member.id gift.id %}">{{gift.gift_type.name}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
@@ -117,7 +117,7 @@
                 {% for watch in view.member_watches %}
                 <tr>
                   <td>
-                    {{watch.member.avatar_url|avatar_icon}}
+                    {{watch.member|avatar}}
                     <a href="{% url 'member_profile' watch.member.id %}">{{watch.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=watch.member.tags.all %}
                   </td>
@@ -156,7 +156,7 @@
                 {% for member in view.new_members %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
@@ -190,7 +190,7 @@
                 {% for member, tstamp in view.new_contributors %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
@@ -233,7 +233,7 @@
                 {% for member in view.top_connections %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                   </td>
                   <td>{{member.connection_count}}</td>
@@ -269,7 +269,7 @@
                 {% for connection in view.recent_connections %}
                 <tr>
                   <td>
-                    {{connection.to_member.avatar_url|avatar_icon}}
+                    {{connection.to_member|avatar}}
                     <a href="{% url 'member_profile' connection.to_member.id %}{% if view.tag %}?tag={{view.tag.name}}{% endif %}">{{ connection.to_member.name }}</a>
                   </td>
                   <td class="text-nowrap">{{connection.last_connected|dateortime}}</td>

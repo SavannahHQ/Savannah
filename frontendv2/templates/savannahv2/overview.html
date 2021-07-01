@@ -151,7 +151,7 @@
                 {% for member in view.most_active %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                   </td>
                   <td>{{member.conversation_count}}</td>
@@ -183,7 +183,7 @@
                 {% for member in view.most_connected %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                   </td>
                   <td>{{member.connection_count}}</td>
@@ -216,7 +216,7 @@
                 {% for member in view.top_contributors %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                   </td>
                   <td>{{member.contrib_count}}</td>
@@ -252,6 +252,7 @@
                 {% for company in view.company_members %}
                 <tr>
                   <td>
+                    {{company.icon_url|icon:"fas fa-building"}}
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
                   </td>
                   <td>{{company.member_count}}</td>
@@ -283,6 +284,7 @@
                 {% for company in view.company_conversations %}
                 <tr>
                   <td>
+                    {{company.icon_url|icon:"fas fa-building"}}
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
                   </td>
                   <td>{{company.convo_count}}</td>
@@ -314,6 +316,7 @@
                 {% for company in view.company_contributions %}
                 <tr>
                   <td>
+                    {{company.icon_url|icon:"fas fa-building"}}
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
                   </td>
                   <td>{{company.contrib_count}}</td>

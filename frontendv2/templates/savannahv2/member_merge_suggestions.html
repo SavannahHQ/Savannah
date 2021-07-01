@@ -45,11 +45,11 @@
                       <i class="{{identity.source.icon_name}}" title="{{identity.detail}}"> </i>
                     {% endfor %}
                     <a href="{% url 'member_profile' suggestion.source_member.id %}">{{suggestion.source_member.name}}</a>
-                    {{suggestion.source_member.avatar_url|avatar_icon}}
+                    {{suggestion.source_member|avatar}}
                   </td>
                   <td class="text-center"><i class="fas fa-arrow-right"> </i></td>
                   <td class="text-left">
-                    {{suggestion.destination_member.avatar_url|avatar_icon}}
+                    {{suggestion.destination_member|avatar}}
                     <a href="{% url 'member_profile' suggestion.destination_member.id %}">{{suggestion.destination_member.name}}</a>
                     {% for identity in suggestion.destination_member.contact_set.all %}
                       <i class="{{identity.source.icon_name}}" title="{{identity.detail}}"> </i>

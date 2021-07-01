@@ -6,7 +6,7 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">{{view.company.name}}</h1>
+            <h1 class="h3 mb-0 text-gray-800">{{view.company.icon_url|icon:"fas fa-building"}}{{view.company.name}}</h1>
           </div>
 
           <!-- Content Row -->
@@ -156,7 +156,7 @@
                   <div class="ml-3">
                   {% for member in view.all_members %}
                     <div class="mb-3">
-                      {{member.avatar_url|avatar_icon}}
+                      {{member.avatar_url|icon}}
                       <a href="{% url 'member_profile' member.id %}">{{member}}</a>
                       {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                       <br/><small class="muted">{{member.first_seen|date|default:''}} - {{member.last_seen|date|default:''}}</small>

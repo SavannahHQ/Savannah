@@ -48,7 +48,7 @@ th[scope="col"] > a:hover {
                 {% for contributor in view.paged_contributors %}
                 <tr>
                   <td class="text-nowrap">
-                  {{contributor.avatar_url|avatar_icon}}
+                  {{contributor|avatar}}
                   <a href="{% url 'member_profile' contributor.id %}">{{contributor.name}}</a>
                   {% include 'savannahv2/tag_list.html' with tags=contributor.tags.all %}
                   </td>

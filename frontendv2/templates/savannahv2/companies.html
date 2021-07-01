@@ -1,6 +1,6 @@
 {% extends "savannahv2/base.html"%}
 {% load static %}
-{% load humanize %}
+{% load humanize member_utils %}
 
 {% block page_title %} | {{view.community.name}} Companies{% endblock %}
 
@@ -39,7 +39,7 @@
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col" width="30%">Name</th>
+                    <th scope="col"  width="40%">Name</th>
                     <th scope="col">Members</th>
                     <th scope="col">Last Activity</th>
                     <th width="100px" scope="col"></th>
@@ -49,7 +49,10 @@
                 {% for company in view.all_companies %}
                 <tr>
                   <td>
-                    <a href="{% url 'company_profile' company.id %}"><i class="{% if company.is_staff %}fas fa-user-tie{% else %}fas fa-building{% endif %}" title="{% if company.is_staff %}Staff{% endif %}"> </i> {{ company.name }}</a>
+                    {{company.logo_url|icon:'fas fa-building'}}
+                    <a href="{% url 'company_profile' company.id %}">
+                    {{ company.name }}
+                    </a>
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
                   <td >{{company.member_count|intcomma}}</td>
@@ -66,6 +69,9 @@
                 </table>
                 </div>
                 </div>
+              </div>
+              <div class="d-flex justify-content-center">
+                <a class="text-muted" href="https://clearbit.com">Logos provided by Clearbit</a>
               </div>
 
             </div>
@@ -127,6 +133,7 @@
             </div>
 
           </div>
+
         </div>
         <!-- /.container-fluid -->
 {% endblock %}

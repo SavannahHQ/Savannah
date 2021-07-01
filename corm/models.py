@@ -1311,6 +1311,20 @@ class Company(models.Model):
             self.set_tag(new_tag)
 
     @property
+    def logo_url(self):
+        if self.icon_url:
+            return self.icon_url
+        elif self.website:
+            domain = self.website.split("/")[2]
+            if domain.startswith('www.'):
+                domain = domain[4:]
+            self.icon_url = "https://logo.clearbit.com/%s?size=32" % domain
+            self.save()
+            return self.icon_url
+        else:
+            return None
+
+    @property
     def first_seen(self):
         try:
             first_convo = Conversation.objects.filter(speaker__community=self.community, speaker__company=self).order_by('timestamp')[0]

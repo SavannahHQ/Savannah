@@ -38,7 +38,7 @@
                 {% for member in view.all_members %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% if member.tag_count %}{% include 'savannahv2/tag_list.html' with tags=member.tags.all %}{% endif %}
                   </td>

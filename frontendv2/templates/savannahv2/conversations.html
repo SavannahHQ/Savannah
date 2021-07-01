@@ -156,7 +156,7 @@
                 {% for member in view.most_active %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
@@ -189,7 +189,7 @@
                 {% for member in view.most_connected %}
                 <tr>
                   <td>
-                    {{member.avatar_url|avatar_icon}}
+                    {{member|avatar}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>

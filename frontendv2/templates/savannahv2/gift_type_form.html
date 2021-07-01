@@ -60,7 +60,7 @@
                 <tbody>
                 {% for gift in view.sent_gifts %}
                 <tr>
-                  <td>{{gift.member.avatar_url|avatar_icon}}<a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
+                  <td>{{gift.member|avatar}}<a href="{% url 'member_profile' gift.member.id %}">{{gift.member}}</a>{% if gift.reason %} <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="{{gift.reason}}"></i>{% endif %}</td>
                   <td>{{gift.sent_date|dateortime}}</td>
                   <td>{% if gift.impact == 0 %}--{% else %}{% if gift.impact > 0 %}<span class="text-success"><i class="fas fa-caret-up"></i> {% else %}<span class="text-danger"><i class="fas fa-caret-down"></i> {% endif %}{{gift.impact|abs|floatformat:-2}}%{% endif %}</td>
                 </tr>

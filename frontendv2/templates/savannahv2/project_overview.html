@@ -169,7 +169,7 @@
                 {% for level in view.core_levels %}
                 <tr>
                   <td>
-                    {{level.member.avatar_url|avatar_icon}}
+                    {{level.member|avatar}}
                     <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
                   </td>
@@ -207,7 +207,7 @@
                 {% for level in view.contrib_levels %}
                 <tr>
                   <td>
-                    {{level.member.avatar_url|avatar_icon}}
+                    {{level.member|avatar}}
                     <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
                     {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
                   </td>
