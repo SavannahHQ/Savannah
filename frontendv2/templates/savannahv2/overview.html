@@ -315,7 +315,6 @@
                 <tr>
                   <td>
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
                   <td>{{company.contrib_count}}</td>
                 </tr>
