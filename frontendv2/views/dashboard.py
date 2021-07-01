@@ -212,11 +212,28 @@ class Overview(SavannahFilterView):
         members = members.order_by('-connection_count')
         return members[:10]
 
+    @property
+    def top_contributors(self):
+        activity_counts = dict()
+        members = Member.objects.filter(community=self.community)
+        members = members.filter(community=self.community).annotate(contrib_count=Count('contribution', distinct=True, filter=Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)))
+        members = members.filter(contrib_count__gt=0)
+        members = members.order_by('-contrib_count')
+
+        return members[:10]
+
+    def company_members(self):
+        companies = Company.objects.filter(community=self.community, is_staff=False)
+        convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+
+        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0).order_by('-member_count')
+        return companies[:10]
+
     def company_conversations(self):
         companies = Company.objects.filter(community=self.community, is_staff=False)
         convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
 
-        companies = companies.annotate(convo_count=Count('member__speaker_in', distinct=True, filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
+        companies = companies.annotate(convo_count=Count('member__speaker_in', distinct=True, filter=convo_filter), last_active=Max('member__last_seen')).filter(convo_count__gt=0).order_by('-convo_count', '-last_active')
         return companies[:10]
 
     def company_contributions(self):

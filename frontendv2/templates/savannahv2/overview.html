@@ -132,7 +132,7 @@
           <div class="row">
 
             <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
@@ -153,7 +153,6 @@
                   <td>
                     {{member.avatar_url|avatar_icon}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.conversation_count}}</td>
                 </tr>
@@ -165,7 +164,7 @@
             </div>
 
             <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
@@ -186,9 +185,41 @@
                   <td>
                     {{member.avatar_url|avatar_icon}}
                     <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
                   </td>
                   <td>{{member.connection_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text">#</span><span class="full-text">Contributions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.top_contributors %}
+                <tr>
+                  <td>
+                    {{member.avatar_url|avatar_icon}}
+                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                  </td>
+                  <td>{{member.contrib_count}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -202,7 +233,38 @@
           <div class="row">
 
             <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
+
+              <!-- Most Active Users-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Involved Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Company</th>
+                    <th scope="col"><span class="short-text">#</span><span class="full-text">Members</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.company_members %}
+                <tr>
+                  <td>
+                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
+                  </td>
+                  <td>{{company.member_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
@@ -222,7 +284,6 @@
                 <tr>
                   <td>
                     <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
                   <td>{{company.convo_count}}</td>
                 </tr>
@@ -234,7 +295,7 @@
             </div>
 
             <!-- Content Column -->
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
 
               <!-- Most Active Users-->
               <div class="card shadow mb-4">
