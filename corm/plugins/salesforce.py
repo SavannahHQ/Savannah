@@ -118,7 +118,7 @@ class SalesforceMemberSerializer(serializers.Serializer):
     company = serializers.CharField(source='member.company', required=False)
     first_seen = serializers.SerializerMethodField()
     last_seen = serializers.SerializerMethodField()
-    tags = TagsField(through='member', required=False)
+    tags = serializers.SerializerMethodField()
     identities = serializers.SerializerMethodField(source='*')
     engagement_levels = serializers.SerializerMethodField(source='*')
     notes = serializers.SerializerMethodField(source='*')
@@ -133,6 +133,9 @@ class SalesforceMemberSerializer(serializers.Serializer):
             return identity.member.last_seen.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')
         else:
             return self.get_first_seen()
+
+    def get_tags(self, identity):
+        return list({'name':tag.name, 'color':tag.color} for tag in identity.member.tags.all())
 
     def get_identities(self, identity):
         return list({'source':identity.source.connector_name, 'detail':identity.detail, 'url':identity.link_url} for identity in Contact.objects.filter(member=identity.member))
