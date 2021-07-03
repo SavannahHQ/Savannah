@@ -116,14 +116,23 @@ class SalesforceMemberSerializer(serializers.Serializer):
     email = serializers.EmailField(source='email_address', required=False, allow_null=True)
     name = serializers.CharField(source='member.name', max_length=256, required=False, allow_null=True)
     company = serializers.CharField(source='member.company', required=False)
-    first_seen = serializers.DateTimeField(source='member.first_seen', default_timezone=pytz.UTC)
-    last_seen = serializers.DateTimeField(source='member.last_seen', default_timezone=pytz.UTC, required=False)
+    first_seen = serializers.SerializerMethodField()
+    last_seen = serializers.SerializerMethodField()
     tags = TagsField(through='member', required=False)
     identities = serializers.SerializerMethodField(source='*')
     engagement_levels = serializers.SerializerMethodField(source='*')
     notes = serializers.SerializerMethodField(source='*')
     top_connections = serializers.SerializerMethodField(source='*')
     recent_connections = serializers.SerializerMethodField(source='*')
+
+    def get_first_seen(self, identity):
+        return identity.member.first_seen.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')
+
+    def get_last_seen(self, identity):
+        if identity.member.last_seen:
+            return identity.member.last_seen.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')
+        else:
+            return self.get_first_seen()
 
     def get_identities(self, identity):
         return list({'source':identity.source.connector_name, 'detail':identity.detail, 'url':identity.link_url} for identity in Contact.objects.filter(member=identity.member))
@@ -132,13 +141,13 @@ class SalesforceMemberSerializer(serializers.Serializer):
         return list({'project':level.project.name, 'level':level.level_name} for level in MemberLevel.objects.filter(member=identity.member).order_by('-project__default_project', '-level', 'timestamp'))
 
     def get_notes(self, identity):
-        return list({'tstamp':note.timestamp.replace(tzinfo=pytz.UTC).isoformat(), 'author': note.author.username, 'content': note.content} for note in Note.objects.filter(member=identity.member).order_by('-timestamp'))
+        return list({'tstamp':note.timestamp.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds'), 'author': note.author.username, 'content': note.content} for note in Note.objects.filter(member=identity.member).order_by('-timestamp'))
 
     def get_top_connections(self, identity):
         return list({'name':c.to_member.name, 'connections':c.connection_count} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-connection_count')[:5])
 
     def get_recent_connections(self, identity):
-        return list({'name':c.to_member.name, 'tstamp':c.last_connected.replace(tzinfo=pytz.UTC).isoformat()} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
+        return list({'name':c.to_member.name, 'tstamp':c.last_connected.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
