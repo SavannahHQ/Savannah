@@ -49,7 +49,7 @@
                 {% for company in view.all_companies %}
                 <tr>
                   <td>
-                    {{company.logo_url|icon:'fas fa-building'}}
+                    {{company.logo_url|icon:'img/company-default.png'}}
                     <a href="{% url 'company_profile' company.id %}">
                     {{ company.name }}
                     </a>

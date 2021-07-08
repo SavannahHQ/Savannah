@@ -18,7 +18,7 @@
 {% block page_content %}
         <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between pb-2 mb-4">
-            <h1 class="text-nowrap h3 mb-0 text-gray-800">{{view.member.avatar_url|icon}}{{view.member.name}}</h1>
+            <h1 class="text-nowrap h3 mb-0 text-gray-800">{{view.member|avatar_icon}}{{view.member.name}}</h1>
             <span class="d-flex">
             <form class="d-sm-inline-block form-inline" action="{% url 'member_followup_form' view.member.id %}" method="POST">
               {% csrf_token %}
