@@ -1,0 +1,8 @@
+
+IS_DEMO = True
+
+SITE_NAME = 'Savannah CRM Demo'
+
+DEMO_POOL = 3
+DEMO_DURATION_HOURS = 24
+DEMO_SIZE = 500

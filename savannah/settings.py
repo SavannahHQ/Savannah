@@ -28,6 +28,10 @@ DEBUG = True
 ALPHA = False
 BETA = True
 OPEN_BETA = True
+IS_DEMO = False
+DEMO_POOL = 3
+DEMO_DURATION_HOURS = 24
+DEMO_SIZE = 500
 SITE_ROOT = 'https://savannahcrm.com'
 SITE_DOMAIN = 'savannahcrm.com'
 SITE_NAME = 'Savannah CRM'
@@ -105,6 +109,7 @@ INSTALLED_APPS = [
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',
     'apiv1.apps.Apiv1Config',
+    'demo.apps.DemoConfig',
 
     'djstripe',
     'billing.apps.BillingConfig',

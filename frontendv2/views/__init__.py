@@ -6,6 +6,7 @@ from django.db.models import Q, Count, Max
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UsernameField, SetPasswordForm
 from django.contrib import messages
+from django.conf import settings
 from django import forms
 
 from corm.models import *
@@ -189,7 +190,7 @@ class SavannahView:
         
     @property
     def context(self):
-        communities = Community.objects.filter(status__lte=Community.SUSPENDED).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+        communities = Community.objects.filter(Q(status__lte=Community.SUSPENDED)|Q(status=Community.DEMO)).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
         return {
             "communities": communities,
             "active_community": self.community,
@@ -481,7 +482,10 @@ class CommunityCreationEmail(EmailMessage):
         self.html_body = "emails/new_community_created.html"
 
 def new_community(request):
-    return redirect('billing:signup')
+    if settings.IS_DEMO:
+        return redirect('demo:new')
+    else:
+        return redirect('billing:signup')
     
 def branding(request):
     context = {

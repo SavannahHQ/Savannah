@@ -1,6 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 from django.templatetags.static import static
+from django.conf import settings
 
 from corm.models import *
 
@@ -8,7 +9,7 @@ register = template.Library()
 
 @register.filter
 def icon(icon_url, default="img/user-default.png"):
-    if icon_url and icon_url[:8] == 'https://':
+    if icon_url and (icon_url[:8] == 'https://' or (icon_url[:7] == settings.SITE_ROOT[:7])):
         html = '<img class="rounded mr-1" src="%s" onerror="this.src=\'%s\';" height="32" width="32" />' % (icon_url, static(default))
     else:
         html = '<img class="rounded mr-1" src="%s" height="32" width="32" />' % static(default)

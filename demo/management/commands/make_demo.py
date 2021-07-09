@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
+from django.conf import settings
 import datetime
 import re
 import string
@@ -14,6 +15,7 @@ class Command(BaseCommand):
     help = 'Generate a Community with mock data'
 
     def add_arguments(self, parser):
+        parser.add_argument('--community_id', type=int)
         parser.add_argument('--name', default="New", type=str)
         parser.add_argument('--owner_id', type=int)
         parser.add_argument('--size', default=200, type=int)
@@ -22,9 +24,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         random.seed()
+        self.community_id = options.get("community_id")
         self.community_name = options.get("name")
         try:
-            c = Community.objects.get(name=self.community_name+" Demo")
+            if self.community_id:
+                c = Community.objects.get(id=self.community_id)
+            else:
+                c = Community.objects.get(name=self.community_name+" Demo")
             community_id=c.id
             if c.managers is not None:
                 c.managers.delete()
@@ -45,7 +51,8 @@ class Command(BaseCommand):
         if owner_id:
             self.owner = User.objects.get(id=owner_id)
         else:
-            self.owner = User.objects.filter(is_staff=True).order_by('id')[0]
+            self.owner = User.objects.get(username=settings.SYSTEM_USER)
+
 
         self.community = Community.objects.create(id=community_id, name=self.community_name+" Demo", owner=self.owner, status=Community.DEMO)
         self.community.bootstrap()
@@ -128,20 +135,20 @@ class Command(BaseCommand):
         print("Making Companies...")
         customer = Tag.objects.create(name="customer", community=self.community, color="fbff32")
         staff_domain = self.community_name.replace(" ", "").lower() + ".com"
-        staff_company = self.community.company_set.create(name=self.community_name, website="https://%s" % staff_domain, is_staff=True)
+        staff_company = self.community.company_set.create(name=self.community_name, website="https://%s" % staff_domain, icon_url=settings.SITE_ROOT+'/static/img/company-default.png', is_staff=True)
         CompanyDomains.objects.create(company=staff_company, domain=staff_domain)
 
-        large_co = self.community.company_set.create(name="Big Enterprise", website="https://enterprise.com", is_staff=False, tag=customer)
+        large_co = self.community.company_set.create(name="Big Enterprise", website="https://enterprise.com", icon_url=settings.SITE_ROOT+'/static/img/company-default.png', is_staff=False, tag=customer)
         CompanyDomains.objects.create(company=large_co, domain="large.com")
 
-        medium_co = self.community.company_set.create(name="Smart Stuff", website="https://smartstuff.com", is_staff=False, tag=None)
+        medium_co = self.community.company_set.create(name="Smart Stuff", website="https://smartstuff.com", icon_url=settings.SITE_ROOT+'/static/img/company-default.png', is_staff=False, tag=None)
         CompanyDomains.objects.create(company=medium_co, domain="smartstuff.com")
 
         prospect = Tag.objects.create(name="prospect", community=self.community, color="40f2dd")
-        small_co = self.community.company_set.create(name="Indie Tech", website="https://indietech.com", is_staff=False, tag=prospect)
+        small_co = self.community.company_set.create(name="Indie Tech", website="https://indietech.com", icon_url=settings.SITE_ROOT+'/static/img/company-default.png', is_staff=False, tag=prospect)
         CompanyDomains.objects.create(company=small_co, domain="indietech.com")
 
-        tiny_co = self.community.company_set.create(name="Startup Biz", website="https://startup.com", is_staff=False, tag=None)
+        tiny_co = self.community.company_set.create(name="Startup Biz", website="https://startup.com", icon_url=settings.SITE_ROOT+'/static/img/company-default.png', is_staff=False, tag=None)
         CompanyDomains.objects.create(company=tiny_co, domain="startup.com")
 
         companies = [None, staff_company, large_co, medium_co, small_co, tiny_co]
