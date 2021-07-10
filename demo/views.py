@@ -6,7 +6,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from corm.models import Community, Company, CompanyDomains
+from corm.models import *
 from demo.models import Demonstration
 
 # Create your views here.
