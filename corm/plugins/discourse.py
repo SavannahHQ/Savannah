@@ -135,6 +135,7 @@ class DiscourseImporter(PluginImporter):
             'Api-Key': source.auth_secret,
             'Api-Username': source.auth_id,
         }
+        self.API_BACKOFF_SECONDS = 30
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
         self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Support")
 
