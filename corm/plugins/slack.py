@@ -144,8 +144,12 @@ class SlackImporter(PluginImporter):
             resp = self.api_call(TEAM_INFO % {'team_id': self.source.auth_id})
             if resp.status_code == 200:
                 data = resp.json()
-                self.source.server = 'https://%s.slack.com' % data['team']['domain']
-                self.source.save()
+                if data['ok']:
+                    self.source.server = 'https://%s.slack.com' % data['team']['domain']
+                    self.source.save()
+                else:
+                    print("Error updating Slack workspace data")
+                    print(data)
             else:
                 print("Error updating Slack workspace data")
                 print(resp.content)
