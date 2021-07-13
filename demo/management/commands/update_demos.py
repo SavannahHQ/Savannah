@@ -45,8 +45,8 @@ class Command(BaseCommand):
             tag_weights.append(tag_weights[-1]+5)
             if tag_weights[-1] >= 95:
                 break
-        for from_member in random.sample(members, int(member_count/50)):
-            conversation_count = random.randint(1, 10)
+        for from_member in random.sample(members, int(member_count/100)):
+            conversation_count = random.randint(1, 3)
             print("Adding %s conversations for %s" % (conversation_count, from_member))
             tag_counts = dict()
             for i in range(conversation_count):
