@@ -1318,7 +1318,7 @@ class Company(models.Model):
             domain = self.website.split("/")[2]
             if domain.startswith('www.'):
                 domain = domain[4:]
-            self.icon_url = "https://logo.clearbit.com/%s?size=52" % domain
+            self.icon_url = "https://logo.clearbit.com/%s?size=32" % domain
             self.save()
             return self.icon_url
         else:
