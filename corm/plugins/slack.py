@@ -17,6 +17,7 @@ CONVERSATION_LOOKUP = 'https://slack.com/api/conversations.history?channel=%(cha
 THREAD_URL = 'https://slack.com/api/conversations.replies?channel=%(channel)s&ts=%(thread_ts)s&cursor=%(cursor)s&oldest=%(oldest)s'
 USER_PROFILE_URL = 'https://slack.com/api/users.info?user=%(user)s'
 USERS_LIST = 'https://slack.com/api/users.list?cursor=%(cursor)s'
+TEAM_INFO = 'https://slack.com/api/team.info?team=%(team_id)s'
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session.get('community'))
@@ -28,6 +29,7 @@ def authenticate(request):
         'users:read.email',
         'groups:read',
         'groups:history',
+        'team:read',
     ]
     callback_uri = request.build_absolute_uri(reverse('slack_callback'))
     client = OAuth2Session(client_id, scope=slack_auth_scope, redirect_uri=callback_uri)
@@ -136,6 +138,20 @@ class SlackImporter(PluginImporter):
 
     def api_call(self, path):
         return self.api_request(path, headers=self.API_HEADERS)
+
+    def update_source(self):
+        try:
+            resp = self.api_call(TEAM_INFO % {'team_id': self.source.auth_id})
+            if resp.status_code == 200:
+                data = resp.json()
+                self.source.server = 'https://%s.slack.com' % data['team']['domain']
+                self.source.save()
+            else:
+                print("Error updating Slack workspace data")
+                print(resp.content)
+        except Exception as e:
+            print("Failed to update Slack workspace data")
+            print(e)
 
     def prefetch_users(self):
         if self._has_prefetched:

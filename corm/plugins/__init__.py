@@ -320,6 +320,7 @@ class PluginImporter:
 
     def run(self, new_only=False):
         failures = list()
+        self.update_source()
         channels = self.get_channels()
         channels = channels.filter(enabled=True)
         if new_only:
@@ -418,4 +419,7 @@ class PluginImporter:
         raise NotImplementedError
 
     def update_identity(self, identity):
+        pass
+
+    def update_source(self):
         pass
