@@ -52,7 +52,7 @@ def callback(request):
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
         cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={"auth_id": token['user_id'], "auth_secret": token['access_token']})
-        source, created = Source.objects.update_or_create(community=community, auth_id=token['team_id'], connector="corm.plugins.slack", server=request.session['oauth_slack_instance'], defaults={'name':token['team_name'], 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token']})
+        source, created = Source.objects.update_or_create(community=community, auth_id=token['team_id'], connector="corm.plugins.slack", defaults={'name':token['team_name'], 'icon_name': 'fab fa-slack', 'auth_secret': token['access_token'], 'server':request.session['oauth_slack_instance']})
         if created:
             messages.success(request, 'Your Slack workspace has been connected! Pick which channels you want to track from the list below.')
         else:
