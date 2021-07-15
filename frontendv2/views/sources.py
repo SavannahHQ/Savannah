@@ -19,7 +19,7 @@ class Sources(SavannahView):
         self.active_tab = "sources"
 
     def all_sources(self):
-        return Source.objects.filter(community=self.community).annotate(channel_count=Count('channel', distinct=True), member_count=Count('contact', distinct=True))
+        return Source.objects.filter(community=self.community).annotate(channel_count=Count('channel', filter=Q(channel__enabled=True), distinct=True), member_count=Count('contact', distinct=True))
 
     def _add_sources_message(self):
         if self.request.method == "GET":
