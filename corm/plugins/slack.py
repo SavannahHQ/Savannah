@@ -140,6 +140,7 @@ class SlackImporter(PluginImporter):
         return self.api_request(path, headers=self.API_HEADERS)
 
     def update_source(self):
+        # Update workspace domain
         try:
             resp = self.api_call(TEAM_INFO % {'team_id': self.source.auth_id})
             if resp.status_code == 200:
@@ -155,6 +156,18 @@ class SlackImporter(PluginImporter):
                 print(resp.content)
         except Exception as e:
             print("Failed to update Slack workspace data")
+            print(e)
+
+        # Update channel names
+        try:
+            source_channels = dict([(channel["id"], channel["name"]) for channel in self.plugin.get_channels(self.source)])
+            tracked_channels = self.get_channels()
+            for channel in tracked_channels:
+                if channel.origin_id in source_channels and channel.name != source_channels[channel.origin_id]:
+                    channel.name = source_channels[channel.origin_id]
+                    channel.save()
+        except Exception as e:
+            print("Failed to update Slack channel names data")
             print(e)
 
     def prefetch_users(self):

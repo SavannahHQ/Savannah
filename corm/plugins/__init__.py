@@ -77,6 +77,7 @@ class PluginImporter:
     def __init__(self, source):
         self.source = source
         self.community = source.community
+        self.plugin = plugin = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
         self.verbosity = 0
         self.debug = False
         self._first_import = False
