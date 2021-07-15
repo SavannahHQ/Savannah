@@ -77,7 +77,6 @@ class PluginImporter:
     def __init__(self, source):
         self.source = source
         self.community = source.community
-        self.plugin = plugin = ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
         self.verbosity = 0
         self.debug = False
         self._first_import = False
@@ -88,6 +87,13 @@ class PluginImporter:
         self.TAGGED_USER_MATCHER = re.compile('\@([a-zA-Z0-9]+)')
         self.API_BACKOFF_ATTEMPTS = getattr(settings, 'API_BACKOFF_ATTEMPTS', 5)
         self.API_BACKOFF_SECONDS = getattr(settings, 'API_BACKOFF_SECONDS', 10)
+
+    @property
+    def plugin(self):
+        try:
+            return ConnectionManager.CONNECTOR_PLUGINS[self.source.connector]
+        except:
+            return None
 
     def get_full_import(self):
         return self._full_import or self._first_import
