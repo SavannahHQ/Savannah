@@ -135,7 +135,7 @@ class Channels(SavannahView):
         pass
 
     def all_channels(self):
-        return Channel.objects.filter(source=self.source).annotate(conversation_count=Count('conversation', distinct=True))
+        return Channel.objects.filter(source=self.source).annotate(conversation_count=Count('conversation', distinct=True)).order_by('name')
 
     def _get_source_channels(self, request):
         channels = []
