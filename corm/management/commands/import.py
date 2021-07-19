@@ -14,6 +14,7 @@ class Command(BaseCommand):
         parser.add_argument('importer', type=str)
         parser.add_argument('--community', dest='community_id', type=int)
         parser.add_argument('--source', dest='source_id', type=int)
+        parser.add_argument('--channel', dest='channel_id', type=int)
         parser.add_argument('--full', dest='full_import', action='store_true', help='Do a full import, not incremental from the previous import')
         parser.add_argument('--new', dest='new_only', action='store_true', help='Import only from new sources')
         parser.add_argument('--debug', dest='debug', action='store_true', help='Enter debugger on errors')
@@ -25,6 +26,7 @@ class Command(BaseCommand):
         verbosity = options.get('verbosity')
         community_id = options.get('community_id')
         source_id = options.get('source_id')
+        channel_id = options.get('channel_id')
         full_import = options.get('full_import')
         new_only = options.get('new_only')
         debug = options.get('debug')
@@ -51,6 +53,13 @@ class Command(BaseCommand):
             source = Source.objects.get(id=source_id)
             print("Using Source: %s" % source.name)
             sources = sources.filter(id=source.id)
+
+        if channel_id:
+            channels = Channel.objects.filter(id=channel_id)
+            print("Using Channel: %s" % channels[0].name)
+            sources = sources.filter(id=channels[0].source_id)
+        else:
+            channels = None
 
         if new_only:
             print("Using new sources only")
@@ -80,7 +89,7 @@ class Command(BaseCommand):
             try:
                 if verbosity >= 2:
                     print("Importing %s source: %s" % (plugin.get_source_type_name(), source))
-                importer.run(new_only)
+                importer.run(new_only, channels=channels)
                 if full_import:
                     sleep(5)
             except Exception as e:

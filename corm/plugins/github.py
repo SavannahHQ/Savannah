@@ -265,7 +265,7 @@ class GithubImporter(PluginImporter):
                     conversations.add(convo)
                     # Pull Requests are Contributions
                     if 'pull_request' in issue:
-                        contrib, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'], 'location':issue['html_url']})
+                        contrib, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'][:255], 'location':issue['html_url']})
                         contrib.update_activity(convo.activity)
                         # Not all comments should get the channel tag, but all PRs should
                         if channel.tag:

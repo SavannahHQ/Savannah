@@ -325,11 +325,12 @@ class PluginImporter:
         channels = self.source.channel_set.filter(origin_id__isnull=False, source__auth_secret__isnull=False).order_by('last_import')
         return channels
 
-    def run(self, new_only=False):
+    def run(self, new_only=False, channels=None):
         failures = list()
         self.update_source()
-        channels = self.get_channels()
-        channels = channels.filter(enabled=True)
+        if channels is None:
+            channels = self.get_channels()
+            channels = channels.filter(enabled=True)
         if new_only:
             channels = channels.filter(first_import__isnull=True)
         if channels.count() == 0:
