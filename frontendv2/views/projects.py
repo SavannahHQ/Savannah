@@ -138,7 +138,7 @@ class ProjectOverview(SavannahView):
     @property
     def levels_chart(self):
         if self._levelsChart is None:
-            self._levelsChart = FunnelChart("project%s" % self.project.id, "Engagement Levels", stages=MemberLevel.LEVEL_CHOICES)
+            self._levelsChart = FunnelChart("project%s" % self.project.id, "Engagement Pyramid", stages=MemberLevel.LEVEL_CHOICES)
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=level)
                 levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
