@@ -103,7 +103,6 @@ class RssPlugin(BasePlugin):
                 tree = XMLParser.parse(rawxml)
                 i = 0
                 for feedchannel in tree.findall('channel'):
-                    feed_url = feedchannel.find('{http://www.w3.org/2005/Atom}link').get('href')
                     channels.append({
                         'id': source.server,
                         'name': feedchannel.find('title').text.strip(),
