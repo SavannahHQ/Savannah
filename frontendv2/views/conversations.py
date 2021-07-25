@@ -9,6 +9,7 @@ from corm.models import *
 from frontendv2.views import SavannahFilterView
 from frontendv2.views.charts import PieChart
 from frontendv2 import colors as savannah_colors
+from frontendv2.models import PublicDashboard
 
 class Conversations(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -397,3 +398,18 @@ class Conversations(SavannahFilterView):
     def as_view(request, community_id):
         view = Conversations(request, community_id)
         return render(request, 'savannahv2/conversations.html', view.context)
+
+    @login_required
+    def publish(request, community_id):
+        if 'cancel' in request.GET:
+            return redirect('conversations', community_id=community_id)
+            
+        conversations = Conversations(request, community_id)
+        return conversations.publish_view(request, PublicDashboard.CONVERSATIONS, 'public_conversations')
+
+    def public(request, dashboard_id):
+        dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
+        conversations = Conversations(request, dashboard.community.id)
+        context = dashboard.apply(conversations)
+        dashboard.count()
+        return render(request, 'savannahv2/public/conversations.html', context)

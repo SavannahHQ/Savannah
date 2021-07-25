@@ -1,23 +1,12 @@
-{% extends "savannahv2/base.html"%}
+{% extends "savannahv2/public/base.html"%}
 {% load static humanize member_utils %}
 
 {% block page_title %} | {{view.community.name}} Members{% endblock %}
 
-{% block page_alerts %}
-          {% if view.suggestion_count %}
-          <div class="alerts">
-              <div class="m-3 alert alert-info">You have <b>{{view.suggestion_count }}</b> <a href="{% url 'member_merge_suggestions' view.community.id %}">member merge suggestion{{view.suggestion_count|pluralize}}</a></div>
-          </div>
-          {% endif %}
-{% endblock %}
-
-
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Members</h1>
-            {% include 'savannahv2/filter_button.html' with current_tag=view.tag members_only=True %}
-            <a class="btn btn-light text-muted" title="Share Dashboard" href="{% url 'publish_members' view.community.id %}"><i class="fas fa-share-alt"></i></a>
+            <h1 class="h3 mb-0 text-gray-800">{% if request.user.is_authenticated %}<a href="{% url 'members' view.community.id %}"><i class="fas fa-chevron-left"></i></a> {% endif %}{{dashboard.display_name}}</h1>
           </div>
 
           <!-- Content Row -->
@@ -149,6 +138,7 @@
 
           </div>
 
+          {% if dashboard.show_members %}
          <!-- Content Row -->
           <div class="row">
 
@@ -172,9 +162,8 @@
                 {% for member in view.new_members %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{member.first_seen}}</td>
                 </tr>
@@ -205,9 +194,8 @@
                 {% for member in view.recently_active %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{member.last_active}}</td>
                 </tr>
@@ -220,6 +208,7 @@
             </div>
 
           </div>
+          {% endif %}
        </div>
         <!-- /.container-fluid -->
 {% endblock %}

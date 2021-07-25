@@ -11,6 +11,7 @@ from django.utils.safestring import mark_safe
 from corm.models import *
 from frontendv2.views import SavannahFilterView
 from frontendv2.views.charts import PieChart
+from frontendv2.models import PublicDashboard
 
 class Contributions(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -364,6 +365,20 @@ class Contributions(SavannahFilterView):
         view = Contributions(request, community_id)
         return render(request, 'savannahv2/contributions.html', view.context)
 
+    @login_required
+    def publish(request, community_id):
+        if 'cancel' in request.GET:
+            return redirect('contributions', community_id=community_id)
+            
+        contributions = Contributions(request, community_id)
+        return contributions.publish_view(request, PublicDashboard.CONTRIBUTIONS, 'public_contributions')
+
+    def public(request, dashboard_id):
+        dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
+        contributions = Contributions(request, dashboard.community.id)
+        context = dashboard.apply(contributions)
+        dashboard.count()
+        return render(request, 'savannahv2/public/contributions.html', context)
 
 class Contributors(SavannahFilterView):
     def __init__(self, request, community_id):

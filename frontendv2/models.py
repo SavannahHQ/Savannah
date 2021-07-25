@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, reverse
 from django.core.serializers.json import DjangoJSONEncoder
 
-from corm.models import Community, Member, ManagerProfile, Tag
+from corm.models import Community, Member, ManagerProfile, Tag, Company, Source, Channel
 from corm.email import EmailMessage, send_message, remaining_emails_allowed
 
 import datetime
@@ -126,7 +126,7 @@ class PasswordResetRequest(models.Model):
 class PublicDashboard(models.Model):
     OVERVIEW = 'overview'
     MEMBERS = 'members'
-    CONVERSATIONS = 'conversation'
+    CONVERSATIONS = 'conversations'
     CONTRIBUTIONS = 'contributions'
     PAGES = {
         OVERVIEW: "Overview",
@@ -171,8 +171,8 @@ class PublicDashboard(models.Model):
             view.member_company = Company.objects.get(community=view.community, id=filters.get('member_company'))
 
         view.role = None
-        if 'role' in filters and filters['role'] is not None:
-            view.role = filters.get('role')
+        if 'member_role' in filters and filters['member_role'] is not None:
+            view.role = filters.get('member_role')
 
         view.contrib_type = None
         if 'contrib_type' in filters and filters['contrib_type'] is not None:

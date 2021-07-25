@@ -1,22 +1,12 @@
-{% extends "savannahv2/base.html"%}
+{% extends "savannahv2/public/base.html"%}
 {% load static humanize member_utils %}
 
 {% block page_title %} | {{view.community.name}} Contributions{% endblock %}
 
-{% block page_alerts %}
-          {% if view.suggestion_count %}
-          <div class="alerts">
-              <div class="m-3 alert alert-info">You have <b>{{view.suggestion_count }}</b> <a href="{% url 'conversation_as_contribution_suggestions' view.community.id %}">contribution suggestion{{view.suggestion_count|pluralize}}</a></div>
-          </div>
-          {% endif %}
-{% endblock %}
-
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Contributions</h1>
-            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
-            <a class="btn btn-light text-muted" title="Share Dashboard" href="{% url 'publish_contributions' view.community.id %}"><i class="fas fa-share-alt"></i></a>
+            <h1 class="h3 mb-0 text-gray-800">{% if request.user.is_authenticated %}<a href="{% url 'contributions' view.community.id %}"><i class="fas fa-chevron-left"></i></a> {% endif %}{{dashboard.display_name}}</h1>
           </div>
 
           <!-- Content Row -->
@@ -68,6 +58,7 @@
             </div>
           </div>
 
+          {% if dashboard.show_members %}
           <!-- Content Row -->
           <div class="row">
 
@@ -91,19 +82,11 @@
                 {% for member, date in view.new_contributors %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{date}}</td>
                 </tr>
-                {% if forloop.last and forloop.counter == 10 %}
-                <tr>
-                  <td colspan="2" align="center">
-                    <a href ="{% url 'contributors' view.community.id %}?sort=-first_contrib"><b>More...</b></a>
-                  </td>
-                </tr>
-                {% endif %}
                 {% endfor %}
                 </tbody>
                 </table>
@@ -130,19 +113,11 @@
                 {% for member, count in view.top_contributors %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{count}}</td>
                 </tr>
-                {% if forloop.last and forloop.counter == 10 %}
-                <tr>
-                  <td colspan="2" align="center">
-                    <a href ="{% url 'contributors' view.community.id %}?sort=-contrib_count"><b>More...</b></a>
-                  </td>
-                </tr>
-                {% endif %}
                 {% endfor %}
                 </tbody>
                 </table>
@@ -174,9 +149,8 @@
                 {% for member, convo_count in view.top_supporters %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{convo_count}}</td>
                 </tr>
@@ -208,9 +182,8 @@
                 {% for member, convo_count in view.top_enablers %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{convo_count}}</td>
                 </tr>
@@ -223,81 +196,7 @@
             </div>
 
           </div>
-
-          <!-- Content Row -->
-          <div class="row">
-
-            <!-- Content Column -->
-            <div class="col-lg-12 mb-4">
-
-              <!-- All Contributions -->
-              <a name="conversations" />
-              <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Contributions</h6>
-                </div>
-                <div class="card-body p-0 table-responsive">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Channel</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Author</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for contribution in view.all_contributions %}
-                <tr>
-                  <td class="text-nowrap">
-                  <i class="{{contribution.source_icon}}"></i> 
-                  {% if contribution.channel_name %}
-                    {{contribution.channel_name}}
-                  {% else %}
-                    {{ contribution.source_name }}
-                  {% endif %}
-                  </td>
-                  <td>{{contribution.timestamp}}</td>
-                  <td>
-                    <a target="_blank" href="{{contribution.location|default:"#"}}">{{ contribution.title }}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=contribution.tags.all %}
-                  </td>
-                  <td>{% if contribution.author_name %}<a href="{% url 'member_profile' contribution.author_id %}">{{contribution.author_name}}</a>{% endif %}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-
-                {% if view.has_pages %}
-                <nav aria-label="Contribution table pages">
-                  <ul class="pagination justify-content-center">
-                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
-                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page=1#conributions" aria-label="First">
-                        <span aria-hidden="true">&laquo;</span>
-                        <span class="sr-only">Previous</span>
-                      </a>
-                    </li>
-                    {% for page in view.page_links %}
-                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conributions">{{page}}</a></li>
-                    {% endfor %}
-                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
-                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}#contributions" aria-label="Last">
-                        <span aria-hidden="true">&raquo;</span>
-                        <span class="sr-only">{{Next}}</span>
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-                {% endif %}
-                <div class="d-flex justify-content-center mb-2">
-                {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Contributions
-                </div>
-
-                </div>
-              </div>
-
-            </div>
-          </div>
+          {% endif %}
 
         </div>
         <!-- /.container-fluid -->

@@ -15,6 +15,7 @@ from frontendv2.views import SavannahView, SavannahFilterView
 from frontendv2.views.charts import PieChart
 from savannah.utils import safe_int
 from frontendv2 import colors as savannah_colors
+from frontendv2.models import PublicDashboard
 
 class Members(SavannahFilterView):
     def __init__(self, request, community_id):
@@ -308,6 +309,20 @@ class Members(SavannahFilterView):
         members = Members(request, community_id)
         return render(request, 'savannahv2/members.html', members.context)
 
+    @login_required
+    def publish(request, community_id):
+        if 'cancel' in request.GET:
+            return redirect('members', community_id=community_id)
+            
+        members = Members(request, community_id)
+        return members.publish_view(request, PublicDashboard.MEMBERS, 'public_members')
+
+    def public(request, dashboard_id):
+        dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
+        members = Members(request, dashboard.community.id)
+        context = dashboard.apply(members)
+        dashboard.count()
+        return render(request, 'savannahv2/public/members.html', context)
 
 class AllMembers(SavannahFilterView):
     def __init__(self, request, community_id):

@@ -369,8 +369,13 @@ class SavannahFilterView(SavannahView):
     def filters_as_dict(self, request):
         filters = dict()
         for name, used in self.filter.items():
+            session_name = name
+            if name == 'member_role':
+                session_name = 'role'
+            if name == 'contrib_type':
+                session_name = 'type'
             if used:
-                filters[name] = request.session.get(name, None)
+                filters[name] = request.session.get(session_name, None)
         return filters
 
     @property
