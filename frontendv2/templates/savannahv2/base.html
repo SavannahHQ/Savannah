@@ -181,6 +181,13 @@
           <span>Gifts</span></a>
       </li>
 
+      <!-- Nav Item - Managers -->
+      <li class="nav-item {% if active_tab == "public" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'public_dashboards' view.community.id %}">
+          <i class="fas fa-share-alt"></i>
+          <span>Shared</span></a>
+      </li>
+
       <!-- Divider -->
       <hr class="sidebar-divider d-none d-md-block">
 

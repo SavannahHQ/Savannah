@@ -16,7 +16,7 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView, CommunityForm
-from frontendv2.models import ManagerInvite, ManagerProfile
+from frontendv2.models import ManagerInvite, ManagerProfile, PublicDashboard
 
 class Managers(SavannahView):
     def __init__(self, request, community_id):
@@ -385,3 +385,34 @@ class EditCommunity(SavannahView):
             return redirect('managers', community_id=community_id)
 
         return render(request, 'savannahv2/community_edit.html', view.context)
+
+class PublicDashboards(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "public"
+
+    def all_dashboards(self):
+        return PublicDashboard.objects.filter(community=self.community)
+
+    @login_required
+    def as_view(request, community_id):
+        view = PublicDashboards(request, community_id)
+        if request.method == 'POST':
+            if 'delete_dashboard' in request.POST:
+                dashboard = get_object_or_404(PublicDashboard, id=request.POST.get('delete_dashboard'))
+                context = view.context
+                context.update({
+                    'object_type':"Public Dashboard", 
+                    'object_name': dashboard.display_name, 
+                    'object_id': dashboard.id,
+                    'warning_msg': "This dashboard will not longer be available to viewers.",
+                })
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                dashboard = get_object_or_404(PublicDashboard, id=request.POST.get('object_id'))
+                dashboard_name = dashboard.display_name
+                dashboard.delete()
+                messages.success(request, "Deleted dashboard: <b>%s</b>" % dashboard_name)
+
+                return redirect('public_dashboards', community_id=community_id)
+        return render(request, "savannahv2/public_dashboards.html", view.context)

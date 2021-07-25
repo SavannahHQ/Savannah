@@ -1,5 +1,5 @@
 from django.contrib import admin
-from frontendv2.models import EmailRecord, ManagerInvite, PasswordResetRequest
+from frontendv2.models import EmailRecord, ManagerInvite, PasswordResetRequest, PublicDashboard
 
 # Register your models here.
 class EmailAdmin(admin.ModelAdmin):
@@ -35,3 +35,7 @@ class PasswordResetAdmin(admin.ModelAdmin):
     list_filter = ("timestamp", "expires")
 admin.site.register(PasswordResetRequest, PasswordResetAdmin)
 
+class PublicDashboardAdmin(admin.ModelAdmin):
+    list_display = ('display_name', 'community', 'page', 'created_by', 'created_at', 'view_count')
+    list_filter = ('page', 'community', 'created_at')
+admin.site.register(PublicDashboard, PublicDashboardAdmin)

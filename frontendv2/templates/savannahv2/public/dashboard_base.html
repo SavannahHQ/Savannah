@@ -1,0 +1,33 @@
+{% extends 'savannahv2/public/base.html' %}
+{% load static %}
+
+{% block page_content %}
+  <div class="row justify-content-center">
+    <div class="col-xl-12 m-3 align-items-center">
+    <center>
+        <div class="card shadow h-100 py-2">
+        <div class="card-body">
+            <div class="container-fluid">
+                {% block dashboard_content %}{% endblock %}
+                <p>Powered by <a href="https://savannahhq.com"> Savannah CRM <img src="{% static 'savannah/Savannah32.png' %}"></a> 
+            </div>
+        </div>
+    </center>
+  </div>
+{% endblock %}
+
+{% block page_scripts %}
+  <!-- Page level plugins -->
+  <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
+  
+  <!-- Chart scripts -->
+  {% block chart_scripts %}
+  {% for chart in view.charts %}
+    <!-- {{chart.id}} -->
+    {% include chart.script_template %}
+  {% endfor %}
+  {% endblock %}
+
+  {% block dashboard_scripts %}{% endblock %}
+{% endblock %}

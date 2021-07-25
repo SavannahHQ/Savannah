@@ -50,7 +50,7 @@
 <body id="page-top" class="bg-gradient-savannah-blue">
 
   <!-- Page Container -->
-  <div class="container">
+  <div class="container-fluid">
 
         {% if tip %}
         <div class="alerts">
@@ -66,7 +66,17 @@
         </div>
         {% endif %}
 
-  {% block page_content %}{% endblock %}
+      <div class="row justify-content-center">
+        <div class="col-xl-12 m-3 align-items-center">
+            <div class="card shadow h-100 py-2">
+            <div class="card-body">
+                <div class="container-fluid">
+                      {% block page_content %}{% endblock %}
+                    <center>Powered by <a href="https://savannahhq.com"> Savannah CRM <img src="{% static 'savannah/Savannah32.png' %}"></a></center> 
+                </div>
+            </div>
+      </div>
+
   </div>
   <!-- End of Page Container -->
 

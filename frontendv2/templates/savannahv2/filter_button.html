@@ -174,6 +174,6 @@
             {% endif %}
             
             {% if view.is_filtered %}
-            <a class="align-baseline text-secondary" href="?{% if view.search %}search={{view.search}}&{% endif %}clear=all" title="Clear filters"><i class="fas fa-times"> </i></a>
+            <a class="btn btn-light text-muted" href="?{% if view.search %}search={{view.search}}&{% endif %}clear=all" title="Clear filters"><i class="fas fa-times"> </i></a>
             {% endif %}
           <span>

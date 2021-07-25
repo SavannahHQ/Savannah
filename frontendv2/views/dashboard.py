@@ -8,6 +8,7 @@ from notifications.models import Notification
 
 from corm.models import *
 from corm.connectors import ConnectionManager
+from frontendv2.models import PublicDashboard
 from frontendv2.views import SavannahFilterView, SavannahView
 from frontendv2.views.projects import TaskForm
 from frontendv2.views.charts import FunnelChart
@@ -326,6 +327,21 @@ class Overview(SavannahFilterView):
 
     @login_required
     def as_view(request, community_id):
-        dashboard = Overview(request, community_id)
+        overview = Overview(request, community_id)
 
-        return render(request, 'savannahv2/overview.html', dashboard.context)
+        return render(request, 'savannahv2/overview.html', overview.context)
+
+    @login_required
+    def publish(request, community_id):
+        if 'cancel' in request.GET:
+            return redirect('overview', community_id=community_id)
+            
+        overview = Overview(request, community_id)
+        return overview.publish_view(request, PublicDashboard.OVERVIEW, 'public_overview')
+
+    def public(request, dashboard_id):
+        dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
+        overview = Overview(request, dashboard.community.id)
+        context = dashboard.apply(overview)
+        dashboard.count()
+        return render(request, 'savannahv2/public/overview.html', context)

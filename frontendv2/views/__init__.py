@@ -1,5 +1,6 @@
 import operator
 import datetime
+import json
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
@@ -11,7 +12,7 @@ from django import forms
 
 from corm.models import *
 from frontendv2 import colors
-from frontendv2.models import EmailMessage, PasswordResetRequest
+from frontendv2.models import EmailMessage, PasswordResetRequest, PublicDashboard
 
 # Create your views here.
 def index(request):
@@ -161,8 +162,10 @@ class SavannahView:
         self.request = request
         if request.user.is_superuser:
             self.community = get_object_or_404(Community, id=community_id)
-        else:
+        elif request.user.is_authenticated:
             self.community = get_object_or_404(Community, Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all()), id=community_id)
+        else:
+            self.community = None
         if request.user.is_authenticated:
             self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow()})
             self.user_member = self.manager_profile.member
@@ -176,7 +179,7 @@ class SavannahView:
 
 
     def _add_sources_message(self):
-        if self.request.method == "GET":
+        if self.request.method == "GET" and self.request.user.is_authenticated:
             if self.community.status == Community.SUSPENDED:
                 messages.warning(self.request, "Updates to this community have been suspended due to a billing problem. Please update your <a href=\"%s\">billing information</a> to resume updates." % reverse('billing:manage_account', kwargs={'community_id':self.community.id}))
             elif self.community.status == Community.DEACTIVE:
@@ -190,7 +193,10 @@ class SavannahView:
         
     @property
     def context(self):
-        communities = Community.objects.filter(Q(status__lte=Community.SUSPENDED)|Q(status=Community.DEMO)).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+        if self.request.user.is_authenticated:
+            communities = Community.objects.filter(Q(status__lte=Community.SUSPENDED)|Q(status=Community.DEMO)).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+        else:
+            communities = []
         return {
             "communities": communities,
             "active_community": self.community,
@@ -242,7 +248,7 @@ class SavannahFilterView(SavannahView):
         try:
             if 'member_tag' in request.GET:
                 if request.GET.get('member_tag') == '':
-                    equest.session['member_tag'] = None
+                    request.session['member_tag'] = None
                 else:
                     self.member_tag = Tag.objects.get(community=self.community, name=request.GET.get('member_tag'))
                     request.session['member_tag'] = request.GET.get('member_tag')
@@ -360,6 +366,13 @@ class SavannahFilterView(SavannahView):
         else:
             self.timespan = 1+(self.rangeend - self.rangestart).days
 
+    def filters_as_dict(self, request):
+        filters = dict()
+        for name, used in self.filter.items():
+            if used:
+                filters[name] = request.session.get(name, None)
+        return filters
+
     @property
     def is_filtered(self):
         if self.filter['timespan'] and self.timespan != self.MAX_TIMESPAN:
@@ -459,6 +472,37 @@ class SavannahFilterView(SavannahView):
         else:
             return values[-span_count:]
 
+    def publish_view(self, request, page, view_name):
+        filters = self.filters_as_dict(request)
+        default_name = ""
+        if page in PublicDashboard.PAGES:
+            default_name = '%s %s' % (self.community.name, PublicDashboard.PAGES.get(page))
+        dashboard = PublicDashboard(
+            community=self.community,
+            page=page, 
+            created_by=request.user, 
+            display_name=default_name, 
+            filters=filters
+        )
+        if request.method == "POST":
+            form = PublicViewForm(instance=dashboard, data=request.POST)
+            if form.is_valid():
+                new_pub = form.save()
+                messages.success(request, "Your public dashboard is ready!")
+                return redirect(view_name, dashboard_id=new_pub.id)
+            else:
+                messages.error(request, "Unable to create dashboard.")
+
+        else:
+            form = PublicViewForm(instance=dashboard)
+
+        context = dashboard.apply(self)
+        context.update({
+            'form': form,
+            'filters': filters,
+        })
+        return render(request, 'savannahv2/publish_dashboard.html', context)
+        
 class CommunityForm(forms.ModelForm):
     class Meta:
         model = Community
@@ -514,3 +558,13 @@ def branding(request):
 #         "form": form,
 #     }
 #     return render(request, 'savannahv2/community_add.html', context)
+
+class PublicViewForm(forms.ModelForm):
+    class Meta:
+        model = PublicDashboard
+        fields = [
+            'display_name', 
+            'show_members', 
+            'show_companies', 
+            'pin_time',
+        ]

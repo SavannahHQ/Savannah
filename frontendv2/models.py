@@ -1,12 +1,14 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.template.loader import get_template, render_to_string
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, reverse
+from django.core.serializers.json import DjangoJSONEncoder
 
-from corm.models import Community, Member, ManagerProfile
+from corm.models import Community, Member, ManagerProfile, Tag
 from corm.email import EmailMessage, send_message, remaining_emails_allowed
 
 import datetime
@@ -121,3 +123,77 @@ class PasswordResetRequest(models.Model):
         msg = PasswordResetEmail(request)
         msg.send(email)
 
+class PublicDashboard(models.Model):
+    OVERVIEW = 'overview'
+    MEMBERS = 'members'
+    CONVERSATIONS = 'conversation'
+    CONTRIBUTIONS = 'contributions'
+    PAGES = {
+        OVERVIEW: "Overview",
+        MEMBERS: "Members",
+        CONVERSATIONS: "Conversations",
+        CONTRIBUTIONS: "Contributions"
+    }
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    page = models.CharField(max_length=32, choices=PAGES.items())
+    display_name = models.CharField(max_length=256, default="", blank=False, null=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    view_count = models.PositiveBigIntegerField(default=0)
+    show_companies = models.BooleanField(default=False, help_text="Show company names.")
+    show_members = models.BooleanField(default=False, help_text="Show member names and affiliation (but not contact info).")
+    pin_time = models.BooleanField(default=False, help_text="Show data from the time the dashboard was created, not the time it was viewed.")
+    filters = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
+
+    def get_absolute_url(self):
+        return reverse("public_%s" % self.page, kwargs={"dashboard_id": self.id})
+    
+    def count(self):
+        self.view_count += 1
+        self.save()
+
+    def apply(self, view):
+        view.community = self.community
+
+        filters = self.filters
+
+        view.tag = None
+        if 'tag' in filters and filters['tag'] is not None:
+            view.tag = Tag.objects.get(community=view.community, name=filters.get('tag'))
+
+        view.member_tag = None
+        if 'member_tag' in filters and filters['member_tag'] is not None:
+            view.member_tag = Tag.objects.get(community=view.community, name=filters.get('member_tag'))
+
+        view.member_company = None
+        if 'member_company' in filters and filters['member_company'] is not None:
+            view.member_company = Company.objects.get(community=view.community, id=filters.get('member_company'))
+
+        view.role = None
+        if 'role' in filters and filters['role'] is not None:
+            view.role = filters.get('role')
+
+        view.contrib_type = None
+        if 'contrib_type' in filters and filters['contrib_type'] is not None:
+            view.contrib_type = filters.get('contrib_type')
+
+        view.source = None
+        if 'source' in filters and filters['source'] is not None:
+            view.source = Source.objects.get(community=view.community, id=filters.get('source'))
+
+        view.rangestart = None
+        view.rangeend = None
+        view.timespan = view.MAX_TIMESPAN
+        if 'timespan' in filters and filters['timespan'] is not None:
+            view.timespan = filters.get('timespan')
+            view.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=view.timespan)
+            view.rangeend = datetime.datetime.utcnow()
+
+        if self.pin_time:
+            view.rangeend = self.created_at
+            view.rangestart = view.rangeend - datetime.timedelta(days=view.timespan)
+
+        context = view.context
+        context['dashboard'] = self
+        return context

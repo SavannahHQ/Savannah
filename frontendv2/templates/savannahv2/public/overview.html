@@ -1,4 +1,4 @@
-{% extends "savannahv2/base.html"%}
+{% extends "savannahv2/public/base.html"%}
 {% load static humanize member_utils %}
 
 {% block page_title %} | {{view.community.name}}{% endblock %}
@@ -6,9 +6,7 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Overview</h1>
-            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
-            <a class="btn btn-light text-muted" title="Share Dashboard" href="{% url 'publish_overview' view.community.id %}"><i class="fas fa-share-alt"></i></a>
+            <h1 class="h3 mb-0 text-gray-800">{% if request.user.is_authenticated %}<a href="{% url 'overview' view.community.id %}"><i class="fas fa-chevron-left"></i></a> {% endif %}{{dashboard.display_name}}</h1>
           </div>
 
           <!-- Content Row -->
@@ -17,7 +15,6 @@
             <!-- Members Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-member shadow h-100 py-2">
-                <a href="{% url 'members' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -29,14 +26,12 @@
                     </div>
                   </div>
                 </div>
-                </a>
               </div>
             </div>
 
             <!-- Conversations Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-conversation shadow h-100 py-2">
-              <a href="{% url 'conversations' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -48,14 +43,12 @@
                     </div>
                   </div>
                 </div>
-                </a>
               </div>
             </div>
 
             <!-- Contributors Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-contributor shadow h-100 py-2">
-              <a href="{% url 'contributors' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -67,7 +60,6 @@
                     </div>
                   </div>
                 </div>
-                </a>
               </div>
             </div>
 
@@ -75,7 +67,6 @@
           <!-- Contributions Card -->
             <div class="col-xl-3 col-md-6 mb-4">
               <div class="card border-left-contribution shadow h-100 py-2">
-              <a href="{% url 'contributions' view.community.id %}">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
@@ -87,7 +78,6 @@
                     </div>
                   </div>
                 </div>
-                </a>
               </div>
             </div>
           </div>
@@ -129,6 +119,7 @@
             </div>
           </div>
 
+          {% if dashboard.show_members %}
           <!-- Content Row -->
           <div class="row">
 
@@ -152,8 +143,8 @@
                 {% for member in view.most_active %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{member.conversation_count}}</td>
                 </tr>
@@ -184,8 +175,8 @@
                 {% for member in view.most_connected %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{member.connection_count}}</td>
                 </tr>
@@ -217,8 +208,8 @@
                 {% for member in view.top_contributors %}
                 <tr>
                   <td>
-                    {{member|avatar}}
-                    <a href="{% url 'member_profile' member.id %}">{{ member.name }}</a>
+                    {% if dashboard.show_companies %}{{member|avatar}}{% else %}{{member.avatar_url|icon}}{% endif %}
+                    {{ member.name }}
                   </td>
                   <td>{{member.contrib_count}}</td>
                 </tr>
@@ -230,6 +221,9 @@
 
             </div>
           </div>
+          {% endif %}
+
+          {% if dashboard.show_companies %}
           <!-- Content Row -->
           <div class="row">
 
@@ -254,7 +248,7 @@
                 <tr>
                   <td>
                     {{company.icon_url|icon:"img/company-default.png"}}
-                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
+                    {{ company.name }}
                   </td>
                   <td>{{company.member_count}}</td>
                 </tr>
@@ -286,7 +280,7 @@
                 <tr>
                   <td>
                     {{company.icon_url|icon:"img/company-default.png"}}
-                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
+                    {{ company.name }}
                   </td>
                   <td>{{company.convo_count}}</td>
                 </tr>
@@ -318,7 +312,7 @@
                 <tr>
                   <td>
                     {{company.icon_url|icon:"img/company-default.png"}}
-                    <a href="{% url 'company_profile' company.id %}">{{ company.name }}</a>
+                    {{ company.name }}
                   </td>
                   <td>{{company.contrib_count}}</td>
                 </tr>
@@ -330,6 +324,7 @@
 
             </div>
           </div>
+          {% endif %}
 
         </div>
         <!-- /.container-fluid -->
@@ -429,12 +424,4 @@ var myLineChart = new Chart(ctx, {
 });
   </script>
 
-  <script>
-$("#{{view.levels_chart.id}}").click( 
-    function(evt){
-        var activePoints = myPieChart.getElementAtEvent(evt);  
-        window.location = "{% url 'project_overview' view.community.id view.community.default_project.id %}";
-    }
-); 
-  </script>
   {% endblock %}

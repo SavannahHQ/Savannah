@@ -25,7 +25,7 @@ from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
-from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager
+from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd
 from frontendv2.views.reports import Reports, view_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup
@@ -49,6 +49,8 @@ urlpatterns = [
     path('manager/<str:secret_key>/savannah_tasks.ical', ManagerTasksCalendar(), name='manager_task_ical'),
     path('dashboard/<int:community_id>/gift/received', ManagerDashboard.mark_gift_received, name='manager_gift_received'),
     path('overview/<int:community_id>/', Overview.as_view, name='overview'),
+    path('overview/<int:community_id>/publish', Overview.publish, name='publish_overview'),
+    path('public/overview/<str:dashboard_id>/', Overview.public, name='public_overview'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
@@ -111,6 +113,7 @@ urlpatterns = [
     path('tags/<int:community_id>/', Tags.as_view, name='tags'),
     path('tags/<int:community_id>/add', AddTag.as_view, name='tag_add'),
     path('tag/<int:tag_id>/edit', EditTag.as_view, name='tag_edit'),
+    path('shared/<int:community_id>/', PublicDashboards.as_view, name='public_dashboards'),
     path('companies/<int:community_id>/', Companies.as_view, name='companies'),
     path('companies/<int:community_id>/add', AddCompany.as_view, name='company_add'),
     path('companies/<int:community_id>/tag', tag_company, name='company_tag_form'),
