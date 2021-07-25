@@ -143,7 +143,7 @@ class PublicDashboard(models.Model):
     view_count = models.PositiveBigIntegerField(default=0)
     show_companies = models.BooleanField(default=False, help_text="Show company names.")
     show_members = models.BooleanField(default=False, help_text="Show member names and affiliation (but not contact info).")
-    pin_time = models.BooleanField(default=False, help_text="Show data from the time the dashboard was created, not the time it was viewed.")
+    pin_time = models.BooleanField(default=False, help_text="Show data from the time the dashboard was shared, not the time it was viewed.")
     filters = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
     def get_absolute_url(self):
