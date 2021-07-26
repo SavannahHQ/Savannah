@@ -4,10 +4,6 @@
 {% block page_title %} | {{view.community.name}}{% endblock %}
 
 {% block page_content %}
-          <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">{% if request.user.is_authenticated %}<a href="{% url 'overview' view.community.id %}"><i class="fas fa-chevron-left"></i></a> {% endif %}{{dashboard.display_name}}</h1>
-          </div>
 
           <!-- Content Row -->
           <div class="row">

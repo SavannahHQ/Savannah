@@ -198,6 +198,7 @@ class SavannahView:
         else:
             communities = []
         return {
+            "SITE_ROOT": settings.SITE_ROOT,
             "communities": communities,
             "active_community": self.community,
             "active_tab": self.active_tab,
