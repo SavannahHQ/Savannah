@@ -286,6 +286,7 @@ class Conversations(SavannahFilterView):
                 convo_filter = convo_filter & Q(conversation__channel__source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
+                tags = tags.exclude(id=self.tag.id)
             if self.member_company:
                 convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
             if self.member_tag:

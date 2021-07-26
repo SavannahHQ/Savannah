@@ -28,7 +28,7 @@
                   {% elif view.role %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas {% if view.role == "bot" %}fa-ban{% elif view.role == "staff" %}fa-user-tie{% else %}fa-user{% endif %}"> </i> {{view.role}}</span></span>
                   {% endif %}
                   {% if view.member_company %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas fa-building"> </i> {{view.member_company.name}}</span></span>{% endif %}
-                  {% if view.tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.tag.color}}; "><span class="tag-text" style="color: #{{view.tag.color}}aa;"><i class="{% if view.source %}{{view.source.icon_name}}{% else %}fas fa-tag{% endif %}"> </i> {{view.tag.name}}</span></span>
+                  {% if view.tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.tag.color}}; "><span class="tag-text" style="color: #{{view.tag.color}}aa;"><i class="{% if view.source %}{{view.source.icon_name}}{% else %}fas fa-comment{% endif %}"> </i> {{view.tag.name}}</span></span>
                   {% elif view.source %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="{{view.source.icon_name}}"> </i> {{view.source.name}}</span></span>
                   {% endif %}
                   </span>
