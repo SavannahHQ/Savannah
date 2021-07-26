@@ -392,7 +392,7 @@ class PublicDashboards(SavannahView):
         self.active_tab = "public"
 
     def all_dashboards(self):
-        return PublicDashboard.objects.filter(community=self.community)
+        return PublicDashboard.objects.filter(community=self.community).order_by('-created_at')
 
     @login_required
     def as_view(request, community_id):
