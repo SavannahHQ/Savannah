@@ -494,7 +494,7 @@ class SavannahFilterView(SavannahView):
             form = PublicViewForm(instance=dashboard, data=request.POST)
             if form.is_valid():
                 new_pub = form.save()
-                messages.success(request, "Your public dashboard is ready!")
+                messages.success(request, "Your shared dashboard is ready! You can share <a href=\"%s\">this link</a> publicly for anyone to view it." % new_pub.get_absolute_url())
                 return redirect(view_name, dashboard_id=new_pub.id)
             else:
                 messages.error(request, "Unable to create dashboard.")
