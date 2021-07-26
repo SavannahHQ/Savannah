@@ -33,13 +33,13 @@
 	<meta property="og:url" content="{{SITE_ROOT}}{{dashboard.get_absolute_url}}"/>
 	<meta property="og:site_name" content="Savannah CRM"/>
 	<meta property="article:modified_time" content="{{dashboard.created_at|date:'c'}}"/>
-	<meta property="og:image" content="{{SITE_ROOT}}{% static 'savannah/CardHeader.png' %}"/>
+	<meta property="og:image" content="{% static 'savannah/CardHeader.png' %}"/>
 	<meta property="og:image:width" content="1545"/>
 	<meta property="og:image:height" content="666"/>
 	<meta name="twitter:card" content="summary_large_image"/>
 	<meta name="twitter:title" content="{{dashboard.display_name}}"/>
 	<meta name="twitter:description" content="{{dashboard.get_page_display}} dashboard for {{dashboard.community.name}}."/>
-	<meta name="twitter:image" content="{{SITE_ROOT}}{% static 'savannah/CardHeader.png' %}"/>
+	<meta name="twitter:image" content="{% static 'savannah/CardHeader.png' %}"/>
 	<meta name="twitter:site" content="@savannah_crm"/>
 	<meta name="twitter:label1" content="Est. reading time"/>
 	<meta name="twitter:data1" content="2 minutes"/>
