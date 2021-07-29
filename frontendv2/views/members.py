@@ -321,7 +321,8 @@ class Members(SavannahFilterView):
         dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
         members = Members(request, dashboard.community.id)
         context = dashboard.apply(members)
-        dashboard.count()
+        if not request.user.is_authenticated:
+            dashboard.count()
         return render(request, 'savannahv2/public/members.html', context)
 
 class AllMembers(SavannahFilterView):

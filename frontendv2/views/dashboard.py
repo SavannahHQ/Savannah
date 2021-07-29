@@ -343,5 +343,6 @@ class Overview(SavannahFilterView):
         dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
         overview = Overview(request, dashboard.community.id)
         context = dashboard.apply(overview)
-        dashboard.count()
+        if not request.user.is_authenticated:
+            dashboard.count()
         return render(request, 'savannahv2/public/overview.html', context)

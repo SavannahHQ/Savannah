@@ -377,7 +377,8 @@ class Contributions(SavannahFilterView):
         dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
         contributions = Contributions(request, dashboard.community.id)
         context = dashboard.apply(contributions)
-        dashboard.count()
+        if not request.user.is_authenticated:
+            dashboard.count()
         return render(request, 'savannahv2/public/contributions.html', context)
 
 class Contributors(SavannahFilterView):

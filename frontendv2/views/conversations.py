@@ -400,5 +400,6 @@ class Conversations(SavannahFilterView):
         dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
         conversations = Conversations(request, dashboard.community.id)
         context = dashboard.apply(conversations)
-        dashboard.count()
+        if not request.user.is_authenticated:
+            dashboard.count()
         return render(request, 'savannahv2/public/conversations.html', context)
