@@ -274,7 +274,11 @@ class SlackImporter(PluginImporter):
                 print("Older thread: %s" % thread.thread_start.location)
             checked.append(thread.thread_start_id)
             thread_ts = "{0:.6f}".format(thread.thread_start.timestamp.timestamp())
-            self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
+            try:
+                self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
+            except Exception as e:
+                print("Failed to check older thread: %s" % thread.thread_start.location)
+                print(e)
         return
 
     def import_thread(self, channel, thread_ts, from_timestamp):
