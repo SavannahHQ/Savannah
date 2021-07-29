@@ -116,7 +116,8 @@ class Conversations(SavannahFilterView):
             offset = 1
         return [page+offset for page in range(min(10, pages))]
 
-    def getResponseTimes(self):
+    @property
+    def median_response_time(self):
         if not self._responseTimes:
             replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
@@ -143,29 +144,15 @@ class Conversations(SavannahFilterView):
             replies = replies.filter(first_response__isnull=False, first_response__gt=F('timestamp'))
             response_time = ExpressionWrapper(F('first_response') - F('timestamp'), output_field=fields.DurationField())
             replies = replies.annotate(response_time=response_time)
-            self._responseTimes = replies.aggregate(avg=Avg('response_time'), min=Min('response_time'), max=Max('response_time'))
-        return self._responseTimes
-
-    @property
-    def min_response_time(self):
-        response_times = self.getResponseTimes()
-        if response_times['min'] is None:
-            return None
-        return response_times['min'] - datetime.timedelta(microseconds=response_times['min'].microseconds)
-
-    @property
-    def max_response_time(self):
-        response_times = self.getResponseTimes()
-        if response_times['max'] is None:
-            return None
-        return response_times['max'] - datetime.timedelta(microseconds=response_times['max'].microseconds)
-
-    @property
-    def avg_response_time(self):
-        response_times = self.getResponseTimes()
-        if response_times['avg'] is None:
-            return None
-        return response_times['avg'] - datetime.timedelta(microseconds=response_times['avg'].microseconds)
+            count = replies.count()
+            if count < 1:
+                return "N/A"
+            values = replies.values_list('response_time', flat=True).order_by('response_time')
+            if count % 2 == 1:
+                median = values[int(round(count/2))]
+            else:
+                median = (values[int(count/2-1)] + values[int(count/2+1)])/(2.0)
+            return median - datetime.timedelta(microseconds=median.microseconds)
 
     @property 
     def speaker_count(self):
