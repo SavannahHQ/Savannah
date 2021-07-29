@@ -254,16 +254,32 @@ class SlackImporter(PluginImporter):
             else:
                 print("HTTP %s Error: %s" % (resp.status_code, resp.content))
                 raise RuntimeError("HTTP %s: %s" % (resp.status_code, resp.content))
+
+        # import any new threads
+        if self.verbosity >= 2:
+            print("Checking new threads")
         for thread_id, thread_ts in list(self._update_threads.items()):
             self.import_thread(channel, thread_ts, from_timestamp)
-            # data = self.get_message(channel, thread_ts)
-            # if data is not None:
-            #     thread = Conversation.objects.get(channel=channel, id=thread_id)
-            #     thread.content = data.get('text')
-            #     thread.save()
+
+        # check older threads for newer messages
+        if self.verbosity >= 2:
+            print("Checking older threads")
+        checked = []
+        older_threads_timestamp = from_date - datetime.timedelta(days=getattr(settings, 'SLACK_THREAD_LOOKBACK_DAYS', 1))
+        thread_comments = Conversation.objects.filter(channel=channel, thread_start__isnull=False, timestamp__gte=older_threads_timestamp)
+        for thread in thread_comments:
+            if thread.thread_start_id in checked:
+                continue
+            if self.verbosity >= 3:
+                print("Older thread: %s" % thread.thread_start.location)
+            checked.append(thread.thread_start_id)
+            thread_ts = "{0:.6f}".format(thread.thread_start.timestamp.timestamp())
+            self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
         return
 
     def import_thread(self, channel, thread_ts, from_timestamp):
+        if self.verbosity >= 3:
+            print("Importing thread: %s" % thread_ts)
         cursor = ''
         has_more = True
         while has_more:
