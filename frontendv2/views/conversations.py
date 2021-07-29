@@ -147,7 +147,7 @@ class Conversations(SavannahFilterView):
             values = replies.values_list('response_time', flat=True).order_by('response_time')
             count = len(values)
             if count < 1:
-                return "N/A"
+                return None
             if count % 2 == 1:
                 median = values[int(round(count/2))]
             else:

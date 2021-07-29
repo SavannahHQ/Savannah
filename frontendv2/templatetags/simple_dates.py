@@ -13,6 +13,8 @@ def date_or_time(value):
 @register.filter(name="duration")
 def duration_as_text(timedeltaobj):
     """Convert a datetime.timedelta object into Days, Hours, Minutes, Seconds."""
+    if timedeltaobj is None:
+        return None
     secs = timedeltaobj.total_seconds()
     timetot = ""
     if secs > 86400: # 60sec * 60min * 24hrs
