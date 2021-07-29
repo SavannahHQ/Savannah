@@ -144,10 +144,10 @@ class Conversations(SavannahFilterView):
             replies = replies.filter(first_response__isnull=False, first_response__gt=F('timestamp'))
             response_time = ExpressionWrapper(F('first_response') - F('timestamp'), output_field=fields.DurationField())
             replies = replies.annotate(response_time=response_time)
-            count = replies.count()
+            values = replies.values_list('response_time', flat=True).order_by('response_time')
+            count = len(values)
             if count < 1:
                 return "N/A"
-            values = replies.values_list('response_time', flat=True).order_by('response_time')
             if count % 2 == 1:
                 median = values[int(round(count/2))]
             else:
