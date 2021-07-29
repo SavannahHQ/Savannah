@@ -151,7 +151,8 @@ class Conversations(SavannahFilterView):
             if count % 2 == 1:
                 median = values[int(round(count/2))]
             else:
-                median = (values[int(count/2-1)] + values[int(count/2+1)])/(2.0)
+                med1, med2 = values[int(count/2-1):int(count/2+1)]
+                median = (med1 + med2)/(2.0)
             return median - datetime.timedelta(microseconds=median.microseconds)
 
     @property 
@@ -254,7 +255,7 @@ class Conversations(SavannahFilterView):
             channels = channels.annotate(conversation_count=Count('conversation', filter=convo_filter))
 
             channels = channels.annotate(source_connector=F('source__connector'), source_icon=F('source__icon_name'), color=F('tag__color'))
-            for c in channels.order_by("-conversation_count"):
+            for c in channels:
                 if c.conversation_count == 0:
                     continue
                 counts[c] = c.conversation_count
