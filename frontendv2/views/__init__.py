@@ -478,7 +478,7 @@ class SavannahFilterView(SavannahView):
         else:
             return values[-span_count:]
 
-    def publish_view(self, request, page, view_name):
+    def publish_view(self, request, page, view_name, show_members=False, show_companies=False, pin_time=False):
         filters = self.filters_as_dict(request)
         default_name = ""
         if page in PublicDashboard.PAGES:
@@ -488,6 +488,9 @@ class SavannahFilterView(SavannahView):
             page=page, 
             created_by=request.user, 
             display_name=default_name, 
+            show_members=show_members,
+            show_companies=show_companies,
+            pin_time=pin_time,
             filters=filters
         )
         if request.method == "POST":

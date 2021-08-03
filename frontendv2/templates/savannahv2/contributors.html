@@ -18,6 +18,7 @@ th[scope="col"] > a:hover {
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Contributors</h1>
             {% include 'savannahv2/filter_button.html' %}
+            <a class="btn btn-light text-muted" title="Share Dashboard" href="{% url 'publish_contributors' view.community.id %}"><i class="fas fa-share-alt"></i></a>
           </div>
 
          <!-- Content Row -->

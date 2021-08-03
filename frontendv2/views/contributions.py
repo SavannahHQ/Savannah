@@ -456,6 +456,12 @@ class Contributors(SavannahFilterView):
 
         return members
 
+    def filters_as_dict(self, request):
+        filters = super().filters_as_dict(request)
+        if self.sort_by:
+            filters['sort_by'] = self.sort_by
+        return filters
+
     @property
     def paged_contributors(self):
         members = self.all_contributors
@@ -512,3 +518,20 @@ class Contributors(SavannahFilterView):
                 'Tags': ",".join([tag.name for tag in member.tags.all()])
             })
         return response
+
+    @login_required
+    def publish(request, community_id):
+        if 'cancel' in request.GET:
+            return redirect('contributors', community_id=community_id)
+            
+        contributors = Contributors(request, community_id)
+        return contributors.publish_view(request, PublicDashboard.CONTRIBUTORS, 'public_contributors', show_members=True)
+
+    def public(request, dashboard_id):
+        dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
+        contributors = Contributors(request, dashboard.community.id)
+        context = dashboard.apply(contributors)
+
+        if not request.user.is_authenticated:
+            dashboard.count()
+        return render(request, 'savannahv2/public/contributors.html', context)

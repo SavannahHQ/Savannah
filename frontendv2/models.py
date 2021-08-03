@@ -128,11 +128,13 @@ class PublicDashboard(models.Model):
     MEMBERS = 'members'
     CONVERSATIONS = 'conversations'
     CONTRIBUTIONS = 'contributions'
+    CONTRIBUTORS = 'contributors'
     PAGES = {
         OVERVIEW: "Overview",
         MEMBERS: "Members",
         CONVERSATIONS: "Conversations",
-        CONTRIBUTIONS: "Contributions"
+        CONTRIBUTIONS: "Contributions",
+        CONTRIBUTORS: "Contributors"
     }
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
@@ -194,6 +196,9 @@ class PublicDashboard(models.Model):
             view.rangeend = self.created_at
             view.rangestart = view.rangeend - datetime.timedelta(days=view.timespan)
 
+        if 'sort_by' in filters and filters['sort_by'] is not None:
+            view.sort_by = filters.get('sort_by')
+            
         context = view.context
         context['dashboard'] = self
         return context
