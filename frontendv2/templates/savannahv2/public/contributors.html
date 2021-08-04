@@ -1,0 +1,89 @@
+{% extends "savannahv2/public/base.html"%}
+{% load static member_utils %}
+
+{% block page_title %} | {{view.community.name}} Contributors{% endblock %}
+
+{% block page_styles %}
+<style>
+th[scope="col"] > a {
+  color: #858796;
+}
+th[scope="col"] > a:hover {
+  text-decoration: none;
+}
+</style>
+{% endblock %}
+{% block page_content %}
+
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- All Contributions -->
+              <a name="contributors" />
+              <div class="card shadow mb-4">
+                <div class="card-header d-sm-flex align-items-center justify-content-between py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></th>
+                    {% if dashboard.show_companies %}<th scope="col">Company&nbsp;<i class="{% if view.sort_by == "company" %}fas fa-sort-down{% elif view.sort_by == "-company" %}fas fa-sort-up{% endif %}"></i></th>{% endif %}
+                    <th scope="col">First Contribution&nbsp;<i class="{% if view.sort_by == "first_contrib" %}fas fa-sort-down{% elif view.sort_by == "-first_contrib" %}fas fa-sort-up{% endif %}"></i></th>
+                    <th scope="col">Last Contribution&nbsp;<i class="{% if view.sort_by == "last_contrib" %}fas fa-sort-down{% elif view.sort_by == "-last_contrib" %}fas fa-sort-up{% endif %}"></i></th>
+                    <th scope="col">Contributions&nbsp;<i class="{% if view.sort_by == "contrib_count" %}fas fa-sort-down{% elif view.sort_by == "-contrib_count" %}fas fa-sort-up{% endif %}"></i></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for contributor in view.paged_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                    {% if dashboard.show_companies %}{{contributor|avatar}}{% else %}{{contributor.avatar_url|icon}}{% endif %}
+                    {{ contributor.name }}
+                  </td>
+                  {% if dashboard.show_companies %}<td>{{contributor.company|default:''}}</td>{% endif %}
+                  <td>{{contributor.first_contrib}}</td>
+                  <td>{{contributor.last_contrib}}</td>
+                  <td>{{contributor.contrib_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                {% if view.has_pages %}
+                <nav aria-label="Contribution table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page=1" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conributions">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
