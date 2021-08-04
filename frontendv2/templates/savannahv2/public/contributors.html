@@ -64,7 +64,7 @@ th[scope="col"] > a:hover {
                       </a>
                     </li>
                     {% for page in view.page_links %}
-                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}#conributions">{{page}}</a></li>
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{page}}">{{page}}</a></li>
                     {% endfor %}
                     <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
                       <a class="page-link" href="?{% if view.search %}search={{view.search}}&{% endif %}page={{view.last_page}}" aria-label="Last">
