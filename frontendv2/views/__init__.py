@@ -377,6 +377,9 @@ class SavannahFilterView(SavannahView):
                 session_name = 'type'
             if used:
                 filters[name] = request.session.get(session_name, None)
+        filters['rangestart'] = request.session.get('rangestart', None)
+        filters['rangeend'] = request.session.get('rangeend', None)
+        filters['timefilter'] = request.session.get('timefilter', 'timespan')
         return filters
 
     @property
@@ -478,11 +481,15 @@ class SavannahFilterView(SavannahView):
         else:
             return values[-span_count:]
 
-    def publish_view(self, request, page, view_name, show_members=False, show_companies=False, pin_time=False):
+    def publish_view(self, request, page, view_name, show_members=False, show_companies=False, pin_time=None):
         filters = self.filters_as_dict(request)
         default_name = ""
         if page in PublicDashboard.PAGES:
             default_name = '%s %s' % (self.community.name, PublicDashboard.PAGES.get(page))
+        if filters.get('timefilter', 'timespan') == 'range' and not pin_time:
+            pin_time = True
+        else:
+            pin_time = False
         dashboard = PublicDashboard(
             community=self.community,
             page=page, 

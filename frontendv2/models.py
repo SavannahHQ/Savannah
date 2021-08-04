@@ -193,8 +193,12 @@ class PublicDashboard(models.Model):
             view.rangeend = datetime.datetime.utcnow()
 
         if self.pin_time:
-            view.rangeend = self.created_at
-            view.rangestart = view.rangeend - datetime.timedelta(days=view.timespan)
+            view.rangeend = datetime.datetime.strptime(filters.get('rangeend', self.created_at), view.DATE_FORMAT)
+            if 'rangestart' in filters and filters.get('rangestart') is not None:
+                view.rangestart = datetime.datetime.strptime(filters.get('rangestart'), view.DATE_FORMAT)
+            else:
+                view.rangestart = view.rangeend - datetime.timedelta(days=view.timespan)
+            view.timespan = 1+(view.rangeend - view.rangestart).days
 
         if 'sort_by' in filters and filters['sort_by'] is not None:
             view.sort_by = filters.get('sort_by')
