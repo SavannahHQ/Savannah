@@ -103,12 +103,8 @@ class ProjectsGraph(SavannahView):
             links.append({"source":'prj%s'%level.project_id, "target":'m%s'%level.member_id})
             
         for project, count in projects.items():
-            if project.tag:
-                node_color = project.tag.color
-            else:
-                node_color = "8a8a8a"
             link = reverse('project_overview', kwargs={'community_id':view.community.id, 'project_id':project.id})
-            nodes.append({"id":'prj%s'%project.id, "name":project.name, "link":link, "color":node_color, "connections":count})
+            nodes.append({"id":'prj%s'%project.id, "name":project.name, "link":link, "color":project.color, "connections":count})
 
                     
         return JsonResponse({"nodes":nodes, "links":links})

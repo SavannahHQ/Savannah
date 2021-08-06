@@ -848,6 +848,14 @@ class Project(models.Model):
     threshold_core = models.SmallIntegerField(verbose_name="Core level", default=5, help_text="Number of contributions needed to become a Core Contributor")
 
     @property
+    def color(self):
+        if self.member_tag is not None:
+            return self.member_tag.color
+        elif self.tag is not None:
+            return self.tag.color
+        else:
+            return '8a8a8a'
+    @property
     def collaborators(self):
         return MemberLevel.objects.filter(project=self, level__gte=MemberLevel.PARTICIPANT)
 
