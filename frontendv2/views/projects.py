@@ -150,14 +150,17 @@ class ProjectOverview(SavannahView):
         if not self._engagementChart:
             conversations_counts = dict()
             activity_counts = dict()
-            project_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            convo_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if not self.project.default_project:
-                project_filter = Q(channel__in=self.project.channels.all())
+                convo_filter = Q(channel__in=self.project.channels.all())
                 if self.project.tag is not None:
-                    project_filter = project_filter | Q(tags=self.project.tag)
+                    convo_filter = convo_filter | Q(tags=self.project.tag)
+                contrib_filter = convo_filter
+                if self.project.member_tag is not None:
+                    convo_filter = convo_filter | Q(speaker__tags=self.project.member_tag)
 
             conversations = conversations = Conversation.objects.filter(channel__source__community=self.project.community)
-            conversations = conversations.filter(project_filter)
+            conversations = conversations.filter(convo_filter)
             conversations = conversations.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(convo_count=Count('id', distinct=True)).order_by('month')
 
             months = list()
@@ -167,8 +170,15 @@ class ProjectOverview(SavannahView):
                     months.append(month)
                 conversations_counts[month] = c['convo_count']
 
+            contrib_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+            if not self.project.default_project:
+                contrib_filter = Q(channel__in=self.project.channels.all())
+                if self.project.tag is not None:
+                    contrib_filter = contrib_filter | Q(tags=self.project.tag)
+                if self.project.member_tag is not None:
+                    contrib_filter = contrib_filter | Q(author__tags=self.project.member_tag)
             activity = Contribution.objects.filter(community=self.project.community)
-            activity = activity.filter(project_filter)
+            activity = activity.filter(contrib_filter)
             activity = activity.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(contrib_count=Count('id', distinct=True)).order_by('month')
 
             for a in activity:
@@ -275,7 +285,7 @@ class ProjectOverview(SavannahView):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'owner', 'tag', 'channels']
+        fields = ['name', 'owner', 'tag', 'member_tag', 'channels']
 
     def __init__(self, *args, **kwargs):
         super(ProjectForm, self).__init__(*args, **kwargs)
@@ -285,6 +295,8 @@ class ProjectForm(forms.ModelForm):
         self.fields['owner'].widget.choices.insert(0, ('', '-----'))
         self.fields['tag'].widget.choices = [(tag.id, tag.name) for tag in Tag.objects.filter(community=community)]
         self.fields['tag'].widget.choices.insert(0, ('', '-----'))
+        self.fields['member_tag'].widget.choices = [(tag.id, tag.name) for tag in Tag.objects.filter(community=community)]
+        self.fields['member_tag'].widget.choices.insert(0, ('', '-----'))
         self.fields['channels'].widget.choices = [(channel.id, "%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector))) for channel in Channel.objects.filter(source__community=community).annotate(source_connector=F('source__connector')).order_by('name')]
 
 class ProjectAdd(SavannahView):
@@ -345,6 +357,34 @@ class ProjectEdit(SavannahView):
             return redirect('project_overview', community_id=community_id, project_id=project_id)
 
         return render(request, 'savannahv2/project_edit.html', view.context)
+
+class ProjectDelete(SavannahView):
+    def __init__(self, request, community_id, project_id):
+        super(ProjectDelete, self).__init__(request, community_id)
+        self.project = get_object_or_404(Project, community=self.community, id=project_id)
+        self.active_tab = "projects"
+
+    @login_required
+    def as_view(request, community_id, project_id):
+        view = ProjectDelete(request, community_id, project_id)
+        if request.method == "POST" and 'delete_confirm' in request.POST:
+                project = get_object_or_404(Project, id=request.POST.get('object_id'))
+                project_name = project.name
+                project.delete()
+                messages.success(request, "Deleted project: <b>%s</b>" % project_name)
+
+                return redirect('projects', community_id=community_id)
+        elif 'cancel' in request.GET:
+            return redirect('project_overview', community_id=community_id, project_id=project_id)
+
+        context = view.context
+        context.update({
+            'object_type':"Project", 
+            'object_name': view.project.name, 
+            'object_id': view.project.id,
+            'warning_msg': "This will delete all Engagement Levels for this project",
+        })
+        return render(request, "savannahv2/delete_confirm.html", context)
 
 
 class ProjectThresholdsForm(forms.ModelForm):

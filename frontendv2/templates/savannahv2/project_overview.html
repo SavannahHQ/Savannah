@@ -37,11 +37,21 @@
                     <div class="mb-2 col-lg-10">{% if view.project.tag %}<span class="tag-pill" style="background-color: #{{view.project.tag.color}};"><span class="tag-text" style="color: #{{view.project.tag.color}}aa;">{{view.project.tag.name}}</span></span>{% endif %}</div>
                   </div>
                   <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Member Tag</div>
+                    <div class="mb-2 col-lg-10">{% if view.project.member_tag %}<span class="tag-pill" style="background-color: #{{view.project.member_tag.color}};"><span class="tag-text" style="color: #{{view.project.member_tag.color}}aa;">{{view.project.member_tag.name}}</span></span>{% endif %}</div>
+                  </div>
+                  <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Channels</div>
                     <div class="mb-2 col-lg-10">
+                      {% if view.project.channels.count == 0 %}
+                        Any Channels
+                      {% elif view.project.channels.count > 10 %}
+                        {{view.project.channels.count}} Channels
+                      {% else %}
                       {% for channel in view.project.channels.all %}
                         <div><i class="{{channel.source.icon_name}}"></i> {{channel.name}}</div>
                       {% endfor %}
+                      {% endif %}
                     </div>
                   </div>
                 {% else %}

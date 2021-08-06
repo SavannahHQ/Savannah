@@ -31,6 +31,7 @@
                 {{ view.form|crispy }}
                 <button class="btn btn-primary" type="submit">Save</button>
                 <a class="btn btn-secondary" href="{% url 'project_overview' view.community.id view.project.id %}">Cancel</a>
+                <a class="btn btn-danger" href="{% url 'project_delete' view.community.id view.project.id %}">Delete</a>
                 </form>
                 </div>            
 

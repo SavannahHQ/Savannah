@@ -67,9 +67,13 @@ class Command(BaseCommand):
                     print("%s project level deletes: %s" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
                 now = datetime.datetime.utcnow()
-                speaker_filter=Q(speaker_in__channel__in=project.channels.all())
+                speaker_filter = Q()
                 if project.tag is not None:
                     speaker_filter = speaker_filter | Q(speaker_in__tags=project.tag)
+                if project.member_tag is not None:
+                    speaker_filter = speaker_filter | Q(tags=project.member_tag)
+                if project.channels.count() > 0:
+                    speaker_filter = speaker_filter | Q(speaker_in__channel__in=project.channels.all())
                 for member in Member.objects.filter(community=community).filter(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(convo_count=Count('speaker_in__id', filter=speaker_filter, distinct=True), last_convo=Max('speaker_in__timestamp', filter=speaker_filter)):
                     if member.convo_count >= project.threshold_participant:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.PARTICIPANT, 'timestamp':member.last_convo, 'conversation_count':member.convo_count})
@@ -79,9 +83,13 @@ class Command(BaseCommand):
                     print("%s project conversation levels: %s" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
                 now = datetime.datetime.utcnow()
-                author_filter = Q(contribution__channel__in=project.channels.all())
+                author_filter = Q()
                 if project.tag is not None:
                     author_filter = author_filter | Q(contribution__tags=project.tag)
+                if project.member_tag is not None:
+                    author_filter = author_filter | Q(tags=project.member_tag)
+                if project.channels.count() > 0:
+                    author_filter = author_filter | Q(contribution__channel__in=project.channels.all())
                 for member in Member.objects.filter(community=community).filter(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(contrib_count=Count('contribution__id', filter=author_filter, distinct=True), last_contrib=Max('contribution__timestamp', filter=author_filter)):
                     if member.contrib_count >= project.threshold_core:
                         MemberLevel.objects.update_or_create(community=community, project=project, member=member, defaults={'level':MemberLevel.CORE, 'timestamp':member.last_contrib, 'contribution_count':member.contrib_count})
