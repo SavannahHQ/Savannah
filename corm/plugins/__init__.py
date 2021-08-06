@@ -289,25 +289,26 @@ class PluginImporter:
             except:
                 pass
 
-    def api_request(self, url, headers):
-        if self.verbosity:
+    def api_request(self, url, headers={}, retries=None, timeout=None):
+        if self.verbosity or settings.DEBUG:
             print("API Call: %s" % url)
-        retries = self.API_BACKOFF_ATTEMPTS
+        if retries is None:
+            retries = self.API_BACKOFF_ATTEMPTS
         backoff_time = 0
-        resp = requests.get(url, headers=headers)
+        resp = requests.get(url, headers=headers, timeout=timeout)
         while resp.status_code == 429 and retries > 0:
             retries -= 1
             if settings.DEBUG:
                 print("API backoff, %s retries remaining" % retries)
             backoff_time += self.API_BACKOFF_SECONDS
             sleep(backoff_time)
-            resp = requests.get(url, headers=headers)
+            resp = requests.get(url, headers=headers, timeout=timeout)
         return resp
 
-    def api_call(self, path):
+    def api_call(self, path, retries=None, timeout=None):
         if len(self.source.server) > 0 and self.source.server[-1] == '/' and path[0] == '/':
             path = path[1:]
-        return self.api_request(self.source.server+path, headers=self.API_HEADERS)
+        return self.api_request(self.source.server+path, headers=self.API_HEADERS, retries=retries, timeout=timeout)
 
     def strftime(self, dtime):
         return dtime.strftime(self.TIMESTAMP_FORMAT)

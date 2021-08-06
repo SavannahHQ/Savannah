@@ -92,10 +92,10 @@ class DiscoursePlugin(BasePlugin):
     def get_channels(self, source):
         importer = DiscourseImporter(source)
         channels = []
-        resp = importer.api_call(DISCOURSE_CATEGORIES_URL)
+        resp = importer.api_request(source.server+DISCOURSE_CATEGORIES_URL, retries=0, timeout=10)
         if resp.status_code == 403:
             # Attempt to lookup public categories
-            resp = importer.api_request(source.server+DISCOURSE_CATEGORIES_URL, headers={})
+            resp = importer.api_request(source.server+DISCOURSE_CATEGORIES_URL, retries=0, timeout=10)
 
         if resp.status_code == 200:
             data = resp.json()
@@ -110,7 +110,7 @@ class DiscoursePlugin(BasePlugin):
                 subcategories = category.get('subcategory_ids')
                 if subcategories:
                     for sub_id in subcategories:
-                        resp = importer.api_call(DISCOURSE_CATEGORY_URL % {'id': sub_id})
+                        resp = importer.api_request(source.server+DISCOURSE_CATEGORY_URL % {'id': sub_id}, retries=0, timeout=10)
                         if resp.status_code == 200:
                             data = resp.json()
                             sub = data.get('category')
