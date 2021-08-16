@@ -182,7 +182,11 @@ class PublicDashboard(models.Model):
 
         view.source = None
         if 'source' in filters and filters['source'] is not None:
-            view.source = Source.objects.get(community=view.community, id=filters.get('source'))
+            source_id = int(filters.get('source'))
+            if source_id < 0:
+                view.exclude_source = True
+                source_id = abs(source_id)
+            view.source = Source.objects.get(community=view.community, id=source_id)
 
         view.rangestart = None
         view.rangeend = None

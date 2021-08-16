@@ -52,7 +52,10 @@ class Conversations(SavannahFilterView):
             conversations = Conversation.objects.filter(channel__source__community=self.community)
             conversations = conversations.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
-                conversations = conversations.filter(channel__source=self.source)
+                if self.exclude_source:
+                    conversations = conversations.exclude(channel__source=self.source)
+                else:
+                    conversations = conversations.filter(channel__source=self.source)
 
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
@@ -121,7 +124,10 @@ class Conversations(SavannahFilterView):
         if not self._responseTimes:
             replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
-                replies = replies.filter(channel__source=self.source)
+                if self.exclude_source:
+                    replies = replies.exclude(channel__source=self.source)
+                else:
+                    replies = replies.filter(channel__source=self.source)
             if self.tag:
                 replies = replies.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
 
@@ -170,7 +176,10 @@ class Conversations(SavannahFilterView):
 
         conversation_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.source:
-            conversation_filter = conversation_filter & Q(speaker_in__channel__source=self.source)
+            if self.exclude_source:
+                conversation_filter = conversation_filter & ~Q(speaker_in__channel__source=self.source)
+            else:
+                conversation_filter = conversation_filter & Q(speaker_in__channel__source=self.source)
         if self.tag:
             conversation_filter = conversation_filter & Q(speaker_in__tags=self.tag)
         members = members.annotate(activity_count=Count('speaker_in', filter=conversation_filter)).filter(activity_count__gt=0)
@@ -188,7 +197,10 @@ class Conversations(SavannahFilterView):
 
             conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
-                conversations = conversations.filter(channel__source=self.source)
+                if self.exclude_source:
+                    conversations = conversations.exclude(channel__source=self.source)
+                else:
+                    conversations = conversations.filter(channel__source=self.source)
 
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
@@ -237,7 +249,10 @@ class Conversations(SavannahFilterView):
             channels = Channel.objects.filter(source__community=self.community)
             convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
             if self.source:
-                channels = channels.filter(source=self.source)
+                if self.exclude_source:
+                    channels = channels.exclude(source=self.source)
+                else:
+                    channels = channels.filter(source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
             if self.member_company:
@@ -271,7 +286,10 @@ class Conversations(SavannahFilterView):
             tags = Tag.objects.filter(community=self.community)
             convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
             if self.source:
-                convo_filter = convo_filter & Q(conversation__channel__source=self.source)
+                if self.exclude_source:
+                    convo_filter = convo_filter & ~Q(conversation__channel__source=self.source)
+                else:
+                    convo_filter = convo_filter & Q(conversation__channel__source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(conversation__tags=self.tag)
                 tags = tags.exclude(id=self.tag.id)
@@ -309,7 +327,10 @@ class Conversations(SavannahFilterView):
             members = Member.objects.filter(community=self.community)
             convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
             if self.source:
-                convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
+                if self.exclude_source:
+                    convo_filter = convo_filter & ~Q(speaker_in__channel__source=self.source)
+                else:
+                    convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
             if self.member_company:
@@ -343,7 +364,10 @@ class Conversations(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.source:
-            convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
+            if self.exclude_source:
+                convo_filter = convo_filter & ~Q(speaker_in__channel__source=self.source)
+            else:
+                convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.member_company:
@@ -368,7 +392,10 @@ class Conversations(SavannahFilterView):
         members = Member.objects.filter(community=self.community)
         connection_filter = Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)
         if self.source:
-            members = members.filter(connections__contact__source=self.source)
+            if self.exclude_source:
+                members = members.exclude(connections__contact__source=self.source)
+            else:
+                members = members.filter(connections__contact__source=self.source)
         if self.tag:
             connection_filter = connection_filter & Q(connections__tags=self.tag)
         if self.member_company:

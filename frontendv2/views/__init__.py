@@ -302,17 +302,28 @@ class SavannahFilterView(SavannahView):
             request.session['type'] = None
 
         self.source = None
+        self.exclude_source = False
         try:
             if 'source' in request.GET:
                 if request.GET.get('source') == '':
                     request.session['source'] = None
                 else:
-                    self.source = Source.objects.get(community=self.community, id=request.GET.get('source'))
+                    source_id = int(request.GET.get('source'))
+                    if source_id < 0:
+                        self.exclude_source = True
+                        source_id = abs(source_id)
+                    self.source = Source.objects.get(community=self.community, id=source_id)
                     request.session['source'] = request.GET.get('source')
-            elif 'source' in request.session:
-                self.source = Source.objects.get(community=self.community, id=request.session.get('source'))
-        except:
+            elif 'source' in request.session and request.session.get('source') is not None:
+                source_id = int(request.session.get('source'))
+                if source_id < 0:
+                    self.exclude_source = True
+                    source_id = abs(source_id)
+                self.source = Source.objects.get(community=self.community, id=source_id)
+        except Exception as e:
+            print(e)
             self.source = None
+            self.exclude_source = False
             request.session['source'] = None
 
         self.rangestart = None
