@@ -37,6 +37,12 @@
     scroll-behavior: auto;
 }
 
+.dropdown-menu.dropdown-scroll {
+    max-height: 20rem;
+    overflow-y: auto;
+    scroll-behavior: auto;
+}
+
 .dropdown-submenu {
     position: relative;
 }
