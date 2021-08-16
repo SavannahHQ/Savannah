@@ -38,7 +38,7 @@ class SourceAdd(SavannahView):
     def as_view(request):
         view = SourceAdd(request, community_id=request.session['community'])
 
-        new_source = Source(community=view.community, connector="corm.plugins.api", auth_secret=uuid.uuid4())
+        new_source = Source(community=view.community, connector="corm.plugins.api", api_key=uuid.uuid4())
 
         if request.method == "POST":
             form = APISourceForm(data=request.POST, instance=new_source)
@@ -92,7 +92,7 @@ class SourceTokenAuthentication(BaseAuthentication):
 
         source = None
         try:
-            source = Source.objects.get(connector="corm.plugins.api", auth_secret=token, enabled=True)
+            source = Source.objects.get(connector="corm.plugins.api", api_key=token, enabled=True)
         except Source.DoesNotExist:
             msg = 'Invalid token. Token is not associated with any API Integration'
             raise AuthenticationFailed(msg)

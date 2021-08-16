@@ -65,7 +65,7 @@ class SalesforceAuthentication(BaseAuthentication):
 
         source = None
         try:
-            source = Source.objects.get(connector="corm.plugins.salesforce", auth_secret=token, enabled=True)
+            source = Source.objects.get(connector="corm.plugins.salesforce", api_key=token, enabled=True)
         except Source.DoesNotExist:
             msg = 'Invalid token. Token is not associated with any API Integration'
             raise AuthenticationFailed(msg)

@@ -638,6 +638,7 @@ class Source(models.Model):
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
     auth_secret = models.CharField(max_length=256, null=True, blank=True)
+    api_key = models.CharField(max_length=256, null=True, blank=True)
     icon_name = models.CharField(max_length=256, null=True, blank=True)
     first_import = models.DateTimeField(null=True, blank=True)
     last_import = models.DateTimeField(null=True, blank=True)
