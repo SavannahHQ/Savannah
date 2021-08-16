@@ -2,6 +2,7 @@ from corm.plugins import BasePlugin, PluginImporter
 import datetime
 import re
 import pytz
+import uuid
 from corm.models import *
 from urllib.parse import urlparse, parse_qs, urlencode
 from requests.auth import HTTPBasicAuth
@@ -185,6 +186,8 @@ def callback(request):
         cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, auth_id=token.get('id'), connector="corm.plugins.salesforce", server=token.get('instance_url'), defaults={"auth_secret": token['access_token'], "auth_refresh": token.get('refresh_token', None)})
         source, created = Source.objects.update_or_create(community=community, auth_id=token.get('id'), connector="corm.plugins.salesforce", server=token.get('instance_url'), defaults={'name':'Salesforce', 'icon_name': 'fab fa-salesforce', 'auth_secret': token['access_token']})
         if created:
+            source.api_key = uuid.uuid4()
+            source.save()
             messages.success(request, 'Your Salesforce org has been connected!')
         else:
             messages.info(request, 'Your Salesforce source has been updated.')
