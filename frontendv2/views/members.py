@@ -690,7 +690,6 @@ class ContributionPromotionForm(forms.ModelForm):
                 current_source = source_name
                 choices.append((source_name, []))
             choices[-1][1].append((contrib_type.id, contrib_type.name))
-        print('Choices: %s' % choices)
         self.fields['contribution_type'].widget.choices = choices
 
 class PromoteToContribution(SavannahView):

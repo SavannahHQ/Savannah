@@ -5,6 +5,7 @@ import os
 import sys
 import datetime
 import operator
+from functools import reduce
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -66,6 +67,7 @@ class Command(BaseCommand):
                 self.make_merge_suggestions(community)
             if community.suggest_contribution:
                 self.make_conversation_helped_suggestions(community)
+                self.make_conversation_feedback_suggestions(community)
             if community.suggest_tag:
                 self.make_tag_suggestions(community)
             if community.suggest_task:
@@ -146,6 +148,110 @@ class Command(BaseCommand):
                 link=reverse('member_merge_suggestions', kwargs={'community_id':community.id})
             )
 
+    def make_conversation_feedback_suggestions(self, community):
+        suggestion_count = 0
+
+        # Get potential conversations
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None)
+
+
+        # From Chat-style sources
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss'))
+        convos = convos.filter(channel__source__in=chat_sources)
+
+        positive_words = ('feedback', 'good idea', 'for sharing', 'could add')
+        # Only check conversations with positive words in them
+        convos = convos.filter(reduce(operator.or_, [Q(content__icontains=word) for word in positive_words]))
+
+        # Involving only the speaker and one other participant
+        convos = convos.annotate(participant_count=Count('participation')).filter(participant_count=2)
+        convos = convos.select_related('channel').order_by('channel', '-timestamp')
+
+        print("%s potential feedback in %s" % (convos.count(), community))
+        negative_words = ('not helpful', 'harmful')
+        last_feedback = None
+        last_channel = None
+        for convo in convos:
+            activity = get_support_activity(convo)
+            if activity is None or activity.contribution is not None:
+                continue
+            if convo.content is None:
+                continue
+            if last_channel != convo.channel:
+                last_feedback = None
+            last_channel = convo.channel
+
+            feedback, created = ContributionType.objects.get_or_create(
+                community=community,
+                source_id=convo.channel.source_id,
+                name="Feedback",
+            )
+
+            # Attempt to see if this was for feedback
+            content = convo.content.lower()
+            content_words = content.split(" ")
+            score = 0
+            for word in positive_words:
+                if word in content:
+                    score += 2
+
+            # Skip conversations that don't have a positive feedback word in them
+            if score < 2:
+                continue
+
+            if len(content_words) < 20:
+                score += 1
+            if len(content_words) > 50:
+                score -= 1
+            for word in negative_words:
+                if word in content:
+                    score -= 1
+
+            # Feedback is more likely to come from community than to staff or bots
+            if score >= 1 and activity.member.role != Member.COMMUNITY:
+                score -= 1
+
+            # Only suggest for high positive scores
+            if score < 2:
+                continue
+
+            # Exclude conversations that are part of another contribution's thread
+            if convo.thread_start:
+                if convo.thread_start.contribution:
+                    continue
+
+            # Don't count multiple instances in a row from the same person
+            if last_feedback == activity.member:
+                continue
+            last_feedback = activity.member
+
+            supporter = convo.participation.exclude(member_id=convo.speaker.id)[0]
+            suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
+                community=community,
+                reason="%s gave feedback in %s" % (supporter.member, convo.channel),
+                conversation=convo,
+                activity=activity,
+                contribution_type=feedback,
+                source_id=convo.channel.source_id,
+                score=score,
+                title="Feedback in %s" % convo.channel,
+            )
+            if created:
+                suggestion_count += 1
+
+        print("Suggested %s contributions" % suggestion_count)
+        if suggestion_count > 0:
+            recipients = community.managers or community.owner
+            notify.send(community, 
+                recipient=recipients, 
+                verb="has %s new contribution %s" % (suggestion_count, pluralize(suggestion_count, "suggestion")),
+                level='info',
+                icon_name="fas fa-shield-alt",
+                link=reverse('conversation_as_contribution_suggestions', kwargs={'community_id':community.id})
+            )
+
+
+
     def make_conversation_helped_suggestions(self, community):
         suggestion_count = 0
         try:
@@ -190,6 +296,12 @@ class Command(BaseCommand):
                 last_helped = None
             last_channel = convo.channel
 
+            helped, created = ContributionType.objects.get_or_create(
+                community=community,
+                source_id=convo.channel.source_id,
+                name="Support",
+            )
+
             # Attempt to see if this was for something helpful
             content = convo.content.lower()
             content_words = content.split(" ")
@@ -223,11 +335,6 @@ class Command(BaseCommand):
                 continue
             last_helped = convo.speaker
 
-            helped, created = ContributionType.objects.get_or_create(
-                community=community,
-                source_id=convo.channel.source_id,
-                name="Support",
-            )
             supporter = convo.participation.exclude(member_id=convo.speaker.id)[0]
             suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
                 community=community,
