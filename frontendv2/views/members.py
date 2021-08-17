@@ -676,6 +676,66 @@ class MemberActivity(SavannahView):
         view = MemberActivity(request, member_id)
         return render(request, 'savannahv2/member_activity.html', view.context)
 
+class ContributionPromotionForm(forms.ModelForm):
+    class Meta:
+        model = Contribution
+        fields = ['title', 'contribution_type', 'location']
+
+    def limit_to(self, community):
+        current_source = None
+        choices = [(None, '--------')]
+        for contrib_type in ContributionType.objects.filter(community=community, source__isnull=False).select_related('source').order_by(Lower('source__connector')):
+            source_name = '%s (%s)' % (contrib_type.source.connector_name, contrib_type.source.name)
+            if source_name != current_source:
+                current_source = source_name
+                choices.append((source_name, []))
+            choices[-1][1].append((contrib_type.id, contrib_type.name))
+        print('Choices: %s' % choices)
+        self.fields['contribution_type'].widget.choices = choices
+
+class PromoteToContribution(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    @property
+    def form(self):
+        new_contrib = Contribution(community=self.community, author=self.conversation.speaker, channel=self.conversation.channel, timestamp=self.conversation.timestamp, location=self.conversation.location)
+        if self.request.method == 'POST':
+            form = ContributionPromotionForm(instance=new_contrib, data=self.request.POST)
+        else:
+            form = ContributionPromotionForm(instance=new_contrib)
+        form.limit_to(self.community)
+        return form
+
+    @login_required
+    def as_view(request, member_id):
+        view = PromoteToContribution(request, member_id)
+
+        if request.GET.get('conversation_id', None) is None:
+            messages.error(request, "No conversation was chosen to be promoted to a contribution.")
+            return redirect('member_activity', member_id=member_id)
+
+        try:
+            view.conversation = Conversation.objects.get(speaker__community=view.community, id=request.GET.get('conversation_id'))
+        except:
+            messages.error(request, "Could not find the conversation.")
+            return redirect('member_activity', member_id=member_id)
+
+        if request.method == 'POST':
+            if view.form.is_valid():
+                contrib = view.form.save()
+                activity = view.conversation.activity
+                activity.contribution = contrib
+                activity.short_description = contrib.contribution_type.name
+                activity.icon_name = 'fas fa-shield-alt'
+                activity.save()
+                messages.success(request, "Converastion has been promoted to a Contribution.")
+                return redirect('member_activity', member_id=member_id)
+
+        return render(request, 'savannahv2/promote_to_contribution.html', view.context)
+
 class MemberMergeHistory(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)

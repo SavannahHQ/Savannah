@@ -1,0 +1,46 @@
+{% extends "savannahv2/base.html"%}
+{% load static member_utils %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Promote to Contribution{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Promote to Contribution</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Contribution</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+                <p><b>{{view.conversation.speaker}}</b>: {{view.conversation.content}}</p>
+                
+                <form class="form" action="{% url 'promote_to_contribution' view.member.id %}?conversation_id={{view.conversation.id}}" method="POST">
+                {% csrf_token %}
+                {{ view.form|crispy }}
+                <button class="btn btn-success" type="submit">Promote</button>
+                <a class="btn btn-secondary" href="{% url 'member_activity' view.member.id %}">Cancel</a>
+                </form>
+                </div>            
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

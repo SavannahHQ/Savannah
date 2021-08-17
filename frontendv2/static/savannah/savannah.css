@@ -128,3 +128,11 @@
     background-color: white;
     border: 1px solid #cacaca;
 }
+
+.show-children-on-hover:hover .show-on-parent-hover {
+    visibility: visible;
+}
+
+.show-on-parent-hover {
+    visibility: hidden;
+}

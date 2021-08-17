@@ -97,8 +97,15 @@
                   </div>
                   <div class="col-2 text-right">{{activity.timestamp|date}}</div>
                 </div>
-                <div class="row mb-4">
-                  <div class="col-10 pl-5">
+                <div class="row mb-4 show-children-on-hover">
+                  <div class="col-1 pt-1 show-on-parent-hover">
+                  {% if activity.icon_name == 'fas fa-comments' %}
+                  <a title="Promote to Contribution" href="{% url 'promote_to_contribution' member_id=view.member.id %}?conversation_id={{activity.conversation.id}}">
+                    <i class="fas fa-shield-alt text-gray-300">&nbsp;</i>
+                  </a>
+                  {% endif %}
+                  </div>
+                  <div class="col-9 pl-0 pr-0">
                     <span style="white-space: pre-wrap;">{{ activity.long_description }}</span>
                   </div>
                   <div class="col-2 text-right">
