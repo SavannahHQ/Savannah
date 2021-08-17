@@ -68,7 +68,10 @@ class Contributions(SavannahFilterView):
                 contributions = contributions.filter(author__role=self.role)
 
         if self.source:
-            contributions = contributions.filter(channel__source=self.source)
+            if self.exclude_source:
+                contributions = contributions.exclude(channel__source=self.source)
+            else:
+                contributions = contributions.filter(channel__source=self.source)
 
         contributions = contributions.annotate(author_name=F('author__name'), channel_name=F('channel__name'), source_name=F('contribution_type__source__name'), source_icon=F('contribution_type__source__icon_name')).prefetch_related('tags').order_by('-timestamp')
         self.result_count = contributions.count()
@@ -117,7 +120,10 @@ class Contributions(SavannahFilterView):
         if self.tag:
             contrib_filter = contrib_filter &Q(contribution__tags=self.tag)
         if self.source:
-            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+            if self.exclude_source:
+                contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+            else:
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
 
         if self.member_company:
             members = members.filter(company=self.member_company)
@@ -149,7 +155,10 @@ class Contributions(SavannahFilterView):
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.source:
-            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+            if self.exclude_source:
+                contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+            else:
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
 
         if self.member_company:
             members = members.filter(company=self.member_company)
@@ -180,7 +189,10 @@ class Contributions(SavannahFilterView):
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.source:
-            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+            if self.exclude_source:
+                contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+            else:
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
 
         if self.member_company:
             members = members.filter(company=self.member_company)
@@ -211,7 +223,10 @@ class Contributions(SavannahFilterView):
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.source:
-            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+            if self.exclude_source:
+                contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+            else:
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
 
         if self.member_company:
             contributors = contributors.filter(company=self.member_company)
@@ -249,7 +264,10 @@ class Contributions(SavannahFilterView):
         if self.tag:
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
         if self.source:
-            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+            if self.exclude_source:
+                contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+            else:
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
 
         if self.member_company:
             contributors = contributors.filter(company=self.member_company)
@@ -290,7 +308,10 @@ class Contributions(SavannahFilterView):
             if self.tag:
                 contributions = contributions.filter(tags=self.tag)
             if self.source:
-                contributions = contributions.filter(channel__source=self.source)
+                if self.exclude_source:
+                    contributions = contributions.exclude(channel__source=self.source)
+                else:
+                    contributions = contributions.filter(channel__source=self.source)
 
             if self.member_company:
                 contributions = contributions.filter(author__company=self.member_company)
@@ -337,7 +358,10 @@ class Contributions(SavannahFilterView):
             if self.tag:
                 contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             if self.source:
-                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
+                if self.exclude_source:
+                    contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+                else:
+                    contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
             if self.member_company:
                 contrib_filter = contrib_filter & Q(contribution__author__company=self.member_company)
             if self.member_tag:
@@ -427,7 +451,10 @@ class Contributors(SavannahFilterView):
             contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
             contrib_range_filter = contrib_range_filter & contrib_filter
         if self.source:
-            contrib_filter = contrib_filter &Q(contribution__channel__source=self.source)
+            if self.exclude_source:
+                contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+            else:
+                contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
             contrib_range_filter = contrib_range_filter & contrib_filter
         if self.member_company:
             members = members.filter(company=self.member_company)

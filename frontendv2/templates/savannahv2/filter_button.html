@@ -106,7 +106,7 @@
           <!-- Tag -->
             <span class="dropdown">
             {% if view.tag or view.source %}
-                <button class="btn {% if view.tag %}{% else %}btn-secondary{% endif %} dropdown-toggle" {% if view.tag %}style="white-space:nowrap; background-color: #{{view.tag.color}};"{% endif %} type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span {% if view.tag %}style="color: #{{view.tag.color}}aa" class="tag-text"{% endif %}>{% if view.source and view.exclude_source %}Not {% endif %}<i class="{% if view.source  %}{{view.source.icon_name}}{% elif view.tag %}fas fa-comment{% else %}fas fa-comment{% endif %}"></i> {% if view.tag %}{{view.tag.name}}{% elif view.source %}{{view.source.name}}{% else %}Content{% endif %}</span></button>
+                <button class="btn {% if view.tag %}{% else %}btn-secondary{% endif %} dropdown-toggle" {% if view.tag %}style="white-space:nowrap; background-color: #{{view.tag.color}};"{% endif %} type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span {% if view.tag %}style="color: #{{view.tag.color}}aa" class="tag-text"{% endif %}>{% if view.exclude_source %}<span class="fa-stack small"><i class="{{view.source.icon_name}} fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span>{% else %}<i class="{% if view.source  %}{{view.source.icon_name}}{% elif view.tag %}fas fa-comment{% else %}fas fa-comment{% endif %}"></i>{% endif %} {% if view.tag %}{{view.tag.name}}{% elif view.source %}{{view.source.name}}{% else %}Content{% endif %}</span></button>
             {% else %}
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-comment"></i> Content</button>
             {% endif %}
@@ -135,7 +135,7 @@
                 {% if view.filter.source %}
                 <li class="dropdown-submenu pull-left">
                   {% if view.source %}
-                    <a class="bg-secondary text-light dropdown-item dropend p-2" href="#"><i class="{{view.source.icon_name}}"></i> {{view.source.name}}</a>
+                    <a class="bg-secondary text-light dropdown-item dropend p-2" href="#">{% if view.exclude_source %}<span class="fa-stack small"><i class="{{view.source.icon_name}} fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span>{% else %}<i class="{{view.source.icon_name}}"> </i>{% endif %} {{view.source.name}}</a>
                   {% else %}
                     <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-filter"></i> Source</a>
                   {% endif %}
@@ -144,7 +144,11 @@
                     <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}source="><i class="fas fa-filter"></i> Any Source</a></li>
                     <li class="dropdown-divider p-0"></li>
                     {% for source in view.community.source_set.all %}
+                    {% if view.source == source and not view.exclude_source%}
+                    <li><a class="dropdown-item p-0" href="?{% if view.search %}search={{view.search}}&{% endif %}source=-{{source.id}}"><span class="fa-stack small"><i class="{{view.source.icon_name}} fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span> {{source.name}}</a></li>
+                    {% else %}
                     <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}source={{source.id}}"><i class="{{source.icon_name}}"></i> {{source.name}}</a></li>
+                    {% endif %}
                     {% endfor %}
                   </ul>
                 </li>
