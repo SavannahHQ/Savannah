@@ -135,7 +135,17 @@ class SlackImporter(PluginImporter):
         self._has_prefetched = False
         self._update_threads = dict()
         self.tag_matcher = re.compile(r'\<\@([^>]+)\>')
-
+        support, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Support",
+        )
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
+        
     def api_call(self, path):
         return self.api_request(path, headers=self.API_HEADERS)
 

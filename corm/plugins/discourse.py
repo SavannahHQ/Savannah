@@ -138,6 +138,16 @@ class DiscourseImporter(PluginImporter):
         self.API_BACKOFF_SECONDS = 30
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
         self.ANSWER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Support")
+        support, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Support",
+        )
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
 
     def update_identity(self, identity):
         resp = self.api_call(DISCOURSE_USER_URL % {'username':identity.detail})

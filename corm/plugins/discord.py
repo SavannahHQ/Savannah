@@ -203,7 +203,17 @@ class DiscordImporter(PluginImporter):
         self.API_HEADERS =  {
             'Authorization': 'Bot %s' % source.auth_secret,
         }
-
+        support, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Support",
+        )
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
+        
     def api_call(self, path):
         return self.api_request(path, headers=self.API_HEADERS)
 

@@ -192,7 +192,11 @@ class GitlabImporter(PluginImporter):
         }
         self.TIMESTAMP_FORMAT = GITLAB_TIMESTAMP
         self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Merge Request")
-
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
     def update_identity(self, identity):
         pass
 

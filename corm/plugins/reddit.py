@@ -181,7 +181,17 @@ class RedditImporter(PluginImporter):
         self._users = dict()
         self.tag_matcher = re.compile(r'\/u\/([a-zA-z0-9]+)')
         self._comment_cache = dict()
-
+        support, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Support",
+        )
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
+        
     def get_comment(self, comment_id):
         if comment_id in self._comment_cache:
             return self._comment_cache[comment_id]

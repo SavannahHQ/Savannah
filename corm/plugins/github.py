@@ -205,6 +205,11 @@ class GithubImporter(PluginImporter):
         }
         self.TIMESTAMP_FORMAT = GITHUB_TIMESTAMP
         self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
 
     def api_call(self, path):
         return self.api_request(path, headers=self.API_HEADERS)
