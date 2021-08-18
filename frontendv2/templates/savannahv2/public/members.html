@@ -15,11 +15,7 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-left">
                   <h6 class="m-0 font-weight-bold text-primary">Members</h6>
-                  <span class="text-muted pl-2">
-                  {% if view.member_tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.member_tag.color}}; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas {% if view.role == "bot" %}fa-robot{% elif view.role == "staff" %}fa-user-tie{% elif view.role == "community" %}fa-user{% else %}fa-users{% endif %}"> </i> {{view.member_tag.name}}</span></span>
-                  {% elif view.role %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas {% if view.role == "bot" %}fa-ban{% elif view.role == "staff" %}fa-user-tie{% else %}fa-user{% endif %}"> </i> {{view.role}}</span></span>
-                  {% endif %}
-                  </span>
+                  {% include 'savannahv2/filter_pills.html' %}
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">

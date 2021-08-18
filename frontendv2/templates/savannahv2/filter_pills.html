@@ -1,0 +1,15 @@
+              <span class="text-muted pl-2">
+                {% if view.filter.member %}
+                  {% if view.member_tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.member_tag.color}}; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;">{% if view.role == 'bot' %}<span class="fa-stack small"><i class="fas fa-robot fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span>{% else %}<i class="fas {% if view.role == "staff" %}fa-user-tie{% elif view.role == "community" %}fa-user{% else %}fa-users{% endif %}"> </i>{% endif %} {{view.member_tag.name}}</span></span>
+                  {% elif view.role %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas {% if view.role == "bot" %}fa-ban{% elif view.role == "staff" %}fa-user-tie{% else %}fa-user{% endif %}"> </i> {{view.role}}</span></span>
+                  {% endif %}
+                  {% if view.filter.member_company and view.member_company %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas fa-building"> </i> {{view.member_company.name}}</span></span>{% endif %}
+                {% endif %}
+                {% if view.filter.source or view.filter.tag %}
+                  {% if view.tag %}<span class="tag-pill text-nowrap" style="background-color: #{{view.tag.color}}; "><span class="tag-text" style="color: #{{view.tag.color}}aa;">{% if view.exclude_source %}<span class="fa-stack small"><i class="{{view.source.icon_name}} fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span>{% else %}<i class="{% if view.source %}{{view.source.icon_name}}{% else %}fas fa-comment{% endif %}"> </i>{% endif %} {{view.tag.name}}</span></span>
+                  {% elif view.source %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;">{% if view.exclude_source %}<span class="fa-stack small"><i class="{{view.source.icon_name}} fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span>{% else %}<i class="{{view.source.icon_name}}"> </i>{% endif %} {{view.source.name}}</span></span>
+                  {% endif %}
+                {% endif %}
+                  {% if view.filter.contrib_type and view.contrib_type %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas fa-shield-alt"> </i> {{view.contrib_type}}</span></span>{% endif %}
+                  {% if view.conversation_search %}<span class="tag-pill text-nowrap" style="background-color: #dadadaaa; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas fa-search"> </i> "{{view.conversation_search}}"</span></span>{% endif %}
+              </span>
