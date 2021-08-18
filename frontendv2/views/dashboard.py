@@ -172,33 +172,83 @@ class Overview(SavannahFilterView):
         self._levelsChart = None
         self.charts = set()
         self.filter['custom_timespan'] = False
-        self.filter['member'] = False
+        self.filter['member'] = True
     
     @property 
     def member_count(self):
         members = self.community.member_set.all()
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
         return members.count()
         
     @property 
     def conversation_count(self):
         conversations = Conversation.objects.filter(channel__source__community=self.community)
+        if self.member_company:
+            conversations = conversations.filter(speaker__company=self.member_company)
+
+        if self.member_tag:
+            conversations = conversations.filter(speaker__tags=self.member_tag)
+
+        if self.role:
+            if self.role == Member.BOT:
+                conversations = conversations.exclude(speaker__role=self.role)
+            else:
+                conversations = conversations.filter(speaker__role=self.role)
         return conversations.count()
         
     @property 
     def contribution_count(self):
         contributions = Contribution.objects.filter(community=self.community)
+        contributions = contributions.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+        if self.member_company:
+            contributions = contributions.filter(author__company=self.member_company)
+
+        if self.member_tag:
+            contributions = contributions.filter(author__tags=self.member_tag)
+
+        if self.role:
+            if self.role == Member.BOT:
+                contributions = contributions.exclude(author__role=self.role)
+            else:
+                contributions = contributions.filter(author__role=self.role)
+
         return contributions.count()
         
     @property 
     def contributor_count(self):
-        contributors = Member.objects.filter(community=self.community)
-        return contributors.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
+        members = Member.objects.filter(community=self.community)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
+        return members.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0).count()
         
     @property
     def most_active(self):
-        activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        members = members.filter(community=self.community).annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)))
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
+        members = members.annotate(conversation_count=Count('speaker_in', filter=Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)))
         members = members.filter(conversation_count__gt=0)
         members = members.order_by('-conversation_count')
 
@@ -207,6 +257,15 @@ class Overview(SavannahFilterView):
     @property
     def most_connected(self):
         members = Member.objects.filter(community=self.community)
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
         members = members.annotate(connection_count=Count('connections', filter=Q(memberconnection__last_connected__gte=self.rangestart, memberconnection__last_connected__lte=self.rangeend)))
 
         members = members.filter(connection_count__gt=0)
@@ -215,31 +274,66 @@ class Overview(SavannahFilterView):
 
     @property
     def top_contributors(self):
-        activity_counts = dict()
         members = Member.objects.filter(community=self.community)
-        members = members.filter(community=self.community).annotate(contrib_count=Count('contribution', distinct=True, filter=Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)))
+        if self.member_company:
+            members = members.filter(company=self.member_company)
+        if self.member_tag:
+            members = members.filter(tags=self.member_tag)
+        if self.role:
+            if self.role == Member.BOT:
+                members = members.exclude(role=self.role)
+            else:
+                members = members.filter(role=self.role)
+        members = members.annotate(contrib_count=Count('contribution', distinct=True, filter=Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)))
         members = members.filter(contrib_count__gt=0)
         members = members.order_by('-contrib_count')
 
         return members[:10]
 
     def company_members(self):
-        companies = Company.objects.filter(community=self.community, is_staff=False)
+        companies = Company.objects.filter(community=self.community)
         convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+        if self.role:
+            if self.role == Member.BOT:
+                convo_filter = convo_filter & ~Q(member__role=self.role)
+            else:
+                convo_filter = convo_filter & Q(member__role=self.role)
+        if self.member_tag:
+            convo_filter = convo_filter & Q(member__tags=self.member_tag)
+        if self.member_company:
+            convo_filter = convo_filter & Q(member__company=self.member_company)
 
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0).order_by('-member_count')
         return companies[:10]
 
     def company_conversations(self):
-        companies = Company.objects.filter(community=self.community, is_staff=False)
+        companies = Company.objects.filter(community=self.community)
         convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+        if self.role:
+            if self.role == Member.BOT:
+                convo_filter = convo_filter & ~Q(member__role=self.role)
+            else:
+                convo_filter = convo_filter & Q(member__role=self.role)
+        if self.member_tag:
+            convo_filter = convo_filter & Q(member__tags=self.member_tag)
+        if self.member_company:
+            convo_filter = convo_filter & Q(member__company=self.member_company)
 
         companies = companies.annotate(convo_count=Count('member__speaker_in', distinct=True, filter=convo_filter), last_active=Max('member__last_seen')).filter(convo_count__gt=0).order_by('-convo_count', '-last_active')
         return companies[:10]
 
     def company_contributions(self):
-        companies = Company.objects.filter(community=self.community, is_staff=False)
+        companies = Company.objects.filter(community=self.community)
         contrib_filter = Q(member__contribution__timestamp__lte=self.rangeend, member__contribution__timestamp__gte=self.rangestart)
+        if self.role:
+            if self.role == Member.BOT:
+                contrib_filter = contrib_filter & ~Q(member__role=self.role)
+            else:
+                contrib_filter = contrib_filter & Q(member__role=self.role)
+        if self.member_tag:
+            contrib_filter = contrib_filter & Q(member__tags=self.member_tag)
+        if self.member_company:
+            contrib_filter = contrib_filter & Q(member__company=self.member_company)
 
         companies = companies.annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
 
@@ -250,10 +344,19 @@ class Overview(SavannahFilterView):
             months = list()
             counts = dict()
             total = 0
-            members = Member.objects.filter(community=self.community, first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
-            total = Member.objects.filter(community=self.community, first_seen__lt=self.rangestart)
+            members = Member.objects.filter(community=self.community)
+            if self.member_company:
+                members = members.filter(company=self.member_company)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
+            if self.role:
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)                
+            total = members.filter(first_seen__lt=self.rangestart).count()
+            members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
 
-            total = total.count()
             counts['prev'] = total
             members = members.order_by("first_seen")
             for m in members:
@@ -282,36 +385,36 @@ class Overview(SavannahFilterView):
         return cumulative_counts
         #return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
-    def getChannelsChart(self):
-        channel_names = dict()
-        if not self._channelsChart:
-            counts = dict()
-            total = 0
-            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+    # def getChannelsChart(self):
+    #     channel_names = dict()
+    #     if not self._channelsChart:
+    #         counts = dict()
+    #         total = 0
+    #         conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
 
-            conversations = conversations.annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
-            for c in conversations:
-                source_name = "%s (%s)" % (c.source_name, ConnectionManager.display_name(c.source_connector))
-                if source_name not in counts:
-                    counts[source_name] = 1
-                else:
-                    counts[source_name] += 1
-            self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
-            if len(self._channelsChart) > 8:
-                other_count = sum([count for tag, count in self._channelsChart[7:]])
-                self._channelsChart = self._channelsChart[:7]
-                self._channelsChart.append(("Other", other_count, "#efefef"))
-        return self._channelsChart
+    #         conversations = conversations.annotate(source_name=F('channel__source__name'), source_connector=F('channel__source__connector')).order_by("timestamp")
+    #         for c in conversations:
+    #             source_name = "%s (%s)" % (c.source_name, ConnectionManager.display_name(c.source_connector))
+    #             if source_name not in counts:
+    #                 counts[source_name] = 1
+    #             else:
+    #                 counts[source_name] += 1
+    #         self._channelsChart = [(channel, count) for channel, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True)]
+    #         if len(self._channelsChart) > 8:
+    #             other_count = sum([count for tag, count in self._channelsChart[7:]])
+    #             self._channelsChart = self._channelsChart[:7]
+    #             self._channelsChart.append(("Other", other_count, "#efefef"))
+    #     return self._channelsChart
 
-    @property
-    def channel_names(self):
-        chart = self.getChannelsChart()
-        return [channel[0] for channel in chart]
+    # @property
+    # def channel_names(self):
+    #     chart = self.getChannelsChart()
+    #     return [channel[0] for channel in chart]
 
-    @property
-    def channel_counts(self):
-        chart = self.getChannelsChart()
-        return [channel[1] for channel in chart]
+    # @property
+    # def channel_counts(self):
+    #     chart = self.getChannelsChart()
+    #     return [channel[1] for channel in chart]
 
     @property
     def levels_chart(self):
@@ -321,6 +424,15 @@ class Overview(SavannahFilterView):
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=project, level=level)
                 levels = levels.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+                if self.member_company:
+                    levels = levels.filter(member__company=self.member_company)
+                if self.member_tag:
+                    levels = levels.filter(member__tags=self.member_tag)
+                if self.role:
+                    if self.role == Member.BOT:
+                        levels = levels.exclude(member__role=self.role)
+                    else:
+                        levels = levels.filter(member__role=self.role)
                 self._levelsChart.add(level, levels.count())
             self.charts.add(self._levelsChart)
         return self._levelsChart
