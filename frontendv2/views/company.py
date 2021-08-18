@@ -263,7 +263,7 @@ class Companies(SavannahFilterView):
 
     def members_chart(self):
         if not self._membersChart:
-            companies = Company.objects.filter(community=self.community, is_staff=False)
+            companies = Company.objects.filter(community=self.community)
             convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
             if self.role:
                 if self.role == Member.BOT:
@@ -296,7 +296,7 @@ class Companies(SavannahFilterView):
 
     def conversations_chart(self):
         if not self._conversationsChart:
-            companies = Company.objects.filter(community=self.community, is_staff=False)
+            companies = Company.objects.filter(community=self.community)
             convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
             if self.role:
                 if self.role == Member.BOT:
@@ -324,7 +324,7 @@ class Companies(SavannahFilterView):
 
     def contributions_chart(self):
         if not self._contributionsChart:
-            companies = Company.objects.filter(community=self.community, is_staff=False)
+            companies = Company.objects.filter(community=self.community)
             contrib_filter = Q(member__contribution__timestamp__lte=self.rangeend, member__contribution__timestamp__gte=self.rangestart)
             if self.role:
                 if self.role == Member.BOT:
