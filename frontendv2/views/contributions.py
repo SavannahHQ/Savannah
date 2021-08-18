@@ -500,6 +500,18 @@ class Contributors(SavannahFilterView):
         return members[start:start+self.RESULTS_PER_PAGE]
 
     @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
+
+    @property
     def has_pages(self):
         return self.result_count > self.RESULTS_PER_PAGE
 

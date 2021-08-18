@@ -1,5 +1,5 @@
 {% extends "savannahv2/base.html"%}
-{% load static member_utils %}
+{% load static member_utils humanize %}
 
 {% block page_title %} | {{view.community.name}} Contributors{% endblock %}
 
@@ -31,7 +31,10 @@ th[scope="col"] > a:hover {
               <a name="contributors" />
               <div class="card shadow mb-4">
                 <div class="card-header d-sm-flex align-items-center justify-content-between py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                  <span class="justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary d-inline">Contributors</h6>
+                  {% include 'savannahv2/filter_pills.html' %}
+                  </span>
                   <a class="btn btn-sm btn-primary" href="{% url 'contributors_csv' view.community.id %}"><i class="fas fa-file-csv"> </i> Download</a>
                 </div>
                 <div class="card-body p-0 table-responsive">
@@ -83,7 +86,9 @@ th[scope="col"] > a:hover {
                   </ul>
                 </nav>
                 {% endif %}
-
+                <div class="d-flex justify-content-center mb-2">
+                {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Contributors
+                </div>
 
                 </div>
               </div>
