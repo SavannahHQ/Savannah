@@ -222,7 +222,10 @@ class Companies(SavannahFilterView):
         if self.tag:
             convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
         if self.source:
-            convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
+            if self.exclude_source:
+                convo_filter = convo_filter & ~Q(member__speaker_in__channel__source=self.source)
+            else:
+                convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
         companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
             companies = companies.filter(last_activity__isnull=False)
@@ -240,8 +243,16 @@ class Companies(SavannahFilterView):
                     members = members.exclude(role=self.role)
                 else:
                     members = members.filter(role=self.role)
+            convo_filter = Q(speaker_in__timestamp__lte=self.rangeend, speaker_in__timestamp__gte=self.rangestart)
+            if self.tag:
+                convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
+            if self.source:
+                if self.exclude_source:
+                    convo_filter = convo_filter & ~Q(speaker_in__channel__source=self.source)
+                else:
+                    convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
+            members = members.annotate(convo_count=Count('speaker_in', distinct=True, filter=convo_filter)).filter(convo_count__gt=0)
 
-            chart_colors = ChartColors()
             self._assignmentChart = PieChart("assignmentChart", title="Members by Association")
             self._assignmentChart.set_show_legend(True)
             self._assignmentChart.add("Company", members.filter(company__isnull=False, company__is_staff=False).count(), data_color=colors.MEMBER.COMMUNITY)
@@ -264,7 +275,10 @@ class Companies(SavannahFilterView):
             if self.tag:
                 convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
             if self.source:
-                convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
+                if self.exclude_source:
+                    convo_filter = convo_filter & ~Q(member__speaker_in__channel__source=self.source)
+                else:
+                    convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
 
             companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0).order_by('-member_count')
 
@@ -294,7 +308,10 @@ class Companies(SavannahFilterView):
             if self.tag:
                 convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
             if self.source:
-                convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
+                if self.exclude_source:
+                    convo_filter = convo_filter & ~Q(member__speaker_in__channel__source=self.source)
+                else:
+                    convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
 
             companies = companies.annotate(convo_count=Count('member__speaker_in', distinct=True, filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
 
@@ -319,7 +336,10 @@ class Companies(SavannahFilterView):
             if self.tag:
                 contrib_filter = contrib_filter & Q(member__contribution__tags=self.tag)
             if self.source:
-                contrib_filter = contrib_filter & Q(member__contribution__channel__source=self.source)
+                if self.exclude_source:
+                    contrib_filter = contrib_filter & ~Q(member__contribution__channel__source=self.source)
+                else:
+                    contrib_filter = contrib_filter & Q(member__contribution__channel__source=self.source)
 
             companies = companies.annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
 
