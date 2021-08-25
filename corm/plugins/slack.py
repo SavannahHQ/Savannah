@@ -271,40 +271,41 @@ class SlackImporter(PluginImporter):
         for thread_id, thread_ts in list(self._update_threads.items()):
             self.import_thread(channel, thread_ts, from_timestamp)
 
-        # check older threads for newer messages
-        checked = []
-        older_threads_timestamp = from_date - datetime.timedelta(days=getattr(settings, 'SLACK_THREAD_LOOKBACK_DAYS', 1))
-        if self.verbosity >= 2:
-            print("Checking older threads")
-        thread_comments = Conversation.objects.filter(channel=channel, thread_start__isnull=False, timestamp__gte=older_threads_timestamp)
-        for thread in thread_comments:
-            if thread.thread_start_id in checked:
-                continue
-            if self.verbosity >= 3:
-                print("Older thread: %s" % thread.thread_start.location)
-            checked.append(thread.thread_start_id)
-            thread_ts = "{0:.6f}".format(thread.thread_start.timestamp.timestamp())
-            try:
-                self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
-            except Exception as e:
-                print("Failed to check older thread: %s" % thread.thread_start.location)
-                print(e)
+        if not full_import:
+            # check older threads for newer messages
+            checked = []
+            older_threads_timestamp = from_date - datetime.timedelta(days=getattr(settings, 'SLACK_THREAD_LOOKBACK_DAYS', 1))
+            if self.verbosity >= 2:
+                print("Checking older threads")
+            thread_comments = Conversation.objects.filter(channel=channel, thread_start__isnull=False, timestamp__gte=older_threads_timestamp)
+            for thread in thread_comments:
+                if thread.thread_start_id in checked:
+                    continue
+                if self.verbosity >= 3:
+                    print("Older thread: %s" % thread.thread_start.location)
+                checked.append(thread.thread_start_id)
+                thread_ts = "{0:.6f}".format(thread.thread_start.timestamp.timestamp())
+                try:
+                    self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
+                except Exception as e:
+                    print("Failed to check older thread: %s" % thread.thread_start.location)
+                    print(e)
 
-        if self.verbosity >= 2:
-            print("Checking older comments for new threads")
-        old_comments = Conversation.objects.filter(channel=channel, thread_start__isnull=True, timestamp__gte=older_threads_timestamp)
-        for comment in old_comments:
-            if comment.id in checked:
-                continue
-            if self.verbosity >= 3:
-                print("Older thread: %s" % comment.location)
-            checked.append(comment.id)
-            thread_ts = "{0:.6f}".format(comment.timestamp.timestamp())
-            try:
-                self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
-            except Exception as e:
-                print("Failed to check older thread: %s" % comment.location)
-                print(e)
+            if self.verbosity >= 2:
+                print("Checking older comments for new threads")
+            old_comments = Conversation.objects.filter(channel=channel, thread_start__isnull=True, timestamp__gte=older_threads_timestamp)
+            for comment in old_comments:
+                if comment.id in checked:
+                    continue
+                if self.verbosity >= 3:
+                    print("Older thread: %s" % comment.location)
+                checked.append(comment.id)
+                thread_ts = "{0:.6f}".format(comment.timestamp.timestamp())
+                try:
+                    self.import_thread(channel, thread_ts, older_threads_timestamp.timestamp())
+                except Exception as e:
+                    print("Failed to check older thread: %s" % comment.location)
+                    print(e)
         return
 
     def import_thread(self, channel, thread_ts, from_timestamp):
