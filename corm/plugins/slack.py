@@ -254,10 +254,16 @@ class SlackImporter(PluginImporter):
                         cursor = data['response_metadata']['next_cursor']
                     for message in data['messages']:
                         if message['type'] == 'message' and ('subtype' not in message or message['subtype'] == "bot_message"):
-                            if 'thread_ts' in message:
-                                self.import_thread(channel, message.get('thread_ts'), from_timestamp)
-                            else:
-                                self.import_message(channel, message)
+                            try:
+                                if 'thread_ts' in message:
+                                    self.import_thread(channel, message.get('thread_ts'), from_timestamp)
+                                else:
+                                    self.import_message(channel, message)
+                            except Exception as e:
+                                if full_import:
+                                    print("Error importing message %s: %s" % (message.get('ts'), str(e)))
+                                else:
+                                    raise RuntimeError("Error importing message %s: %s" % (message.get('ts'), str(e)))
                 else:
                     print("Data Error: %s" % resp.content)
                     raise RuntimeError("Slack error: %s" % data.get('error', "Unknown Error"))
@@ -326,7 +332,10 @@ class SlackImporter(PluginImporter):
                             print("Thread has_more=True, cursor=%s" % cursor)
                     for message in data['messages']:
                         if message['type'] == 'message' and ('subtype' not in message or message['subtype'] == "bot_message"):
-                            self.import_message(channel, message)
+                            try:
+                                self.import_message(channel, message)
+                            except Exception as e:
+                                raise RuntimeError("Error importing message %s: %s" % (message.get('ts'), str(e)))
                 else:
                     print("Data Error: %s" % data)
                     raise RuntimeError("Slack error: %s" % data.get('error', "Unknown Error"))
@@ -344,13 +353,16 @@ class SlackImporter(PluginImporter):
             user_name = message.get('username', message.get('bot_id'))
             user_email = None
             user_real_name = user_name
-        else:
+        elif 'user' in message:
             user = self.get_user(message['user'])
             user_isbot = False
             user_id = user.get('id')
             user_name = user.get('name', user.get('id'))
             user_email = user.get('profile').get('email')
             user_real_name = user.get('real_name', user_name)
+        else:
+            print("Error: No 'user' data in message: %s" % message)
+            return
         slack_user_id = "slack.com/%s" % user_id
         speaker = self.make_member(slack_user_id, channel=channel, detail=user_name, email_address=user_email, tstamp=tstamp, speaker=True, name=user_real_name)
         if user_isbot and speaker.role != Member.BOT:
