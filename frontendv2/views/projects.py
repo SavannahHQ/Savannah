@@ -8,6 +8,7 @@ from django.db.models.functions import Trunc
 from django.contrib import messages
 from django.http import JsonResponse
 from django import forms
+from django.core.exceptions import ValidationError
 
 from corm.models import *
 from corm.connectors import ConnectionManager
@@ -390,6 +391,30 @@ class ProjectThresholdsForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjectThresholdsForm, self).__init__(*args, **kwargs)
+
+    def clean_threshold_user(self):
+        value = self.cleaned_data['threshold_user']
+        if value <= 0:
+            raise ValidationError("Must be greater than 0.")
+        return value
+
+    def clean_threshold_participant(self):
+        value = self.cleaned_data['threshold_participant']
+        if value <= 0:
+            raise ValidationError("Must be greater than 0.")
+        return value
+
+    def clean_threshold_contributor(self):
+        value = self.cleaned_data['threshold_contributor']
+        if value <= 0:
+            raise ValidationError("Must be greater than 0.")
+        return value
+
+    def clean_threshold_core(self):
+        value = self.cleaned_data['threshold_core']
+        if value <= 0:
+            raise ValidationError("Must be greater than 1.")
+        return value
 
 class ProjectThresholdEdit(SavannahView):
     def __init__(self, request, community_id, project_id):
