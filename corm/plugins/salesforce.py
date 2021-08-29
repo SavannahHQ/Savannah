@@ -22,12 +22,13 @@ from rest_framework.exceptions import APIException, AuthenticationFailed, NotFou
 from apiv1.serializers import TagsField
 
 AUTHORIZATION_BASE_URL = 'https://login.salesforce.com/services/oauth2/authorize'
-TOKEN_URL = 'https://login.salesforce.com/services/oauth2/token'
-REFRESH_URL = 'https://login.salesforce.com/services/oauth2/token'
+DEFAULT_LOGIN_URL = 'https://login.salesforce.com/'
 
-CHANNELS_URL = '/services/data/v50.0/limits/recordCount'
-ACCOUNTS_URL = '/services/data/v50.0/sobjects/Account'
-CONTACTS_URL = '/services/data/v50.0/sobjects/Contact'
+QUERY_URL = '/services/data/v51.0/query/'
+CHANNELS_URL = '/services/data/v51.0/limits/recordCount'
+ACCOUNTS_URL = '/services/data/v51.0/sobjects/Account'
+CONTACTS_URL = '/services/data/v51.0/sobjects/Contact'
+CREDENTIALS_URL = '/services/data/v52.0/tooling/sobjects/NamedCredential'
 
 @login_required
 def not_available_view(request):
@@ -179,16 +180,56 @@ def callback(request):
     callback_uri = request.build_absolute_uri(reverse('salesforce_callback'))
     client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
     community = get_object_or_404(Community, id=request.session['community'])
-
+    login_url = request.headers.get('Referer', DEFAULT_LOGIN_URL)
+    token_url = login_url + 'services/oauth2/token'
     try:
-        token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
+        token = client.fetch_token(token_url, code=request.GET.get('code', None), client_secret=client_secret)
         print("Token: %s" % token)
+        new_api_key = uuid.uuid4()
+        # query_path = token.get('instance_url') + QUERY_URL + '?q=SELECT+ID,DeveloperName,NamespacePrefix+FROM+NamedCredential'
+        # print(query_path)
+        # print("Authorization: Bearer %s" % token.get('access_token'))
+        # resp = requests.get(query_path, headers={"Authorization": "Bearer %s" % token.get('access_token')})
+        # if resp.status_code == 200:
+        #     data = resp.json()
+        #     print(data)
+        #     for record in data['records']:
+        #         if record['DeveloperName'] == 'Savannah_CRM_API':
+        #             print("ID: %s" % record['Id'])
+        #             credential_path = token.get('instance_url') + CREDENTIALS_URL + '/' + record['Id']
+        #             print(credential_path)
+        #             payload = {
+        #                 'Metadata': {
+        #                     'principalType': 'Anonymous',
+        #                     'label': 'Savannah CRM API',
+        #                     'protocol': 'Password',
+        #                     'allowMergeFieldsInHeader': True,
+        #                     'username': request.user.username,
+        #                     'password': str(new_api_key)
+        #                 }
+        #             }
+        #             resp = requests.patch(credential_path, json=payload, headers={"Authorization": "Bearer %s" % token.get('access_token'), 'Content-Type': 'application/json'})
+        #             if resp.status_code == 200:
+        #                 data = resp.json()
+        #                 print(data)
+        #             else:
+        #                 messages.error(request, "Could not add API key to Salesforce Named Credential: %s" % resp.content)
+        #                 return redirect(reverse('sources', kwargs={'community_id':community.id}))
+        #         else:
+        #             messages.error(request, "Could not find Salesforce Named Credential: Savannah_CRM_API")
+        #             return redirect(reverse('sources', kwargs={'community_id':community.id}))
+        # else:
+        #     messages.error(request, "Error checking Salesforce Named Credentials")
+        #     return redirect(reverse('sources', kwargs={'community_id':community.id}))
+
         cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, auth_id=token.get('id'), connector="corm.plugins.salesforce", server=token.get('instance_url'), defaults={"auth_secret": token['access_token'], "auth_refresh": token.get('refresh_token', None)})
         source, created = Source.objects.update_or_create(community=community, auth_id=token.get('id'), connector="corm.plugins.salesforce", server=token.get('instance_url'), defaults={'name':'Salesforce', 'icon_name': 'fab fa-salesforce', 'auth_secret': token['access_token']})
         if created:
-            source.api_key = uuid.uuid4()
+            source.api_key = new_api_key
             source.save()
+
             messages.success(request, 'Your Salesforce org has been connected!')
+            messages.info(request, "Use the provided API Token for your NamedCredential password.")
         else:
             messages.info(request, 'Your Salesforce source has been updated.')
 
@@ -214,7 +255,7 @@ def refresh_auth(source):
         client_secret = settings.SALESFORCE_CLIENT_SECRET
         client = OAuth2Session(client_id)
 
-        new_token = client.refresh_token(REFRESH_URL, refresh_token=user_cred.auth_refresh, auth=HTTPBasicAuth(client_id, client_secret))
+        new_token = client.refresh_token(source.server+'/services/oauth2/token', refresh_token=user_cred.auth_refresh, auth=HTTPBasicAuth(client_id, client_secret))
         user_cred.auth_secret = new_token.get('access_token')
         user_cred.save()
         source.auth_secret = new_token.get('access_token')
@@ -255,17 +296,18 @@ class SalesforcePlugin(BasePlugin):
         if resp.status_code == 200:
             data = resp.json()
             for sobj in data.get('sObjects', []):
-                if sobj.get('name') in ('Account', 'Contact'):
+                if sobj.get('name', None) in ('Account', 'Contact'):
                     channels.append(
                         {
                             'id': sobj['name'],
-                            'name': sobj.get('name', ''),
+                            'name': sobj.get('name'),
                             'topic': '',
                             'count':sobj.get('count', 0),
                             'is_private': False,
                             'is_archived': False,
                         }
                     )
+        
         elif resp.status_code == 403:
             raise RuntimeError("Invalid authentication token")
         else:
