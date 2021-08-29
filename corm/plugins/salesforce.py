@@ -184,7 +184,7 @@ def callback(request):
     token_url = login_url + 'services/oauth2/token'
     try:
         token = client.fetch_token(token_url, code=request.GET.get('code', None), client_secret=client_secret)
-        print("Token: %s" % token)
+        #print("Token: %s" % token)
         new_api_key = uuid.uuid4()
         # query_path = token.get('instance_url') + QUERY_URL + '?q=SELECT+ID,DeveloperName,NamespacePrefix+FROM+NamedCredential'
         # print(query_path)
@@ -248,6 +248,7 @@ def refresh_auth(source):
     try:
         user_cred = UserAuthCredentials.objects.get(connector='corm.plugins.salesforce', auth_secret=source.auth_secret, auth_refresh__isnull=False)
     except UserAuthCredentials.DoesNotExist:
+        import pdb; pdb.set_trace()
         raise RuntimeError("Unable to refresh accesss token: Unknown credentials")
         
     try:
@@ -255,13 +256,13 @@ def refresh_auth(source):
         client_secret = settings.SALESFORCE_CLIENT_SECRET
         client = OAuth2Session(client_id)
 
-        new_token = client.refresh_token(source.server+'/services/oauth2/token', refresh_token=user_cred.auth_refresh, auth=HTTPBasicAuth(client_id, client_secret))
+        new_token = client.refresh_token(source.server+'/services/oauth2/token', refresh_token=user_cred.auth_refresh, client_id=client_id,  client_secret=client_secret)
         user_cred.auth_secret = new_token.get('access_token')
         user_cred.save()
         source.auth_secret = new_token.get('access_token')
         source.save()
     except Exception as e:
-        raise RuntimeError("Unable to refresh accesss token: %s" % e)
+        raise RuntimeError("Failed to refresh accesss token: %s" % e)
 
     return source
 
@@ -335,6 +336,7 @@ class SalesforceImporter(PluginImporter):
         return self.api_request(self.source.server + path, headers=self.API_HEADERS)
 
     def import_channel(self, channel, from_date, full_import=False):
+        print("Importing channel: %s" % channel.name)
         self.customer_tag, created = Tag.objects.get_or_create(community=self.community, name="customer", defaults={'color': 'eff240', 'connector': 'corm.plugins.salesforce', 'editable': False})
         self.prospect_tag, created = Tag.objects.get_or_create(community=self.community, name="prospect", defaults={'color': '40f2dd', 'connector': 'corm.plugins.salesforce', 'editable': False})
         self.lead_tag, created = Tag.objects.get_or_create(community=self.community, name="lead", defaults={'color': '40f29c', 'connector': 'corm.plugins.salesforce', 'editable': False})
