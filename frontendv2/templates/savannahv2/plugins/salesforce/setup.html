@@ -1,0 +1,38 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+
+
+{% block page_title %} | Salesforce Setup{% endblock %}
+
+{% block page_content %}
+
+<!-- Members Card -->
+<div class="row mt-3 justify-content-center">
+<div class="col-xl-8 col-md-8 mb-5 align-items-center">
+<center>
+    <div class="card shadow h-100 py-2">
+    <div class="card-body">
+        <div class="text-left">
+            <h2>Salesforce Integration</h2>
+            <p>The Salesforce integration provides a bi-directional link between your Salesforce org and Savannah CRM accounts, allowing you to share data about people and companies.</p>
+            <p>This integration will <b>only</b> share data about people if they are already in both systems, it will not add community contacts into Salesforce, or sales contacts into Savannah.</p>
+
+            <h4 class="mt-4">Step 1: Install Salesforce Package</h4>
+            <p>The <u>Savannah CRM Integration</u> package for Salesforce provides Lightning Web Components that can be added to your Salesforce Contact and Account pages to provide extra information from Savannah. These components will need to be added to your Salesforce pages by an administrator.</p>
+            <p><a class="btn btn-success" href="{{package_url}}" target="salesforce">Install</a></p>
+
+            <h4 class="mt-4">Step 2: Connect Savannah CRM to Salesforce</h4>
+            <p>Once the package is installed to your Salesforce org you can connect your Savannah CRM account to it using the standard app authorization process.</p>
+            <p><a class="btn btn-success" href="{% url 'salesforce_auth' %}">Connect</a></p>
+
+            <h4 class="mt-4">Step 3: Connect Salesforce to Savannah CRM</h4>
+            <p>Once you have connected Savannah to your Salesforce org, you will be given an API Token. This token must set as the password on the <u>Savannah CRM API</u> Named Credential to allow Salesforce to read data from the Savannah CRM API.</p>
+
+            <p class="text-center"><a class="btn btn-secondary" href="{% url 'sources' view.community.id %}"><i class="fas fa-chevron-left"></i> Back</a></p>
+        </div>
+    </div>
+    </div>
+</center>
+</div>
+</div>
+{% endblock %}
