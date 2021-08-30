@@ -41,12 +41,10 @@
                             <i class="fas fa-check-square {% if plan.metadata.tags|as_int == 0 %}text-primary{% else %}text-secondary{% endif %}"> </i> 
                             {{plan.metadata.tags|default:'Unlimited'}} Tag{% if plan.metadata.tags|as_int != 1 %}s{% endif %}
                         </div>
-                        {% comment %}
                         <div class="text-left">
                             <i class="{% if plan.metadata.sales_integration == "true" %}fas fa-check-square text-primary{% else %}far fa-square text-secondary{% endif %}"> </i> 
                             {% if plan.metadata.sales_integration == "true" %}Sales CRM integrations{% else %}No sales integrations{% endif %}
                         </div>
-                        {% endcomment %}
 
                     </div>
                     {% if plan.id == current_plan.id %}

@@ -73,6 +73,10 @@ class Management(models.Model, ManagementPermissionMixin):
         if projects > 0 and self.community.project_set.filter(default_project=False).count() > projects:
             return False
 
+        can_have_sales = plan_data.get('sales_integration', False)
+        if not can_have_sales and self.community.source_set.filter(connector='corm.plugins.salesforce').count() > 0:
+            return False
+
         return True
 
     @classmethod
@@ -119,5 +123,5 @@ class Management(models.Model, ManagementPermissionMixin):
 
     @property
     def sales_itegration(self):
-        return bool(self.metadata.get('sales_itegration', False))
+        return bool(self.metadata.get('sales_integration', False))
 

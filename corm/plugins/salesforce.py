@@ -20,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import APIException, AuthenticationFailed, NotFound
 from apiv1.serializers import TagsField
+from frontendv2.views import SavannahView
 
 AUTHORIZATION_BASE_URL = 'https://login.salesforce.com/services/oauth2/authorize'
 DEFAULT_LOGIN_URL = 'https://login.salesforce.com/'
@@ -29,16 +30,6 @@ CHANNELS_URL = '/services/data/v51.0/limits/recordCount'
 ACCOUNTS_URL = '/services/data/v51.0/sobjects/Account'
 CONTACTS_URL = '/services/data/v51.0/sobjects/Contact'
 CREDENTIALS_URL = '/services/data/v52.0/tooling/sobjects/NamedCredential'
-
-@login_required
-def not_available_view(request):
-    context = {
-        'feature_name': 'Salesforce Integration',
-        'feature_msg': 'Salesforce integration will allow you to connect your Salesforce and Savannah data.',
-        'feature_signup': settings.SAVANAH_NEWSLETTER,
-        'back_url': reverse('sources', kwargs={'community_id': request.session['community']})
-    }
-    return render(request, 'savannahv2/feature_not_available.html', context=context)
 
 class SalesforceAuthentication(BaseAuthentication):
     def authenticate_header(self, request):
@@ -154,6 +145,38 @@ class SalesforceMemberSerializer(serializers.Serializer):
     def get_recent_connections(self, identity):
         return list({'name':c.to_member.name, 'tstamp':c.last_connected.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
 
+@login_required
+def not_available_view(request):
+    context = {
+        'feature_name': 'Salesforce Integration',
+        'feature_msg': 'Salesforce integration will allow you to connect your Salesforce and Savannah data.',
+        'feature_signup': settings.SAVANAH_NEWSLETTER,
+        'back_url': reverse('sources', kwargs={'community_id': request.session['community']})
+    }
+    return render(request, 'savannahv2/feature_not_available.html', context=context)
+
+class SalesforceSetup(SavannahView):
+    def _add_sources_message(self):
+        pass
+
+    @login_required
+    def as_view(request):
+        view = SalesforceSetup(request, community_id=request.session['community'])
+        if not view.community.management.can_add_source():
+            messages.warning(request, "You have reach your maximum number of Sources. Upgrade your plan to add more.")
+            return redirect('sources', community_id=view.community.id)
+
+        print(view.community.management.metadata)
+        if not view.community.management.can_add_sales_source():
+            messages.warning(request, "Your plan does not allow sales integrations. <a class=\"btn btn-sm btn-success\" href=\"%s\">Upgrade your plan</a> to add this source." % reverse('billing:upgrade', kwargs={"community_id":view.community.id}))
+            return redirect('sources', community_id=view.community.id)
+        context = view.context
+        context.update({
+            'package_url': settings.SALESFORCE_PACKAGE_URL
+        })
+        return render(request, 'savannahv2/plugins/salesforce/setup.html', context=context)
+
+
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
     # if not community.management.can_add_source():
@@ -239,6 +262,7 @@ def callback(request):
         return redirect(reverse('sources', kwargs={'community_id':community.id}))
 
 urlpatterns = [
+    path('setup', SalesforceSetup.as_view, name='salesforce_setup'),
     path('auth', authenticate, name='salesforce_auth'),
     path('callback', callback, name='salesforce_callback'),
     path('api/member', MemberDetail.as_view(), name='salesforce_api_member'),
@@ -269,7 +293,7 @@ def refresh_auth(source):
 class SalesforcePlugin(BasePlugin):
 
     def get_add_view(self):
-        return not_available_view
+        return SalesforceSetup.as_view
         
     def get_identity_url(self, contact):
         return contact.source.server  + "/lightning/r/Contact/" + contact.origin_id + "/view"

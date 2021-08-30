@@ -94,7 +94,7 @@ class ManagementPermissionMixin(object):
 
     def max_import_date(self):
         if self.import_days > 0:
-            return self.community.created - datetime.timedelta(days=import_days)
+            return self.community.created - datetime.timedelta(days=self.import_days)
         else:
             return self.community.created - datetime.timedelta(years=5)
 
@@ -104,13 +104,16 @@ class ManagementPermissionMixin(object):
 
     def max_retention_date(self):
         if self.retention_days > 0:
-            return datetime.datetime.utcnow() - datetime.timedelta(days=retention_days)
+            return datetime.datetime.utcnow() - datetime.timedelta(days=self.retention_days)
         else:
             return self.community.created - datetime.timedelta(years=3)
 
     @property
     def sales_itegration(self):
         return False
+
+    def can_add_sales_source(self):
+        return self.sales_itegration
 
 class NoManagement(ManagementPermissionMixin):
     def __init__(self, community, metadata={}):
