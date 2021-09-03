@@ -121,7 +121,7 @@ class PluginImporter:
                 first_seen = tstamp
                 if first_seen is None:
                     first_seen = datetime.datetime.utcnow()
-                member = Member.objects.create(community=self.community, name=name, first_seen=first_seen, last_seen=None)
+                member = Member.objects.create(community=self.community, name=name, email_address=email_address, avatar_url=avatar_url, first_seen=first_seen, last_seen=None)
                 contact = Contact.objects.create(origin_id=origin_id, source=self.source, member=member, detail=detail, name=name, email_address=email_address, avatar_url=avatar_url)
                 self.update_identity(contact)
             else:
