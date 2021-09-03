@@ -7,6 +7,8 @@ from corm.models import Source, Channel, Member, Contact, Conversation, Contribu
 from corm.plugins import PluginImporter
 from django.db import models
 
+from frontendv2.views.tags import random_tag_color
+
 def update_source(source):
     source.last_import = datetime.datetime.utcnow()
     source.save()
@@ -143,10 +145,11 @@ class IdentitySerializer(serializers.Serializer):
         )
 
         for tag_name in self.validated_data.get('tags', []):
-            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={
-                'color': 'E5E6E8'
-            })
-            member.tags.add(tag)
+            if tag_name is not None and len(tag_name.strip()) > 0:
+                tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name.strip(), defaults={
+                    'color': random_tag_color(community=source.community)
+                })
+                member.tags.add(tag)
 
         update_source(source)
         return Contact.objects.get(source=source, member=member, origin_id=self.validated_data.get('origin_id'))
@@ -236,10 +239,11 @@ class ConversationSerializer(serializers.Serializer):
         importer.add_participants(convo, participants)
 
         for tag_name in self.validated_data.get('tags', []):
-            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={
-                'color': 'E5E6E8'
-            })
-            convo.tags.add(tag)
+            if tag_name is not None and len(tag_name.strip()) > 0:
+                tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name.strip(), defaults={
+                    'color': random_tag_color(community=source.community)
+                })
+                convo.tags.add(tag)
 
         update_channel(channel)
         return convo
@@ -307,10 +311,11 @@ class ContributionSerializer(serializers.Serializer):
         )
 
         for tag_name in self.validated_data.get('tags', []):
-            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name, defaults={
-                'color': 'E5E6E8'
-            })
-            contrib.tags.add(tag)
+            if tag_name is not None and len(tag_name.strip()) > 0:
+                tag, created = Tag.objects.get_or_create(community=source.community, name=tag_name.strip(), defaults={
+                    'color': random_tag_color(community=source.community)
+                })
+                contrib.tags.add(tag)
 
         update_channel(channel)
         return contrib
@@ -344,9 +349,9 @@ class EventSerializer(serializers.Serializer):
 
         tag = None
         tag_data = self.validated_data.get('tag', None)
-        if tag_data:
-            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_data['name'], defaults={
-                'color': 'E5E6E8'
+        if tag_data is not None and len(tag_data.get('name', '').strip()) > 0:
+            tag, created = Tag.objects.get_or_create(community=source.community, name=tag_data['name'].strip(), defaults={
+                'color': random_tag_color(community=source.community)
             })
             event.tag = tag
             event.save()
