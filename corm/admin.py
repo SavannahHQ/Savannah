@@ -263,6 +263,7 @@ class ContactAdmin(admin.ModelAdmin):
     list_display = ("detail", "source", "member", "name", "email_address")
     list_filter = ("source__connector", "member__community", "source")
     search_fields = ("detail","email_address")
+    raw_id_fields = ("member",)
 
 admin.site.register(Contact, ContactAdmin)
 
