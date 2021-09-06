@@ -155,7 +155,7 @@ class DemoManagement(ManagementPermissionMixin):
 
     @property
     def sales_itegration(self):
-        return False
+        return True
 
 class Community(models.Model):
     SETUP = 0
