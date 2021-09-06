@@ -314,31 +314,25 @@ class SalesforcePlugin(BasePlugin):
         return SalesforceImporter(source)
 
     def get_channels(self, source):
-        source = refresh_auth(source)
-        channels = []
-        path = source.server + CHANNELS_URL
-        resp = requests.get(path, headers={"Authorization": "Bearer %s" % source.auth_secret})
-        if resp.status_code == 200:
-            data = resp.json()
-            for sobj in data.get('sObjects', []):
-                if sobj.get('name', None) in ('Account', 'Contact'):
-                    channels.append(
-                        {
-                            'id': sobj['name'],
-                            'name': sobj.get('name'),
-                            'topic': '',
-                            'count':sobj.get('count', 0),
-                            'is_private': False,
-                            'is_archived': False,
-                        }
-                    )
-        
-        elif resp.status_code == 403:
-            raise RuntimeError("Invalid authentication token")
-        else:
-            raise RuntimeError("%s (%s)" % (resp.reason, resp.status_code))
-
+        channels = [{
+            'id': 'Account',
+            'name': 'Account',
+            'topic': 'Link Salesforce Account records to Savannah Company records',
+            'count':1,
+            'is_private': False,
+            'is_archived': False,
+        },
+        {
+            'id': 'Contact',
+            'name': 'Contact',
+            'topic': 'Link Salesforce Contact records to Savannah Member records',
+            'count':0,
+            'is_private': False,
+            'is_archived': False,
+        }]
         return channels
+
+
 
 class SalesforceImporter(PluginImporter):
 
