@@ -272,7 +272,6 @@ def refresh_auth(source):
     try:
         user_cred = UserAuthCredentials.objects.get(connector='corm.plugins.salesforce', auth_secret=source.auth_secret, auth_refresh__isnull=False)
     except UserAuthCredentials.DoesNotExist:
-        import pdb; pdb.set_trace()
         raise RuntimeError("Unable to refresh accesss token: Unknown credentials")
         
     try:
