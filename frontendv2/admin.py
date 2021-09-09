@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
+
 from frontendv2.models import EmailRecord, ManagerInvite, PasswordResetRequest, PublicDashboard
 
 # Register your models here.
@@ -36,6 +38,9 @@ class PasswordResetAdmin(admin.ModelAdmin):
 admin.site.register(PasswordResetRequest, PasswordResetAdmin)
 
 class PublicDashboardAdmin(admin.ModelAdmin):
-    list_display = ('display_name', 'community', 'page', 'created_by', 'created_at', 'view_count')
+    list_display = ('display_name', 'link', 'community', 'page', 'created_by', 'created_at', 'view_count')
     list_filter = ('page', 'community', 'created_at')
+    def link(self, dashboard):
+        return mark_safe("<a href=\"%s\" target=\"_blank\">Open</a>" % dashboard.get_absolute_url())
+    link.short_description = "URL"
 admin.site.register(PublicDashboard, PublicDashboardAdmin)
