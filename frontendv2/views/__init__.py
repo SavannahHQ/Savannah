@@ -499,22 +499,27 @@ class SavannahFilterView(SavannahView):
             default_name = PublicDashboard.PAGES.get(page)
         if filters.get('tag', None):
             default_name = self.tag.name.title() + " " + default_name
-        if filters.get('member_company', None):
-            default_name = self.member_company.name + " " + default_name
         if filters.get('member_role', None):
             if filters.get('member_role') == 'bot':
                 default_name = default_name + " (excluding bots)"
             else:
-                default_name = default_name + " by "+filters.get('member_role').title()
+                default_name = filters.get('member_role').title() +" "+ default_name
         if filters.get('member_tag', None):
-            if filters.get('member_role', None) and filters.get('member_role') != 'bot':
-                default_name = default_name + " " + self.member_tag.name.title()
+            if filters.get('member_role', None) or filters.get('member_company', None):
+                default_name = self.member_tag.name.title() + " " + default_name
             else:
                 default_name = default_name + " by " + self.member_tag.name.title()
+
+        if filters.get('member_company', None):
+            default_name = self.member_company.name + " " + default_name
+
         if filters.get('timefilter', 'timespan') == 'timespan' and filters.get('timespan') < self.MAX_TIMESPAN:
             default_name = self.timespan_display + " " + default_name
-        if 'source' in filters:
-            default_name = default_name + " in %s %s" % (self.source.name, self.source.connector_name)
+        if filters.get('source', None):
+            if int(filters.get('source', 0)) < 1:
+                default_name = default_name + " not in %s %s" % (self.source.name, self.source.connector_name)
+            else:
+                default_name = default_name + " in %s %s" % (self.source.name, self.source.connector_name)
 
         if filters.get('timefilter', 'timespan') == 'range' and not pin_time:
             pin_time = True
