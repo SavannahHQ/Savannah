@@ -234,7 +234,12 @@
                   <td class="text-nowrap">{{conversation.timestamp|dateortime}}</td>
                   <td class="text-nowrap"><i class="{{conversation.channel.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
                   <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker.id %}">{{conversation.speaker.name}}</a>{% endif %}</td>
-                  <td>
+                  <td class="show-children-on-hover">
+                  <div class="show-on-parent-hover d-inline" style="margin-left: -1.5em">
+                  <a title="Promote to Contribution" href="{% url 'promote_to_contribution' member_id=conversation.speaker.id %}?conversation_id={{conversation.id}}">
+                    <i class="fas fa-shield-alt text-gray-300">&nbsp;</i>
+                  </a>
+                  </div>
                     <a target="_blank" href="{{conversation.location|default:'#'}}" data-toggle="tooltip" data-placement="right" title="{{conversation.content}}">{{ conversation }}</a>
                     {% include 'savannahv2/tag_list.html' with tags=conversation.tags.all %}
                   </td>

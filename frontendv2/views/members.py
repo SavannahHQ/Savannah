@@ -700,7 +700,22 @@ class PromoteToContribution(SavannahView):
 
     @property
     def form(self):
-        new_contrib = Contribution(community=self.community, author=self.conversation.speaker, channel=self.conversation.channel, timestamp=self.conversation.timestamp, location=self.conversation.location)
+        try:
+            default_type = ContributionType.objects.filter(source=self.conversation.channel.source).annotate(use_count=Count('contribution')).order_by('-use_count')[0]
+            default_title = "%s in %s on %s" % (default_type.name, self.conversation.channel, self.conversation.channel.source.connector_name)
+        except:
+            default_type = None
+            default_title = ""
+        new_contrib = Contribution(
+            community=self.community, 
+            contribution_type=default_type,
+            title=default_title,
+            author=self.conversation.speaker, 
+            channel=self.conversation.channel, 
+            timestamp=self.conversation.timestamp, 
+            location=self.conversation.location
+        )
+
         if self.request.method == 'POST':
             form = ContributionPromotionForm(instance=new_contrib, data=self.request.POST)
         else:
