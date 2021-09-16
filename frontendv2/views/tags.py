@@ -15,12 +15,15 @@ from frontendv2.views import SavannahView
 from frontendv2 import colors
 
 def random_tag_color(community=None):
-    if community:
-        used_colors = set(Tag.objects.filter(community=community).values('color').distinct().values_list('color', flat=True))
-        available_colors = list(set(colors.TAG_COLORS) - used_colors)
-        return available_colors[random.randrange(len(available_colors))]
-    else:
-        return colors.TAG_COLORS[random.randrange(len(colors.TAG_COLORS))]
+    try:
+        if community:
+            used_colors = set(Tag.objects.filter(community=community).values('color').distinct().values_list('color', flat=True))
+            available_colors = list(set(colors.TAG_COLORS) - used_colors)
+            return available_colors[random.randrange(len(available_colors))]
+        else:
+            return colors.TAG_COLORS[random.randrange(len(colors.TAG_COLORS))]
+    except:
+        return colors.OTHER
 
 class Tags(SavannahView):
     def __init__(self, request, community_id):
