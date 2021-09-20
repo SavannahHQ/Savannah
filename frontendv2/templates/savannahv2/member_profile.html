@@ -441,7 +441,7 @@ $('#note_cancel').on('click', function(event) {
 
 $('#noteDialog').on('hidden.bs.modal', function() {
   $('#note_form').trigger('reset');
-  $('#id_note_id').attr('value', undefined);
+  $('#id_note_id').attr('value', '');
   $('#id_note_content').text('');
 })
 
