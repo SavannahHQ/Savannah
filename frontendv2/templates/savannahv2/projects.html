@@ -42,8 +42,8 @@
                     {% if project.task_count > 0 %}<p>Open Tasks: {{project.task_count}}</p>{% endif %}
                   {% else %}
                     {% if project.owner %}<p>Owner: {{project.owner}}</p>{% endif %}
-                    {% if project.tag %}<p>Tag: <span class="tag-pill" style="background-color: #{{project.tag.color}};"><span class="tag-text" style="color: #{{project.tag.color}}aa;">{{project.tag.name}}</span></span></p>{% endif %}
-                    {% if project.member_tag %}<p>Member Tag: <span class="tag-pill" style="background-color: #{{project.member_tag.color}};"><span class="tag-text" style="color: #{{project.member_tag.color}}aa;">{{project.member_tag.name}}</span></span></p>{% endif %}
+                    {% if project.tag %}<p>Content: <span class="tag-pill" style="background-color: #{{project.tag.color}};"><span class="tag-text" style="color: #{{project.tag.color}}aa;">{{project.tag.name}}</span></span></p>{% endif %}
+                    {% if project.member_tag %}<p>Members: <span class="tag-pill" style="background-color: #{{project.member_tag.color}};"><span class="tag-text" style="color: #{{project.member_tag.color}}aa;">{{project.member_tag.name}}</span></span></p>{% endif %}
                     {% if project.channels.all.count > 0 %}<p>Channels: {{project.channels.all.count}}</p>{% endif %}
                     {% if project.task_count > 0 %}<p>Open Tasks: {{project.task_count}}</p>{% endif %}
                   {% endif %}
