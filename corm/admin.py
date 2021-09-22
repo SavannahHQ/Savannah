@@ -366,6 +366,7 @@ class NoteAdmin(admin.ModelAdmin):
     list_display = ("__str__", "member", "author", "timestamp")
     list_filter = ("author", "timestamp")
     search_fields = ("content", "member__name")
+    raw_id_fields = ('member','author', 'tags')
 admin.site.register(Note, NoteAdmin)
 
 class GiftTypeAdmin(admin.ModelAdmin):
