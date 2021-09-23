@@ -433,7 +433,7 @@ class CompanyEditForm(forms.ModelForm):
             if domain in old_domains:
                 del old_domains[domain]
                 continue
-            else:
+            elif domain != "":
                 CompanyDomains.objects.create(company=self.instance, domain=domain)
 
         for removed in old_domains.values():
