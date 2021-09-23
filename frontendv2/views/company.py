@@ -182,6 +182,44 @@ class CompanyProfile(SavannahView):
 
         return render(request, "savannahv2/company.html", view.context)
 
+class CompanyMerge(SavannahView):
+    def __init__(self, request, company_id):
+        self.company = get_object_or_404(Company, id=company_id)
+        super().__init__(request, self.company.community.id)
+        self.active_tab = "company"
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower()
+        else:
+            self.search = None
+
+    @property
+    def possible_matches(self):
+        matches = Company.objects.filter(community=self.community).exclude(id=self.company.id)
+        if self.search:
+            return matches.filter(Q(name__icontains=self.search)|Q(domains__domain__icontains=self.search)|Q(groups__name__icontains=self.search)).distinct()
+        else:
+
+            similar_name = [name for name in self.company.name.split(" ") if len(name) > 2]
+            if len(similar_name) == 0:
+                return []
+            elif len(similar_name) > 1:
+                similar_matches = matches.filter(reduce(operator.or_, (Q(name__icontains=name) for name in similar_name)))
+            elif len(similar_name) == 1:
+                similar_matches = matches.filter(Q(name__icontains=similar_name[0]))
+            similar_matches = similar_matches.exclude(id=self.company.id).distinct()[:20]
+            return list(similar_matches)
+
+    @login_required
+    def as_view(request, company_id):
+        view = CompanyMerge(request, company_id)
+
+        if request.method == 'POST':
+            merge_with = get_object_or_404(Company, id=request.POST.get('merge_with'))
+            view.company.merge_with(merge_with)
+            return redirect('company_profile', company_id=company_id)
+        return render(request, "savannahv2/company_merge.html", view.context)
+
 class Companies(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)

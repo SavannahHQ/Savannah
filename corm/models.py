@@ -669,6 +669,10 @@ class Source(models.Model):
     def connector_name(self):
         return ConnectionManager.display_name(self.connector)
 
+    @property
+    def plugin(self):
+        return ConnectionManager.CONNECTOR_PLUGINS.get(self.connector)
+        
     def __str__(self):
         return self.name
 
@@ -1308,6 +1312,18 @@ class Company(models.Model):
     is_staff = models.BooleanField(default=False, help_text="Treat members as staff")
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE, null=True, blank=True)
 
+    def merge_with(self, other):
+        for domain in other.domains.all():
+            domain.company = self
+            domain.save()
+        for group in other.groups.all():
+            group.company = self
+            group.save()
+        for member in other.member_set.all():
+            member.company = self
+            member.save()
+        other.delete()
+
     def set_tag(self, tag):
         if tag != self.tag:
             for member in Member.objects.filter(company=self):
@@ -1361,7 +1377,7 @@ class CompanyDomains(models.Model):
         ordering = ('domain',)
         verbose_name = "Company Domain"
         verbose_name_plural = "Company Domains"
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, related_name='domains', on_delete=models.CASCADE)
     domain = models.CharField(max_length=256, null=True, blank=True, help_text=_('Email domain names'))
 
     def __str__(self):
@@ -1371,6 +1387,9 @@ class SourceGroup(ImportedDataModel):
     company = models.ForeignKey(Company, related_name='groups', on_delete=models.CASCADE)
     source = models.ForeignKey(Source, on_delete=models.CASCADE)
     name = models.CharField(max_length=256)
+
+    def get_external_url(self):
+        return self.source.plugin.get_company_url(self.origin_id)
 
     def __str__(self):
         return self.name

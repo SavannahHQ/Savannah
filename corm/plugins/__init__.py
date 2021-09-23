@@ -50,6 +50,9 @@ class BasePlugin:
     def get_identity_url(self, contact):
         return None
 
+    def get_company_url(self, origin_id):
+        return None
+        
     def get_connector(self):
         return self.__class__.__module__
 
@@ -146,6 +149,7 @@ class PluginImporter:
                 if member.avatar_url is None:
                     member.avatar_url = matched_contact.avatar_url
                     save_member = True
+                self.update_identity(matched_contact)
 
             self._member_cache[origin_id] = member
         if member.first_seen == replace_first_seen and tstamp is not None:

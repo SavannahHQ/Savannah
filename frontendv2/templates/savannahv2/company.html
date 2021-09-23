@@ -63,6 +63,31 @@
                       </span>
                     </div>
                   </div>
+                  {% if view.company.domains.count %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Domains</div>
+                    <div class="mb-2 col-lg-10"><i class="far fa-envelope"></i> 
+                    {% for domain in view.company.domains.all %}
+                      {{domain.domain}}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% if view.company.groups.count %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Sources</div>
+                    <div class="mb-2 col-lg-10">
+                      {% for group in view.company.groups.all %}
+                      {% if group.get_external_url %}
+                        <a href="{{group.get_external_url}}" target="_blank"><i class="{{group.source.icon_name}}"></i> {{group.name}}</a>
+                      {% else %}
+                        <i class="{{group.source.icon_name}}"></i> {{group.name}}
+                      {% endif %}
+                      {% if not forloop.last %}<br/>{% endif %}
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
                   {% if view.all_notes.count > 0 %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Notes</div>
@@ -150,6 +175,7 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Members</h6>
+                  <a class="text-gray-500" href="{% url 'company_merge' view.company.id %}" title="Merge"><i class="fas fa-people-arrows"></i></a>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">

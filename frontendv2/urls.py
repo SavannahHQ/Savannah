@@ -28,7 +28,7 @@ from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions,
 from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
 from frontendv2.views.reports import Reports, view_report
-from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup
+from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
 from frontendv2 import views
 
 urlpatterns = [
@@ -130,4 +130,5 @@ urlpatterns = [
     path('companies/<int:community_id>/lookup', CompanyLookup.as_view, name='company_lookup'),
     path('company/<int:company_id>/', CompanyProfile.as_view, name='company_profile'),
     path('company/<int:company_id>/edit', EditCompany.as_view, name='company_edit'),
+    path('company/<int:company_id>/merge', CompanyMerge.as_view, name='company_merge'),
 ]

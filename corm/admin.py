@@ -522,6 +522,18 @@ class ManagersAdmin(admin.ModelAdmin):
 
 admin.site.register(ManagerProfile, ManagersAdmin)
 
+class CompanyDomainAdmin(admin.ModelAdmin):
+#     list_display = ("domain", "company", "community")
+#     list_filter = ("community",)
+    pass
+admin.site.register(CompanyDomains, CompanyDomainAdmin)
+
+class SourceGroupAdmin(admin.ModelAdmin):
+#     list_display = ("name", "community", "source")
+#     list_filter = ("source__connector", "community")
+    pass
+admin.site.register(SourceGroup, SourceGroupAdmin)
+
 class CompanyDomainInline(admin.TabularInline):
     model = CompanyDomains
     fk_name = "company"
@@ -542,16 +554,6 @@ class CompanyAdmin(admin.ModelAdmin):
         return Member.objects.filter(company=company).count()
 
 admin.site.register(Company, CompanyAdmin)
-
-# class CompanyDomainAdmin(admin.ModelAdmin):
-#     list_display = ("domain", "company", "community")
-#     list_filter = ("community",)
-# admin.site.register(CompanyDomains, CompanyDomainAdmin)
-
-# class SourceGroupAdmin(admin.ModelAdmin):
-#     list_display = ("name", "community", "source")
-#     list_filter = ("source__connector", "community")
-# admin.site.register(SourceGroup, SourceGroupAdmin)
 
 class EmailAdmin(admin.ModelAdmin):
     list_display = ["when", "recipient_display", "category", "subject", "sender", "ok"]

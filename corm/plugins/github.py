@@ -153,6 +153,12 @@ class GithubPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "https://github.com/%s" % contact.detail
 
+    def get_company_url(self, github_id):
+        if github_id[0] == '@':
+            return "https://github.com/%s" % github_id[1:]
+        else:
+            return None
+
     def get_icon_name(self):
         return 'fab fa-github'
 
@@ -227,6 +233,17 @@ class GithubImporter(PluginImporter):
                 identity.member.name = identity.name
             if identity.member.email_address is None:
                 identity.member.email_address = identity.email_address
+
+            if identity.member.company is None and data.get("company") is not None:
+                origin_id = data.get("company").strip()
+                try:
+                    group = SourceGroup.objects.get(origin_id=origin_id, source=self.source)
+                    identity.member.company = group.company
+                except:
+                    company_name = origin_id.replace('@', '')
+                    company = Company.objects.create(community=self.source.community, name=company_name)
+                    SourceGroup.objects.create(origin_id=origin_id, company=company, source=self.source, name=company_name)
+                    identity.member.company = company
             identity.member.save()
         else:
             print("Failed to lookup identity info: %s" % resp.content)
