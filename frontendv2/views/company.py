@@ -84,7 +84,7 @@ class CompanyProfile(SavannahView):
             for s in sources:
                 counts[s] = s.conversation_count
 
-            self._sourcesChart = PieChart("sourcesChart", title="Converation Sources", limit=8)
+            self._sourcesChart = PieChart("sourcesChart", title="Conversation Sources", limit=8)
             for source, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
                 self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), count)
         self.charts.add(self._sourcesChart)
