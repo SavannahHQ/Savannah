@@ -235,7 +235,7 @@ class GithubImporter(PluginImporter):
                 identity.member.email_address = identity.email_address
 
             if identity.member.company is None and data.get("company") is not None:
-                origin_id = data.get("company").split(" ")[0].strip()
+                origin_id = data.get("company").split(" @")[0].strip()
                 try:
                     group = SourceGroup.objects.get(origin_id=origin_id, source=self.source)
                     identity.member.company = group.company
