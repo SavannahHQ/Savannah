@@ -1,16 +1,61 @@
 {% extends "savannahv2/base.html"%}
-{% load static member_utils %}
+{% load static member_utils humanize %}
 
 {% block page_title %} | {{view.community.name}} Search{% endblock %}
 
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Members</h1>
+            <h1 class="h3 mb-0 text-gray-800">Search Results</h1>
             {% include 'savannahv2/filter_button.html' with current_tag=view.tag members_only=True %}
           </div>
 
+          {% if view.all_companies.count %}
           <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+
+              <!-- All Members -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Companies</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col">Members</th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">First Seen&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.all_companies %}
+                <tr>
+                  <td>
+                    {{company.logo_url|icon:'img/company-default.png'}}
+                    <a href="{% url 'company_profile' company.id %}">
+                    {{ company.name }}
+                    </a>
+                    {% include 'savannahv2/tag_list.html' with tag=company.tag %}
+                  </td>
+                  <td >{{company.member_count|intcomma}}</td>
+                  <td >{{company.first_activity|date}}</td>
+                  <td >{{company.last_activity|date}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+          {% endif %}
 
           <!-- Content Row -->
           <div class="row">
@@ -21,17 +66,17 @@
               <!-- All Members -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">All Members</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Members</h6>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <table class="table">
                 <thead>
                   <tr>
-                    <th scope="col"><a href="?sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col">Company</th>
                     <th scope="col">Role</th>
-                    <th scope="col"><a href="?sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">Joined&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
-                    <th scope="col"><a href="?sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">First Seen&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -86,8 +131,10 @@
               </div>
 
             </div>
-          </div>
-        </div>
-        <!-- /.container-fluid -->
+          </div>        
+
+
+      </div>
+      <!-- /.container-fluid -->
 {% endblock %}
 

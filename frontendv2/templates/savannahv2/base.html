@@ -230,7 +230,7 @@
           <!-- Topbar Search -->
           <form class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-search" action="{% url 'all_members' active_community.id %}">
             <div class="input-group">
-              <input name="search" {% if view.search %}value="{{view.search}}" {% endif %}type="text" class="form-control bg-light border-0 small" placeholder="Search for Member..." aria-label="Search" aria-describedby="basic-addon2">
+              <input name="search" {% if view.search %}value="{{view.search}}" {% endif %}type="text" class="form-control bg-light border-0 small" placeholder="Search..." aria-label="Search" aria-describedby="basic-addon2">
               <div class="input-group-append">
                 <button class="btn btn-primary" type="submit">
                   <i class="fas fa-search fa-sm"></i>
@@ -241,7 +241,7 @@
 
           <div class="navbar-nav ml-none mr-auto">
             <div class="nav-item">
-              <a class="nav-link" href="{% url 'member_add' view.community.id %}" title="Add Member"><i class="fas fa-plus fa-fw">&nbsp;</i></a>
+              <a class="nav-link" href="{% url 'member_add' view.community.id %}" title="Add Member"><i class="fas fa-user-plus fa-fw">&nbsp;</i></a>
             </div>
           </div>
           

@@ -246,10 +246,8 @@ class Companies(SavannahFilterView):
 
     def all_companies(self):
         companies = Company.objects.filter(community=self.community)
-        if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
-            convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
-        else:
-            convo_filter = Q()
+        convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+
         if self.role:
             if self.role == Member.BOT:
                 convo_filter = convo_filter & ~Q(member__role=self.role)
@@ -265,8 +263,7 @@ class Companies(SavannahFilterView):
             else:
                 convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
         companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
-        if self.timefilter=='custom' or self.timespan < self.MAX_TIMESPAN:
-            companies = companies.filter(last_activity__isnull=False)
+        companies = companies.filter(last_activity__isnull=False)
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0)
         return companies.order_by(Lower('name'))
 

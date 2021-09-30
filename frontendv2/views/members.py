@@ -3,7 +3,7 @@ from functools import reduce
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max, Avg
+from django.db.models import F, Q, Count, Min, Max, Avg
 from django.db.models.functions import Trunc, Lower
 from django import forms
 from django.http import JsonResponse
@@ -380,6 +380,54 @@ class AllMembers(SavannahFilterView):
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
         return members[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def all_companies(self):
+        if not self.search:
+            return Company.objects.none()
+
+        companies = Company.objects.filter(community=self.community)
+        if self.search:
+            companies = companies.filter(Q(name__icontains=self.search) | Q(domains__domain__icontains=self.search) | Q(groups__name__icontains=self.search))
+
+        if self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN:
+            convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
+        else:
+            convo_filter = Q()
+        if self.role:
+            if self.role == Member.BOT:
+                convo_filter = convo_filter & ~Q(member__role=self.role)
+            else:
+                convo_filter = convo_filter & Q(member__role=self.role)
+        if self.member_tag:
+            convo_filter = convo_filter & Q(member__tags=self.member_tag)
+        if self.tag:
+            convo_filter = convo_filter & Q(member__speaker_in__tags=self.tag)
+        if self.source:
+            if self.exclude_source:
+                convo_filter = convo_filter & ~Q(member__speaker_in__channel__source=self.source)
+            else:
+                convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
+        companies = companies.annotate(first_activity=Min('member__speaker_in__timestamp', filter=convo_filter), last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
+        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
+        if self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN:
+            companies = companies.filter(member_count__gt=0)
+
+        if self.sort_by == 'name':
+            companies = companies.order_by(Lower('name'))
+        elif self.sort_by == '-name':
+            companies = companies.order_by(Lower('name').desc())
+        elif self.sort_by == 'first_seen':
+            companies = companies.order_by('first_activity')
+        elif self.sort_by == '-first_seen':
+            companies = companies.order_by('-first_activity')
+        elif self.sort_by == 'last_seen':
+            companies = companies.order_by('last_activity')
+        elif self.sort_by == '-last_seen':
+            companies = companies.order_by('-last_activity')
+        else:
+            companies = companies.order_by(self.sort_by)
+        return companies
 
     @property
     def has_pages(self):
