@@ -793,7 +793,7 @@ class PromoteToContribution(SavannahView):
                 activity.short_description = contrib.contribution_type.name
                 activity.icon_name = 'fas fa-shield-alt'
                 activity.save()
-                messages.success(request, "Converastion has been promoted to a Contribution.")
+                messages.success(request, "Conversation has been promoted to a Contribution.")
                 return redirect('member_activity', member_id=member_id)
 
         return render(request, 'savannahv2/promote_to_contribution.html', view.context)
