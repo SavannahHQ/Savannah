@@ -395,7 +395,7 @@ class SavannahFilterView(SavannahView):
 
     @property
     def is_filtered(self):
-        if self.filter['timespan'] and self.timespan != self.MAX_TIMESPAN:
+        if self.filter['timespan'] and (self.timespan != self.MAX_TIMESPAN or self.rangeend.date != datetime.datetime.utcnow().date):
             return True
         if self.filter['member_role'] and self.role is not None:
             return True
