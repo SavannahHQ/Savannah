@@ -70,6 +70,12 @@ class SavannahIntegrationView(APIView):
     authentication_classes = [SalesforceAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
+def identity_origin_id(source, member):
+    try:
+        return member.identities.get(source=source).origin_id
+    except:
+        return None
+        
 class MemberDetail(SavannahIntegrationView):
     """
     Retrieve a Member identity instance.
@@ -144,6 +150,85 @@ class SalesforceMemberSerializer(serializers.Serializer):
 
     def get_recent_connections(self, identity):
         return list({'name':c.to_member.name, 'tstamp':c.last_connected.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')} for c in MemberConnection.objects.filter(from_member=identity.member).order_by('-last_connected')[:5])
+
+class CompanyDetail(SavannahIntegrationView):
+    """
+    Retrieve a Company instance.
+    """
+    def get(self, request, format=None):
+        origin_id = request.GET.get('origin_id')
+        if origin_id is None:
+            raise APIException(detail='origin_id is required')
+        origin_website = request.GET.get('origin_website')
+        origin_name = request.GET.get('origin_name', origin_website)
+
+        # See if the SFDC ID matches an identity in this souce
+        try:
+            group = SourceGroup.objects.get(source=request.source, origin_id=origin_id)
+        except:
+            # no matching origin_id
+            # Try matching by email address in this source
+            if origin_website is not None and origin_website != "":
+                try:
+                    company = Company.objects.get(community=request.source.community, website=origin_website)
+                    group, created = company.groups.get_or_create(source=request.source, origin_id=origin_id, defaults={'name': origin_name})
+                except: 
+                    raise NotFound(detail="No Company matching ID or website")
+            else:
+                raise NotFound(detail="No Company matching ID")
+        serializer = SalesforceCompanySerializer(group)
+        return Response(serializer.data)
+
+class SalesforceCompanySerializer(serializers.Serializer):
+    company_id = serializers.IntegerField()
+    origin_id = serializers.CharField(max_length=256)
+    name = serializers.CharField(source='company.name', max_length=256, required=False, allow_null=True)
+    website = serializers.CharField(source='company.website', max_length=256)
+    first_seen = serializers.SerializerMethodField()
+    last_seen = serializers.SerializerMethodField()
+    tag = serializers.SerializerMethodField()
+    members = serializers.SerializerMethodField()
+    notes = serializers.SerializerMethodField()
+
+    def get_first_seen(self, group):
+        if group.company.first_seen:
+            return group.company.first_seen.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')
+        else:
+            return None
+
+    def get_last_seen(self, group):
+        if group.company.last_seen:
+            return group.company.last_seen.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')
+        else:
+            return self.get_first_seen(group)
+
+    def get_tag(self, group):
+        if group.company.tag:
+            return {'name':group.company.tag.name, 'color':group.company.tag.color}
+        else:
+            return None
+
+    def get_members(self, group):
+        member_data = []
+        for member in group.company.member_set.all():
+            last_seen = member.first_seen
+            if member.last_seen:
+                last_seen = member.last_seen
+            try:
+                level = MemberLevel.objects.get(member=member, default_project=True).level_name
+            except:
+                level = None
+            member_data.append({
+                'member_id': identity_origin_id(group.source, member), 
+                'member_name': member.name,
+                'engagement_level': level,
+                'last_seen': last_seen.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds')
+            })
+        return member_data
+
+    def get_notes(self, group):
+        return list({'tstamp':note.timestamp.replace(tzinfo=pytz.UTC).isoformat(timespec='seconds'), 'member_id': identity_origin_id(group.source, note.member), 'member_name': note.member.name, 'author': note.author.username, 'content': note.content} for note in Note.objects.filter(member__company=group.company).order_by('-timestamp'))
+
 
 @login_required
 def not_available_view(request):
@@ -266,6 +351,7 @@ urlpatterns = [
     path('auth', authenticate, name='salesforce_auth'),
     path('callback', callback, name='salesforce_callback'),
     path('api/member', MemberDetail.as_view(), name='salesforce_api_member'),
+    path('api/company', CompanyDetail.as_view(), name='salesforce_api_company'),
 ]
 
 def refresh_auth(source):
@@ -296,6 +382,9 @@ class SalesforcePlugin(BasePlugin):
         
     def get_identity_url(self, contact):
         return contact.source.server  + "/lightning/r/Contact/" + contact.origin_id + "/view"
+
+    def get_company_url(self, group):
+        return group.source.server  + "/lightning/r/Account/" + group.origin_id + "/view"
 
     def get_icon_name(self):
         return 'fab fa-salesforce'

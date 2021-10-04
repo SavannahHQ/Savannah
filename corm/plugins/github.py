@@ -153,9 +153,9 @@ class GithubPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "https://github.com/%s" % contact.detail
 
-    def get_company_url(self, github_id):
-        if github_id[0] == '@':
-            return "https://github.com/%s" % github_id[1:]
+    def get_company_url(self, group):
+        if group.origin_id[0] == '@':
+            return "https://github.com/%s" % group.origin_id[1:]
         else:
             return None
 

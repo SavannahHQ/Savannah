@@ -50,7 +50,7 @@ class BasePlugin:
     def get_identity_url(self, contact):
         return None
 
-    def get_company_url(self, origin_id):
+    def get_company_url(self, group):
         return None
         
     def get_connector(self):

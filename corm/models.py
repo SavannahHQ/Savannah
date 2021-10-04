@@ -1389,7 +1389,7 @@ class SourceGroup(ImportedDataModel):
     name = models.CharField(max_length=256)
 
     def get_external_url(self):
-        return self.source.plugin.get_company_url(self.origin_id)
+        return self.source.plugin.get_company_url(self)
 
     def __str__(self):
         return self.name
