@@ -215,8 +215,8 @@ class SalesforceCompanySerializer(serializers.Serializer):
             if member.last_seen:
                 last_seen = member.last_seen
             try:
-                level = MemberLevel.objects.get(member=member, default_project=True).level_name
-            except:
+                level = MemberLevel.objects.get(member=member, project__default_project=True).level_name
+            except Exception as e:
                 level = None
             member_data.append({
                 'member_id': identity_origin_id(group.source, member), 
