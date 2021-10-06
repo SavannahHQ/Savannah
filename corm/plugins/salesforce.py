@@ -189,6 +189,7 @@ class SalesforceCompanySerializer(serializers.Serializer):
     tag = serializers.SerializerMethodField()
     members = serializers.SerializerMethodField()
     notes = serializers.SerializerMethodField()
+    topics = serializers.SerializerMethodField()
 
     def get_first_seen(self, group):
         if group.company.first_seen:
@@ -207,6 +208,17 @@ class SalesforceCompanySerializer(serializers.Serializer):
             return {'name':group.company.tag.name, 'color':group.company.tag.color}
         else:
             return None
+
+    def get_topics(self, group):
+        counts = dict()
+        tags = Tag.objects.filter(community=group.company.community)
+        convo_filter = Q(conversation__timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=366))
+        convo_filter = convo_filter & Q(conversation__speaker__company=group.company)
+
+        tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
+        tags = tags.filter(conversation_count__gt=0)
+        return tags.values('name', 'color', 'conversation_count')
+
 
     def get_members(self, group):
         member_data = []
