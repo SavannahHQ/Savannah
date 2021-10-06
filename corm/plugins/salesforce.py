@@ -216,7 +216,7 @@ class SalesforceCompanySerializer(serializers.Serializer):
         convo_filter = convo_filter & Q(conversation__speaker__company=group.company)
 
         tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
-        tags = tags.filter(conversation_count__gt=0)
+        tags = tags.filter(conversation_count__gt=0).order_by('-conversation_count')
         return tags.values('name', 'color', 'conversation_count')
 
 
