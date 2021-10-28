@@ -376,7 +376,7 @@ class SavannahFilterView(SavannahView):
             self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
             self.rangeend = datetime.datetime.utcnow()
         else:
-            self.timespan = 1+(self.rangeend - self.rangestart).days
+            self.timespan = (self.rangeend - self.rangestart).days
 
     def filters_as_dict(self, request):
         filters = dict()

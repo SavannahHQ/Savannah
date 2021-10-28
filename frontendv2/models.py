@@ -202,7 +202,7 @@ class PublicDashboard(models.Model):
                 view.rangestart = datetime.datetime.strptime(filters.get('rangestart'), view.DATE_FORMAT)
             else:
                 view.rangestart = view.rangeend - datetime.timedelta(days=view.timespan)
-            view.timespan = 1+(view.rangeend - view.rangestart).days
+            view.timespan = (view.rangeend - view.rangestart).days
 
         if 'sort_by' in filters and filters['sort_by'] is not None:
             view.sort_by = filters.get('sort_by')
