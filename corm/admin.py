@@ -82,6 +82,7 @@ class CommunityAdmin(admin.ModelAdmin):
     list_filter = ("status", "created")
     search_fields = ("name", "owner__username", "owner__email")
     actions = ('download_owners',)
+    date_hierarchy='created'
 
     def get_queryset(self, request):
         qs = super(CommunityAdmin, self).get_queryset(request)
@@ -160,6 +161,7 @@ admin.site.register(Tag, TagAdmin)
 class SourceAdmin(admin.ModelAdmin):
     list_display = ("name", "enabled", "status", "icon_name", "connector", "community", "contact_count", "contribution_count", "conversation_count", "first_import", "last_import")
     list_filter = (isNotZero("import_failed_attempts", "import failures"), "connector", "community", "enabled", "first_import", "last_import")
+    date_hierarchy='first_import'
 
     def status(self, source):
         if source.import_failed_attempts > 0:
@@ -184,6 +186,7 @@ class ChannelAdmin(admin.ModelAdmin):
     list_display = ("name", "enabled", "status", "source", "conversation_count", "first_import", "last_import", "oldest_import")
     list_filter = (isNotZero("import_failed_attempts", "import failures"), "source__community", "source__connector", "enabled", "first_import", "last_import")
     search_fields = ("name",)
+    date_hierarchy='first_import'
 
     def status(self, channel):
         if channel.import_failed_attempts > 0:
@@ -285,6 +288,8 @@ class ConversationAdmin(admin.ModelAdmin):
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
     search_fields = ("content",)
     raw_id_fields = ('speaker', 'thread_start', 'contribution')
+    date_hierarchy='timestamp'
+
     def link(self, conversation):
         if conversation.location is not None:
             return mark_safe("<a href=\"%s\">Open</a>" % conversation.location)
@@ -336,6 +341,8 @@ class ContributionAdmin(admin.ModelAdmin):
     list_display = ("title", "contribution_type", "channel", "timestamp", "author", "tag_list")
     list_filter = ("contribution_type__source__connector", "community", "contribution_type__name", "timestamp")
     raw_id_fields = ('author',)
+    date_hierarchy='timestamp'
+
     def tag_list(self, contribution):
         return ", ".join([tag.name for tag in contribution.tags.all()[:10]])
     tag_list.short_description = "Tags"
@@ -354,12 +361,16 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ("title", "source", "channel", "start_timestamp", "end_timestamp", "tag")
     list_filter = ("source__connector", "community", "start_timestamp")
     raw_id_fields = ("source", "channel")
+    date_hierarchy='start_timestamp'
+
 admin.site.register(Event, EventAdmin)
 
 class EventAttendeeAdmin(admin.ModelAdmin):
     list_display = ("member", "event", "community", "timestamp")
     list_filter = ("event__source__connector", "community", "timestamp")
     raw_id_fields = ("member",)
+    date_hierarchy='timestamp'
+
 admin.site.register(EventAttendee, EventAttendeeAdmin)
 
 class NoteAdmin(admin.ModelAdmin):
@@ -367,6 +378,7 @@ class NoteAdmin(admin.ModelAdmin):
     list_filter = ("author", "timestamp")
     search_fields = ("content", "member__name")
     raw_id_fields = ('member','author', 'tags')
+    date_hierarchy='timestamp'
 admin.site.register(Note, NoteAdmin)
 
 class GiftTypeAdmin(admin.ModelAdmin):
@@ -377,6 +389,8 @@ admin.site.register(GiftType, GiftTypeAdmin)
 class GiftAdmin(admin.ModelAdmin):
     list_display = ("gift_type", "member", "impact", "community", "sent_date")
     list_filter = ("community", "gift_type", "sent_date")
+    date_hierarchy='sent_date'
+
 admin.site.register(Gift, GiftAdmin)
 
 class SuggestTagAdmin(admin.ModelAdmin):
@@ -493,6 +507,8 @@ admin.site.register(SuggestCompanyCreation, SuggestCompanyAdmin)
 class ReportAdmin(admin.ModelAdmin):
     list_display = ("title", "report_type", "community", "generated")
     list_filter = ("community", "report_type", "generated")
+    date_hierarchy='generated'
+
 admin.site.register(Report, ReportAdmin)
 
 class ManagersAdmin(admin.ModelAdmin):
@@ -500,6 +516,7 @@ class ManagersAdmin(admin.ModelAdmin):
     list_filter = ('last_seen', 'community__status', 'community', 'send_notifications')
     raw_id_fields = ('member',)
     actions = ('download_managers',)
+    date_hierarchy='last_seen'
     def download_managers(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="community_managers.csv"'
@@ -560,6 +577,7 @@ class EmailAdmin(admin.ModelAdmin):
     list_filter = ["ok", "when", "category", ("sender", admin.RelatedOnlyFieldListFilter)]
     readonly_fields = ["when", "sender", "member", "email", "subject", "body", "category", "ok"]
     search_fields = ["subject", "body", "to"]
+    date_hierarchy='when'
 
     def recipient_display(self, record):
         if record.member is not None:
