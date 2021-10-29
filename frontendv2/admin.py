@@ -2,6 +2,21 @@ from django.contrib import admin
 from django.utils.safestring import mark_safe
 
 from frontendv2.models import EmailRecord, ManagerInvite, PasswordResetRequest, PublicDashboard
+from django.contrib.sessions.models import Session
+from django.contrib.auth.models import User
+
+class SessionAdmin(admin.ModelAdmin):
+    def user(self, obj):
+        session_user = obj.get_decoded().get('_auth_user_id')
+        user = User.objects.get(pk=session_user)
+        return user.username
+    def _session_data(self, obj):
+        return obj.get_decoded()
+    list_display = ['session_key', 'user', '_session_data', 'expire_date']
+    readonly_fields = ['user', '_session_data']
+    exclude = ['session_data']
+    date_hierarchy='expire_date'
+admin.site.register(Session, SessionAdmin)
 
 # Register your models here.
 class EmailAdmin(admin.ModelAdmin):
