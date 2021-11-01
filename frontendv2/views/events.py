@@ -416,9 +416,17 @@ class EditEvent(SavannahView):
     @login_required
     def as_view(request, event_id):
         view = EditEvent(request, event_id)
-
+        old_channel = view.edit_event.channel
         if request.method == "POST" and view.form.is_valid():
             edited_event = view.form.save()
+            if old_channel != edited_event.channel and edited_event.channel is not None:
+                for attendee in edited_event.rsvp.all():
+                    attendee.activity.channel = edited_event.channel
+                    attendee.activity.save()
+                    if attendee.activity.contribution is not None:
+                        attendee.activity.contribution.channel = edited_event.channel
+                        attendee.activity.contribution.save()
+
             return redirect('event', event_id=edited_event.id)
 
         return render(request, "savannahv2/event_edit.html", view.context)
