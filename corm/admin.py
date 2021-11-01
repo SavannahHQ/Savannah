@@ -272,8 +272,8 @@ admin.site.register(Contact, ContactAdmin)
 
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ("short_description", "member", "channel", "timestamp", "link")
-    list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
-    search_fields = ("short_description","long_description")
+    list_filter = ("short_description", "channel__source__community", "channel__source__connector", "timestamp")
+    search_fields = ("short_description","long_description", "member")
     raw_id_fields = ('member', 'conversation', 'contribution', 'event_attendance')
     def link(self, conversation):
         if conversation.location is not None:
@@ -366,8 +366,8 @@ class EventAdmin(admin.ModelAdmin):
 admin.site.register(Event, EventAdmin)
 
 class EventAttendeeAdmin(admin.ModelAdmin):
-    list_display = ("member", "event", "community", "timestamp")
-    list_filter = ("event__source__connector", "community", "timestamp")
+    list_display = ("member", "role", "event", "community", "timestamp")
+    list_filter = ("role", "event__source__connector", "community", "timestamp")
     raw_id_fields = ("member",)
     date_hierarchy='timestamp'
 

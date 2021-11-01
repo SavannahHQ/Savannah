@@ -200,6 +200,11 @@ class Community(models.Model):
     suggest_task = models.BooleanField(default=True, help_text="Suggest Tasks to help engage with your Members")
     
     @property
+    def manual_source(self):
+        source, created = Source.objects.get_or_create(community=self, name="Manual Entry", connector='corm.plugins.null', icon_name='fas fa-edit')
+        return source
+
+    @property
     def management(self):
         try:
             return self._management
@@ -457,6 +462,17 @@ class Member(TaggableModel):
             except MemberLevel.DoesNotExist:
                 level.member = self
                 level.save()
+
+        for attendance in EventAttendee.objects.filter(member=other_member):
+            try:
+                self_attendance = EventAttendee.objects.get(community=self.community, event=attendance.event)
+                if attendance.role > self_attendance.role:
+                    self_attendance.role = attendance.role
+                self_attendance.save()
+            except:
+                attendance.member = self
+                attendance.save()
+
         self.save()
         other_member.delete()
 
@@ -1014,7 +1030,7 @@ class Event(ImportedDataModel):
     description = models.TextField(null=True, blank=True)
     start_timestamp = models.DateTimeField(db_index=True)
     end_timestamp = models.DateTimeField()
-    location = models.URLField(max_length=512, null=True, blank=True)
+    location = models.URLField(max_length=512, null=True, blank=True, verbose_name='Event URL')
     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True)
     promotions = models.ManyToManyField(Promotion, blank=True)
     impact = models.IntegerField(default=0, null=False, blank=False)
@@ -1023,16 +1039,38 @@ class Event(ImportedDataModel):
     def attendees(self):
         return Member.objects.filter(event_attendance__event=self)
 
+    @property
+    def hosts(self):
+        return Member.objects.filter(event_attendance__event=self, event_attendance__role=EventAttendee.HOST)
+
+    @property
+    def speakers(self):
+        return Member.objects.filter(event_attendance__event=self, event_attendance__role=EventAttendee.SPEAKER)
+
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
 
 class EventAttendee(models.Model):
+    GUEST = "guest"
+    HOST = "host"
+    SPEAKER = "speaker"
+    ATTENDEE_ROLE = [
+        (GUEST, 'Guest'),
+        (HOST, 'Host'),
+        (SPEAKER, 'Speaker'),
+    ]
+    ROLE_NAME = {
+        GUEST: "Guest",
+        HOST: "Host",
+        SPEAKER: "Speaker"
+    }    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     event = models.ForeignKey(Event, related_name="rsvp", on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='event_attendance', on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
-
+    role = models.CharField(max_length=32, choices=ATTENDEE_ROLE, default=GUEST)
+ 
     def update_activity(self, from_activity=None):
         if from_activity:
             try :

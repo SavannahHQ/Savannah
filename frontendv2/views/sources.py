@@ -19,7 +19,7 @@ class Sources(SavannahView):
         self.active_tab = "sources"
 
     def all_sources(self):
-        return Source.objects.filter(community=self.community).annotate(channel_count=Count('channel', filter=Q(channel__enabled=True), distinct=True), member_count=Count('contact', distinct=True))
+        return Source.objects.filter(community=self.community).exclude(connector='corm.plugins.null').annotate(channel_count=Count('channel', filter=Q(channel__enabled=True), distinct=True), member_count=Count('contact', distinct=True))
 
     def _add_sources_message(self):
         if self.request.method == "GET":
@@ -76,7 +76,7 @@ class Sources(SavannahView):
         connected = set()
 
         contact_filter = Q(contact__member__last_seen__gte=datetime.datetime.now() - datetime.timedelta(days=30))
-        sources = Source.objects.filter(community=view.community).annotate(contact_count=Count('contact', filter=contact_filter, distinct=True))
+        sources = Source.objects.filter(community=view.community).exclude(connector="corm.plugins.null").annotate(contact_count=Count('contact', filter=contact_filter, distinct=True))
         source_node_color = "1cc88a"
         for source in sources:
             if source.contact_count > 0:

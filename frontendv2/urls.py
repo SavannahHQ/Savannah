@@ -29,6 +29,7 @@ from frontendv2.views.community import EditCommunity, Managers, ManagerPreferenc
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
 from frontendv2.views.reports import Reports, view_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
+from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
 from frontendv2 import views
 
 urlpatterns = [
@@ -131,4 +132,10 @@ urlpatterns = [
     path('company/<int:company_id>/', CompanyProfile.as_view, name='company_profile'),
     path('company/<int:company_id>/edit', EditCompany.as_view, name='company_edit'),
     path('company/<int:company_id>/merge', CompanyMerge.as_view, name='company_merge'),
+    path('events/<int:community_id>/', Events.as_view, name='events'),
+    path('events/<int:community_id>/add', AddEvent.as_view, name='event_add'),
+    path('events/<int:community_id>/tag', tag_event, name='event_tag_form'),
+    path('event/<int:event_id>/', EventProfile.as_view, name='event'),
+    path('event/<int:event_id>/edit', EditEvent.as_view, name='event_edit'),
+    path('event/<int:event_id>/add', AddAttendee.as_view, name='attendee_add'),
 ]

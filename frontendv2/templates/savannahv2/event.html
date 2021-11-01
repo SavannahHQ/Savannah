@@ -1,0 +1,364 @@
+{% extends "savannahv2/base.html"%}
+{% load static simple_math simple_dates member_utils humanize %}
+
+{% block page_title %} | {{view.event.title}}{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.event.title}}</h1>
+            <a class="btn btn-success" title="Add Attendee" href="{% url 'attendee_add' view.event.id %}"><i class="fas fa-plus"></i> Attendee</a>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Event Info  -->
+            <div class="col-xl-8">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Event Info</h6>
+                  <a class="text-gray-500" href="{% url 'event_edit' view.event.id %}"><i class="fas fa-edit"> </i>Edit</a>
+                    
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+                  <div class="row mb-2">
+                    {% if view.event.start_timestamp.date == view.event.end_timestamp.date %}
+                    <div class="mb-2 col-lg-2 font-weight-bold">Time</div>
+                    <div class="mb-2 col-lg-10">{{view.event.start_timestamp|date|default:''}} from {{view.event.start_timestamp|time|default:''}} - {{view.event.end_timestamp|time|default:''}}</div>
+                    {% else %}
+                    <div class="mb-2 col-lg-2 font-weight-bold">Dates</div>
+                    <div class="mb-2 col-lg-10">{{view.event.start_timestamp|default:''}} - {{view.event.end_timestamp|default:''}}</div>
+                    {% endif %}
+                  </div>
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Attendees</div>
+                    <div class="mb-2 col-lg-10">
+                      {{view.event.attendees.count|intcomma}}
+                    </div>
+                  </div>
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Tag</div>
+                    <div class="mb-2 col-lg-10">
+                      <span class="tag_form_dropdown dropdown no-arrow">
+                        <a class="dropdown-toggle tag_row" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        {% if view.event.tag %}
+                          <span class="tag-pill" style="background-color: #{{view.event.tag.color}};"><span class="tag-text" style="color: #{{view.event.tag.color}}aa;">{{view.event.tag.name}}</span></span>
+                        {% else %}
+                          <i class="fas fa-tag text-gray-500"> </i>
+                        {% endif %}
+                        </a>
+                        <div class="mb-0 dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                          <div class="dropdown-header">Tags:</div>
+                          <form action="#" method="POST" class="form tag_form">
+                          {% csrf_token %}
+                          <input type="hidden" name="event_id" value="{{view.event.id}}"/>
+                          <div class="dropdown-item" style=""><input id="event_{{view.event.id}}_tag_clear" name="tag_select" value="" class="p-2 tag_select form-check-input" type="radio" {% if not view.event.tag %}checked="1"{% endif %}><label class="form-check-label" for="event_{{view.event.id}}_tag_clear">None</label></div>
+                          {% for tag in view.community.tag_set.all %}
+                          <div class="dropdown-item" style="background-color: #{{tag.color}};"><input id="event_{{view.event.id}}_tag_{{tag.id}}" name="tag_select" value="{{tag.id}}" class="p-2 tag_select form-check-input" type="radio" {% if tag.id == view.event.tag.id %}checked="1"{% endif %}><label class="form-check-label" for="event_{{view.event.id}}_tag_{{tag.id}}"><span style="color:#{{tag.color}}aa;" class="tag-text">{{tag.name}}</span></label></div>
+                          {% endfor %}
+                          </form>
+                        </div>
+                      </span>
+                    </div>
+                  </div>
+                  {% if view.event.location %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Website</div>
+                    <div class="mb-2 col-lg-10">
+                      <a href="{{view.event.location}}" target="_blank">{{view.event.location}}</a>
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% if view.event.description %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">About</div>
+                    <div class="mb-2 col-lg-10">
+                      {{view.event.description}}
+                    </div>
+                  </div>
+                  {% endif %}
+
+
+                </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hosts List -->
+            <div class="col-4">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                  <a class="text-gray-500" href="{% url 'attendee_add' view.event.id %}?role=host" title="Add Host or Speaker"><i class="fas fa-user-plus"> </i></a>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="ml-3">
+                  {% for member in view.event.hosts %}
+                    <div class="mb-3">
+                      {{member|avatar_icon}}
+                      <a href="{% url 'member_profile' member.id %}">{{member}}</a>
+                      - Host
+                    </div>
+                  {% endfor %}
+                  {% for member in view.event.speakers %}
+                    <div class="mb-3">
+                      {{member|avatar_icon}}
+                      <a href="{% url 'member_profile' member.id %}">{{member}}</a>
+                      - Speaker
+                    </div>
+                  {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+
+          <div class="row">
+
+            <!-- Attendees List -->
+            <div class="col-xl-12">
+
+              <a name="attendees" />
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Attendees</h6>
+                  <form class="d-none d-sm-inline-block form-inline" action="#events" method="GET">
+                    <div class="input-group">
+                      <input name="event_search" type="text" class="form-control small" placeholder="Search..." value="{{view.event_search|default:''}}" aria-label="Search" aria-describedby="basic-addon2">
+                      <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                          <i class="fas fa-search fa-sm"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0 table-responsive">
+                <form class="inline-form" action="{% url 'event' view.event.id %}" method="POST">
+                {% csrf_token %}
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Events</th>
+                    <th scope="col">Engagement</th>
+                    <th scope="col">Last Seen</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for attendee in view.all_attendees %}
+                <tr>
+                  <td class="text-nowrap">
+                    {{attendee.member|avatar_icon}}
+                    <a href="{% url 'member_profile' attendee.member.id %}">{{attendee.member}}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=attendee.member.tags.all %}
+                  </td>
+                  <td class="text-nowrap">{{attendee.events_count|intcomma}}</td>
+                  <td class="text-nowrap">
+                      {% if attendee.member.default_level %}
+                      <a href="{% url 'project_overview' view.community.id attendee.member.default_level.project_id %}" title="{{attendee.member.default_level.level_name}}">
+                      {% if attendee.member.default_level.level == attendee.member.default_level.CORE %}
+                      <img src="{% static 'savannah/progression_core.png' %}" />
+                      {% elif attendee.member.default_level.level == attendee.member.default_level.CONTRIBUTOR %}
+                      <img src="{% static 'savannah/progression_contrib.png' %}" />
+                      {% elif attendee.member.default_level.level == attendee.member.default_level.PARTICIPANT %}
+                      <img src="{% static 'savannah/progression_participant.png' %}" />
+                      {% elif attendee.member.default_level.level == attendee.member.default_level.USER %}
+                      <img src="{% static 'savannah/progression_visitor.png' %}" />
+                      {% endif %}
+                      </a>
+                      {% endif %}
+                  </td>
+                  <td class="text-nowrap">{{attendee.member.last_seen|dateortime}}</td>
+                  <td class="">
+                    <a class="btn btn-sm btn-secondary" href="{% url 'attendee_add' view.event.id %}?attendee={{attendee.id}}" title="Edit Attendee"><i class="fas fa-edit"> </i></a>
+                    <button class="btn btn-danger btn-sm" type="submit" name="delete_attendee" value="{{attendee.id}}" title="Remove"><i class="fas fa-trash"> </i></button>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+
+                {% if view.has_pages %}
+                <nav aria-label="Attendee table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page=1#attendees" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page={{page}}#attendees">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page={{view.last_page}}#attendees" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+                <div class="d-flex justify-content-center mb-2">
+                {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Attendees
+                </div>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script>
+$('.tag_form_dropdown').on('hide.bs.dropdown', function (e) {
+    var tags = e.relatedTarget.parentElement.getElementsByClassName("tag_select");
+    var tags_html = "";
+    for (var i = 0; i < tags.length; i++){
+        var tag = tags[i];
+        if (tag.checked) {
+          var tag_name = tag.labels[0].textContent;
+          if (tag.value == '') {
+            tags_html = "<i class=\"fas fa-tag text-gray-500\"> </i>";
+          } else {
+            tags_html = '<span class="tag-pill" style="background-color: '+tag.parentNode.style.backgroundColor+';"><span class="tag-text" style="color: '+tag.parentNode.style.backgroundColor+';">'+tag_name+'</span></span>'
+          }
+
+        }
+    }
+    var tag_form = e.relatedTarget.parentElement.getElementsByClassName('tag_form')[0];
+    $.post( "{% url 'event_tag_form' view.community.id %}", $(tag_form).serialize(), function(data) {
+        var tag_row = e.relatedTarget.parentElement.getElementsByClassName("tag_row")[0];
+        tag_row.innerHTML = tags_html
+      },
+      'json' // I expect a JSON response
+    );
+});
+  </script>
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("engagementChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.engagement_chart_months|safe}},
+    datasets: [{
+      label: "Conversations",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.CONVERSATION}}22",
+      borderColor: "#{{colors.CONVERSATION}}",
+      pointRadius: 1,
+      pointBackgroundColor: "#{{colors.CONVERSATION}}",
+      pointBorderColor: "#{{colors.CONVERSATION}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.CONVERSATION}}",
+      pointHoverBorderColor: "#{{colors.CONVERSATION}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.engagement_chart_conversations|safe}},
+    },
+    {
+      label: "Contributions",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.CONTRIBUTION}}22",
+      borderColor: "#{{colors.CONTRIBUTION}}",
+      pointRadius: 1,
+      pointBackgroundColor: "#{{colors.CONTRIBUTION}}",
+      pointBorderColor: "#{{colors.CONTRIBUTION}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.CONTRIBUTION}}",
+      pointHoverBorderColor: "#{{colors.CONTRIBUTION}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.engagement_chart_activities|safe}},
+    }],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+
+{% endblock %}

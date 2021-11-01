@@ -124,6 +124,7 @@ CORM_PLUGINS = [
     "corm.plugins.rss.RssPlugin",
     "corm.plugins.slack.SlackPlugin",
     "corm.plugins.stackexchange.StackExchangePlugin",
+    "corm.plugins.salesforce.SalesforcePlugin"
 ]
 
 MIDDLEWARE = [

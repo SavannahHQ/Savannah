@@ -1,0 +1,132 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize member_utils %}
+
+{% block page_title %} | {{view.community.name}} Events{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Events</h1>
+            {% include 'savannahv2/filter_button.html' %}
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-8 mb-8">
+
+              <!-- New Members-->
+              <a name="events" />
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Events</h6>
+                  <div>
+                    <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'event_add' view.community.id %}"><i class="fas fa-plus"></i> Add</a>
+                  </div>
+                </div>
+                <div class="card-body p-0">
+                <div>
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col"  width="40%">Title</th>
+                    <th scope="col">Attendees</th>
+                    <th scope="col">Start</th>
+                    <th width="100px" scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for event in view.all_events %}
+                <tr>
+                  <td>
+                    <a href="{% url 'event' event.id %}">
+                    {{ event.title }}
+                    </a>
+                    {% include 'savannahv2/tag_list.html' with tag=event.tag %}
+                  </td>
+                  <td >{{event.attendee_count|intcomma}}</td>
+                  <td >{{event.start_timestamp|date}}</td>
+                  <td class="text-center pr-1">
+                    <form class="inline-form" action="{% url 'events' view.community.id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-danger" type="submit" name="delete_event" value="{{event.id}}" title="Delete Event"><i class="fas fa-trash"> </i></button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                {% if view.has_pages %}
+                <nav aria-label="Attendee table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page=1#events" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page={{page}}#events">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page={{view.last_page}}#events" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+                <div class="d-flex justify-content-center mb-2">
+                {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Events
+                </div>
+
+                </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="col-xl-4 col-lg-5">
+              {% comment %}
+              <!-- Events by Tag -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">placeholder_chart_title</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="placeholder_chart_id"></canvas>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Attendees by Tag -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">placeholder_chart_title</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="placeholder_chart_id"></canvas>
+                  </div>
+                </div>
+              </div>
+              {% endcomment %}
+            </div>
+
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}
