@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'totd',
     'simple_ga',
+    'markdownify.apps.MarkdownifyConfig',
 
     'corm.apps.CormConfig',
     'frontendv2.apps.FrontendConfig',

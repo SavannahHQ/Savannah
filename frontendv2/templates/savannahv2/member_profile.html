@@ -1,5 +1,6 @@
 {% extends "savannahv2/base.html"%}
 {% load static simple_math simple_dates member_utils %}
+{% load markdownify %}
 
 {% block page_title %} | {{view.member.name}}{% endblock %}
 
@@ -144,9 +145,10 @@
                       <div id="notes_div">
                       {% for note in view.member.note_set.all %}
                         <div id="id_note_div_{{note.id}}" class="mb-2">
-                        <span class="small font-weight-bold text-nowrap">{{note.timestamp.date}} - {{note.author_name}} <i class="fas fa-edit note_edit text-gray-500" data-target="id_note_{{note.id}}" title="Edit" >&nbsp;</i> <button class="btn btn-sm btn-default p-0" type="submit" name="delete_note" value="{{note.id}}"><i class="fas fa-trash text-gray-500" title="Delete" > </i></button></span>
+                        <span class="small font-weight-bold text-nowrap">{{note.timestamp.date}} - {{note.author_name}} <i class="fas fa-edit note_edit text-gray-500" data-target="id_raw_{{note.id}}" title="Edit" >&nbsp;</i> <button class="btn btn-sm btn-default p-0" type="submit" name="delete_note" value="{{note.id}}"><i class="fas fa-trash text-gray-500" title="Delete" > </i></button></span>
                         <br/>
-                        <span id="id_note_{{note.id}}" data-note_id="{{note.id}}">{{note.content|linebreaksbr}}</span>
+                        <span id="id_note_{{note.id}}" data-note_id="{{note.id}}">{{note.content|markdownify}}</span>
+                        <span style="display: none;" id="id_raw_{{note.id}}" data-note_id="{{note.id}}">{{note.content}}</span>
                         </div>
                       {% endfor %}
                       </form>
@@ -454,9 +456,11 @@ $('#note_submit').on('click', function(event) {
       if (note_id) {
         var note_node = document.getElementById('id_note_'+note_id)
         note_node.innerText = note_content;
+        var raw_node = document.getElementById('id_raw_'+note_id)
+        raw_node.innerText = note_content;
       } else {
         note_id = data['note_id']
-        var new_note = `<div id="id_note_div_${data.id}" class="mb-3"><span class="small font-weight-bold text-nowrap">${tstamp.toDateString()} - {{request.user.username}} <i class="fas fa-edit note_edit text-gray-500" data-target="id_note_${note_id}" title="Edit" >&nbsp;</i> <button class="btn btn-sm btn-default p-0" type="submit" name="delete_note" value="${note_id}"><i class="fas fa-trash text-gray-500" title="Delete" > </i></button></span><br/><span id="id_note_${note_id} data-note_id="{{note.id}}"">${note_content}</span></div>`
+        var new_note = `<div id="id_note_div_${data.id}" class="mb-3"><span class="small font-weight-bold text-nowrap">${tstamp.toDateString()} - {{request.user.username}} <i class="fas fa-edit note_edit text-gray-500" data-target="id_raw_${note_id}" title="Edit" >&nbsp;</i> <button class="btn btn-sm btn-default p-0" type="submit" name="delete_note" value="${note_id}"><i class="fas fa-trash text-gray-500" title="Delete" > </i></button></span><br/><span id="id_note_${note_id} data-note_id="{{note.id}}"">${note_content}</span><span style="display: none;" id="id_raw_${note_id} data-note_id="{{note.id}}"">${note_content}</span></div>`
         var notes_div = document.getElementById("notes_div")
         notes_div.innerHTML = new_note + notes_div.innerHTML
         $('.note_edit').on('click', edit_note_dialog);
