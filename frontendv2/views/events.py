@@ -349,6 +349,43 @@ class Events(SavannahFilterView):
     @login_required
     def as_view(request, community_id):
         view = Events(request, community_id)
+        if request.method == 'POST':
+            if 'delete_event' in request.POST:
+                event = get_object_or_404(Event, id=request.POST.get('delete_event'))
+                context = view.context
+                context.update({
+                    'object_type':"Event", 
+                    'object_name': event.title, 
+                    'object_id': event.id,
+                    'warning_msg': "This will remove all attendance activity from this Event.",
+                })
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                event = get_object_or_404(Event, id=request.POST.get('object_id'))
+                event_name = event.title
+                try:
+                    Contribution.objects.filter(
+                        community=event.community,
+                        channel=event.channel,
+                        activity__event_attendance__event=event,
+                    ).delete()
+                except:
+                    pass
+                    
+                members = list(event.attendees)
+                event.delete()
+                for member in members:
+                    try:
+                        member.last_seen = member.activity.order_by('-timestamp')[0].timestamp
+                        member.save()
+                    except Exception as e:
+                        if member.activity.count() == 0:
+                            member.last_seen = member.first_seen
+
+                messages.success(request, "Deleted event: <b>%s</b> and %s attendance records" % (event_name, len(members)))
+
+                return redirect('events', community_id=community_id)
+
         return render(request, "savannahv2/events.html", view.context)
 
 

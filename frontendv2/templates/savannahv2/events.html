@@ -28,6 +28,8 @@
                 </div>
                 <div class="card-body p-0">
                 <div>
+                <form class="inline-form" action="{% url 'events' view.community.id %}" method="POST">
+                {% csrf_token %}
                 <table class="table">
                 <thead>
                   <tr>
@@ -49,15 +51,14 @@
                   <td >{{event.attendee_count|intcomma}}</td>
                   <td >{{event.start_timestamp|date}}</td>
                   <td class="text-center pr-1">
-                    <form class="inline-form" action="{% url 'events' view.community.id %}" method="POST">
-                    {% csrf_token %}
                     <button class="btn btn-sm btn-danger" type="submit" name="delete_event" value="{{event.id}}" title="Delete Event"><i class="fas fa-trash"> </i></button>
-                    </form>
                   </td>
                 </tr>
                 {% endfor %}
                 </tbody>
                 </table>
+                </form>
+
                 {% if view.has_pages %}
                 <nav aria-label="Attendee table pages">
                   <ul class="pagination justify-content-center">
