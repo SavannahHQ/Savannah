@@ -148,7 +148,7 @@ class EventAttendeeForm(forms.ModelForm):
         fields = ['member', 'role', 'timestamp']
 
     def limit_to(self, community):
-        self.fields['member'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=community)]
+        self.fields['member'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=community).order_by(Lower('name'))]
         self.fields['member'].widget.choices.insert(0, ('', '-----'))
 
 class AddAttendee(SavannahView):
@@ -188,7 +188,11 @@ class AddAttendee(SavannahView):
             speaker, created = ContributionType.objects.get_or_create(community=view.event.community, source=source, name="Speaker")
 
             attendee, attendee_created = EventAttendee.objects.update_or_create(community=view.community, event=view.event, member=new_attendee.member, defaults={'role': new_attendee.role, 'timestamp': new_attendee.timestamp})
-            if attendee.timestamp > attendee.member.last_seen:
+            if attendee.member.last_seen is None:
+                attendee.member.first_seen = attendee.timestamp
+                attendee.member.last_seen = attendee.timestamp
+                attendee.member.save()
+            elif attendee.timestamp > attendee.member.last_seen:
                 attendee.member.last_seen = attendee.timestamp
                 attendee.member.save()
             if attendee_created:
