@@ -96,7 +96,26 @@ class EventProfile(SavannahView):
             elif 'delete_confirm' in request.POST:
                 attendee = get_object_or_404(EventAttendee, id=request.POST.get('object_id'))
                 attendee_name = attendee.member.name
+                try:
+                    contrib = Contribution.objects.get(
+                        community=view.event.community,
+                        channel=view.event.channel,
+                        author=attendee.member,
+                        activity__event_attendance__event=view.event,
+                    ).delete()
+                except Contribution.DoesNotExist:
+                    pass # There was no Contribution
+                except Exception as e:
+                    raise e
+                member = attendee.member
                 attendee.delete()
+                try:
+                    member.last_seen = member.activity.order_by('-timestamp')[0].timestamp
+                    member.save()
+                except Exception as e:
+                    if member.activity.count() == 0:
+                        member.last_seen = member.first_seen
+
                 messages.success(request, "Deleted attendee: <b>%s</b>" % attendee_name)
 
                 return redirect('event', event_id=event_id)
@@ -169,6 +188,9 @@ class AddAttendee(SavannahView):
             speaker, created = ContributionType.objects.get_or_create(community=view.event.community, source=source, name="Speaker")
 
             attendee, attendee_created = EventAttendee.objects.update_or_create(community=view.community, event=view.event, member=new_attendee.member, defaults={'role': new_attendee.role, 'timestamp': new_attendee.timestamp})
+            if attendee.timestamp > attendee.member.last_seen:
+                attendee.member.last_seen = attendee.timestamp
+                attendee.member.save()
             if attendee_created:
                 attendee.update_activity()
                 if attendee.role == EventAttendee.HOST:
@@ -185,7 +207,7 @@ class AddAttendee(SavannahView):
 
                     )
                     contrib.update_activity(attendee.activity)
-                    messages.success(request, "%s made a host of this event" % attendee.member.name)
+                    messages.success(request, "<b>%s</b> made a host of this event" % attendee.member.name)
                 elif attendee.role == EventAttendee.SPEAKER:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
@@ -199,7 +221,7 @@ class AddAttendee(SavannahView):
                         }
                     )
                     contrib.update_activity(attendee.activity)
-                    messages.success(request, "%s made a speaker at this event" % attendee.member.name)
+                    messages.success(request, "<b>%s</b> made a speaker at this event" % attendee.member.name)
             else:
                 if attendee.role == EventAttendee.GUEST:
                     try:
@@ -232,7 +254,7 @@ class AddAttendee(SavannahView):
                         }
                     )
                     contrib.update_activity(attendee.activity)
-                    messages.success(request, "%s made a host of this event" % attendee.member.name)
+                    messages.success(request, "<b>%s</b> made a host of this event" % attendee.member.name)
                 elif attendee.role == EventAttendee.SPEAKER:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
@@ -247,7 +269,7 @@ class AddAttendee(SavannahView):
                         }
                     )
                     contrib.update_activity(attendee.activity)
-                    messages.success(request, "%s made a speaker at this event" % attendee.member.name)
+                    messages.success(request, "<b>%s</b> made a speaker at this event" % attendee.member.name)
 
 
             return redirect('event', event_id=view.event.id)

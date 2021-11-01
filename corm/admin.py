@@ -273,7 +273,7 @@ admin.site.register(Contact, ContactAdmin)
 class ActivityAdmin(admin.ModelAdmin):
     list_display = ("short_description", "member", "channel", "timestamp", "link")
     list_filter = ("short_description", "channel__source__community", "channel__source__connector", "timestamp")
-    search_fields = ("short_description","long_description", "member")
+    search_fields = ("short_description","long_description", "member__name")
     raw_id_fields = ('member', 'conversation', 'contribution', 'event_attendance')
     def link(self, conversation):
         if conversation.location is not None:
@@ -576,7 +576,7 @@ class EmailAdmin(admin.ModelAdmin):
     list_display = ["when", "recipient_display", "category", "subject", "sender", "ok"]
     list_filter = ["ok", "when", "category", ("sender", admin.RelatedOnlyFieldListFilter)]
     readonly_fields = ["when", "sender", "member", "email", "subject", "body", "category", "ok"]
-    search_fields = ["subject", "body", "to"]
+    search_fields = ["subject", "body", "member__name"]
     date_hierarchy='when'
 
     def recipient_display(self, record):
