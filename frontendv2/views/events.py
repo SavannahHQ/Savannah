@@ -364,6 +364,8 @@ class EventEditForm(forms.ModelForm):
         self.fields['end_timestamp'].input_formats = ["%Y-%m-%dT%H:%M"]
         if self.initial.get('channel', None) is not None:
             self.initial['channel'] = self.instance.channel.name
+        self.fields['channel'].label = "Category"
+        self.fields['channel'].help_text = "Category for your events, such as Conference or Meetup."
 
     def clean_channel(self):
         channel_name = self.cleaned_data['channel']
