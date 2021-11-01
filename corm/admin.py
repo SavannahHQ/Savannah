@@ -358,7 +358,7 @@ class PromotionAdmin(admin.ModelAdmin):
 admin.site.register(Promotion, PromotionAdmin)
 
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("title", "source", "channel", "start_timestamp", "end_timestamp", "tag")
+    list_display = ("title", "community", "source", "channel", "start_timestamp", "end_timestamp", "tag")
     list_filter = ("source__connector", "community", "start_timestamp")
     raw_id_fields = ("source", "channel")
     date_hierarchy='start_timestamp'
