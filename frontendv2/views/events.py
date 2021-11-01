@@ -195,8 +195,8 @@ class AddAttendee(SavannahView):
             elif attendee.timestamp > attendee.member.last_seen:
                 attendee.member.last_seen = attendee.timestamp
                 attendee.member.save()
+            attendee.update_activity()
             if attendee_created:
-                attendee.update_activity()
                 if attendee.role == EventAttendee.HOST:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
