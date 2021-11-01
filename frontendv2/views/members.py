@@ -831,6 +831,7 @@ class MemberMergeHistory(SavannahView):
         return render(request, 'savannahv2/merge_history.html', view.context)
 
 from django.http import JsonResponse
+from markdownify.templatetags.markdownify import markdownify
 @login_required
 def add_note(request, member_id):
     member = get_object_or_404(Member, id=member_id)
@@ -845,7 +846,7 @@ def add_note(request, member_id):
             note.save()
         else:
             note = Note.objects.create(member=member, author=request.user, content=note_content)
-        return JsonResponse({'success': True, 'errors':None, 'note_id': note.id})
+        return JsonResponse({'success': True, 'errors':None, 'note_id': note.id, 'html': markdownify(note.content)})
     return JsonResponse({'success': False, 'errors':'Only POST method supported'}, status=405)
 
 @login_required
