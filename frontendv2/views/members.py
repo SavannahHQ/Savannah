@@ -506,6 +506,17 @@ class MemberProfile(SavannahView):
         connections.select_related('to_member').prefetch_related('to_member__tags')
         return connections
 
+    @property
+    def recent_events(self):
+        attendance = EventAttendee.objects.filter(member=self.member).select_related('event').order_by('-event__start_timestamp')[:10]
+        return attendance
+
+    @property
+    def journey(self):
+        activity_filter = Q(channel__activity__member=self.member)
+        touches = Source.objects.filter(community=self.community).annotate(first_seen=Min('channel__activity__timestamp', filter=activity_filter)).filter(first_seen__isnull=False).order_by('first_seen')
+        return touches
+
     @login_required
     def as_view(request, member_id):
         view = MemberProfile(request, member_id)
