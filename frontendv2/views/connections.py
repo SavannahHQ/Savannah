@@ -109,10 +109,11 @@ class Connections(SavannahFilterView):
         connection_counts = dict()
         connected = set()
         missing_members = set()
-        if view.timespan <= 31:
-            timespan = view.timespan
-        else:
-            timespan = 30
+        # if view.timespan <= 31:
+        #     timespan = view.timespan
+        # else:
+        #     timespan = 30
+        timespan = view.timespan
         
         connections = MemberConnection.objects.filter(from_member__community=view.community, last_connected__gte=view.rangeend - datetime.timedelta(days=timespan), last_connected__lte=view.rangeend)
         if view.member_company:
