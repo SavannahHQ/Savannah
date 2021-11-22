@@ -165,6 +165,9 @@ class iCalImporter(PluginImporter):
         status = ical_event.get('STATUS', 'CONFIRMED')
 
         event = self.make_event(event_id, channel, title, description, start=start_timestamp, end=end_timestamp, location=location)
+        if channel.tag is not None and event.tag is None:
+            event.tag = channel.tag
+            event.save()
 
         organizer = None
         members = []
