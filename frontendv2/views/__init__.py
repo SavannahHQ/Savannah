@@ -513,7 +513,7 @@ class SavannahFilterView(SavannahView):
         if filters.get('member_company', None):
             default_name = self.member_company.name + " " + default_name
 
-        if filters.get('timefilter', 'timespan') == 'timespan' and filters.get('timespan') < self.MAX_TIMESPAN:
+        if filters.get('timefilter', 'timespan') == 'timespan' and filters.get('timespan', self.MAX_TIMESPAN) < self.MAX_TIMESPAN:
             default_name = self.timespan_display + " " + default_name
         if filters.get('source', None):
             if int(filters.get('source', 0)) < 1:
