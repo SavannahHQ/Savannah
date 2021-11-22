@@ -261,37 +261,46 @@ class PluginImporter:
                 return Event.objects.filter(origin_id=origin_id, channel__source__community=self.community)[0]
             except:
                 pass
-        event, created = Event.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, defaults={'channel':channel, 'title':title, 'description':description, 'start_timestamp':start, 'end_timestamp':end, 'location':location})
+        event, created = Event.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, channel=channel, defaults={'title':title, 'description':description, 'start_timestamp':start, 'end_timestamp':end, 'location':location})
         return event
 
-    def add_event_attendees(self, event, members, make_connections=False):
+    def add_event_attendees(self, event, members, make_connections=False, role=EventAttendee.GUEST):
         for member in members:
-            try:
-                attendee, created = EventAttendee.objects.get_or_create(
-                    community=self.community, 
-                    event=event,
-                    member=member,
-                    timestamp=event.start_timestamp
-                )
-                attendee.update_activity()
-                tstamp = event.start_timestamp
-                save_member = False
-                if tstamp is not None:
-                    if member.first_seen is None or tstamp < member.first_seen:
-                        member.first_seen = tstamp
-                        save_member = True
-                    if member.last_seen is None or tstamp > member.last_seen:
-                        member.last_seen = tstamp
-                        save_member = True
-                if save_member:
-                    member.save()
+            attendee = self.add_event_attendee(event, member, role)
+            
+            if make_connections:
+                for to_member in members:
+                    if member.id != to_member.id:
+                        member.add_connection(to_member, event.start_timestamp)
 
-                if created and make_connections:
-                    for to_member in members:
-                        if member.id != to_member.id:
-                            member.add_connection(to_member, event.start_timestamp)
-            except:
-                pass
+
+    def add_event_attendee(self, event, member, role=EventAttendee.GUEST):
+        try:
+            attendee, created = EventAttendee.objects.update_or_create(
+                community=self.community, 
+                event=event,
+                member=member,
+                defaults={
+                    'role': role,
+                    'timestamp': event.start_timestamp
+                }
+            )
+            attendee.update_activity()
+            tstamp = event.start_timestamp
+            save_member = False
+            if tstamp is not None:
+                if member.first_seen is None or tstamp < member.first_seen:
+                    member.first_seen = tstamp
+                    save_member = True
+                if member.last_seen is None or tstamp > member.last_seen:
+                    member.last_seen = tstamp
+                    save_member = True
+            if save_member:
+                member.save()
+
+            return attendee
+        except:
+            pass
 
     def api_request(self, url, headers={}, retries=None, timeout=None):
         if self.verbosity or settings.DEBUG:
