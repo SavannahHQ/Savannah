@@ -9,6 +9,7 @@ from django.contrib import messages
 from django import forms
 from django.shortcuts import redirect, get_object_or_404, reverse, render
 from django.urls import path
+from django.conf import settings
 
 from corm.plugins import BasePlugin, PluginImporter
 from corm.models import Community, Source, ContributionType, Contribution, EventAttendee
@@ -153,8 +154,14 @@ class iCalImporter(PluginImporter):
         description = ical_event['DESCRIPTION']
         location = ical_event.get('URL', None)
 
-        start_timestamp = ical_event['DTSTART'].dt.replace(tzinfo=None)
-        end_timestamp = ical_event['DTEND'].dt.replace(tzinfo=None)
+        start_timestamp = ical_event['DTSTART'].dt
+        end_timestamp = ical_event['DTEND'].dt
+        if not settings.USE_TZ:
+            try:
+                start_timestamp = ical_event['DTSTART'].dt.replace(tzinfo=None)
+                end_timestamp = ical_event['DTEND'].dt.replace(tzinfo=None)
+            except:
+                pass # It's possible these are Date and not Datetime
         status = ical_event.get('STATUS', 'CONFIRMED')
 
         event = self.make_event(event_id, channel, title, description, start=start_timestamp, end=end_timestamp, location=location)
@@ -179,6 +186,7 @@ class iCalImporter(PluginImporter):
                 member_email, member_detail = self.member_details(attendee)
                 print('ATTENDEE: %s' % member_email)
                 member = self.make_member(member_email, member_detail, channel=channel)
+                members.append(member)
         self.add_event_attendees(event, members, make_connections=True)
 
         if organizer:
