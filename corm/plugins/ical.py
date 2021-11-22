@@ -175,20 +175,20 @@ class iCalImporter(PluginImporter):
             organizer = ical_event.get('ORGANIZER')
             member_email, member_detail = self.member_details(organizer)
             print('ORGANIZER: %s <%s>' % (member_detail, member_email))
-            organizer = self.make_member(member_email, member_detail, channel=channel)
+            organizer = self.make_member(member_email, member_detail, email_address=member_email, channel=channel, tstamp=event.start_timestamp)
             members.append(organizer)
         if 'ATTENDEE' in ical_event:
             if isinstance(ical_event['ATTENDEE'], list):
                 for attendee in ical_event['ATTENDEE']:
                     member_email, member_detail = self.member_details(attendee)
                     print('ATTENDEE: %s' % member_email)
-                    member = self.make_member(member_email, member_detail, channel=channel)
+                    member = self.make_member(member_email, member_detail, email_address=member_email, channel=channel, tstamp=event.start_timestamp)
                     members.append(member)
             else: 
                 attendee = ical_event['ATTENDEE']
                 member_email, member_detail = self.member_details(attendee)
                 print('ATTENDEE: %s' % member_email)
-                member = self.make_member(member_email, member_detail, channel=channel)
+                member = self.make_member(member_email, member_detail, email_address=member_email, channel=channel, tstamp=event.start_timestamp)
                 members.append(member)
         self.add_event_attendees(event, members, make_connections=True)
 
