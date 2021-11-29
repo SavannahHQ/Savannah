@@ -302,13 +302,13 @@ class PluginImporter:
         except:
             pass
 
-    def api_request(self, url, headers={}, retries=None, timeout=None):
+    def api_request(self, url, headers={}, params={}, retries=None, timeout=None):
         if self.verbosity or settings.DEBUG:
             print("API Call: %s" % url)
         if retries is None:
             retries = self.API_BACKOFF_ATTEMPTS
         backoff_time = 0
-        resp = requests.get(url, headers=headers, timeout=timeout)
+        resp = requests.get(url, headers=headers, params=params, timeout=timeout)
         while resp.status_code == 429 and retries > 0:
             retries -= 1
             if settings.DEBUG:

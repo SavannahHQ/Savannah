@@ -29,7 +29,7 @@ class Sources(SavannahView):
                 super()._add_sources_message()
        
     def available_plugins(self):
-        return ConnectionManager.CONNECTOR_PLUGINS.values()
+        return sorted(ConnectionManager.CONNECTOR_PLUGINS.values(), key=lambda x: x.get_source_type_name().lower())
 
     @login_required
     def as_view(request, community_id):
