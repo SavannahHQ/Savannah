@@ -69,25 +69,35 @@ def callback(request):
         return redirect(reverse('sources', kwargs={'community_id':community.id}))
 
 import urllib
+import hashlib
+import time
+def verify_request(request):
+    # Convert your signing secret to bytes
+    slack_signing_secret = bytes(settings.SLACK_SIGNING_SECRET, "utf-8")
+    request_body = request.body.decode()
+    slack_request_timestamp = request.headers["X-Slack-Request-Timestamp"]
+    slack_signature = request.headers["X-Slack-Signature"]
+    # Check that the request is no more than 60 seconds old
+    if (int(time.time()) - int(slack_request_timestamp)) > 60:
+        print("Verification failed. Request is out of date.")
+        return False
+    # Create a basestring by concatenating the version, the request timestamp, and the request body
+    basestring = f"v0:{slack_request_timestamp}:{request_body}".encode("utf-8")
+    # Hash the basestring using your signing secret, take the hex digest, and prefix with the version number
+    my_signature = (
+        "v0=" + hmac.new(slack_signing_secret, basestring, hashlib.sha256).hexdigest()
+    )
+    # Compare the resulting signature with the signature on the request to verify the request
+    if hmac.compare_digest(my_signature, slack_signature):
+        return True
+    else:
+        print("Verification failed. Signature invalid.")
+        return False
+        
 @csrf_exempt
 def handle_shortcuts(request):
-    if not settings.DEBUG:
-        try:
-            slack_sig = request.headers['X-Slack-Signature']
-            timestamp = request.headers['X-Slack-Request-Timestamp']
-        except:
-            return HttpResponse("Missing signature headers", status=400)
-        if abs(datetime.datetime.now() - timestamp) > 60 * 5:
-            # The request timestamp is more than five minutes from local time.
-            # It could be a replay attack, so let's ignore it.
-            return HttpResponse("Request is too old", status=400)
-        sig_basestring = 'v0:' + timestamp + ':' + request.body
-        my_signature = 'v0=' + hmac.compute_hash_sha256(
-            settings.SLACK_SIGNING_SECRET,
-            sig_basestring
-        ).hexdigest()
-        if not hmac.compare(my_signature, slack_sig):
-            return HttpResponse("Signature verfication failed", status=400)
+    if not verify_request(request):
+        return HttpResponse("Signature verfication failed", status=400)
 
     try:
         if request.method == 'POST' and 'payload' in request.POST:
