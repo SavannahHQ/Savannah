@@ -140,7 +140,7 @@ def handle_shortcuts(request):
                 if callback_id == 'add_note':
                     content = '**%s**: %s' % (target_contact.detail, payload['message']['text'])
                     Note.objects.update_or_create(member=target_member, author=action_user, timestamp=datetime.datetime.utcnow(), content=content)
-                    return HttpResponse("Note added", content_type='text/plain', status=200)
+                    return HttpResponse(status=200)
                 elif callback_id == 'make_contrib':
                     server = source.server or 'slack.com'
                     tstamp = datetime.datetime.fromtimestamp(float(payload['message']['ts']))
