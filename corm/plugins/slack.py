@@ -68,28 +68,30 @@ def callback(request):
         messages.add_message(request, messages.ERROR, 'Unable to connect your Slack workspace: %s' % e)
         return redirect(reverse('sources', kwargs={'community_id':community.id}))
 
+import urllib
 @csrf_exempt
 def handle_shortcuts(request):
-    try:
-        slack_sig = request.headers['X-Slack-Signature']
-        timestamp = request.headers['X-Slack-Request-Timestamp']
-    except:
-        return HttpResponse("Missing signature headers", status=400)
-    if abs(datetime.datetime.now() - timestamp) > 60 * 5:
-        # The request timestamp is more than five minutes from local time.
-        # It could be a replay attack, so let's ignore it.
-        return HttpResponse("Request is too old", status=400)
-    sig_basestring = 'v0:' + timestamp + ':' + request.body
-    my_signature = 'v0=' + hmac.compute_hash_sha256(
-        settings.SLACK_SIGNING_SECRET,
-        sig_basestring
-    ).hexdigest()
-    if not hmac.compare(my_signature, slack_sig):
-        return HttpResponse("Signature verfication failed", status=400)
+    if not settings.DEBUG:
+        try:
+            slack_sig = request.headers['X-Slack-Signature']
+            timestamp = request.headers['X-Slack-Request-Timestamp']
+        except:
+            return HttpResponse("Missing signature headers", status=400)
+        if abs(datetime.datetime.now() - timestamp) > 60 * 5:
+            # The request timestamp is more than five minutes from local time.
+            # It could be a replay attack, so let's ignore it.
+            return HttpResponse("Request is too old", status=400)
+        sig_basestring = 'v0:' + timestamp + ':' + request.body
+        my_signature = 'v0=' + hmac.compute_hash_sha256(
+            settings.SLACK_SIGNING_SECRET,
+            sig_basestring
+        ).hexdigest()
+        if not hmac.compare(my_signature, slack_sig):
+            return HttpResponse("Signature verfication failed", status=400)
 
     try:
         if request.method == 'POST' and 'payload' in request.POST:
-            payload = json.loads(request.POST.get('payload'))
+            payload = json.loads(urllib.parse.unquote_plus(request.POST.get('payload')))
             payload_type = payload['type']
             if payload_type == 'message_action':
                 response_url = payload.get('response_url', None)
