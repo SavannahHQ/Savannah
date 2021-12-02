@@ -37,6 +37,10 @@ class ManagerDashboard(SavannahView):
         self.charts = set()
 
     @property
+    def recent_notes(self):
+        return Note.objects.filter(member__community=self.community, author=self.request.user).order_by('-timestamp')[:5]
+
+    @property
     def open_tasks(self):
         return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due')
 
