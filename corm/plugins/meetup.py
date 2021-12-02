@@ -1,6 +1,7 @@
 import datetime
 import re
 import requests
+import json
 from requests_oauthlib import OAuth2Session
 from django.conf import settings
 from django.shortcuts import redirect, get_object_or_404, reverse, render
@@ -16,7 +17,38 @@ AUTHORIZATION_BASE_URL = 'https://secure.meetup.com/oauth2/authorize'
 TOKEN_URL = 'https://secure.meetup.com/oauth2/access'
 MEETUP_API_ROOT = 'https://api.meetup.com/gql'
 MEETUP_SELF_QUERY = '{"query": "query { self { id name isAdmin memberships{ edges{ node{id name isPrivate isOrganizer } } } } }"}'
-
+MEETUP_MEMBERS_QUERY = 'query($groupId: ID) {group(id: $groupId) { name memberships { count pageInfo { endCursor } edges { node { id name email joinTime } } } } }'
+MEETUP_MEMBERS_QUERY_PAGED = 'query($groupId: ID, $cursor: String!) {group(id: $groupId) { name memberships(input: {after: $cursor}) { count pageInfo { endCursor } edges { node { id name email joinTime } } } } }'
+MEETUP_PAST_EVENTS_QUERY = '''
+  query($groupId:ID) {
+    group(id: $groupId) {
+      pastEvents(input: {first:20}) {
+        count
+        pageInfo { endCursor }
+        edges {
+          node {
+            id
+            title
+            dateTime
+            endTime
+            eventUrl
+            hosts { id name }
+            tickets {
+              edges {
+                node {
+                  user { id name }
+                }
+              }
+            }
+            shortDescription
+            description
+          }
+        }
+      }
+      
+    }
+  }
+  '''
 class MeetupOrgForm(forms.ModelForm):
     class Meta:
         model = Source
@@ -133,13 +165,10 @@ class MeetupPlugin(BasePlugin):
         return SourceAdd.as_view
 
     def get_identity_url(self, contact):
-        return "https://meetup.com/%s" % contact.detail
+        return "https://www.meetup.com/members/%s" % contact.origin_id
 
     def get_company_url(self, group):
-        if group.origin_id[0] == '@':
-            return "https://meetup.com/%s" % group.origin_id[1:]
-        else:
-            return None
+        return None
 
     def get_icon_name(self):
         return 'fab fa-meetup'
@@ -159,7 +188,7 @@ class MeetupPlugin(BasePlugin):
 
     def get_channels(self, source):
         channels = [
-            {'id': 'members', 'name': 'Members', 'topic': 'Member names and joined dates', 'count':10},
+            # {'id': 'members', 'name': 'Members', 'topic': 'Member names and joined dates', 'count':10},
             {'id': 'discussions', 'name': 'Discussions', 'topic': 'Posts and comments', 'count':9},
             {'id': 'events', 'name': 'Events', 'topic': 'Events and attendees', 'count':8},
         ]
@@ -174,16 +203,28 @@ class MeetupImporter(PluginImporter):
             'Authorization': 'Bearer %s' % source.auth_secret,
             'Content-Type': 'application/json',
         }
-        # self.TIMESTAMP_FORMAT = MEETUP_TIMESTAMP
-        # self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
-        # feedback, created = ContributionType.objects.get_or_create(
-        #     community=source.community,
-        #     source_id=source.id,
-        #     name="Feedback",
-        # )
+        if settings.USE_TZ:
+            self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M%z'
+        else:
+            self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M'
+        self.HOST_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Hosted")
+        self.SPEAKER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Speaker")
 
-    def api_call(self, path):
-        return self.api_request(path, params=self.API_PARAMS)
+    def strptime(self, timestamp):
+        if settings.USE_TZ:
+            if ":" == timestamp[-3:-2]:
+                timestamp = timestamp[:-3]+timestamp[-2:]
+        else:
+            timestamp = timestamp[:-6]
+        return super().strptime(timestamp)
+
+    def api_call(self, query, **variables):
+        data = json.dumps({
+            "query": query,
+            "variables": variables
+        })
+        print("API Call: %s" % data)
+        return requests.post(MEETUP_API_ROOT, data=data, headers=self.API_HEADERS)
 
     # def update_identity(self, identity):
     #     resp = self.api_call(MEETUP_USER_URL%{'username':identity.detail})
@@ -214,6 +255,79 @@ class MeetupImporter(PluginImporter):
     #         print("Failed to lookup identity info: %s" % resp.content)
 
     def import_channel(self, channel, from_date, full_import=False):
-      source = channel.source
-      community = source.community
-      raise RuntimeError("Not implemented")
+        source = channel.source
+        community = source.community
+        if channel.origin_id == 'members':
+            self.import_members(from_date, full_import)
+        elif channel.origin_id == 'events':
+            self.import_events(channel, from_date, full_import)
+        elif channel.origin_id == 'discussions':
+            self.import_discussions(channel, from_date, full_import)
+        else:
+            raise RuntimeError("Unknown Meetup channel: %s" % channel.id)
+
+    def import_members(self, from_date, full_import=False):
+        cursor = None
+        has_more = True
+        while has_more:
+            has_more = False
+            if cursor:
+                resp = self.api_call(MEETUP_MEMBERS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
+            else:
+                resp = self.api_call(MEETUP_MEMBERS_QUERY, groupId=self.source.auth_id)
+            if resp.status_code == 200:
+                data = resp.json()
+                # print(data)
+                for m in data['data']['group']['memberships']['edges']:
+                    user = m['node']
+                    member = self.make_member(user['id'], detail=user['name'])
+                if cursor != data['data']['group']['memberships']['pageInfo']['endCursor']:
+                    cursor = data['data']['group']['memberships']['pageInfo']['endCursor']
+                    has_more = True
+                
+        else:
+            raise RuntimeError("Error querying members: %s" % resp.content)
+
+    def import_events(self, channel, from_date, full_import=False):
+        if full_import:
+            resp = self.api_call(MEETUP_PAST_EVENTS_QUERY, groupId=self.source.auth_id)
+            if resp.status_code == 200:
+                data = resp.json()
+                for e in data['data']['group']['pastEvents']['edges']:
+                    try:
+                        event = e['node']
+                        origin_id = event['id'].split('!')[0]
+                        start_date = self.strptime(event['dateTime'])
+                        end_date = self.strptime(event['endTime'])
+                        new_event = self.make_event(origin_id=origin_id, channel=channel, title=event['title'], description=event['description'], start=start_date, end=end_date, location=event['eventUrl'])
+
+                        for rsvp in event['tickets']['edges']:
+                            user = rsvp['node']['user']
+                            user_id = user['id'].split('!')[0]
+                            attendee = self.make_member(user_id, user['name'], tstamp=start_date)
+                            self.add_event_attendee(new_event, attendee)
+
+                        for host in event['hosts']:
+                            host_id = host['id'].split('!')[0]
+                            h = self.make_member(host_id, host['name'], tstamp=start_date)
+                            attendee = self.add_event_attendee(new_event, h, EventAttendee.HOST)
+                            contrib, contrib_created = Contribution.objects.get_or_create(
+                                community=self.community,
+                                channel=channel,
+                                author=h,
+                                contribution_type=self.HOST_CONTRIBUTION,
+                                timestamp=new_event.start_timestamp,
+                                defaults={
+                                    'location': new_event.location,
+                                    'title': 'Hosted %s' % new_event.title,
+                                }
+                            )
+                            contrib.update_activity(attendee.activity)
+                    except Exception as e:
+                        print(e)
+                        
+        else:
+            raise RuntimeError("Not implemented")
+
+    def import_discussions(self, channel, from_date, full_import=False):
+        raise RuntimeError("Not implemented")

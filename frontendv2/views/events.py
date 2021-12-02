@@ -36,6 +36,10 @@ class EventProfile(SavannahView):
         self.result_count = 0
 
     @property
+    def attendee_count(self):
+        return EventAttendee.objects.filter(event=self.event).count()
+
+    @property
     def all_attendees(self):
         attendees = EventAttendee.objects.filter(event=self.event).select_related('member')
         if self.event_search:

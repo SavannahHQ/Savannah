@@ -30,7 +30,7 @@
                   <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Tag</th>
-                    <th scope="col">Conversations</th>
+                    <th scope="col">Activities</th>
                     <th scope="col">Last Import</th>
                     <th class="text-center" width="100px" scope="col">Action</th>
                   </tr>
@@ -64,7 +64,7 @@
                         </div>
                       </span>
                   </td>
-                  <td>{{channel.conversation_count}}</td>
+                  <td>{{channel.activity_count}}</td>
                   <td>{{channel.last_import|default:"-"}}</td>
                   <td class="text-center">
                     <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">
