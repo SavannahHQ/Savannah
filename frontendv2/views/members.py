@@ -27,7 +27,16 @@ class Members(SavannahFilterView):
         self._tagsChart = None
         self._rolesChart = None
         self._dauPercent = None
-
+        self.filter.update({
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
+            'member_company': True,
+            'tag': False,
+            'source': True,
+            'contrib_type': False,
+        })
     def suggestion_count(self):
         return SuggestMemberMerge.objects.filter(community=self.community, status__isnull=True).count()
 
@@ -43,6 +52,8 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            members = members.filter(contact__source=self.source)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         return members
 
@@ -58,6 +69,8 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            members = members.filter(contact__source=self.source)
         members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
         members = members.prefetch_related('tags')
 
@@ -76,6 +89,8 @@ class Members(SavannahFilterView):
             else:
                 members = members.filter(role=self.role)
             
+        if self.source:
+            members = members.filter(contact__source=self.source)
         members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__isnull=False)))
         members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
         members = members.prefetch_related('tags')
@@ -98,6 +113,8 @@ class Members(SavannahFilterView):
                     members = members.exclude(role=self.role)
                 else:
                     members = members.filter(role=self.role)
+            if self.source:
+                members = members.filter(contact__source=self.source)
 
             seen = members.annotate(month=Trunc('first_seen', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for m in seen:
@@ -158,6 +175,8 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            members = members.filter(contact__source=self.source)
 
         members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
         return members.count()
@@ -174,6 +193,8 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            members = members.filter(contact__source=self.source)
 
         members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
         member_count = members.count()
@@ -267,6 +288,8 @@ class Members(SavannahFilterView):
                 else:
                     members = members.filter(role=self.role)
 
+            if self.source:
+                members = members.filter(contact__source=self.source)
             members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
 
             for m in members:
@@ -294,6 +317,8 @@ class Members(SavannahFilterView):
                     member_filter = member_filter & ~Q(member__role=self.role)
                 else:
                     member_filter = member_filter & Q(member__role=self.role)
+            if self.source:
+                member_filter = member_filter & Q(member__contact__source=self.source)
 
             tags = tags.annotate(member_count=Count('member', distinct=True, filter=member_filter))
             tags = tags.filter(member_count__gt=0).order_by('-member_count')

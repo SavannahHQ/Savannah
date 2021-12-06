@@ -14,12 +14,15 @@ class ConnectionManager(object):
 
     @classmethod
     def display_name(cls, connector_name):
-        if cls.CONNECTOR_MAP_CACHE is None:
-            cls.CONNECTOR_MAP_CACHE = dict()
-            for key, value in cls.CONNECTOR_CHOICES:
-                cls.CONNECTOR_MAP_CACHE[key] = value
-        return cls.CONNECTOR_MAP_CACHE[connector_name]
-
+        try:
+            if cls.CONNECTOR_MAP_CACHE is None:
+                cls.CONNECTOR_MAP_CACHE = dict()
+                for key, value in cls.CONNECTOR_CHOICES:
+                    cls.CONNECTOR_MAP_CACHE[key] = value
+            return cls.CONNECTOR_MAP_CACHE[connector_name]
+        except:
+            return connector_name
+            
     @classmethod 
     def add_plugin(cls, namespace, plugin):
         cls.CONNECTOR_PLUGINS[namespace] = plugin
