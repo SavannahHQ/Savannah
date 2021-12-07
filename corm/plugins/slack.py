@@ -50,9 +50,12 @@ def authenticate(request):
 def callback(request):
     client_id = settings.SLACK_CLIENT_ID
     client_secret = settings.SLACK_CLIENT_SECRET
+    community = get_object_or_404(Community, id=request.session.get('community'))
+    if 'oauth_state' not in request.session or not request.session['oauth_state']:
+        messages.add_message(request, messages.ERROR, 'Unable to validate your Slack authentication: Missing oauth_state')
+        return redirect(reverse('sources', kwargs={'community_id':community.id}))
     callback_uri = request.build_absolute_uri(reverse('slack_callback'))
     client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
-    community = get_object_or_404(Community, id=request.session.get('community'))
 
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
