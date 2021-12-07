@@ -54,6 +54,7 @@ urlpatterns = [
     path('public/overview/<str:dashboard_id>/', Overview.public, name='public_overview'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
+    path('members/<int:community_id>/members.csv', AllMembers.as_csv, name='members_csv'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
     path('member/<int:member_id>/activity', MemberActivity.as_view, name='member_activity'),
     path('member/<int:member_id>/make_contribution', PromoteToContribution.as_view, name='promote_to_contribution'),

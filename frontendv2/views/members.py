@@ -1,6 +1,8 @@
 import operator
 from functools import reduce
 import datetime
+import csv
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Min, Max, Avg
@@ -408,7 +410,7 @@ class AllMembers(SavannahFilterView):
         self.community = get_object_or_404(Community, id=community_id)
 
         self.sort_by = request.session.get("sort_members", "name")
-        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'company', '-company', 'first_seen', '-first_seen', 'last_seen', '-last_seen'):
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'company', '-company', 'first_seen', '-first_seen', 'last_seen', '-last_seen', 'activity_count', '-activity_count'):
             self.sort_by = request.GET.get('sort') 
             request.session['sort_members'] = self.sort_by
 
@@ -423,9 +425,9 @@ class AllMembers(SavannahFilterView):
             self.search = None
         self.result_count = 0
     
-    @property
-    def all_members(self):
+    def get_members(self):
         members = Member.objects.filter(community=self.community)
+        activity_filter = Q()
         if self.search:
             members = members.filter(Q(name__icontains=self.search) | Q(company__name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search) | Q(note__content__icontains=self.search))
 
@@ -443,18 +445,28 @@ class AllMembers(SavannahFilterView):
         if self.source:
             if self.exclude_source:
                 members = members.exclude(contact__source=self.source)
+                activity_filter = activity_filter & ~Q(activity__channel__source=self.source)
             else:
                 members = members.filter(contact__source=self.source)
+                activity_filter = activity_filter & Q(activity__channel__source=self.source)
 
         if self.timespan < 365:
             members = members.filter(last_seen__gte=self.rangestart, last_seen__lte=self.rangeend)
+        activity_filter = activity_filter & Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend)
+
+        members = members.annotate(activity_count=Count('activity', distinct=True, filter=activity_filter))
+
         if self.sort_by == 'name':
             members = members.order_by(Lower('name'))
         elif self.sort_by == '-name':
             members = members.order_by(Lower('name').desc())
         else:
             members = members.order_by(self.sort_by)
+        return members
 
+    @property
+    def all_members(self):
+        members = self.get_members()
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
@@ -529,11 +541,45 @@ class AllMembers(SavannahFilterView):
             offset = 1
         return [page+offset for page in range(min(10, pages))]
 
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
+
     @login_required
     def as_view(request, community_id):
         view = AllMembers(request, community_id)
 
         return render(request, 'savannahv2/all_members.html', view.context)
+
+    @login_required
+    def as_csv(request, community_id):
+        view = AllMembers(request, community_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="members.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Member', 'Company', 'Role', 'First Seen', 'Last Seen', 'Activity Count', 'Tags'])
+        writer.writeheader()
+        for member in view.get_members():
+            company_name = ''
+            if member.company:
+                company_name = member.company.name
+            writer.writerow({
+                'Member': member.name, 
+                'Company':company_name, 
+                'Role': member.get_role_display(),
+                'First Seen':member.first_seen, 
+                'Last Seen':member.last_seen, 
+                'Activity Count':member.activity_count,
+                'Tags': ",".join([tag.name for tag in member.tags.all()])
+            })
+        return response
 
 class MemberNoteForm(forms.ModelForm):
     class Meta:
