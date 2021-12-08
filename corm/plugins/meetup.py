@@ -18,37 +18,14 @@ TOKEN_URL = 'https://secure.meetup.com/oauth2/access'
 MEETUP_API_ROOT = 'https://api.meetup.com/gql'
 MEETUP_SELF_QUERY = '{"query": "query { self { id name isAdmin memberships{ edges{ node{id name isPrivate isOrganizer } } } } }"}'
 MEETUP_MEMBERS_QUERY = 'query($groupId: ID) {group(id: $groupId) { name memberships { count pageInfo { endCursor } edges { node { id name email joinTime } } } } }'
-MEETUP_MEMBERS_QUERY_PAGED = 'query($groupId: ID, $cursor: String!) {group(id: $groupId) { name memberships(input: {after: $cursor}) { count pageInfo { endCursor } edges { node { id name email joinTime } } } } }'
-MEETUP_PAST_EVENTS_QUERY = '''
-  query($groupId:ID) {
-    group(id: $groupId) {
-      pastEvents(input: {first:20}) {
-        count
-        pageInfo { endCursor }
-        edges {
-          node {
-            id
-            title
-            dateTime
-            endTime
-            eventUrl
-            hosts { id name }
-            tickets {
-              edges {
-                node {
-                  user { id name }
-                }
-              }
-            }
-            shortDescription
-            description
-          }
-        }
-      }
-      
-    }
-  }
-  '''
+MEETUP_MEMBERS_QUERY_PAGED = 'query($groupId: ID, $cursor: String!) {group(id: $groupId) { name memberships(input: {after: $cursor}) { count pageInfo { endCursor } edges { node { id name email joinTime memberPhoto{ id baseUrl } } } } } }'
+MEETUP_PAST_EVENTS_QUERY = 'query($groupId:ID) { group(id: $groupId) { pastEvents(input: {first:100}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
+MEETUP_PAST_EVENTS_QUERY_PAGED = 'query($groupId:ID, $cursor: String!) { group(id: $groupId) { pastEvents(input: {first:100, after: $cursor}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
+MEETUP_UPCOMING_EVENTS_QUERY = 'query($groupId:ID) { group(id: $groupId) { upcomingEvents(input: {first:20}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
+MEETUP_UPCOMING_EVENTS_QUERY_PAGED = 'query($groupId:ID, $cursor: String!) { group(id: $groupId) { upcomingEvents(input: {first:20, after: $cursor}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
+MEETUP_EVENT_COMMENTS = 'query ($eventId: ID) { event(id: $eventId) { comments(limit: 20, offset: 0) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } replies(limit: 2000, offset: 0) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } } } } } } } } }'
+MEETUP_EVENT_COMMENTS_PAGED = 'query ($eventId: ID, $cursor: String!) { event(id: $eventId) { comments(limit: 20, offset: 0, input: {after: $cursor}) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } replies(limit: 2000, offset: 0) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } } } } } } } } }'
+
 class MeetupOrgForm(forms.ModelForm):
     class Meta:
         model = Source
@@ -189,7 +166,7 @@ class MeetupPlugin(BasePlugin):
     def get_channels(self, source):
         channels = [
             # {'id': 'members', 'name': 'Members', 'topic': 'Member names and joined dates', 'count':10},
-            {'id': 'discussions', 'name': 'Discussions', 'topic': 'Posts and comments', 'count':9},
+            # {'id': 'discussions', 'name': 'Discussions', 'topic': 'Posts and comments', 'count':9},
             {'id': 'events', 'name': 'Events', 'topic': 'Events and attendees', 'count':8},
         ]
 
@@ -204,9 +181,11 @@ class MeetupImporter(PluginImporter):
             'Content-Type': 'application/json',
         }
         if settings.USE_TZ:
-            self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M%z'
+            self.TIMESTAMP_FORMAT_MINUTES = '%Y-%m-%dT%H:%M%z'
+            self.TIMESTAMP_FORMAT_SECONDS = '%Y-%m-%dT%H:%M%S%z'
         else:
-            self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M'
+            self.TIMESTAMP_FORMAT_MINUTES = '%Y-%m-%dT%H:%M'
+            self.TIMESTAMP_FORMAT_SECONDS = '%Y-%m-%dT%H:%M:%S'
         self.HOST_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Hosted")
         self.SPEAKER_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Speaker")
 
@@ -216,7 +195,12 @@ class MeetupImporter(PluginImporter):
                 timestamp = timestamp[:-3]+timestamp[-2:]
         else:
             timestamp = timestamp[:-6]
-        return super().strptime(timestamp)
+
+        try:
+            return datetime.datetime.strptime(timestamp, self.TIMESTAMP_FORMAT_SECONDS)
+        except Exception as e:
+            return datetime.datetime.strptime(timestamp, self.TIMESTAMP_FORMAT_MINUTES)
+
 
     def api_call(self, query, **variables):
         data = json.dumps({
@@ -290,44 +274,113 @@ class MeetupImporter(PluginImporter):
 
     def import_events(self, channel, from_date, full_import=False):
         if full_import:
-            resp = self.api_call(MEETUP_PAST_EVENTS_QUERY, groupId=self.source.auth_id)
+            self.import_past_events(channel, from_date)
+        self.import_upcoming_events(channel, from_date, full_import)
+
+    def import_upcoming_events(self, channel, from_date, full_import=False):
+        cursor = None
+        has_more = True
+        while has_more:
+            has_more = False
+            if cursor:
+                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
+            else:
+                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY, groupId=self.source.auth_id)
+
+            if resp.status_code == 200:
+                data = resp.json()
+                for e in data['data']['group']['upcomingEvents']['edges']:
+                    self.import_event(e['node'], channel)
+                if data['data']['group']['upcomingEvents']['pageInfo']['endCursor'] and data['data']['group']['upcomingEvents']['pageInfo']['endCursor'] != cursor:
+                    cursor = data['data']['group']['upcomingEvents']['pageInfo']['endCursor']
+                    has_more = True
+
+    def import_past_events(self, channel, from_date, full_import=False):
+        cursor = None
+        has_more = True
+        while has_more:
+            has_more = False
+            if cursor:
+                resp = self.api_call(MEETUP_PAST_EVENTS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
+            else:
+                resp = self.api_call(MEETUP_PAST_EVENTS_QUERY, groupId=self.source.auth_id)
+
             if resp.status_code == 200:
                 data = resp.json()
                 for e in data['data']['group']['pastEvents']['edges']:
-                    try:
-                        event = e['node']
-                        origin_id = event['id'].split('!')[0]
-                        start_date = self.strptime(event['dateTime'])
-                        end_date = self.strptime(event['endTime'])
-                        new_event = self.make_event(origin_id=origin_id, channel=channel, title=event['title'], description=event['description'], start=start_date, end=end_date, location=event['eventUrl'])
+                    self.import_event(e['node'], channel)
+                if data['data']['group']['pastEvents']['pageInfo']['endCursor'] and data['data']['group']['pastEvents']['pageInfo']['endCursor'] != cursor:
+                    cursor = data['data']['group']['pastEvents']['pageInfo']['endCursor']
+                    has_more = True
 
-                        for rsvp in event['tickets']['edges']:
-                            user = rsvp['node']['user']
-                            user_id = user['id'].split('!')[0]
-                            attendee = self.make_member(user_id, user['name'], tstamp=start_date)
-                            self.add_event_attendee(new_event, attendee)
+    def import_event(self, event, channel):
+        try:
+            origin_id = event['id'].split('!')[0]
+            start_date = self.strptime(event['dateTime'])
+            end_date = self.strptime(event['endTime'])
+            new_event = self.make_event(origin_id=origin_id, channel=channel, title=event['title'], description=event['description'], start=start_date, end=end_date, location=event['eventUrl'])
 
-                        for host in event['hosts']:
-                            host_id = host['id'].split('!')[0]
-                            h = self.make_member(host_id, host['name'], tstamp=start_date)
-                            attendee = self.add_event_attendee(new_event, h, EventAttendee.HOST)
-                            contrib, contrib_created = Contribution.objects.get_or_create(
-                                community=self.community,
-                                channel=channel,
-                                author=h,
-                                contribution_type=self.HOST_CONTRIBUTION,
-                                timestamp=new_event.start_timestamp,
-                                defaults={
-                                    'location': new_event.location,
-                                    'title': 'Hosted %s' % new_event.title,
-                                }
-                            )
-                            contrib.update_activity(attendee.activity)
-                    except Exception as e:
-                        print(e)
-                        
-        else:
-            raise RuntimeError("Not implemented")
+            for rsvp in event['tickets']['edges']:
+                user = rsvp['node']['user']
+                user_id = user['id'].split('!')[0]
+                photo_url = user['memberPhoto']['baseUrl'] + user['memberPhoto']['id'] + '/64x64.webp'
+                attendee = self.make_member(user_id, user['name'], tstamp=start_date, avatar_url=photo_url)
+                self.add_event_attendee(new_event, attendee)
+
+            for host in event['hosts']:
+                host_id = host['id'].split('!')[0]
+                photo_url = host['memberPhoto']['baseUrl'] + host['memberPhoto']['id'] + '/64x64.webp'
+                h = self.make_member(host_id, host['name'], tstamp=start_date, avatar_url=photo_url)
+                attendee = self.add_event_attendee(new_event, h, EventAttendee.HOST)
+                contrib, contrib_created = Contribution.objects.get_or_create(
+                    community=self.community,
+                    channel=channel,
+                    author=h,
+                    contribution_type=self.HOST_CONTRIBUTION,
+                    timestamp=new_event.start_timestamp,
+                    defaults={
+                        'location': new_event.location,
+                        'title': 'Hosted %s' % new_event.title,
+                    }
+                )
+                contrib.update_activity(attendee.activity)
+
+            self.import_comments(event['id'].split('!')[0], channel)
+        except Exception as e:
+            print(e)
+
+    def import_comments(self, event_id, channel):
+        cursor = None
+        has_more = True
+        while has_more:
+            has_more = False
+            if cursor:
+                resp = self.api_call(MEETUP_EVENT_COMMENTS_PAGED, eventId=event_id, cursor=cursor)
+            else:
+                resp = self.api_call(MEETUP_EVENT_COMMENTS, eventId=event_id)
+            if resp.status_code == 200:
+                data = resp.json()
+                # print(data)
+                for c in data['data']['event']['comments']['edges']:
+                    self.import_comment(c['node'], channel)
+                if data['data']['event']['comments']['pageInfo']['endCursor'] and data['data']['event']['comments']['pageInfo']['endCursor'] != cursor:
+                    cursor = data['data']['event']['comments']['pageInfo']['endCursor']
+                    has_more = True
+
+    def import_comment(self, comment, channel, thread=None):
+        try:
+            tstamp = start_date = self.strptime(comment['created'])
+            photo_url = comment['member']['memberPhoto']['baseUrl'] + comment['member']['memberPhoto']['id'] + '/64x64.webp'
+            speaker = self.make_member(comment['member']['id'], comment['member']['name'], tstamp=start_date, avatar_url=photo_url)
+            convo = self.make_conversation(origin_id=comment['id'], channel=channel, speaker=speaker, content=comment['text'], tstamp=tstamp, location=comment['link'], thread=thread)
+
+            if 'replies' in comment:
+                for r in comment['replies']['edges']:
+                    self.import_comment(r['node'], channel, convo)
+        except Exception as e:
+            print("Error importing event comment: %s" % comment)
+            print(e)
+            print("\n")
 
     def import_discussions(self, channel, from_date, full_import=False):
         raise RuntimeError("Not implemented")
