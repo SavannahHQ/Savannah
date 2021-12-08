@@ -122,7 +122,7 @@ CORM_PLUGINS = [
     "corm.plugins.github.GithubPlugin",
     "corm.plugins.gitlab.GitlabPlugin",
     "corm.plugins.ical.iCalPlugin",
-    "corm.plugins.meetup.Meetup",
+    "corm.plugins.meetup.MeetupPlugin",
     "corm.plugins.reddit.RedditPlugin",
     "corm.plugins.rss.RssPlugin",
     "corm.plugins.slack.SlackPlugin",
