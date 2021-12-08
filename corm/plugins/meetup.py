@@ -117,11 +117,11 @@ def callback(request):
     client_id = settings.MEETUP_CLIENT_ID
     client_secret = settings.MEETUP_CLIENT_SECRET
     callback_uri = request.build_absolute_uri(reverse('meetup_callback'))
-    client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri, include_client_id=True)
+    client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
     community = get_object_or_404(Community, id=request.session['community'])
 
     try:
-        token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
+        token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret, include_client_id=True)
         cred, created = UserAuthCredentials.objects.get_or_create(user=request.user, connector="corm.plugins.meetup", server="https://meetup.com", defaults={"auth_secret": token['access_token']})
 
         return redirect('meetup_add')
