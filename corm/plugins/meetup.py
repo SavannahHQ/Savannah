@@ -102,6 +102,7 @@ class SourceAdd(SavannahView):
             'source_plugin': 'Meetup',
             'submit_text': 'Add',
             'submit_class': 'btn btn-success',
+            'switch_account_url': reverse('meetup_auth')
         })
         return render(request, "savannahv2/source_add.html", context)
 
@@ -129,7 +130,7 @@ def callback(request):
 
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret, include_client_id=True)
-        cred, created = UserAuthCredentials.objects.get_or_create(user=request.user, connector="corm.plugins.meetup", server="https://meetup.com", defaults={"auth_secret": token['access_token']})
+        cred, created = UserAuthCredentials.objects.update_or_create(user=request.user, connector="corm.plugins.meetup", server="https://meetup.com", defaults={"auth_secret": token['access_token']})
 
         return redirect('meetup_add')
 
