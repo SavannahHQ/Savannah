@@ -187,7 +187,7 @@ class MeetupPlugin(BasePlugin):
     def get_pro_channels(self, source):
         channels = []
         importer = MeetupImporter(source)
-
+        found_networks = set()
         cursor = None
         has_more = True
         while has_more:
@@ -204,11 +204,13 @@ class MeetupPlugin(BasePlugin):
 
                 for g in data['data']['proNetwork']['groups']['edges']:
                     group = g['node']
-                    if group['country'] == 'us':
-                        topic = '%s, %s, %s' % (group['city'], group['state'], group['country'].upper())
-                    else:
-                        topic = '%s, %s' % (group['city'], group['country'].upper())
-                    channels.append({'id': group['id'], 'name': group['name'], 'topic': topic, 'count':0})
+                    if group['id'] not in found_networks:
+                        found_networks.add(group['id'])
+                        if group['country'] == 'us':
+                            topic = '%s, %s, %s' % (group['city'], group['state'], group['country'].upper())
+                        else:
+                            topic = '%s, %s' % (group['city'], group['country'].upper())
+                        channels.append({'id': group['id'], 'name': group['name'], 'topic': topic, 'count':0})
                 if data['data']['proNetwork']['groups']['count'] > len(channels) and data['data']['proNetwork']['groups']['pageInfo']['endCursor'] and data['data']['proNetwork']['groups']['pageInfo']['endCursor'] != cursor:
                     cursor = data['data']['proNetwork']['groups']['pageInfo']['endCursor']
                     has_more = True
