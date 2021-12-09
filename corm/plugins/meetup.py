@@ -79,7 +79,7 @@ class SourceAdd(SavannahView):
             for grp in data['data']['self']['memberships']['edges']:
                 group_choices.append((grp['node']['id'], grp['node']['name']))
                 group_names[grp['node']['id']] = grp['node']['name']
-                if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None:
+                if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
                     pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
                     group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
         else:
@@ -187,7 +187,6 @@ class MeetupPlugin(BasePlugin):
     def get_pro_channels(self, source):
         channels = []
         importer = MeetupImporter(source)
-        found_networks = set()
         cursor = None
         has_more = True
         while has_more:
@@ -204,13 +203,11 @@ class MeetupPlugin(BasePlugin):
 
                 for g in data['data']['proNetwork']['groups']['edges']:
                     group = g['node']
-                    if group['id'] not in found_networks:
-                        found_networks.add(group['id'])
-                        if group['country'] == 'us':
-                            topic = '%s, %s, %s' % (group['city'], group['state'], group['country'].upper())
-                        else:
-                            topic = '%s, %s' % (group['city'], group['country'].upper())
-                        channels.append({'id': group['id'], 'name': group['name'], 'topic': topic, 'count':0})
+                    if group['country'] == 'us':
+                        topic = '%s, %s, %s' % (group['city'], group['state'], group['country'].upper())
+                    else:
+                        topic = '%s, %s' % (group['city'], group['country'].upper())
+                    channels.append({'id': group['id'], 'name': group['name'], 'topic': topic, 'count':0})
                 if data['data']['proNetwork']['groups']['count'] > len(channels) and data['data']['proNetwork']['groups']['pageInfo']['endCursor'] and data['data']['proNetwork']['groups']['pageInfo']['endCursor'] != cursor:
                     cursor = data['data']['proNetwork']['groups']['pageInfo']['endCursor']
                     has_more = True
