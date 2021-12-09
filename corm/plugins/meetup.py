@@ -16,15 +16,18 @@ from frontendv2.views import SavannahView
 AUTHORIZATION_BASE_URL = 'https://secure.meetup.com/oauth2/authorize'
 TOKEN_URL = 'https://secure.meetup.com/oauth2/access'
 MEETUP_API_ROOT = 'https://api.meetup.com/gql'
-MEETUP_SELF_QUERY = '{"query": "query { self { id name isAdmin memberships{ edges{ node{id name isPrivate isOrganizer } } } } }"}'
+MEETUP_SELF_QUERY = '{"query": "query { self { id name isAdmin memberships{ edges{ node{id name isPrivate isOrganizer proNetwork{ id name } } } } } }"}'
 MEETUP_MEMBERS_QUERY = 'query($groupId: ID) {group(id: $groupId) { name memberships { count pageInfo { endCursor } edges { node { id name email joinTime } } } } }'
 MEETUP_MEMBERS_QUERY_PAGED = 'query($groupId: ID, $cursor: String!) {group(id: $groupId) { name memberships(input: {after: $cursor}) { count pageInfo { endCursor } edges { node { id name email joinTime memberPhoto{ id baseUrl } } } } } }'
 MEETUP_PAST_EVENTS_QUERY = 'query($groupId:ID) { group(id: $groupId) { pastEvents(input: {first:100}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
 MEETUP_PAST_EVENTS_QUERY_PAGED = 'query($groupId:ID, $cursor: String!) { group(id: $groupId) { pastEvents(input: {first:100, after: $cursor}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
-MEETUP_UPCOMING_EVENTS_QUERY = 'query($groupId:ID) { group(id: $groupId) { upcomingEvents(input: {first:20}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
-MEETUP_UPCOMING_EVENTS_QUERY_PAGED = 'query($groupId:ID, $cursor: String!) { group(id: $groupId) { upcomingEvents(input: {first:20, after: $cursor}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
+MEETUP_UPCOMING_EVENTS_QUERY = 'query($groupId:ID) { group(id: $groupId) { upcomingEvents(input: {first:20}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
+MEETUP_UPCOMING_EVENTS_QUERY_PAGED = 'query($groupId:ID, $cursor: String!) { group(id: $groupId) { upcomingEvents(input: {first:20, after: $cursor}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
 MEETUP_EVENT_COMMENTS = 'query ($eventId: ID) { event(id: $eventId) { comments(limit: 20, offset: 0) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } replies(limit: 2000, offset: 0) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } } } } } } } } }'
 MEETUP_EVENT_COMMENTS_PAGED = 'query ($eventId: ID, $cursor: String!) { event(id: $eventId) { comments(limit: 20, offset: 0, input: {after: $cursor}) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } replies(limit: 2000, offset: 0) { pageInfo { endCursor } edges { node { id created text link member { id name memberPhoto{ id baseUrl } } } } } } } } } }'
+MEETUP_PRO_GROUPS = 'query($proNetworkId:ID!) { proNetwork(id:$proNetworkId) { id name groups { count pageInfo { endCursor } edges { node { id name city state country } } } } }'
+MEETUP_PRO_GROUPS_PAGED = 'query($proNetworkId:ID!, $cursor: String!) { proNetwork(id:$proNetworkId) { id name groups(input: {after: $cursor}) { count pageInfo { endCursor } edges { node { id name city state country } } } } }'
+
 
 class MeetupOrgForm(forms.ModelForm):
     class Meta:
@@ -69,12 +72,16 @@ class SourceAdd(SavannahView):
 
         group_choices = []
         group_names = {}
+        pro_choices = []
         resp = requests.post(MEETUP_API_ROOT, data=MEETUP_SELF_QUERY, headers=API_HEADERS)
         if resp.status_code == 200:
             data = resp.json()
             for grp in data['data']['self']['memberships']['edges']:
                 group_choices.append((grp['node']['id'], grp['node']['name']))
                 group_names[grp['node']['id']] = grp['node']['name']
+                if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None:
+                    pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
+                    group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
         else:
             messages.error(request, "Failed to retrieve Meetup groups: %s"%  resp.content)
 
@@ -88,7 +95,7 @@ class SourceAdd(SavannahView):
 
         # org_choices.append(("other", "other..."))
         form = MeetupOrgForm(instance=new_source)
-        form.fields['auth_id'].widget.choices = group_choices
+        form.fields['auth_id'].widget.choices = [('Pro Networks', pro_choices), ('Meetup Groups', group_choices)]
         context = view.context
         context.update({
             "source_form": form,
@@ -164,12 +171,46 @@ class MeetupPlugin(BasePlugin):
         return MeetupImporter(source)
 
     def get_channels(self, source):
-        channels = [
-            # {'id': 'members', 'name': 'Members', 'topic': 'Member names and joined dates', 'count':10},
-            # {'id': 'discussions', 'name': 'Discussions', 'topic': 'Posts and comments', 'count':9},
-            {'id': 'events', 'name': 'Events', 'topic': 'Events and attendees', 'count':8},
-        ]
+        # TODO: Find a better way to distinguish ProNetwork ids from Group ids
+        if len(source.auth_id) > 10:
+            return self.get_pro_channels(source)
+        else:
+            return [{'id': source.auth_id, 'name': source.name, 'topic': 'Events and Attendees', 'count':0}]
 
+    def get_pro_channels(self, source):
+        channels = []
+        importer = MeetupImporter(source)
+
+        cursor = None
+        has_more = True
+        while has_more:
+            has_more = False
+            if cursor:
+                resp = importer.api_call(MEETUP_PRO_GROUPS, proNetworkId=source.auth_id, cursor=cursor)
+            else:
+                resp = importer.api_call(MEETUP_PRO_GROUPS, proNetworkId=source.auth_id)
+
+            if resp.status_code == 200:
+                data = resp.json()
+                if 'errors' in data:
+                    raise RuntimeError(data['errors'][0]['message'])
+
+                for g in data['data']['proNetwork']['groups']['edges']:
+                    group = g['node']
+                    if group['country'] == 'us':
+                        topic = '%s, %s, %s' % (group['city'], group['state'], group['country'].upper())
+                    else:
+                        topic = '%s, %s' % (group['city'], group['country'].upper())
+                    channels.append({'id': group['id'], 'name': group['name'], 'topic': topic, 'count':0})
+                if data['data']['proNetwork']['groups']['count'] > len(channels) and data['data']['proNetwork']['groups']['pageInfo']['endCursor'] and data['data']['proNetwork']['groups']['pageInfo']['endCursor'] != cursor:
+                    cursor = data['data']['proNetwork']['groups']['pageInfo']['endCursor']
+                    has_more = True
+            else:
+                try:
+                    data = resp.json()
+                    raise RuntimeError("Unable to list Meetup Pro groups: %s" % data['errors'][0]['message'])
+                except:
+                    raise RuntimeError("Unable to list Meetup Pro groups: Error parsing data")
         return channels
 
 class MeetupImporter(PluginImporter):
@@ -241,36 +282,30 @@ class MeetupImporter(PluginImporter):
     def import_channel(self, channel, from_date, full_import=False):
         source = channel.source
         community = source.community
-        if channel.origin_id == 'members':
-            self.import_members(from_date, full_import)
-        elif channel.origin_id == 'events':
-            self.import_events(channel, from_date, full_import)
-        elif channel.origin_id == 'discussions':
-            self.import_discussions(channel, from_date, full_import)
-        else:
-            raise RuntimeError("Unknown Meetup channel: %s" % channel.id)
+        self.import_events(channel, from_date, full_import)
+        # self.import_discussions(channel, from_date, full_import)
 
-    def import_members(self, from_date, full_import=False):
-        cursor = None
-        has_more = True
-        while has_more:
-            has_more = False
-            if cursor:
-                resp = self.api_call(MEETUP_MEMBERS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
-            else:
-                resp = self.api_call(MEETUP_MEMBERS_QUERY, groupId=self.source.auth_id)
-            if resp.status_code == 200:
-                data = resp.json()
-                # print(data)
-                for m in data['data']['group']['memberships']['edges']:
-                    user = m['node']
-                    member = self.make_member(user['id'], detail=user['name'])
-                if cursor != data['data']['group']['memberships']['pageInfo']['endCursor']:
-                    cursor = data['data']['group']['memberships']['pageInfo']['endCursor']
-                    has_more = True
+    # def import_members(self, from_date, full_import=False):
+    #     cursor = None
+    #     has_more = True
+    #     while has_more:
+    #         has_more = False
+    #         if cursor:
+    #             resp = self.api_call(MEETUP_MEMBERS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
+    #         else:
+    #             resp = self.api_call(MEETUP_MEMBERS_QUERY, groupId=self.source.auth_id)
+    #         if resp.status_code == 200:
+    #             data = resp.json()
+    #             # print(data)
+    #             for m in data['data']['group']['memberships']['edges']:
+    #                 user = m['node']
+    #                 member = self.make_member(user['id'], detail=user['name'])
+    #             if cursor != data['data']['group']['memberships']['pageInfo']['endCursor']:
+    #                 cursor = data['data']['group']['memberships']['pageInfo']['endCursor']
+    #                 has_more = True
                 
-        else:
-            raise RuntimeError("Error querying members: %s" % resp.content)
+    #     else:
+    #         raise RuntimeError("Error querying members: %s" % resp.content)
 
     def import_events(self, channel, from_date, full_import=False):
         if full_import:
@@ -283,12 +318,13 @@ class MeetupImporter(PluginImporter):
         while has_more:
             has_more = False
             if cursor:
-                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
+                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY_PAGED, groupId=channel.origin_id, cursor=cursor)
             else:
-                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY, groupId=self.source.auth_id)
+                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY, groupId=channel.origin_id)
 
             if resp.status_code == 200:
                 data = resp.json()
+
                 for e in data['data']['group']['upcomingEvents']['edges']:
                     self.import_event(e['node'], channel)
                 if data['data']['group']['upcomingEvents']['pageInfo']['endCursor'] and data['data']['group']['upcomingEvents']['pageInfo']['endCursor'] != cursor:
@@ -301,9 +337,9 @@ class MeetupImporter(PluginImporter):
         while has_more:
             has_more = False
             if cursor:
-                resp = self.api_call(MEETUP_PAST_EVENTS_QUERY_PAGED, groupId=self.source.auth_id, cursor=cursor)
+                resp = self.api_call(MEETUP_PAST_EVENTS_QUERY_PAGED, groupId=channel.origin_id, cursor=cursor)
             else:
-                resp = self.api_call(MEETUP_PAST_EVENTS_QUERY, groupId=self.source.auth_id)
+                resp = self.api_call(MEETUP_PAST_EVENTS_QUERY, groupId=channel.origin_id)
 
             if resp.status_code == 200:
                 data = resp.json()
