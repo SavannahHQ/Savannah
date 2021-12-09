@@ -314,28 +314,18 @@ class MeetupImporter(PluginImporter):
     #         raise RuntimeError("Error querying members: %s" % resp.content)
 
     def import_events(self, channel, from_date, full_import=False):
-        if full_import:
-            self.import_past_events(channel, from_date)
-        self.import_upcoming_events(channel, from_date, full_import)
+        # if full_import:
+        self.import_past_events(channel, from_date, full_import)
+        # self.import_upcoming_events(channel, from_date, full_import)
 
     def import_upcoming_events(self, channel, from_date, full_import=False):
-        cursor = None
-        has_more = True
-        while has_more:
-            has_more = False
-            if cursor:
-                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY_PAGED, groupId=channel.origin_id, cursor=cursor)
-            else:
-                resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY, groupId=channel.origin_id)
+        resp = self.api_call(MEETUP_UPCOMING_EVENTS_QUERY, groupId=channel.origin_id)
 
-            if resp.status_code == 200:
-                data = resp.json()
+        if resp.status_code == 200:
+            data = resp.json()
 
-                for e in data['data']['group']['upcomingEvents']['edges']:
-                    self.import_event(e['node'], channel)
-                if data['data']['group']['upcomingEvents']['pageInfo']['endCursor'] and data['data']['group']['upcomingEvents']['pageInfo']['endCursor'] != cursor:
-                    cursor = data['data']['group']['upcomingEvents']['pageInfo']['endCursor']
-                    has_more = True
+            for e in data['data']['group']['upcomingEvents']['edges']:
+                self.import_event(e['node'], channel)
 
     def import_past_events(self, channel, from_date, full_import=False):
         cursor = None
@@ -350,6 +340,9 @@ class MeetupImporter(PluginImporter):
             if resp.status_code == 200:
                 data = resp.json()
                 for e in data['data']['group']['pastEvents']['edges']:
+                    start_date = self.strptime(e['node']['dateTime'])
+                    if start_date <= from_date and not full_import:
+                        break;
                     self.import_event(e['node'], channel)
                 if data['data']['group']['pastEvents']['pageInfo']['endCursor'] and data['data']['group']['pastEvents']['pageInfo']['endCursor'] != cursor:
                     cursor = data['data']['group']['pastEvents']['pageInfo']['endCursor']
