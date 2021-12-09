@@ -102,9 +102,14 @@ class SourceAdd(SavannahView):
             'source_plugin': 'Meetup',
             'submit_text': 'Add',
             'submit_class': 'btn btn-success',
-            'switch_account_url': reverse('meetup_auth')
+            'switch_account_url': reverse('meetup_switch_account')
         })
         return render(request, "savannahv2/source_add.html", context)
+
+def switch(request):
+    community = get_object_or_404(Community, id=request.session['community'])
+    UserAuthCredentials.objects.filter(user=request.user, connector="corm.plugins.meetup").delete()
+    return authenticate(request)
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -141,6 +146,7 @@ def callback(request):
 urlpatterns = [
     path('add', SourceAdd.as_view, name='meetup_add'),
     path('auth', authenticate, name='meetup_auth'),
+    path('switch', switch, name='meetup_switch_account'),
     path('callback', callback, name='meetup_callback'),
 ]
 
