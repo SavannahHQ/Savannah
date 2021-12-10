@@ -27,10 +27,9 @@
                 <thead>
                   <tr>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
-                    <th scope="col">Members</th>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">First Seen&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
-                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-activity_count" %}-{% endif %}activity_count">Activities&nbsp;<i class="{% if view.sort_by == "activity_count" %}fas fa-sort-down{% elif view.sort_by == "-activity_count" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-activity_count" %}-{% endif %}activity_count">Members&nbsp;<i class="{% if view.sort_by == "activity_count" %}fas fa-sort-down{% elif view.sort_by == "-activity_count" %}fas fa-sort-up{% endif %}"></i></a></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -43,10 +42,9 @@
                     </a>
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
-                  <td>{{company.member_count|intcomma}}</td>
                   <td>{{company.first_activity|date}}</td>
                   <td>{{company.last_activity|date}}</td>
-                  <td>{{company.activity_count|intcomma}}</td>
+                  <td>{{company.member_count|intcomma}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
