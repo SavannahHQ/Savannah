@@ -75,7 +75,7 @@ class Command(BaseCommand):
 
     def make_merge_suggestions(self, community):
         merge_count = 0
-        # Check for duplicate usernames
+        # Check for duplicate emails
         dups = Contact.objects.filter(member__community=community, email_address__isnull=False).values('email_address').annotate(dup_count=Count('member_id', distinct=True)).order_by('email_address').filter(dup_count__gt=1)
         print("Found %s duplicate email addresses" % len(dups))
         i = 0
@@ -108,7 +108,13 @@ class Command(BaseCommand):
                 destination_member = members[0]
                 if self.verbosity >= 3:
                     print("Target member: [%s] %s" % (destination_member.id, destination_member))
+                destination_sources = [c.source for c in destination_member.contact_set.all()]
                 for source_member in members[1:]:
+                    common_sources = source_member.contact_set.filter(source__in=destination_sources)
+                    if common_sources.count() > 0:
+                        if self.verbosity >= 2:
+                            print("Skipping same source match: %s -> %s " % (source_member, destination_member))
+                        continue
                     if self.verbosity >= 3:
                         print("    <- [%s] %s" % (source_member.id, source_member))
                     suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Username match: %s' % dup['detail']})
@@ -129,7 +135,13 @@ class Command(BaseCommand):
                 destination_member = members[0]
                 if self.verbosity >= 3:
                     print("Target member: [%s] %s" % (destination_member.id, destination_member))
+                destination_sources = [c.source for c in destination_member.contact_set.all()]
                 for source_member in members[1:]:
+                    common_sources = source_member.contact_set.filter(source__in=destination_sources)
+                    if common_sources.count() > 0:
+                        if self.verbosity >= 2:
+                            print("Skipping same source match: %s -> %s " % (source_member, destination_member))
+                        continue
                     if self.verbosity >= 3:
                         print("    <- [%s] %s" % (source_member.id, source_member))
                     suggestion, created = SuggestMemberMerge.objects.get_or_create(community=community, destination_member=destination_member, source_member=source_member, defaults={'reason':'Full name match: %s' % dup['name']})
