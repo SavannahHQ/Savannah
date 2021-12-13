@@ -16,7 +16,8 @@ from frontendv2.views import SavannahView
 AUTHORIZATION_BASE_URL = 'https://secure.meetup.com/oauth2/authorize'
 TOKEN_URL = 'https://secure.meetup.com/oauth2/access'
 MEETUP_API_ROOT = 'https://api.meetup.com/gql'
-MEETUP_SELF_QUERY = '{"query": "query { self { id name isAdmin memberships{ edges{ node{id name isPrivate isOrganizer proNetwork{ id name } } } } } }"}'
+MEETUP_SELF_QUERY = '{"query": "query { self { id name isAdmin memberships{ pageInfo { endCursor } edges{ node{id name isPrivate isOrganizer proNetwork{ id name } } } } } }"}'
+MEETUP_SELF_QUERY_PAGED = '{"query": "query($cursor: String!) { self { id name isAdmin memberships(input: {after: $cursor}) { pageInfo { endCursor } edges{ node{id name isPrivate isOrganizer proNetwork{ id name } } } } } }", "variables": {"cursor": "%s"} }'
 MEETUP_MEMBERS_QUERY = 'query($groupId: ID) {group(id: $groupId) { name memberships { count pageInfo { endCursor } edges { node { id name email joinTime } } } } }'
 MEETUP_MEMBERS_QUERY_PAGED = 'query($groupId: ID, $cursor: String!) {group(id: $groupId) { name memberships(input: {after: $cursor}) { count pageInfo { endCursor } edges { node { id name email joinTime memberPhoto{ id baseUrl } } } } } }'
 MEETUP_PAST_EVENTS_QUERY = 'query($groupId:ID) { group(id: $groupId) { pastEvents(input: {first:100}) { count pageInfo { endCursor } edges { node { id title dateTime endTime eventUrl hosts { id name memberPhoto{ id baseUrl } } tickets(input: {first:10000}) { edges { node { user { id name memberPhoto{ id baseUrl } } } } } shortDescription description } } } } }'
@@ -73,17 +74,30 @@ class SourceAdd(SavannahView):
         group_choices = []
         group_names = {}
         pro_choices = []
-        resp = requests.post(MEETUP_API_ROOT, data=MEETUP_SELF_QUERY, headers=API_HEADERS)
-        if resp.status_code == 200:
-            data = resp.json()
-            for grp in data['data']['self']['memberships']['edges']:
-                group_choices.append((grp['node']['id'], grp['node']['name']))
-                group_names[grp['node']['id']] = grp['node']['name']
-                if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
-                    pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
-                    group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
-        else:
-            messages.error(request, "Failed to retrieve Meetup groups: %s"%  resp.content)
+
+        cursor = None
+        has_more = True
+        while has_more:
+            has_more = False
+            if cursor:
+                resp = requests.post(MEETUP_API_ROOT, data=MEETUP_SELF_QUERY_PAGED % cursor, headers=API_HEADERS)
+            else:
+                resp = requests.post(MEETUP_API_ROOT, data=MEETUP_SELF_QUERY, headers=API_HEADERS)
+
+            if resp.status_code == 200:
+                data = resp.json()
+                # print(data)
+                for grp in data['data']['self']['memberships']['edges']:
+                    group_choices.append((grp['node']['id'], grp['node']['name']))
+                    group_names[grp['node']['id']] = grp['node']['name']
+                    if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
+                        pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
+                        group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
+                if  data['data']['self']['memberships']['pageInfo']['endCursor'] and  data['data']['self']['memberships']['pageInfo']['endCursor'] != cursor:
+                    cursor =  data['data']['self']['memberships']['pageInfo']['endCursor']
+                    has_more = True
+            else:
+                messages.error(request, "Failed to retrieve Meetup groups: %s"%  resp.content)
 
         if request.method == "POST":
             form = MeetupOrgForm(data=request.POST, instance=new_source)
@@ -95,6 +109,8 @@ class SourceAdd(SavannahView):
 
         # org_choices.append(("other", "other..."))
         form = MeetupOrgForm(instance=new_source)
+        pro_choices = sorted(pro_choices, key=lambda x: x[1])
+        group_choices = sorted(group_choices, key=lambda x: x[1])
         form.fields['auth_id'].widget.choices = [('Pro Networks', pro_choices), ('Meetup Groups', group_choices)]
         context = view.context
         context.update({
