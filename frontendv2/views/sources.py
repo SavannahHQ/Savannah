@@ -41,6 +41,9 @@ class Sources(SavannahView):
                 source.save()
                 return redirect('sources', community_id=community_id)
             if 'enable_source' in request.POST:
+                if not view.community.management.can_add_source():
+                    view.community.management.upgrade_message(request, "You have reach your maximum number of Sources")
+                    return redirect('sources', community_id=community_id)
                 source = get_object_or_404(Source, id=request.POST.get('enable_source'))
                 source.enabled = True
                 source.save()

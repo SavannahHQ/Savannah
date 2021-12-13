@@ -8,6 +8,6 @@ class OrgAdmin(admin.ModelAdmin):
 admin.site.register(Organization, OrgAdmin)
 
 class ManagementAdmin(admin.ModelAdmin):
-    list_display = ('org', 'community')
+    list_display = ('org', 'community', 'overrides')
 admin.site.register(Management, ManagementAdmin)
 

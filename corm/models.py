@@ -64,7 +64,7 @@ class ManagementPermissionMixin(object):
 
     def can_add_source(self):
         if self.sources > 0:
-            return self.community.source_set.all().count() < self.sources
+            return self.community.source_set.filter(enabled=True).exclude(connector='corm.plugins.null').count() < self.sources
         else:
             return True
 
