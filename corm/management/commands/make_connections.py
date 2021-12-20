@@ -70,6 +70,7 @@ class Command(BaseCommand):
         found = set()
         participants = Participant.objects.filter(community=community, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).exclude(member=F('initiator'))
         participants = participants.values('initiator', 'member').annotate(connection_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)), distinct=True))
+        participants = participants.order_by('-connection_count')
         for connection in participants:
             from_to = "%s-%s" % (connection['initiator'], connection['member'])
             to_from = "%s-%s" % (connection['member'], connection['initiator'])
