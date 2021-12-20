@@ -58,7 +58,7 @@ class CompanyProfile(SavannahView):
 
     @property 
     def top_connections(self):
-        connections = MemberConnection.objects.filter(from_member__company=self.company).exclude(to_member__company=self.company)
+        connections = MemberConnection.objects.filter(from_member__company=self.company, connection_count__gt=0).exclude(to_member__company=self.company)
         connections = connections.values('to_member').annotate(connection_sum=Sum('connection_count', distinct=True))
         connections = connections.order_by('-connection_sum')[:10]
         members = dict([(m.id, m) for m in Member.objects.filter(id__in=[c['to_member'] for c in connections])])
