@@ -3,7 +3,7 @@ from functools import reduce
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max, Min
+from django.db.models import F, Q, Count, Max, Min, Sum
 from django.db.models.functions import Trunc, Lower
 
 from django.contrib import messages
@@ -46,8 +46,25 @@ class CompanyProfile(SavannahView):
         return members.order_by('-last_seen')
 
     @property
+    def recent_members(self):
+        members = Member.objects.filter(community=self.community, company=self.company)
+        members = members.prefetch_related('tags')
+        members = members.prefetch_related('collaborations')
+        return members.order_by('-last_seen')[:10]
+
+    @property
     def all_notes(self):
         return Note.objects.filter(member__company=self.company).select_related('member').order_by('-timestamp')
+
+    @property 
+    def top_connections(self):
+        connections = MemberConnection.objects.filter(from_member__company=self.company).exclude(to_member__company=self.company)
+        connections = connections.values('to_member').annotate(connection_sum=Sum('connection_count', distinct=True))
+        connections = connections.order_by('-connection_sum')[:10]
+        members = dict([(m.id, m) for m in Member.objects.filter(id__in=[c['to_member'] for c in connections])])
+        for c in connections:
+            c['to_member'] = members[c['to_member']]
+            yield(c)
 
     @property
     def tagsChart(self):
