@@ -57,17 +57,24 @@ class Command(BaseCommand):
             if member.company.tag:
                 member.tags.add(member.company.tag)
 
+        # Delete suggestions we already have a domain for
+        domains = set([d['domain'] for d in CompanyDomains.objects.filter(company__community=community).values('domain')])
+        SuggestCompanyCreation.objects.filter(community=community, domain__in=domains).delete()
+
         # Suggest company creation
         if community.suggest_company:
+            print("Suggesting companies by domain...")
             recipients = community.managers or community.owner
             created_count = 0
             for domain, count in unknown_domain_counts.items():
                 if domain in settings.PUBLIC_EMAIL_DOMAINS:
                     continue
                 if count >= settings.COMPANY_SUGGESTION_MATCHES:
-                    suggestion, created = SuggestCompanyCreation.objects.get_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
+                    suggestion, created = SuggestCompanyCreation.objects.update_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
                     if created:
                         created_count += 1
+                else:
+                    SuggestCompanyCreation.objects.filter(community=community, domain=domain).delete()
             if created_count > 0:
                 notify.send(community, 
                     recipient=recipients, 
