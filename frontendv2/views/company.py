@@ -258,10 +258,28 @@ class Companies(SavannahFilterView):
             'conrib_type': False,
         })
 
+        self.RESULTS_PER_PAGE = 25
+
+        self.sort_by = request.session.get("sort_companies", "-member_count")
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'last_activity', '-last_activity', 'member_count', '-member_count'):
+            self.sort_by = request.GET.get('sort') 
+            request.session['sort_companies'] = self.sort_by
+
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower().strip()
+        else:
+            self.search = None
+        self.result_count = 0
+
     def suggestion_count(self):
         return SuggestCompanyCreation.objects.filter(community=self.community, status__isnull=True).count()
 
-    def all_companies(self):
+    def get_companies(self):
         companies = Company.objects.filter(community=self.community)
         convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
 
@@ -282,7 +300,53 @@ class Companies(SavannahFilterView):
         companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         companies = companies.filter(last_activity__isnull=False)
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0)
-        return companies.order_by(Lower('name'))
+        if self.sort_by == 'name':
+            companies = companies.order_by(Lower('name'))
+        elif self.sort_by == '-name':
+            companies = companies.order_by(Lower('name').desc())
+        else:
+            companies = companies.order_by(self.sort_by)
+        return companies
+
+    @property
+    def all_companies(self):
+        companies = self.get_companies()
+        self.result_count = companies.count()
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return companies[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        return pages
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        offset=1
+        if self.page > 5:
+            offset = self.page - 5
+        if offset + 9 > pages:
+            offset = pages - 9
+        if offset < 1:
+            offset = 1
+        return [page+offset for page in range(min(10, pages))]
+
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
 
     def assignment_chart(self):
         if not self._assignmentChart:
