@@ -114,7 +114,7 @@ def signup_subscribe_session(request, community_id,):
  
         # Create Stripe Checkout session
         checkout_session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
+            # payment_method_types=["card"], # New Stripe checkout allows other options if this is omitted
             mode="subscription",
             client_reference_id=community.id,
             allow_promotion_codes=True,
