@@ -18,7 +18,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit, ManagerTasksCalendar
-from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution
+from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution, AddContribution
 from frontendv2.views.conversations import Conversations
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
@@ -57,6 +57,7 @@ urlpatterns = [
     path('members/<int:community_id>/members.csv', AllMembers.as_csv, name='members_csv'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
     path('member/<int:member_id>/activity', MemberActivity.as_view, name='member_activity'),
+    path('member/<int:member_id>/add_contribution', AddContribution.as_view, name='add_contribution'),
     path('member/<int:member_id>/make_contribution', PromoteToContribution.as_view, name='promote_to_contribution'),
     path('member/<int:community_id>/add', MemberAdd.as_view, name='member_add'),
     path('member/<int:member_id>/edit', MemberEdit.as_view, name='member_edit'),

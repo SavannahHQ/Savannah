@@ -938,6 +938,87 @@ class PromoteToContribution(SavannahView):
 
         return render(request, 'savannahv2/promote_to_contribution.html', view.context)
 
+class NewContributionForm(forms.ModelForm):
+    class Meta:
+        model = Contribution
+        fields = ['title', 'contribution_type', 'channel', 'timestamp', 'location']
+
+    def limit_to(self, community):
+        current_source = None
+        choices = [(None, '--------')]
+        for contrib_type in ContributionType.objects.filter(community=community, source__isnull=False).select_related('source').order_by(Lower('source__connector')):
+            source_name = '%s (%s)' % (contrib_type.source.connector_name, contrib_type.source.name)
+            if source_name != current_source:
+                current_source = source_name
+                choices.append((source_name, []))
+            choices[-1][1].append((contrib_type.id, contrib_type.name))
+        self.fields['contribution_type'].widget.choices = choices
+
+        current_source = None
+        choices = [(None, '--------')]
+        for channel in Channel.objects.filter(source__community=community).select_related('source').order_by(Lower('source__connector'), Lower('name')):
+            source_name = '%s (%s)' % (channel.source.connector_name, channel.source.name)
+            if source_name != current_source:
+                current_source = source_name
+                choices.append((source_name, []))
+            choices[-1][1].append((channel.id, channel.name))
+        self.fields['channel'].widget.choices = choices
+        self.fields['channel'].required = True
+
+        self.fields['location'].label = "Link to Contribution"
+
+
+class AddContribution(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    @property
+    def form(self):
+        try:
+            last_activity = Activity.objects.filter(member=self.member, contribution__isnull=True).order_by('-timestamp')[0]
+            default_channel = last_activity.channel
+            default_timestamp = last_activity.timestamp
+            default_link = last_activity.location
+            default_type = ContributionType.objects.filter(source=default_channel.source).annotate(use_count=Count('contribution')).order_by('-use_count')[0]
+            default_title = "%s in %s on %s" % (default_type.name, default_channel.name, default_channel.source.connector_name)
+        except:
+            default_channel = None
+            default_type = None
+            default_title = ""
+            default_timestamp = datetime.datetime.utcnow()
+            default_link = None
+        new_contrib = Contribution(
+            community=self.community, 
+            contribution_type=default_type,
+            title=default_title,
+            author=self.member, 
+            channel=default_channel,
+            timestamp=default_timestamp, 
+            location=default_link
+        )
+
+        if self.request.method == 'POST':
+            form = NewContributionForm(instance=new_contrib, data=self.request.POST)
+        else:
+            form = NewContributionForm(instance=new_contrib)
+        form.limit_to(self.community)
+        return form
+
+    @login_required
+    def as_view(request, member_id):
+        view = AddContribution(request, member_id)
+
+        if request.method == 'POST':
+            if view.form.is_valid():
+                contrib = view.form.save()
+                contrib.update_activity()
+                messages.success(request, "Contribution has been recorded")
+                return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/add_contribution.html', view.context)
+
 class MemberMergeHistory(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
