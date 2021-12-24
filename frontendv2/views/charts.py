@@ -113,3 +113,63 @@ class FunnelChart(Chart):
 
     def get_data_colors(self):
         return ['#'+self.colors.next() for i in range(len(self.stages))]
+
+class LineChart(Chart):
+    def __init__(self, id, title, limit=None):
+        super().__init__(id, title)
+        self.script_template = 'savannahv2/linechart_script.html'
+        self.limit = limit
+        self.colors = ChartColors()
+        self._keys = []
+        self._raw_data = dict()
+        self._processed_data = None
+        self._show_legend = True
+        self.stacked = False
+
+    @property
+    def keys(self):
+        return self._keys
+
+    def set_keys(self, series_keys):
+        self._keys = series_keys
+
+    def add(self, data_name, data_values, data_color=None, data_link=None):
+        if data_color is None:
+            data_color = next(self.colors)
+        if data_name not in self._raw_data:
+            self._raw_data[data_name] = (data_values, data_color, data_link)
+        else:
+            self._raw_data[data_name][0].append(data_values)
+            if data_color:
+                self._raw_data[data_name][1] = data_color
+            if data_link:
+                self._raw_data[data_name][2] = data_link
+
+    @property
+    def show_legend(self, setval=None):
+        if self._show_legend:
+            return 'true'
+        else:
+            return 'false'
+
+    def set_show_legend(self, show):
+        self._show_legend = show
+
+    @property
+    def processed_data(self):
+        if self._processed_data is None:
+            if self.limit is not None and self.limit > 0 and len(self._raw_data) > self.limit:
+                self._processed_data = sorted(self._raw_data.items(), reverse=True, key=lambda x: sum(x[1][0].values()) )[:self.limit-1]
+            else:
+                self._processed_data = self._raw_data.items()
+        return self._processed_data
+
+    def get_data_series(self):
+        pdata = self.processed_data
+        for name, data in self.processed_data:
+            values = []
+            for month in self.keys:
+                values.append(data[0].get(month, 0))
+            yield (name, values, data[1])
+
+

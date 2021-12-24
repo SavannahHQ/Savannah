@@ -14,7 +14,7 @@ from django.contrib import messages
 from corm.models import *
 from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView, SavannahFilterView
-from frontendv2.views.charts import PieChart
+from frontendv2.views.charts import PieChart, LineChart
 from savannah.utils import safe_int
 from frontendv2 import colors as savannah_colors
 from frontendv2.models import PublicDashboard
@@ -110,7 +110,7 @@ class Members(SavannahFilterView):
  
         return members.order_by('-last_active')[:10]
 
-    def getMembersChart(self):
+    def membersChart(self):
         if not self._membersChart:
             months = list()
             counts = dict()
@@ -149,34 +149,23 @@ class Members(SavannahFilterView):
                     if month not in months:
                         months.append(month)
                     monthly_active[month] = a['member_count']
-            self._membersChart = (sorted(months), counts, monthly_active)
+
+            self._membersChart = LineChart('members_graph', 'Members')
+            self._membersChart.set_keys(self.timespan_chart_keys(sorted(months)))
+            self._membersChart.add('New', counts, savannah_colors.MEMBER.JOINED)
+            self._membersChart.add('Active', monthly_active, savannah_colors.MEMBER.ACTIVE)
+            self._membersChart.add('Returning', self.calculate_returning(self._membersChart.keys, counts, monthly_active), savannah_colors.MEMBER.RETURNING)
+        self.charts.add(self._membersChart)
         return self._membersChart
 
-    @property
-    def members_chart_months(self):
-        (months, counts, monthly_active) = self.getMembersChart()
-        return self.timespan_chart_keys(months)
-
-    @property
-    def members_chart_counts(self):
-        (months, counts, monthly_active) = self.getMembersChart()
-        return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
-
-    @property
-    def members_chart_monthly_active(self):
-        (months, counts, monthly_active) = self.getMembersChart()
-        return [monthly_active.get(month, 0) for month in self.timespan_chart_keys(months)]
-
-    @property
-    def members_chart_monthly_returning(self):
-        (months, joined, active) = self.getMembersChart()
-        data = []
+    def calculate_returning(self, months, joined, active):
+        data = dict()
         month_keys = self.timespan_chart_keys(months)
         for i, month in enumerate(month_keys):
             returned = active.get(month, 0) - joined.get(month, 0)
             if returned < 0:
                 returned = 0
-            data.append(returned)
+            data[month] = returned
         return data
 
     @property 

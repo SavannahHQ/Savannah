@@ -1,0 +1,98 @@
+<script>
+  // Area Chart Example
+  var ctx = document.getElementById("{{chart.id}}");
+  var {{chart.id}} = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [{% for key in chart.keys %}'{{key}}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+      datasets: [
+      {% for series, data, color in chart.get_data_series %}
+      {
+        label: "{{series}}",
+        lineTension: 0.3,
+        backgroundColor: "#{{color}}{% if not chart.stacked %}22{% else %}CC{% endif %}",
+        borderColor: "#{{color}}",
+        borderWidth: 1,
+        pointRadius: 0,
+        pointBackgroundColor: "#{{color}}",
+        pointBorderColor: "#{{color}}",
+        pointHoverRadius: 3,
+        pointHoverBackgroundColor: "#{{color}}",
+        pointHoverBorderColor: "#{{color}}",
+        pointHitRadius: 10,
+        pointBorderWidth: 2,
+        data: [{% for d in data %}{{d}}{% if not forloop.last %}, {% endif %}{% endfor%}],
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      layout: {
+        padding: {
+          left: 10,
+          right: 25,
+          top: 25,
+          bottom: 0
+        }
+      },
+      scales: {
+        xAxes: [{
+          time: {
+            unit: 'date'
+          },
+          gridLines: {
+            display: false,
+            drawBorder: true
+          },
+          ticks: {
+            maxTicksLimit: 7
+          }
+        }],
+        yAxes: [{
+          stacked: {% if chart.stacked %}true{% else %}false{% endif %},
+          ticks: {
+            maxTicksLimit: 5,
+            padding: 10,
+            beginAtZero: true,
+            // Include a dollar sign in the ticks
+            callback: function(value, index, values) {
+              return value;
+            }
+          },
+          gridLines: {
+            color: "rgb(234, 236, 244)",
+            zeroLineColor: "rgb(234, 236, 244)",
+            drawBorder: true,
+            borderDash: [2],
+            zeroLineBorderDash: [2]
+          }
+        }],
+      },
+      legend: {
+        display: true
+      },
+      tooltips: {
+        backgroundColor: "rgb(255,255,255)",
+        bodyFontColor: "#858796",
+        titleMarginBottom: 10,
+        titleFontColor: '#6e707e',
+        titleFontSize: 14,
+        borderColor: '#dddfeb',
+        borderWidth: 1,
+        xPadding: 15,
+        yPadding: 15,
+        displayColors: true,
+        intersect: false,
+        mode: 'index',
+        caretPadding: 10,
+        callbacks: {
+          label: function(tooltipItem, chart) {
+            var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+            return datasetLabel + ': ' + tooltipItem.yLabel;
+          }
+        }
+      }
+    }
+  });
+  </script>

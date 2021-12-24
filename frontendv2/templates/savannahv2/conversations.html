@@ -19,14 +19,27 @@
             <div class="col-xl-9 col-lg-6">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-left">
-                  <h6 class="m-0 font-weight-bold text-primary">Conversations</h6>
-                  {% include 'savannahv2/filter_pills.html' %}
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <div class="align-items-center justify-content-left d-inline">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.conversationsChart.title}}{% include 'savannahv2/filter_pills.html' %}</h6>
+                  </div>
+                  <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" title="Show by..." role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-random fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                      <div class="dropdown-header">Show by:</div>
+                      <a class="dropdown-item text-muted" href="?by_convo"><i class="fas fa-comment"> </i> Conversation</a>
+                      <a class="dropdown-item text-muted" href="?by_tag"><i class="fas fa-tags"> </i> Tag</a>
+                      <a class="dropdown-item text-muted" href="?by_source"><i class="fas fa-filter"> </i> Source</a>
+                      <a class="dropdown-item text-muted" href="?by_role"><i class="fas fa-users"> </i> Role</a>
+                    </div>
+                  </div>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="chart-area">
-                    <canvas id="conversationsChart"></canvas>
+                    <canvas id="{{view.conversationsChart.id}}"></canvas>
                   </div>
                 </div>
               </div>
@@ -280,102 +293,4 @@
           </div>
         </div>
         <!-- /.container-fluid -->
-{% endblock %}
-
-{% block page_scripts %}
-  <script>
-// Area Chart Example
-var ctx = document.getElementById("conversationsChart");
-var myLineChart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: {{view.conversations_chart_months|safe}},
-    datasets: [{
-      label: "Conversations",
-      lineTension: 0.3,
-      backgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}22",
-      borderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
-      borderWidth: 1,
-      pointRadius: 0,
-      pointBackgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
-      pointBorderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
-      pointHoverRadius: 3,
-      pointHoverBackgroundColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
-      pointHoverBorderColor: "#{{view.tag.color|default:colors.CONVERSATION}}",
-      pointHitRadius: 10,
-      pointBorderWidth: 2,
-      data: {{view.conversations_chart_counts|safe}},
-    }],
-  },
-  options: {
-    maintainAspectRatio: false,
-    responsive: true,
-    layout: {
-      padding: {
-        left: 10,
-        right: 25,
-        top: 25,
-        bottom: 0
-      }
-    },
-    scales: {
-      xAxes: [{
-        time: {
-          unit: 'date'
-        },
-        gridLines: {
-          display: false,
-          drawBorder: true
-        },
-        ticks: {
-          maxTicksLimit: 7
-        }
-      }],
-      yAxes: [{
-        ticks: {
-          maxTicksLimit: 5,
-          padding: 10,
-          beginAtZero: true,
-          // Include a dollar sign in the ticks
-          callback: function(value, index, values) {
-            return value;
-          }
-        },
-        gridLines: {
-          color: "rgb(234, 236, 244)",
-          zeroLineColor: "rgb(234, 236, 244)",
-          drawBorder: true,
-          borderDash: [2],
-          zeroLineBorderDash: [2]
-        }
-      }],
-    },
-    legend: {
-      display: false
-    },
-    tooltips: {
-      backgroundColor: "rgb(255,255,255)",
-      bodyFontColor: "#858796",
-      titleMarginBottom: 10,
-      titleFontColor: '#6e707e',
-      titleFontSize: 14,
-      borderColor: '#dddfeb',
-      borderWidth: 1,
-      xPadding: 15,
-      yPadding: 15,
-      displayColors: true,
-      intersect: false,
-      mode: 'index',
-      caretPadding: 10,
-      callbacks: {
-        label: function(tooltipItem, chart) {
-          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-          return datasetLabel + ': ' + tooltipItem.yLabel;
-        }
-      }
-    }
-  }
-});
-  </script>
-
 {% endblock %}
