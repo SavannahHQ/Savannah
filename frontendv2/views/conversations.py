@@ -604,7 +604,15 @@ class Conversations(SavannahFilterView):
         dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
         conversations = Conversations(request, dashboard.community.id)
         context = dashboard.apply(conversations)
+        conversations.chart_type = 'basic'
+        if 'conversations_chart_type' in dashboard.filters and dashboard.filters['conversations_chart_type'] is not None:
+            conversations.chart_type = dashboard.filters['conversations_chart_type']
         if not request.user.is_authenticated:
             dashboard.count()
         return render(request, 'savannahv2/public/conversations.html', context)
 
+    def filters_as_dict(self, request):
+        filters = super().filters_as_dict(request)
+        filters['conversations_chart_type'] = self.chart_type
+        return filters
+        
