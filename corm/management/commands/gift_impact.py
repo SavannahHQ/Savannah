@@ -25,7 +25,7 @@ class Command(BaseCommand):
             print("Using Community: %s" % community.name)
             communities = [community]
         else:
-            communities = Community.objects.all()
+            communities = Community.objects.filter(status=Community.ACTIVE)
 
         for community in communities:
             self.calculate_gift_impact(community)

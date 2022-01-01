@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-      identities = Contact.objects.all()
+      identities = Contact.objects.filter(source__enabled=True, source__community__status=Community.ACTIVE)
       verbosity = options.get('verbosity')
 
       community_id = options.get('community_id')

@@ -32,7 +32,8 @@ class Command(BaseCommand):
             print("Using Community: %s" % community.name)
             communities = [community]
         else:
-            communities = Community.objects.all()
+            communities = Community.objects.filter(status=Community.ACTIVE)
+            
         if for_date:
             self.tstamp = dateutil.parser.parse(for_date)
         else:

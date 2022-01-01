@@ -21,7 +21,7 @@ class Command(BaseCommand):
     help = 'Checks member activity and creates notifications for action'
 
     def handle(self, *args, **options):
-        for community in Community.objects.all():
+        for community in Community.objects.filter(status=Community.ACTIVE):
             self.check_for_inactivity(community)
             self.check_for_resuming_activity(community)
             self.check_for_first_contrib(community)
