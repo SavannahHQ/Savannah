@@ -376,7 +376,7 @@ class SavannahFilterView(SavannahView):
             self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
             self.rangeend = datetime.datetime.utcnow()
         else:
-            self.timespan = (self.rangeend - self.rangestart).days
+            self.timespan = (self.rangeend - self.rangestart).days + 1
 
     def filters_as_dict(self, request):
         filters = dict()
@@ -455,8 +455,13 @@ class SavannahFilterView(SavannahView):
 
     @property
     def timespan_chart_span(self):
-        if self.timespan > 92:
-            return int(self.timespan / 30.4)
+        if self.timespan == 365:
+            return 12
+        elif self.timespan > 92:
+            if self.timespan % 30.5 > 0:
+                return int(self.timespan / 30.5)+1
+            else:
+                return int(self.timespan / 30.5)
         elif self.timespan > 5:
             return self.timespan
         else:
