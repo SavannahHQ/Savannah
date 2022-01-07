@@ -4,7 +4,7 @@ import subprocess
 import requests
 from importlib import import_module
 from time import sleep
-from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile, Event, EventAttendee
+from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile, Event, EventAttendee, Company, SourceGroup, CompanyDomains
 from corm.connectors import ConnectionManager
 from corm.email import EmailMessage
 from django.conf import settings
@@ -12,6 +12,7 @@ from django.shortcuts import reverse
 from django.contrib.contenttypes.models import ContentType
 from notifications.signals import notify
 from notifications.models import Notification
+
 
 def install_plugins():
     for plugin in settings.CORM_PLUGINS:
@@ -264,6 +265,29 @@ class PluginImporter:
         event, created = Event.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, channel=channel, defaults={'title':title, 'description':description, 'start_timestamp':start, 'end_timestamp':end, 'location':location})
         return event
 
+    def make_company(self, name, origin_id=None, domain=None, website=None, logo=None, dedup=False):
+        company = None
+        if origin_id:
+            try:
+                group = SourceGroup.objects.get(source=self.source, origin_id=origin_id)
+                company = group.company
+            except:
+                pass # No matching group found, so we'll create it later
+        if domain:
+            try:
+                cd = CompanyDomains.objects.get(company__community=self.source.community, domain=domain)
+                company = cd.company
+            except:
+                pass # No matching domain found, so we'll create it later
+        if not company:
+            company, created = Company.objects.get_or_create(community=self.source.community, name=name, defaults={'website':website, 'icon_url':logo})
+        if origin_id:
+            SourceGroup.objects.get_or_create(source=self.source, origin_id=origin_id, defaults={'company':company, 'name':name})
+        if domain:
+            CompanyDomains.objects.create(company=company, domain=domain)
+
+        return company
+
     def add_event_attendees(self, event, members, make_connections=False, role=EventAttendee.GUEST):
         for member in members:
             attendee = self.add_event_attendee(event, member, role)
@@ -327,7 +351,10 @@ class PluginImporter:
         return dtime.strftime(self.TIMESTAMP_FORMAT)
 
     def strptime(self, dtimestamp):
-        return datetime.datetime.strptime(dtimestamp, self.TIMESTAMP_FORMAT)
+        tstamp = datetime.datetime.strptime(dtimestamp, self.TIMESTAMP_FORMAT)
+        if not settings.USE_TZ:
+            tstamp = tstamp.replace(tzinfo=None)
+        return tstamp
 
     def get_user_tags(self, content):
         return set(self.TAGGED_USER_MATCHER.findall(content))

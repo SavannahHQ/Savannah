@@ -120,7 +120,7 @@ class IdentityList(SavannahIntegrationView):
     """
 
     def get(self, request, format=None):
-        identities = Contact.objects.filter(source=request.source)
+        identities = Contact.objects.filter(source=request.source).select_related('member').prefetch_related('member__tags')
         serializer = IdentitySerializer(identities, many=True)
         return Response(serializer.data)
 
