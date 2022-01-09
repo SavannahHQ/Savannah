@@ -237,6 +237,38 @@ class AnnualReport(SavannahView):
         self.report = report
         self.data = json.loads(self.report.data)
         self.charts = set()
+        self.previous_company_activity = dict()
+        self.previous_company_contributions = dict()
+        try:
+            self.previous = Report.objects.filter(community=self.community, report_type=Report.ANNUAL, generated__lt=report.generated).order_by('-generated')[0]
+            self.previous_data = json.loads(self.previous.data)
+            if 'top_company_activity' in self.previous_data:
+                for company in self.previous_data['top_company_activity']:
+                    self.previous_company_activity[company['company_id']] = company['conversations']
+            if 'top_company_contributions' in self.previous_data:
+                for company in self.previous_data['top_company_contributions']:
+                    self.previous_company_contributions[company['company_id']] = company['contributions']
+        except:
+            self.previous = None
+            self.previous_data = None
+
+    @property
+    def has_company_data(self):
+        return 'top_company_contributions' in self.data or 'top_company_activity' in self.data
+
+    @property
+    def top_company_activity(self):
+        for company in self.data.get('top_company_activity', []):
+            if company['company_id'] in self.previous_company_activity:
+                company['diff'] = 100 * (company.get('conversations', 0) - self.previous_company_activity[company['company_id']]) / self.previous_company_activity[company['company_id']]
+            yield(company)
+
+    @property
+    def top_company_contributions(self):
+        for company in self.data.get('top_company_contributions', []):
+            if company['company_id'] in self.previous_company_contributions:
+                company['diff'] = 100 * (company.get('contributions', 0) - self.previous_company_contributions[company['company_id']]) / self.previous_company_contributions[company['company_id']]
+            yield(company)
 
     @property
     def year_name(self):
@@ -251,12 +283,28 @@ class AnnualReport(SavannahView):
         return self.data['counts']['new_contributors']
 
     @property
+    def new_company_count(self):
+        return self.data['counts'].get('new_companies', 0)
+
+    @property
     def conversation_count(self):
         return self.data['counts']['conversations']
 
     @property
     def contribution_count(self):
         return self.data['counts']['contributions']
+
+    @property
+    def connections_count(self):
+        return self.data['counts'].get('connections', 0)
+
+    @property
+    def events_count(self):
+        return self.data['counts'].get('events', 0)
+
+    @property
+    def gifts_count(self):
+        return self.data['counts'].get('gifts', 0)
 
     @property
     def top_contributors(self):
