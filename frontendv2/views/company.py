@@ -50,7 +50,7 @@ class CompanyProfile(SavannahView):
         members = Member.objects.filter(community=self.community, company=self.company)
         members = members.prefetch_related('tags')
         members = members.prefetch_related('collaborations')
-        return members.order_by('-last_seen')[:10]
+        return members.order_by(IsNull('last_seen'), '-last_seen')[:10]
 
     @property
     def all_notes(self):
