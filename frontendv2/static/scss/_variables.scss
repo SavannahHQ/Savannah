@@ -20,12 +20,20 @@ $member-active: #1CB6BD;
 $member-returning: #3bdb61;
 $conversation: #1CC88B;
 $conversation-light: #98E2C8;
+$connection: #a9dd30;
+$connection-light: #d5f796;
 $contribution: #f6c23e;
 $contribution-light: #FFE093;
+$company: #f6723e;
+$company-light: #ffb293;
 $level-core: #00C287;
 $level-contributor: #01B0B8;
 $level-participant: #3579BF;
 $level-visitor: #3D58C4;
+$event: #be164e;
+$event-light: #d4507c;
+$gift: #a234c4;
+$gift-light: #c071d8;
 
 $primary: lighten($savannah-blue, 5%);
 $success: $savannah-green;
@@ -70,7 +78,11 @@ $theme-colors: (
     "activity": $member-active,
     "conversation": $conversation,
     "contributor": $level-contributor,
+    "connection": $connection,
     "contribution": $contribution,
+    "company": $company,
+    "event": $event,
+    "gift": $gift,
 );
 
 // Set Contrast Threshold
