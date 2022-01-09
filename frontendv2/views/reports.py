@@ -101,6 +101,14 @@ class GrowthReport(SavannahView):
             self.previous_data = None
 
     @property
+    def start(self):
+        return self.data['start']
+        
+    @property
+    def end(self):
+        return self.data['end']
+        
+    @property
     def month_name(self):
         return calendar.month_name[self.report.generated.month]
         
@@ -331,6 +339,14 @@ class AnnualReport(SavannahView):
             self.previous = None
             self.previous_data = None
 
+    @property
+    def start(self):
+        return self.data['start']
+        
+    @property
+    def end(self):
+        return self.data['end']
+        
     @property
     def has_company_data(self):
         return 'top_company_contributions' in self.data or 'top_company_activity' in self.data
