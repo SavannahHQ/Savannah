@@ -91,7 +91,7 @@
                 <div class="container-fluid">
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                      <h1 class="h3 mb-0 text-gray-800">{% if request.user.is_authenticated %}<a href="{% url dashboard.page view.community.id %}"><i class="fas fa-chevron-left"></i></a> {% endif %}{{dashboard.display_name}}</h1>
+                      <h1 class="h3 mb-0 text-gray-800">{% if request.user.is_authenticated %}<a href="{% if back_link %}{{back_link}}{% else %}{% url dashboard.page view.community.id %}{% endif %}"><i class="fas fa-chevron-left"></i></a> {% endif %}{{dashboard.display_name}}</h1>
                       <h1 class="h4 mb-0 text-gray-800">{{dashboard.community.name}} <img style="vertical-align: bottom;" src="{{dashboard.community.icon_path}}"></h1>
                     </div>
 

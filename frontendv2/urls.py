@@ -27,7 +27,7 @@ from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
 from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
-from frontendv2.views.reports import Reports, view_report
+from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
 from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
 from frontendv2 import views
@@ -94,6 +94,8 @@ urlpatterns = [
 
     path('reports/<int:community_id>/', Reports.as_view, name='reports'),
     path('reports/<int:community_id>/view/<int:report_id>/', view_report, name='report_view'),
+    path('reports/<int:community_id>/view/<int:report_id>/publish', publish_report, name='publish_report'),
+    path('public/report/<str:dashboard_id>/', view_public_report, name='public_report'),
 
     path('projects/<int:community_id>/', Projects.as_view, name='projects'),
     path('projects/<int:community_id>/graph', ProjectsGraph.as_view, name='projects_graph'),

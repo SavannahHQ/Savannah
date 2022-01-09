@@ -1,15 +1,7 @@
-{% extends "savannahv2/base.html"%}
+{% extends "savannahv2/public/base.html"%}
 {% load static simple_math %}
 
-{% block page_title %} | {{view.community.name}} {{view.report.title}}{% endblock %}
-
 {% block page_content %}
-          <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">{{view.report.title}}</h1>
-            <a class="btn btn-light text-muted" title="Share Report" href="{% url 'publish_report' view.community.id view.report.id %}"><i class="fas fa-share-alt"></i></a>
-          </div>
-
           <!-- Content Row -->
 
           <div class="row">
@@ -48,7 +40,7 @@
 
           </div>
 
-          {% if view.has_company_data %}
+          {% if view.has_company_data and dashboard.show_companies %}
           <!-- Content Row -->
           <div class="row">
 
@@ -72,14 +64,12 @@
                 {% for company in view.top_company_activity %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'company_profile' company.company_id %}">
                       {% if company.is_staff %}
                       <i class="fas fa-user-tie">&nbsp;</i>
                       {% else %}
                       <i class="fas fa-building">&nbsp;</i>
                       {% endif %}
                     {{ company.company_name }}
-                  </a>
                   </td>
                   <td>{{company.conversations}}
                   {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
@@ -113,14 +103,12 @@
                 {% for company in view.top_company_contributions %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'company_profile' company.company_id %}">
                       {% if company.is_staff %}
                       <i class="fas fa-user-tie">&nbsp;</i>
                       {% else %}
                       <i class="fas fa-building">&nbsp;</i>
                       {% endif %}
                     {{ company.company_name }}
-                  </a>
                   </td>
                   <td>{{company.contributions}}
                   {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
@@ -141,6 +129,7 @@
           <!-- Content Row -->
           <div class="row">
 
+            {% if dashboard.show_companies %}
             <!-- Area Chart -->
             <div class="col-xl-4 col-lg-4">
               <div class="card shadow mb-4">
@@ -156,6 +145,7 @@
                 </div>
               </div>
             </div>
+            {% endif %}
 
             <!-- Area Chart -->
             <div class="col-xl-4 col-lg-4">
@@ -192,6 +182,7 @@
           </div>
           {% endif %}
 
+         {% if dashboard.show_members %}
          <!-- Content Row -->
           <div class="row">
 
@@ -215,7 +206,6 @@
                 {% for supporter in view.top_supporters %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'member_profile' supporter.member_id %}">
                       {% if supporter.member_role == "bot" %}
                       <i class="fas fa-robot">&nbsp;</i>
                       {% elif supporter.member_role == "staff" %}
@@ -224,7 +214,6 @@
                       <i class="fas fa-user">&nbsp;</i>
                       {% endif %}
                     {{ supporter.member_name }}
-                  </a>
                   </td>
                   <td>{{supporter.conversations}}</td>
                 </tr>
@@ -256,7 +245,6 @@
                 {% for member in view.top_contributors %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'member_profile' member.member_id %}">
                       {% if member.member_role == "bot" %}
                       <i class="fas fa-robot">&nbsp;</i>
                       {% elif member.member_role == "staff" %}
@@ -265,7 +253,6 @@
                       <i class="fas fa-user">&nbsp;</i>
                       {% endif %}
                     {{ member.member_name }}
-                  </a>
                   </td>
                   <td>{{member.contributions}}</td>
                 </tr>
@@ -298,7 +285,6 @@
                 {% for member in view.top_support_contributors %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'member_profile' member.member_id %}">
                       {% if member.member_role == "bot" %}
                       <i class="fas fa-robot">&nbsp;</i>
                       {% elif member.member_role == "staff" %}
@@ -307,7 +293,6 @@
                       <i class="fas fa-user">&nbsp;</i>
                       {% endif %}
                     {{ member.member_name }}
-                  </a>
                   </td>
                   <td>{{member.contributions}}</td>
                 </tr>
@@ -345,7 +330,6 @@
                 {% for member in view.new_contributors %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'member_profile' member.member_id %}">
                       {% if member.member_role == "bot" %}
                       <i class="fas fa-robot">&nbsp;</i>
                       {% elif member.member_role == "staff" %}
@@ -354,7 +338,6 @@
                       <i class="fas fa-user">&nbsp;</i>
                       {% endif %}
                     {{ member.member_name }}
-                  </a>
                   </td>
                   <td>{{member.first_contrib}}</td>
                 </tr>
@@ -386,7 +369,6 @@
                 {% for member in view.new_members %}
                 <tr>
                   <td class="text-nowrap">
-                    <a href="{% url 'member_profile' member.member_id %}">
                       {% if member.member_role == "bot" %}
                       <i class="fas fa-robot">&nbsp;</i>
                       {% elif member.member_role == "staff" %}
@@ -395,7 +377,6 @@
                       <i class="fas fa-user">&nbsp;</i>
                       {% endif %}
                     {{ member.member_name }}
-                  </a>
                   </td>
                   <td>{{member.joined}}</td>
                 </tr>
@@ -407,6 +388,8 @@
 
             </div>
           </div>
+          {% endif %}
+          
        </div>
         <!-- /.container-fluid -->
 {% endblock %}

@@ -129,12 +129,14 @@ class PublicDashboard(models.Model):
     CONVERSATIONS = 'conversations'
     CONTRIBUTIONS = 'contributions'
     CONTRIBUTORS = 'contributors'
+    REPORT = 'report'
     PAGES = {
         OVERVIEW: "Overview",
         MEMBERS: "Members",
         CONVERSATIONS: "Conversations",
         CONTRIBUTIONS: "Contributions",
-        CONTRIBUTORS: "Contributors"
+        CONTRIBUTORS: "Contributors",
+        REPORT: "Report",
     }
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
@@ -190,7 +192,7 @@ class PublicDashboard(models.Model):
 
         view.rangestart = None
         view.rangeend = None
-        view.timespan = view.MAX_TIMESPAN
+        view.timespan = getattr(view, 'MAX_TIMESPAN', 365)
         if 'timespan' in filters and filters['timespan'] is not None:
             view.timespan = filters.get('timespan')
             view.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=view.timespan)

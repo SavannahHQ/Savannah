@@ -8,7 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django import forms
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
@@ -18,9 +18,18 @@ from corm.models import *
 from corm.connectors import ConnectionManager
 
 from frontendv2.views import SavannahView
-from frontendv2.models import ManagerInvite
+from frontendv2.models import ManagerInvite, PublicDashboard
 from frontendv2.views.charts import PieChart
 from frontendv2 import colors
+
+class PublicReportForm(forms.ModelForm):
+    class Meta:
+        model = PublicDashboard
+        fields = [
+            'display_name', 
+            'show_companies', 
+            'show_members', 
+        ]
 
 class Reports(SavannahView):
     def __init__(self, request, community_id):
@@ -47,6 +56,28 @@ def view_report(request, community_id, report_id):
         messages.error(request, "Unknown report type: %s" % self.report.report_type)
         return redirect('reports', community_id=community_id)
 
+def publish_report(request, community_id, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    if report.report_type == Report.GROWTH:
+        return GrowthReport.publish(request, community_id, report)
+    elif report.report_type == Report.ANNUAL:
+        return AnnualReport.publish(request, community_id, report)
+    else:
+        messages.error(request, "Unknown report type: %s" % report.report_type)
+        return redirect('reports', community_id=community_id)
+
+def view_public_report(request, dashboard_id):
+    dashboard = get_object_or_404(PublicDashboard, id=dashboard_id)
+    report_id = dashboard.filters.get('report_id')
+
+    report = get_object_or_404(Report, id=report_id)
+    if report.report_type == Report.GROWTH:
+        return GrowthReport.public(request, dashboard.community.id, report, dashboard)
+    elif report.report_type == Report.ANNUAL:
+        return AnnualReport.public(request, dashboard.community.id, report, dashboard)
+    else:
+        raise Http404
+
 class GrowthReport(SavannahView):
     def __init__(self, request, community_id, report):
         super().__init__(request, community_id)
@@ -57,7 +88,7 @@ class GrowthReport(SavannahView):
         self.previous_company_activity = dict()
         self.previous_company_contributions = dict()
         try:
-            self.previous = Report.objects.filter(community=self.community, report_type=Report.GROWTH, generated__lt=report.generated).order_by('-generated')[0]
+            self.previous = Report.objects.filter(community=self.report.community, report_type=Report.GROWTH, generated__lt=report.generated).order_by('-generated')[0]
             self.previous_data = json.loads(self.previous.data)
             if 'top_company_activity' in self.previous_data:
                 for company in self.previous_data['top_company_activity']:
@@ -230,6 +261,54 @@ class GrowthReport(SavannahView):
             pass
         return render(request, "savannahv2/report_growth.html", view.context)
 
+    @login_required
+    def publish(request, community_id, report):
+        if 'cancel' in request.GET:
+            return redirect('reports', community_id=community_id)
+            
+        # conversations.publish_view(request, PublicDashboard.CONVERSATIONS, 'public_conversations')
+        # def publish_view(self, request, page, view_name, show_members=False, show_companies=False, pin_time=None):
+
+        view = AnnualReport(request, community_id, report)
+        default_name = report.title
+        dashboard = PublicDashboard(
+            community=report.community,
+            page=PublicDashboard.REPORT, 
+            created_by=request.user, 
+            display_name=default_name, 
+            show_members=False,
+            show_companies=True,
+            pin_time=False,
+            filters={'report_id': report.id, 'start': view.start, 'end': view.end}
+        )
+        if request.method == "POST":
+            form = PublicReportForm(instance=dashboard, data=request.POST)
+            if form.is_valid():
+                new_pub = form.save()
+                messages.success(request, "Your shared report is ready! You can share <a href=\"%s\">this link</a> publicly for anyone to view it." % new_pub.get_absolute_url())
+                return redirect('public_report', dashboard_id=new_pub.id)
+            else:
+                messages.error(request, "Unable to create shared report.")
+
+        else:
+            form = PublicReportForm(instance=dashboard)
+
+        context = dashboard.apply(view)
+        context.update({
+            'form': form,
+            'filters': {},
+        })
+        return render(request, 'savannahv2/publish_report.html', context)
+
+    def public(request, community_id, report, dashboard):
+        view = GrowthReport(request, community_id, report)
+        if not request.user.is_authenticated:
+            dashboard.count()
+        context = view.context
+        context['dashboard'] = dashboard
+        context['back_link'] = reverse('report_view', kwargs={'community_id': community_id, 'report_id':report.id})
+        return render(request, 'savannahv2/public/report_growth.html', context)
+
 class AnnualReport(SavannahView):
     def __init__(self, request, community_id, report):
         super().__init__(request, community_id)
@@ -240,7 +319,7 @@ class AnnualReport(SavannahView):
         self.previous_company_activity = dict()
         self.previous_company_contributions = dict()
         try:
-            self.previous = Report.objects.filter(community=self.community, report_type=Report.ANNUAL, generated__lt=report.generated).order_by('-generated')[0]
+            self.previous = Report.objects.filter(community=self.report.community, report_type=Report.ANNUAL, generated__lt=report.generated).order_by('-generated')[0]
             self.previous_data = json.loads(self.previous.data)
             if 'top_company_activity' in self.previous_data:
                 for company in self.previous_data['top_company_activity']:
@@ -357,3 +436,51 @@ class AnnualReport(SavannahView):
         if request.method == "POST":
             pass
         return render(request, "savannahv2/report_annual.html", view.context)
+
+    @login_required
+    def publish(request, community_id, report):
+        if 'cancel' in request.GET:
+            return redirect('reports', community_id=community_id)
+            
+        # conversations.publish_view(request, PublicDashboard.CONVERSATIONS, 'public_conversations')
+        # def publish_view(self, request, page, view_name, show_members=False, show_companies=False, pin_time=None):
+
+        view = AnnualReport(request, community_id, report)
+        default_name = report.title
+        dashboard = PublicDashboard(
+            community=report.community,
+            page=PublicDashboard.REPORT, 
+            created_by=request.user, 
+            display_name=default_name, 
+            show_members=False,
+            show_companies=True,
+            pin_time=False,
+            filters={'report_id': report.id, 'start': view.start, 'end': view.end}
+        )
+        if request.method == "POST":
+            form = PublicReportForm(instance=dashboard, data=request.POST)
+            if form.is_valid():
+                new_pub = form.save()
+                messages.success(request, "Your shared report is ready! You can share <a href=\"%s\">this link</a> publicly for anyone to view it." % new_pub.get_absolute_url())
+                return redirect('public_report', dashboard_id=new_pub.id)
+            else:
+                messages.error(request, "Unable to create shared report.")
+
+        else:
+            form = PublicReportForm(instance=dashboard)
+
+        context = dashboard.apply(view)
+        context.update({
+            'form': form,
+            'filters': {},
+        })
+        return render(request, 'savannahv2/publish_report.html', context)
+
+    def public(request, community_id, report, dashboard):
+        view = AnnualReport(request, community_id, report)
+        if not request.user.is_authenticated:
+            dashboard.count()
+        context = view.context
+        context['dashboard'] = dashboard
+        context['back_link'] = reverse('report_view', kwargs={'community_id': community_id, 'report_id':report.id})
+        return render(request, 'savannahv2/public/report_annual.html', context)

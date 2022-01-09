@@ -174,7 +174,8 @@ class SavannahView:
             self.user_member = None
         self.active_tab = ""
         self.charts = set()
-
+        self.MAX_TIMESPAN = 365
+        self.DATE_FORMAT = '%Y-%m-%d'
         self._add_sources_message()
 
 
@@ -204,6 +205,7 @@ class SavannahView:
             "active_tab": self.active_tab,
             "view": self,
         }
+
 
 class SavannahFilterView(SavannahView):
     def __init__(self, request, community_id):
