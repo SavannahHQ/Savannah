@@ -104,8 +104,8 @@ class Members(SavannahFilterView):
             else:
                 members = members.filter(contact__source=self.source)
             
-        members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__isnull=False)))
-        members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
+        members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__lte=self.rangeend)))
+        members = members.filter(last_active__gte=self.rangestart)
         members = members.prefetch_related('tags')
  
         return members.order_by('-last_active')[:10]
@@ -439,8 +439,6 @@ class AllMembers(SavannahFilterView):
                 members = members.filter(contact__source=self.source)
                 activity_filter = activity_filter & Q(activity__channel__source=self.source)
 
-        if self.timespan < 365:
-            members = members.filter(last_seen__gte=self.rangestart, last_seen__lte=self.rangeend)
         activity_filter = activity_filter & Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend)
 
         members = members.annotate(activity_count=Count('activity', distinct=True, filter=activity_filter))
@@ -456,6 +454,7 @@ class AllMembers(SavannahFilterView):
     @property
     def all_members(self):
         members = self.get_members()
+        members = members.filter(activity_count__gt=0)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
