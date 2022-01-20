@@ -91,7 +91,7 @@
                   <ul class="dropdown-menu" >
                     <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_company="><i class="fas fa-city"></i> Any Company</a></li>
                     <li class="dropdown-divider p-0"></li>
-                    {% for company in view.community.company_set.all %}
+                    {% for company in view.filter_button_companies %}
                     <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_company={{company.id}}"><i class="fas {% if company.is_staff %}fa-user-tie{% else %}fa-building{% endif %}"></i> {{company.name}}</a></li>
                     {% endfor %}
                   </ul>

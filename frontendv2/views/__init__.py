@@ -4,6 +4,7 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
+from django.db.models.functions import Lower
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UsernameField, SetPasswordForm
 from django.contrib import messages
@@ -336,7 +337,7 @@ class SavannahFilterView(SavannahView):
             request.session['timefilter'] = 'timespan'
         try:
             if 'rangestart' in request.GET:
-                if request.GET.get('rangestart') == '':
+                if request.GET.get('rangestart', '') == '':
                     request.session['rangestart'] = None
                 else:
                     self.rangestart = datetime.datetime.strptime(request.GET.get('rangestart'), self.DATE_FORMAT)
@@ -346,7 +347,7 @@ class SavannahFilterView(SavannahView):
                 self.rangestart = datetime.datetime.strptime(request.session.get('rangestart'), self.DATE_FORMAT)
 
             if 'rangeend' in request.GET:
-                if request.GET.get('rangeend') == '':
+                if request.GET.get('rangeend', '') == '':
                     request.session['rangeend'] = None
                 else:
                     self.rangeend = datetime.datetime.strptime(request.GET.get('rangeend'), self.DATE_FORMAT)
@@ -411,6 +412,9 @@ class SavannahFilterView(SavannahView):
             return True
         if self.filter['contrib_type'] and self.contrib_type is not None:
             return True
+
+    def filter_button_companies(self):
+        return self.community.company_set.all().order_by(Lower('name'))
 
     @property
     def timespan_display(self):
