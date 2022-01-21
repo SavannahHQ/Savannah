@@ -158,7 +158,8 @@ class LineChart(Chart):
     @property
     def processed_data(self):
         if self._processed_data is None:
-            self._processed_data = sorted(self._raw_data.items(), reverse=True, key=lambda x: sum(x[1][0].values()) )
+            sums = dict((x[0], sum(x[1][0].values())) for x in self._raw_data.items())
+            self._processed_data = sorted([(key, val) for key, val in self._raw_data.items() if sums[key] > 0], reverse=True, key=lambda x: sums[x[0]] )
             if self.limit is not None and self.limit > 0 and len(self._raw_data) > self.limit:
                 self._processed_data = self._processed_data[:self.limit]
         return self._processed_data

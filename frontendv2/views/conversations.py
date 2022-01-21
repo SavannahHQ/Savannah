@@ -289,6 +289,8 @@ class Conversations(SavannahFilterView):
             seen = Tag.objects.filter(community=self.community).annotate(month=Trunc('conversation__timestamp', self.trunc_span, filter=conversations)).values('month', 'name', 'color').annotate(convo_count=Count('conversation__id', distinct=True, filter=conversations)).order_by('month')
 
             for tag in seen:
+                if tag.get('month') is None:
+                    continue;
                 month = self.trunc_date(tag['month'])
                 if month is None or month == 'None':
                     continue;
@@ -340,8 +342,9 @@ class Conversations(SavannahFilterView):
 
             seen = Source.objects.filter(community=self.community)
             seen = seen.annotate(month=Trunc('channel__conversation__timestamp', self.trunc_span, filter=conversations)).values('month', 'name', 'connector').annotate(convo_count=Count('channel__conversation__id', distinct=True, filter=conversations)).order_by('-convo_count')
-
             for tag in seen:
+                if tag.get('month') is None:
+                    continue;
                 month = self.trunc_date(tag['month'])
                 if month is None or month == 'None':
                     continue;
@@ -395,6 +398,8 @@ class Conversations(SavannahFilterView):
             seen = seen.annotate(month=Trunc('speaker_in__timestamp', self.trunc_span, filter=conversations)).values('month', 'role').annotate(convo_count=Count('speaker_in', distinct=True, filter=conversations)).order_by('month')
 
             for tag in seen:
+                if tag.get('month') is None:
+                    continue;
                 month = self.trunc_date(tag['month'])
                 if month is None or month == 'None':
                     continue;
