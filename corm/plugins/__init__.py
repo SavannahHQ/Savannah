@@ -26,12 +26,13 @@ def install_plugins():
             print("Failed to load plugin: %s" % plugin)
 
 class MemberWatchEmail(EmailMessage):
-    def __init__(self, watch):
+    def __init__(self, watch, convo=None):
         super(MemberWatchEmail, self).__init__(watch.manager, watch.member.community)
         self.subject = "Watched member %s has been active" % watch.member.name
         self.category = "member_watch"
         self.context.update({
             'watch': watch,
+            'convo': convo,
         })
 
         self.text_body = "emails/watched_member_seen.txt"
@@ -167,35 +168,6 @@ class PluginImporter:
         if save_member:
             member.save()
 
-        if speaker and tstamp is not None:
-            for watch in MemberWatch.objects.filter(member=member, start__lte=tstamp):
-                if watch.last_seen is None or tstamp > watch.last_seen:
-                    watch.last_seen = tstamp
-                    watch.last_channel = channel
-                    watch.save()
-                has_recent_notification = Notification.objects.filter(recipient=watch.manager, actor_object_id=member.id, actor_content_type=ContentType.objects.get_for_model(member), verb="has been active in", timestamp__gte=tstamp - datetime.timedelta(hours=1)).count()
-                if not has_recent_notification:
-                    notify.send(member, 
-                        recipient=watch.manager, 
-                        verb="has been active in",
-                        target=member.community,
-                        level='error',
-                        timestamp=tstamp,
-                        icon_name="fas fa-eye",
-                        link=reverse('member_profile', kwargs={'member_id':member.id}),
-                        source=self.source.id,
-                    )
-                    try:
-                        profile = ManagerProfile.objects.get(user=watch.manager, community=watch.member.community)
-                    except ManagerProfile.DoesNotExist:
-                        continue
-                    except Exception as e:
-                        print(e)
-                        continue
-
-                    if profile and profile.send_notifications == True:
-                        email = MemberWatchEmail(watch)
-                        email.send(profile.email)
         return member
 
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None, contribution=None, dedup=False):
@@ -218,6 +190,36 @@ class PluginImporter:
             for tagged in tagged_users:
                 if tagged in self._member_cache:
                     self.make_participant(convo, self._member_cache[tagged_users])
+
+        if speaker and tstamp is not None:
+            for watch in MemberWatch.objects.filter(member=speaker, start__lte=tstamp):
+                if watch.last_seen is None or tstamp > watch.last_seen:
+                    watch.last_seen = tstamp
+                    watch.last_channel = channel
+                    watch.save()
+                has_recent_notification = Notification.objects.filter(recipient=watch.manager, actor_object_id=speaker.id, actor_content_type=ContentType.objects.get_for_model(speaker), verb="has been active in", timestamp__gte=tstamp - datetime.timedelta(hours=1)).count()
+                if not has_recent_notification:
+                    notify.send(speaker, 
+                        recipient=watch.manager, 
+                        verb="has been active in",
+                        target=speaker.community,
+                        level='error',
+                        timestamp=tstamp,
+                        icon_name="fas fa-eye",
+                        link=reverse('member_activity', kwargs={'member_id':speaker.id}),
+                        source=self.source.id,
+                    )
+                    try:
+                        profile = ManagerProfile.objects.get(user=watch.manager, community=self.source.community)
+                    except ManagerProfile.DoesNotExist:
+                        continue
+                    except Exception as e:
+                        print(e)
+                        continue
+
+                    if profile and profile.send_notifications == True:
+                        email = MemberWatchEmail(watch, convo)
+                        email.send(profile.email)
         return convo
 
     def add_participants(self, conversation, members, make_connections=True):
@@ -284,7 +286,7 @@ class PluginImporter:
         if origin_id:
             SourceGroup.objects.get_or_create(source=self.source, origin_id=origin_id, defaults={'company':company, 'name':name})
         if domain:
-            CompanyDomains.objects.create(company=company, domain=domain)
+            CompanyDomains.objects.get_or_create(company=company, domain=domain)
 
         return company
 

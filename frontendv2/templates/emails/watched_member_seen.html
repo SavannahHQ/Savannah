@@ -6,7 +6,9 @@
 <p>
 <b>{{watch.member.name}}</b> was active in <b>{{watch.last_channel}}</b> on <b>{{watch.last_channel.connector_name}}</b> at {{watch.last_seen}}
 </p>
-
+{% if convo %}
+<p><blockquote>{{convo.content}}</blockquote></p>
+{% endif %}
 <p>
 <a href="{{SITE_ROOT}}{% url 'member_activity' watch.member.id %}">View member activity</a>
 </p>
