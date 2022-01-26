@@ -209,6 +209,7 @@ class AddAttendee(SavannahView):
                         community=view.event.community,
                         channel=view.event.channel,
                         author=attendee.member,
+                        activity__event_attendance__event=view.event,
                         defaults={
                             'location': view.event.location,
                             'title': 'Hosted %s' % view.event.title,
@@ -224,6 +225,7 @@ class AddAttendee(SavannahView):
                         community=view.event.community,
                         channel=view.event.channel,
                         author=attendee.member,
+                        activity__event_attendance__event=view.event,
                         defaults={
                             'location': view.event.location,
                             'title': 'Speaker at %s' % view.event.title,
@@ -238,6 +240,7 @@ class AddAttendee(SavannahView):
                         community=view.event.community,
                         channel=view.event.channel,
                         author=attendee.member,
+                        activity__event_attendance__event=view.event,
                         defaults={
                             'location': view.event.location,
                             'title': 'Staff at %s' % view.event.title,
