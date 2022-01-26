@@ -169,6 +169,8 @@ class AddAttendee(SavannahView):
             self.edit_attendee.role = EventAttendee.HOST
         if request.GET.get('role') == 'speaker':
             self.edit_attendee.role = EventAttendee.SPEAKER
+        if request.GET.get('role') == 'staff':
+            self.edit_attendee.role = EventAttendee.STAFF
         self.active_tab = "events"
 
     @property
@@ -190,6 +192,7 @@ class AddAttendee(SavannahView):
                 source = view.event.channel.source
             hosted, created = ContributionType.objects.get_or_create(community=view.event.community, source=source, name="Hosted")
             speaker, created = ContributionType.objects.get_or_create(community=view.event.community, source=source, name="Speaker")
+            staff, created = ContributionType.objects.get_or_create(community=view.event.community, source=source, name="Staff")
 
             attendee, attendee_created = EventAttendee.objects.update_or_create(community=view.community, event=view.event, member=new_attendee.member, defaults={'role': new_attendee.role, 'timestamp': new_attendee.timestamp})
             if attendee.member.last_seen is None:
@@ -230,6 +233,20 @@ class AddAttendee(SavannahView):
                     )
                     contrib.update_activity(attendee.activity)
                     messages.success(request, "<b>%s</b> made a speaker at this event" % attendee.member.name)
+                elif attendee.role == EventAttendee.STAFF:
+                    contrib, contrib_created = Contribution.objects.get_or_create(
+                        community=view.event.community,
+                        channel=view.event.channel,
+                        author=attendee.member,
+                        defaults={
+                            'location': view.event.location,
+                            'title': 'Staff at %s' % view.event.title,
+                            'contribution_type': staff,
+                            'timestamp': attendee.timestamp
+                        }
+                    )
+                    contrib.update_activity(attendee.activity)
+                    messages.success(request, "<b>%s</b> made staff at this event" % attendee.member.name)
             else:
                 if attendee.role == EventAttendee.GUEST:
                     try:
@@ -278,6 +295,21 @@ class AddAttendee(SavannahView):
                     )
                     contrib.update_activity(attendee.activity)
                     messages.success(request, "<b>%s</b> made a speaker at this event" % attendee.member.name)
+                elif attendee.role == EventAttendee.STAFF:
+                    contrib, contrib_created = Contribution.objects.update_or_create(
+                        community=view.event.community,
+                        channel=view.event.channel,
+                        author=attendee.member,
+                        activity__event_attendance__event=view.event,
+                        defaults={
+                            'location': view.event.location,
+                            'title': 'Staff at %s' % view.event.title,
+                            'contribution_type': staff,
+                            'timestamp': attendee.timestamp
+                        }
+                    )
+                    contrib.update_activity(attendee.activity)
+                    messages.success(request, "<b>%s</b> made staff at this event" % attendee.member.name)
 
 
             return redirect('event', event_id=view.event.id)

@@ -1047,6 +1047,10 @@ class Event(ImportedDataModel):
     def speakers(self):
         return Member.objects.filter(event_attendance__event=self, event_attendance__role=EventAttendee.SPEAKER)
 
+    @property
+    def staff(self):
+        return Member.objects.filter(event_attendance__event=self, event_attendance__role=EventAttendee.STAFF)
+
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
 
@@ -1054,15 +1058,18 @@ class EventAttendee(models.Model):
     GUEST = "guest"
     HOST = "host"
     SPEAKER = "speaker"
+    STAFF = "staff"
     ATTENDEE_ROLE = [
         (GUEST, 'Guest'),
         (HOST, 'Host'),
         (SPEAKER, 'Speaker'),
+        (STAFF, "Staff"),
     ]
     ROLE_NAME = {
         GUEST: "Guest",
         HOST: "Host",
-        SPEAKER: "Speaker"
+        SPEAKER: "Speaker",
+        STAFF: "Staff",
     }    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)

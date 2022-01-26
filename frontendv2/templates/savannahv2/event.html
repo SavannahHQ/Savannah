@@ -98,7 +98,7 @@
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
-                  <a class="text-gray-500" href="{% url 'attendee_add' view.event.id %}?role=host" title="Add Host or Speaker"><i class="fas fa-user-plus"> </i></a>
+                  <a class="text-gray-500" href="{% url 'attendee_add' view.event.id %}?role=host" title="Add Host, Speaker, or Staff"><i class="fas fa-user-plus"> </i></a>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
@@ -115,6 +115,13 @@
                       {{member|avatar_icon}}
                       <a href="{% url 'member_profile' member.id %}">{{member}}</a>
                       - Speaker
+                    </div>
+                  {% endfor %}
+                  {% for member in view.event.staff %}
+                    <div class="mb-3">
+                      {{member|avatar_icon}}
+                      <a href="{% url 'member_profile' member.id %}">{{member}}</a>
+                      - Staff
                     </div>
                   {% endfor %}
                   </div>
