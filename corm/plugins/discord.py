@@ -91,8 +91,15 @@ class SourceAdd(SavannahView):
             'source_plugin': 'Discord',
             'submit_text': 'Add',
             'submit_class': 'btn btn-success',
+            'switch_account_url': reverse('discord_switch_account')
         })
         return render(request, "savannahv2/source_add.html", context)
+
+def switch(request):
+    community = get_object_or_404(Community, id=request.session['community'])
+    UserAuthCredentials.objects.filter(user=request.user, connector="corm.plugins.discord").delete()
+    return authenticate(request)
+
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -139,6 +146,7 @@ urlpatterns = [
     path('add', SourceAdd.as_view, name='discord_add'),
     path('auth', authenticate, name='discord_auth'),
     path('callback', callback, name='discord_callback'),
+    path('switch', switch, name='discord_switch_account'),
 ]
 
 class DiscordPlugin(BasePlugin):
