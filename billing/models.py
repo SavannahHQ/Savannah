@@ -127,5 +127,5 @@ class Management(models.Model, ManagementPermissionMixin):
 
     @property
     def sales_itegration(self):
-        return bool(self.metadata.get('sales_integration', False))
+        return self.metadata.get('sales_integration', '').lower() in ['1', 't', 'true', 'yes']
 
