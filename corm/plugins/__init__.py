@@ -368,6 +368,12 @@ class PluginImporter:
         channels = self.source.channel_set.filter(origin_id__isnull=False, source__auth_secret__isnull=False).order_by('last_import')
         return channels
 
+    def pre_import(self, new_only=False, channels=None):
+        pass
+    
+    def post_import(self, new_only=False, channels=None):
+        pass
+    
     def run(self, new_only=False, channels=None):
         failures = list()
         self.update_source()
@@ -379,6 +385,7 @@ class PluginImporter:
         if channels.count() == 0:
             raise Exception("No channels to import")
 
+        self.pre_import(new_only, channels)
         for channel in channels:
             if self.verbosity >= 2:
                 print("Importing channel: %s" % channel.name)
@@ -449,6 +456,9 @@ class PluginImporter:
                     import pdb; pdb.post_mortem()
             if self.full_import:
                 sleep(5)
+
+        self.post_import(new_only, channels)
+
         self.source.last_import = datetime.datetime.utcnow()
         if self.source.first_import is None:
             self.source.first_import = self.source.last_import

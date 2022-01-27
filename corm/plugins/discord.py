@@ -22,6 +22,8 @@ DISCORD_GUILD_URL = 'https://discord.com/api/guilds/%(guild)s'
 CONVERSATIONS_URL = 'https://discord.com/api/channels/%(channel)s/messages'
 CONVERSATIONS_NEXT_URL = 'https://discord.com/api/channels/%(channel)s/messages?before=%(lastpost)s'
 
+DISCORD_THREADS_URL = 'https://discord.com/api/guilds/%(guild)s/threads/active'
+
 class DiscordOrgForm(forms.ModelForm):
     class Meta:
         model = Source
@@ -248,7 +250,7 @@ class DiscordImporter(PluginImporter):
                             # Ignore Discord timestamps after the second, because they don't use a consistent format
                             tstamp_str = message.get('timestamp')[:19]
                             tstamp = self.strptime(tstamp_str)
-                            if tstamp >= from_date:
+                            if self.full_import or tstamp >= from_date:
                                 self.import_message(channel, message, tstamp)
                                 has_more = True
                                 cursor = message['id']
@@ -258,9 +260,62 @@ class DiscordImporter(PluginImporter):
                         raise e
             else:
                 print("Failed to get conversations: %s" % resp.content)
+
         return
 
-    def import_message(self, channel, message, tstamp):
+    def post_import(self, new_only, channels):
+        if self.verbosity >= 2:
+            print("Importing Threads...")
+        tracked_channels = dict([(c.origin_id, c) for c in channels])
+        resp = self.api_call(DISCORD_THREADS_URL % {'guild': self.source.auth_id})
+        if resp.status_code == 200:
+            data = resp.json()        
+            for thread in data['threads']:
+                if thread.get('parent_id', None) in tracked_channels:
+                    archive_timestamp = self.strptime(thread['thread_metadata']['archive_timestamp'][:19])
+                    self.import_thread(thread, tracked_channels[thread.get('parent_id')])
+
+    def import_thread(self, thread, channel, from_date=None):
+        if not from_date:
+            from_date = self.source.last_import
+        cursor = None
+        has_more = True
+        # Override the channel's origin_id to be the thread's ID
+        channel.origin_id = thread.get('id')
+        while has_more:
+            if cursor:
+                url = CONVERSATIONS_NEXT_URL % {'channel': channel.origin_id, 'lastpost': cursor}
+            else:
+                url = CONVERSATIONS_URL % {'channel': channel.origin_id}
+
+            has_more = False
+            cursor = None
+            resp = self.api_call(url)
+            if resp.status_code == 200:
+                data = resp.json()
+
+                participants = set()
+                for message in data:
+
+                    try:
+                        if message['type'] == 0:
+                            # Ignore Discord timestamps after the second, because they don't use a consistent format
+                            tstamp_str = message.get('timestamp')[:19]
+                            tstamp = self.strptime(tstamp_str)
+                            if self.full_import or tstamp >= from_date:
+                                self.import_message(channel, message, tstamp, participants=participants)
+                                has_more = True
+                                cursor = message['id']
+                    except Exception as e:
+                        print("Failed to import message: %s" % e)
+                        print(message)
+                        raise e
+            else:
+                print("Failed to get conversations: %s" % resp.content)
+
+        return
+
+    def import_message(self, channel, message, tstamp, participants=set()):
         source = channel.source
 
         user = message['author']
@@ -276,7 +331,6 @@ class DiscordImporter(PluginImporter):
         discord_convo_link = "%s/channels/%s/%s/%s" % (server, source.auth_id, channel.origin_id, discord_convo_id)
         convo_text = message.get('content')
 
-        participants = set()
         participants.add(speaker)
         for tagged_user in message.get('mentions', []):
             member = self.make_member(tagged_user.get('id'), channel=channel, detail=tagged_user.get('username'), email_address=tagged_user.get('email'), tstamp=tstamp, speaker=False, name=tagged_user.get('username'))
@@ -288,3 +342,4 @@ class DiscordImporter(PluginImporter):
 
         convo = self.make_conversation(origin_id=discord_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=discord_convo_link)
         self.add_participants(convo, participants)
+        return convo
