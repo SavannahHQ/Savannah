@@ -454,7 +454,8 @@ class AllMembers(SavannahFilterView):
     @property
     def all_members(self):
         members = self.get_members()
-        members = members.filter(activity_count__gt=0)
+        if self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN:
+            members = members.filter(activity_count__gt=0)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
