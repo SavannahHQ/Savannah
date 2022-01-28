@@ -14,8 +14,10 @@ from frontendv2.views import SavannahView
 
 FACEBOOK_API_ROOT = 'https://graph.facebook.com/v12.0'
 FACEBOOK_SELF_URL = FACEBOOK_API_ROOT + '/me?fields=id,name,groups{name,administrator,member_count}'
-FACEBOOK_GROUP_FEED = FACEBOOK_API_ROOT + '/%{group_id}/feed?fields=message,created_time,from,source,object_id,target,type,comments'
-FACEBOOK_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
+FACEBOOK_GROUP_FEED = FACEBOOK_API_ROOT + '/%s/feed?fields=message,created_time,updated_time,from,source,link,type,comments'
+FACEBOOK_PROFILE_URL = FACEBOOK_API_ROOT + '/%s?fields=name,link,picture'
+FACEBOOK_GROUP_EVENTS = FACEBOOK_API_ROOT + '/%s/events?fields=name,description,owner,start_time,end_time,is_draft,is_canceled'
+FACEBOOK_TIMESTAMP = '%Y-%m-%dT%H:%M:%S%z'
 
 AUTHORIZATION_BASE_URL = 'https://www.facebook.com/v12.0/dialog/oauth'
 TOKEN_URL = 'https://graph.facebook.com/v12.0/oauth/access_token'
@@ -79,7 +81,9 @@ class SourceAdd(SavannahView):
                 source = form.save(commit=False)
                 source.name = group_names[source.auth_id]
                 source.save()
-                return redirect('channels', community_id=view.community.id, source_id=source.id)
+                Channel.objects.get_or_create(source=source, origin_id=source.auth_id, name=source.name)
+                messages.success(request, "Your Facebook group <b>%s</b>has been added." %  source.name)
+                return redirect('sources', community_id=view.community.id)
 
         # org_choices.append(("other", "other..."))
         form = FacebookOrgForm(instance=new_source)
@@ -138,7 +142,7 @@ class FacebookPlugin(BasePlugin):
         return SourceAdd.as_view
 
     def get_identity_url(self, contact):
-        return "https://facebook.com/%s" % contact.detail
+        return "https://www.facebook.com/photo/?fbid=%s" % contact.origin_id
 
     def get_company_url(self, group):
         if group.origin_id[0] == '@':
@@ -164,9 +168,9 @@ class FacebookPlugin(BasePlugin):
 
     def get_channels(self, source):
         channels = [
-            {'id': 'members', 'name': 'Members', 'topic': 'Member names and joined dates', 'count':10},
-            {'id': 'discussions', 'name': 'Discussions', 'topic': 'Posts and comments', 'count':9},
-            {'id': 'events', 'name': 'Events', 'topic': 'Events and attendees', 'count':8},
+            {'id': source.auth_id, 'name': source.name, 'topic': 'Members, discussions and events', 'count':10},
+            # {'id': 'discussions', 'name': 'Discussions', 'topic': 'Posts and comments', 'count':9},
+            # {'id': 'events', 'name': 'Events', 'topic': 'Events and attendees', 'count':8},
         ]
 
         return channels
@@ -179,45 +183,128 @@ class FacebookImporter(PluginImporter):
             'access_token': source.auth_secret,
         }
         self.TIMESTAMP_FORMAT = FACEBOOK_TIMESTAMP
-        # self.PR_CONTRIBUTION, created = ContributionType.objects.get_or_create(community=source.community, source=source, name="Pull Request")
-        # feedback, created = ContributionType.objects.get_or_create(
-        #     community=source.community,
-        #     source_id=source.id,
-        #     name="Feedback",
-        # )
+
+        support, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Support",
+        )
+        feedback, created = ContributionType.objects.get_or_create(
+            community=source.community,
+            source_id=source.id,
+            name="Feedback",
+        )
 
     def api_call(self, path):
-        return self.api_request(path, params=self.API_PARAMS)
+        return self.api_request(path, headers=self.API_PARAMS, params={'access_token': self.source.auth_secret})
 
-    # def update_identity(self, identity):
-    #     resp = self.api_call(FACEBOOK_USER_URL%{'username':identity.detail})
-    #     if resp.status_code == 200:
-    #         data = resp.json()
-    #         identity.name = data['name']            
-    #         identity.email_address = data['email']
-    #         identity.avatar_url = data['avatar_url']
-    #         identity.save()
+    def update_identity(self, identity):
+        resp = self.api_call(FACEBOOK_PROFILE_URL % identity.origin_id)
+        if resp.status_code == 200:
+            data = resp.json()
+            identity.name = data['name']            
+            identity.avatar_url = data['picture']['data']['url']
+            identity.save()
 
-    #         if identity.member.name == identity.detail and identity.name is not None:
-    #             identity.member.name = identity.name
-    #         if identity.member.email_address is None:
-    #             identity.member.email_address = identity.email_address
-
-    #         if identity.member.company is None and data.get("company") is not None:
-    #             origin_id = data.get("company").split(" @")[0].strip()
-    #             try:
-    #                 group = SourceGroup.objects.get(origin_id=origin_id, source=self.source)
-    #                 identity.member.company = group.company
-    #             except:
-    #                 company_name = origin_id.replace('@', '')
-    #                 company = Company.objects.create(community=self.source.community, name=company_name)
-    #                 SourceGroup.objects.create(origin_id=origin_id, company=company, source=self.source, name=company_name)
-    #                 identity.member.company = company
-    #         identity.member.save()
-    #     else:
-    #         print("Failed to lookup identity info: %s" % resp.content)
+            if identity.member.name == identity.detail and identity.name is not None:
+                identity.member.name = identity.name
+                identity.member.save()
+            if identity.member.avatar_url is None:
+                identity.member.avatar_url = identity.avatar_url
+                identity.member.save()
+        else:
+            print("Failed to lookup identity info: %s" % resp.content)
 
     def import_channel(self, channel, from_date, full_import=False):
-      source = channel.source
-      community = source.community
-      raise RuntimeError("Not implemented")
+        source = channel.source
+        community = source.community
+
+        self.import_discussions(channel, from_date, full_import)
+        self.import_events(channel, from_date, full_import)
+
+    def import_discussions(self, channel, from_date, full_import):
+        has_more = True
+        next_page = FACEBOOK_GROUP_FEED % channel.origin_id
+        if not full_import:
+            next_page += '&since='+self.strftime(from_date)
+        while (has_more):
+            has_more = False
+
+            resp = self.api_call(next_page)
+            if resp.status_code == 200:
+                data = resp.json()
+                for post in data['data']:
+                    if post.get('type', None) == 'status':
+                        self.import_post(channel, post)
+
+
+                if 'paging' in data and 'next' in data['paging']:
+                    next_page = data['paging']['next']
+                    has_more = True
+            else:
+                print("%s: %s" % (resp.status_code, resp.content))
+                error = resp.json()["error"]
+                raise RuntimeError("%s: %s" % (error['type'], error['message']))
+                
+        # raise RuntimeError("Not implemented")
+    def import_post(self, channel, post):
+        tstamp = self.strptime(post['created_time'])
+        msg = post['message']
+        speaker_name = post['from']['name']
+        speaker_id = post['from']['id']
+        group_id, post_id = post['id'].split('_')
+        fb_link = 'https://www.facebook.com/groups/%s/posts/%s/' % (group_id, post_id)
+        speaker = self.make_member(speaker_id, speaker_name, tstamp=tstamp, channel=channel, name=speaker_name, speaker=True, replace_first_seen=True)
+        convo = self.make_conversation(post_id, channel=channel, speaker=speaker, content=msg, tstamp=tstamp, location=fb_link, thread=None)
+        print("%s: %s" % (speaker_name, msg))
+        if 'comments' in post:
+            for comment in post['comments']['data']:
+                self.import_comment(channel, comment, thread=convo)
+
+    def import_comment(self, channel, comment, thread):
+        tstamp = self.strptime(comment['created_time'])
+        msg = comment['message']
+        speaker_name = comment['from']['name']
+        speaker_id = comment['from']['id']
+        comment_id = comment['id']
+        fb_link = thread.location + '?comment_id=' + comment_id
+        speaker = self.make_member(speaker_id, speaker_name, tstamp=tstamp, channel=channel, name=speaker_name, speaker=True, replace_first_seen=True)
+        convo = self.make_conversation(comment_id, channel=channel, speaker=speaker, content=msg, tstamp=tstamp, location=fb_link, thread=thread)
+        print("|- %s: %s" % (speaker_name, msg))
+
+    def import_events(self, channel, from_date, full_import):
+        cursor = ''
+        has_more = True
+        next_page = FACEBOOK_GROUP_EVENTS % channel.origin_id
+        if not full_import:
+            next_page += '&since='+self.strftime(from_date)
+        while (has_more):
+            has_more = False
+
+            resp = self.api_call(next_page + '&after=' + cursor)
+            if resp.status_code == 200:
+                data = resp.json()
+                for event in data['data']:
+                    if event['is_draft'] or event['is_canceled']:
+                        continue
+                    start_time = self.strptime(event['start_time'])
+                    if 'end_time' in event:
+                        end_time = self.strptime(event['end_time'])
+                    else:
+                        end_time = start_time + datetime.timedelta(hours=1)
+                    name = event['name']
+                    description = event['description']
+                    event_id = event['id']
+                    fb_link = 'https://www.facebook.com/events/%s/' % event_id
+                    self.make_event(event_id, channel, title=name, description=description, start=start_time, end=end_time, location=fb_link)
+
+
+                if 'paging' in data and 'cursors' in data['paging'] and data['paging']['cursors']['after'] != cursor and data['paging']['cursors']['after'] != data['paging']['cursors']['before']:
+                    cursor = data['paging']['cursors']['after']
+                    has_more = True
+            else:
+                print("%s: %s" % (resp.status_code, resp.content))
+                error = resp.json()["error"]
+                raise RuntimeError("%s: %s" % (error['type'], error['message']))
+ 
+
