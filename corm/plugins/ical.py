@@ -155,7 +155,10 @@ class iCalImporter(PluginImporter):
         location = ical_event.get('URL', None)
 
         start_timestamp = ical_event['DTSTART'].dt
-        end_timestamp = ical_event['DTEND'].dt
+        if 'DTEND' in ical_event:
+            end_timestamp = ical_event['DTEND'].dt
+        else:
+            end_timestamp = start_timestamp + datetime.timedelta(minutes=15)
         if not settings.USE_TZ:
             try:
                 start_timestamp = ical_event['DTSTART'].dt.replace(tzinfo=None)
