@@ -9,19 +9,29 @@ from corm.models import Community, Member, Conversation, Tag, Contact, SuggestMe
 from corm.models import pluralize
 from notifications.signals import notify
 
-INACTIVITY_THRESHOLD_PREVIOUS_ACTIVITY = 50
-INACTIVITY_THRESHOLD_PREVIOUS_DAYS = 90
-INACTIVITY_THRESHOLD_DAYS = 30
+# INACTIVITY_THRESHOLD_PREVIOUS_ACTIVITY = 50
+# INACTIVITY_THRESHOLD_PREVIOUS_DAYS = 90
+# INACTIVITY_THRESHOLD_DAYS = 30
 
-RESUMING_THRESHOLD_PREVIOUS_ACTIVITY = 20
-RESUMING_THRESHOLD_PREVIOUS_DAYS = 90
-RESUMING_THRESHOLD_DAYS = 30
+# RESUMING_THRESHOLD_PREVIOUS_ACTIVITY = 20
+# RESUMING_THRESHOLD_PREVIOUS_DAYS = 90
+# RESUMING_THRESHOLD_DAYS = 30
 
 class Command(BaseCommand):
     help = 'Checks member activity and creates notifications for action'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--community', dest='community_id', type=int)
+
     def handle(self, *args, **options):
-        for community in Community.objects.filter(status=Community.ACTIVE):
+        communities = Community.objects.filter(status=Community.ACTIVE)
+        
+        community_id = options.get('community_id')
+        if community_id:
+            communities = communities.filter(id=community_id)
+            print("Using Community: %s" % communities[0].name)
+
+        for community in communities:
             self.check_for_inactivity(community)
             self.check_for_resuming_activity(community)
             self.check_for_first_contrib(community)
@@ -43,10 +53,10 @@ class Command(BaseCommand):
             )
 
     def check_for_inactivity(self, community):
-        members = Member.objects.filter(community=community, last_seen__lte=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_DAYS), last_seen__gt=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_DAYS+1))
-        members = members.annotate(past_activity=Count('speaker_in', distinct=True, filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=INACTIVITY_THRESHOLD_PREVIOUS_DAYS))))
+        members = Member.objects.filter(community=community, last_seen__lte=datetime.datetime.utcnow() - datetime.timedelta(days=community.inactivity_threshold_days), last_seen__gt=datetime.datetime.utcnow() - datetime.timedelta(days=community.inactivity_threshold_days+1))
+        members = members.annotate(past_activity=Count('speaker_in', distinct=True, filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=community.inactivity_threshold_previous_days))))
         for member in members:
-            if member.past_activity >= INACTIVITY_THRESHOLD_PREVIOUS_ACTIVITY:
+            if member.past_activity >= community.inactivity_threshold_previous_activity:
                 print("Member has stopped being active: %s (%s conversations in the last 90 days, not seen since %s)" % (member.name, member.past_activity, member.last_seen))
                 recipients = community.managers or community.owner
                 notify.send(member, 
@@ -61,9 +71,9 @@ class Command(BaseCommand):
     def check_for_resuming_activity(self, community):
         members = Member.objects.filter(community=community, last_seen__gte=datetime.datetime.utcnow() - datetime.timedelta(days=1))
         members = members.annotate(last_activity=Max('speaker_in__timestamp', filter=Q(speaker_in__timestamp__lt=datetime.datetime.utcnow() - datetime.timedelta(days=1))))
-        members = members.annotate(past_activity=Count('speaker_in', distint=True, filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=RESUMING_THRESHOLD_PREVIOUS_DAYS))))
+        members = members.annotate(past_activity=Count('speaker_in', distint=True, filter=Q(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=community.resuming_threshold_previous_days))))
         for member in members:
-            if member.past_activity >= RESUMING_THRESHOLD_PREVIOUS_ACTIVITY and member.last_activity is not None and member.last_activity < datetime.datetime.utcnow() - datetime.timedelta(days=RESUMING_THRESHOLD_DAYS):
+            if member.past_activity >= community.resuming_threshold_previous_activity and member.last_activity is not None and member.last_activity < datetime.datetime.utcnow() - datetime.timedelta(days=community.resuming_threshold_days):
                 print("Member became active again: %s (previously seen %s)" % (member.name, member.last_activity))
                 recipients = community.managers or community.owner
                 notify.send(member, 

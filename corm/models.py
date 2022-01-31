@@ -198,7 +198,15 @@ class Community(models.Model):
     suggest_merge = models.BooleanField(default=True, help_text="Suggest merging accounts belonging to the same person")
     suggest_contribution = models.BooleanField(default=True, help_text="Suggest Contributions based on Conversation text")
     suggest_task = models.BooleanField(default=True, help_text="Suggest Tasks to help engage with your Members")
-    
+
+    inactivity_threshold_previous_activity = models.PositiveSmallIntegerField(default=50, help_text="Amount of previous activity required before you will be notified that a member has become inactive.")
+    inactivity_threshold_previous_days = models.PositiveSmallIntegerField(default=90, help_text="Number of days into the past to check for activity to meet the notification threshold")
+    inactivity_threshold_days = models.PositiveSmallIntegerField(default=30, help_text="Number of days of inactivity before triggering a notification")
+
+    resuming_threshold_previous_activity = models.PositiveSmallIntegerField(default=20, help_text="Amount of previous activity required before you will be notified that an inactive member had become active again")
+    resuming_threshold_previous_days = models.PositiveSmallIntegerField(default=90, help_text="Number of days into the past to check for activity to meet the notification threshold")
+    resuming_threshold_days = models.PositiveSmallIntegerField(default=30, help_text="Number of days of inactivity before triggering a notification on new activity")
+
     @property
     def manual_source(self):
         source, created = Source.objects.get_or_create(community=self, name="Manual Entry", connector='corm.plugins.null', icon_name='fas fa-edit')

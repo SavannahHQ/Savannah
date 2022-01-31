@@ -15,11 +15,11 @@
           <div class="row">
 
             <!-- Profile  -->
-            <div class="col-xl-6 col-lg-6">
+            <div class="col-lg-12">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Display Info</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Community Settings</h6>
 
                 </div>
                 <!-- Card Body -->
@@ -27,8 +27,9 @@
                 <div class="container-fluid">
 
                 <form class="form" action="{% url 'community_edit' view.community.id %}" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ view.form|crispy }}
+                <div class="row">
+                {% crispy view.form %}
+                </div>
                 <button class="btn btn-primary" type="submit">Change</button>
                 <a class="btn btn-secondary" href="{% url 'managers' view.community.id %}">Cancel</a>
                 </form>
