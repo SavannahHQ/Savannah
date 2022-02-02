@@ -387,7 +387,7 @@ class CommunityForm(forms.ModelForm):
             ),
 
             Div(
-                HTML('<h3>Thresholds</h3>'),
+                HTML('<h3>Notification Thresholds</h3>'),
                 'inactivity_threshold_days',
                 'inactivity_threshold_previous_activity',
                 'inactivity_threshold_previous_days',
