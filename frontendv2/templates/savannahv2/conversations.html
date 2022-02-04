@@ -73,15 +73,28 @@
                   </div>
                 </div>
               </div>
-              <div class="card border-left-info shadow py-2">
+              <div class="card border-left-info shadow py-2 mb-3">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Response Time</div>
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Response Time <i class="fas fa-question-circle text-sm" title="Not all Sources have a measurable response time."></i></div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.median_response_time|duration|default:"N/A"}}</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card border-left-connection shadow py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-connection text-uppercase mb-1">Response Rate <i class="fas fa-question-circle text-sm" title="Not all Sources have a measurable response rate."></i></div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.response_rate|floatformat:2|default:"N/A"}}%</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-reply-all fa-2x text-gray-300"></i>
                     </div>
                   </div>
                 </div>
@@ -208,7 +221,87 @@
 
             </div>
           </div>
- 
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-7 col-md-12 mb-4">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Shared Links</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                  <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">URL</th>
+                      <th scope="col">References</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for link in view.top_links %}
+                  <tr>
+                    <td class="text-nowrap">
+                      {% if link.content_type == 'Image' %}
+                      <i class='fas fa-file-image'></i>
+                      {% elif link.content_type == 'Video' %}
+                      <i class='fas fa-file-video'></i>
+                      {% elif link.content_type == 'Document' %}
+                      <i class='fas fa-file-alt'></i>
+                      {% elif link.content_type == 'Code' %}
+                      <i class='fas fa-file-code'></i>
+                      {% elif link.content_type == 'Archive' %}
+                      <i class='fas fa-file-archive'></i>
+                      {% else %}
+                      <i class='fas fa-globe'></i>
+                      {% endif %}
+                      <a href="{{link.url}}" target="_blank">{{link.url|truncatechars:64}}</a>
+                    </td>
+                    <td class="text-nowrap"><a href="?link={{link.id}}">{{link.conversation_count}}</a></td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                  </table>
+  
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-5 col-md-12 mb-4">
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Linked Sites</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                  <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Domain</th>
+                      <th scope="col">References</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for link in view.top_link_sites %}
+                  <tr>
+                    <td class="text-nowrap">
+                      <a href="https://{{link.host}}" target="_blank">{{link.host|truncatechars:64}}</a>
+                    </td>
+                    <td class="text-nowrap">{{link.conversation_count}}</td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                  </table>
+  
+                </div>
+              </div>
+            </div>
+
+            
+          </div>
+
+          
           <!-- Content Row -->
           <div class="row">
 

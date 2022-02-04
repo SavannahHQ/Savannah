@@ -776,6 +776,16 @@ class Activity(TaggableModel):
         else:
             return Member.objects.none()
         
+class Hyperlink(models.Model):
+    """
+    For tracking links people mention in conversations
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    url = models.URLField()
+    host = models.CharField(max_length=256)
+    path = models.CharField(max_length=512)
+    content_type = models.CharField(max_length=64, null=True, blank=True)
 
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
@@ -787,6 +797,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     location = models.URLField(max_length=512, null=True, blank=True)
     thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
     contribution = models.OneToOneField('Contribution', related_name='conversation', on_delete=models.SET_NULL, null=True, blank=True)
+    links = models.ManyToManyField(Hyperlink)
 
     @property
     def participants(self):
@@ -1504,3 +1515,4 @@ class EmailRecord(models.Model):
     subject = models.CharField(null=False, max_length=128)
     body = models.TextField(null=False, max_length=1024)
     ok = models.BooleanField(null=False, default=True)
+

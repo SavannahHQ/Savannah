@@ -2,9 +2,10 @@ import datetime
 import re
 import subprocess
 import requests
+import urllib
 from importlib import import_module
 from time import sleep
-from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile, Event, EventAttendee, Company, SourceGroup, CompanyDomains
+from corm.models import Member, MemberWatch, Contact, Conversation, Contribution, Participant, ManagerProfile, Event, EventAttendee, Company, SourceGroup, CompanyDomains, Hyperlink
 from corm.connectors import ConnectionManager
 from corm.email import EmailMessage
 from django.conf import settings
@@ -13,6 +14,8 @@ from django.contrib.contenttypes.models import ContentType
 from notifications.signals import notify
 from notifications.models import Notification
 
+# URL_MATCHER = re.compile(r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s\|()<>]+|\(([^\s\|()<>]+|(\([^\s\|()<>]+\)))*\))+(?:\(([^\s\|()<>]+|(\([^\s\|()<>]+\)))*\)|[^\s\|`!()\[\]{};:'\".,<>?«»“”‘’]))")
+URL_MATCHER = re.compile(r"(https?://[0-9a-zA-Z.-]+(:[0-9]+)?(/[^\s|()<>'\"]*)?)")
 
 def install_plugins():
     for plugin in settings.CORM_PLUGINS:
@@ -190,6 +193,61 @@ class PluginImporter:
             for tagged in tagged_users:
                 if tagged in self._member_cache:
                     self.make_participant(convo, self._member_cache[tagged_users])
+            for link in self.get_links(content):
+                try:
+                    url = urllib.parse.urlparse(link)
+                    if not url.hostname or not url.scheme:
+                        continue
+                    if self.verbosity >= 2:
+                        print(link)
+                    # Clean hostname
+                    host = url.hostname
+                    host_parts = host.split('.')
+                    if len(host_parts) > 2:
+                        try:
+                            int(host_parts[-3])
+                            pass # host is an IP
+                        except:
+                            try:
+                                int(host_parts[-3]['0'])
+                                # 3-rd level subdomain starts with a number and is likely generated
+                                host = '.'.join(host_parts[-2:])
+                            except:
+                                pass
+                    if host[:4] == 'www.':
+                        host = host[4:] # Ignore www subdomains
+                    # Determine content type
+                    ctype = None
+                    if url.path is not None and url.path != '':
+                        ext = url.path.split('.')[-1].lower()
+                        if ext in ['html', 'htm']:
+                            ctype = 'Webpage'
+                        elif ext in ['png', 'jpg', 'jpeg', 'gif', 'svg'] or host in ['i.imgur.com', 'media.giphy.com', 'i.reddit.com']:
+                            ctype = 'Image'
+                        elif ext in ['zip', 'tar', 'gz', 'xz']:
+                            ctype = 'Archive'
+                        elif ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
+                            ctype = 'Document'
+                        elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
+                            ctype = 'Code'
+                        elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
+                            ctype = 'Code'
+                        elif host in ['youtube.com', 'youtu.be', 'vimeo.com', 'twitch.com', 'v.reddit.com']:
+                            ctype = 'Video'
+                        else:
+                            ctype = 'Webpage'
+                    hl, created = Hyperlink.objects.get_or_create(
+                        community=self.community,
+                        url=link,
+                        defaults={
+                            'host':host,
+                            'path':url.path or '/',
+                            'content_type': ctype,
+                        }
+                    )
+                    convo.links.add(hl)
+                except:
+                    pass # Keep going even if capturing the hyperlink fails
 
         if speaker and tstamp is not None:
             for watch in MemberWatch.objects.filter(member=speaker, start__lte=tstamp):
@@ -363,6 +421,9 @@ class PluginImporter:
 
     def get_tagged_users(self, content):
         return []
+
+    def get_links(self, content):
+        return [x[0] for x in URL_MATCHER.findall(content)]
 
     def get_channels(self):
         channels = self.source.channel_set.filter(origin_id__isnull=False, source__auth_secret__isnull=False).order_by('last_import')

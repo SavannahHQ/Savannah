@@ -13,4 +13,5 @@
                 {% endif %}
                   {% if view.filter.contrib_type and view.contrib_type %}<span class="tag-pill text-nowrap" style="background-color: #dadada; "><span class="tag-text" style="color: #dadadaaa;"><i class="fas fa-shield-alt"> </i> {{view.contrib_type}}</span></span>{% endif %}
                   {% if view.conversation_search %}<span class="tag-pill text-nowrap" style="background-color: #dadadaaa; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas fa-search"> </i> "{{view.conversation_search}}"</span></span>{% endif %}
+                  {% if view.filter_link %}<span class="tag-pill text-nowrap" style="background-color: #dadadaaa; "><span class="tag-text" style="color: #{{view.member_tag.color}}aa;"><i class="fas fa-link"> </i> <span title="{{view.filter_link.url}}">{{view.filter_link.url|truncatechars:64}}</span></span></span>{% endif %}
               </span>
