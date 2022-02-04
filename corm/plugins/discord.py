@@ -318,7 +318,7 @@ class DiscordImporter(PluginImporter):
     def import_message(self, channel, message, tstamp, participants=None):
         source = channel.source
 
-        if not participants:
+        if participants is None:
             participants = set()
         user = message['author']
         discord_user_id = user.get('id')
