@@ -315,12 +315,16 @@ class DiscordImporter(PluginImporter):
 
         return
 
-    def import_message(self, channel, message, tstamp, participants=set()):
+    def import_message(self, channel, message, tstamp, participants=None):
         source = channel.source
 
+        if not participants:
+            participants = set()
         user = message['author']
         discord_user_id = user.get('id')
-        speaker = self.make_member(discord_user_id, channel=channel, detail=user.get('username'), email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
+        avatar_hash = user.get('avatar')
+        avatar_url = 'https://cdn.discordapp.com/avatars/%s/%s.png?size=64' % (discord_user_id, avatar_hash)
+        speaker = self.make_member(discord_user_id, channel=channel, detail=user.get('username'), avatar_url=avatar_url, email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
         if (user.get('bot', False) or user.get('system', False))and speaker.role != Member.BOT:
             speaker.role = Member.BOT
             speaker.save()
