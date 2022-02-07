@@ -1,6 +1,13 @@
           <span id="filter-bar" class="">
 
-          {% if view.filter.timespan %}
+            {% if view.conversation_search %}
+            <span class="btn btn-secondary"><i class="fas fa-search"></i> "{{view.conversation_search}}" <a class="text-muted" href="?conversation_search="><i class="fas fa-times"></i></a></span>
+            {% endif %}
+            {% if view.filter_link %}
+            <span class="btn btn-secondary"><i class="fas fa-link"></i> {{view.filter_link.url}} <a class="text-muted" href="?link="><i class="fas fa-times"></i></a></span>
+            {% endif %}
+
+            {% if view.filter.timespan %}
             <span class="dropdown display-children-on-hover">
             {% if view.timefilter == 'timespan' and view.timespan == view.MAX_TIMESPAN %}
               {% if view.MAX_TIMESPAN == 365 %}

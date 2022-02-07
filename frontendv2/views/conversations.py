@@ -43,18 +43,39 @@ class Conversations(SavannahFilterView):
         except:
             self.page = 1
 
-        if 'conversation_search' in request.GET:
-            self.conversation_search = request.GET.get('conversation_search', "").lower()
-        else:
+        if 'clear' in request.GET and request.GET.get('clear') == 'all':
+            request.session['conversation_search'] = None
+            request.session['filter_link'] = None
+
+        self.conversation_search = None
+        try:
+            if 'conversation_search' in request.GET:
+                if request.GET.get('conversation_search') == '':
+                    request.session['conversation_search'] = None
+                else:
+                    self.conversation_search = request.GET.get('conversation_search', "").lower()
+                    request.session['conversation_search'] = self.conversation_search
+            elif 'conversation_search' in request.session:
+                self.conversation_search = request.session.get('conversation_search')
+        except:
             self.conversation_search = None
-        self.result_count = 0
+            request.session['conversation_search'] = None
 
         self.filter_link = None
-        if 'link' in request.GET:
-            try:
-                self.filter_link = Hyperlink.objects.get(community=self.community, id=int(request.GET.get('link', None)))
-            except:
-                pass
+        try:
+            if 'link' in request.GET:
+                if request.GET.get('link') == '':
+                    request.session['filter_link'] = None
+                else:
+                    self.filter_link = Hyperlink.objects.get(community=self.community, id=int(request.GET.get('link')))
+                    request.session['filter_link'] = request.GET.get('link')
+            elif 'filter_link' in request.session:
+                self.filter_link = Hyperlink.objects.get(community=self.community, id=int(request.session.get('filter_link')))
+        except:
+            self.filter_link = None
+            request.session['filter_link'] = None
+
+        self.result_count = 0
 
         self.chart_type = request.session.get('conversations_chart_type', 'basic')
         if 'by_convo' in request.GET:
@@ -743,6 +764,10 @@ class Conversations(SavannahFilterView):
         conversations.chart_type = 'basic'
         if 'conversations_chart_type' in dashboard.filters and dashboard.filters['conversations_chart_type'] is not None:
             conversations.chart_type = dashboard.filters['conversations_chart_type']
+        if 'conversation_search' in dashboard.filters and dashboard.filters['conversation_search'] is not None:
+            conversations.conversation_search = dashboard.filters['conversation_search']
+        if 'filter_link' in dashboard.filters and dashboard.filters['filter_link'] is not None:
+            conversations.filter_link = Hyperlink.objects.get(id=dashboard.filters['filter_link'])
         if not request.user.is_authenticated:
             dashboard.count()
         return render(request, 'savannahv2/public/conversations.html', context)
@@ -750,6 +775,8 @@ class Conversations(SavannahFilterView):
     def filters_as_dict(self, request):
         filters = super().filters_as_dict(request)
         filters['conversations_chart_type'] = self.chart_type
+        filters['conversation_search'] = request.session.get('conversation_search', None)
+        filters['filter_link'] = request.session.get('filter_link', None)
         return filters
         
 @login_required
