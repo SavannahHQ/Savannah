@@ -466,7 +466,7 @@ class SlackImporter(PluginImporter):
             return
         slack_user_id = "slack.com/%s" % user_id
         speaker = self.make_member(slack_user_id, channel=channel, detail=user_name, email_address=user_email, tstamp=tstamp, speaker=True, name=user_real_name)
-        if user_isbot and speaker.role != Member.BOT:
+        if user_isbot and speaker.role == Member.COMMUNITY:
             speaker.role = Member.BOT
             speaker.save()
 
