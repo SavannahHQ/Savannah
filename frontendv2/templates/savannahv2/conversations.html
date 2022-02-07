@@ -291,7 +291,7 @@
                     <td class="text-nowrap">
                       <a href="https://{{link.host}}" target="_blank">{{link.host|truncatechars:64}}</a>
                     </td>
-                    <td class="text-nowrap">{{link.conversation_count}}</td>
+                    <td class="text-nowrap"><a href="?conversation_search={{link.host}}">{{link.conversation_count}}</a></td>
                   </tr>
                   {% endfor %}
                   </tbody>
