@@ -786,6 +786,7 @@ class Hyperlink(models.Model):
     host = models.CharField(max_length=256)
     path = models.CharField(max_length=512)
     content_type = models.CharField(max_length=64, null=True, blank=True)
+    ignored = models.BooleanField(default=False, help_text='Ignore links that are not interesting to you, or are added automatically to conversations.')
 
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:

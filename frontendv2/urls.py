@@ -19,7 +19,7 @@ from django.urls import path
 
 from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit, ManagerTasksCalendar
 from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution, AddContribution
-from frontendv2.views.conversations import Conversations
+from frontendv2.views.conversations import Conversations, ignore_hyperlink, show_hyperlink
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
@@ -76,6 +76,8 @@ urlpatterns = [
     path('public/member/<str:dashboard_id>/', Members.public, name='public_members'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('conversations/<int:community_id>/publish', Conversations.publish, name='publish_conversations'),
+    path('conversations/<int:community_id>/link/<int:hyperlink_id>/ignore', ignore_hyperlink, name='ignore_hyperlink'),
+    path('conversations/<int:community_id>/link/<int:hyperlink_id>/show', show_hyperlink, name='show_hyperlink'),
     path('public/conversations/<str:dashboard_id>/', Conversations.public, name='public_conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('contributions/<int:community_id>/contributors', Contributors.as_view, name='contributors'),

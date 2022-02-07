@@ -241,7 +241,7 @@
                   </thead>
                   <tbody>
                   {% for link in view.top_links %}
-                  <tr>
+                  <tr class=" show-children-on-hover">
                     <td class="text-nowrap">
                       {% if link.content_type == 'Image' %}
                       <i class='fas fa-file-image'></i>
@@ -257,8 +257,11 @@
                       <i class='fas fa-globe'></i>
                       {% endif %}
                       <a href="{{link.url}}" target="_blank">{{link.url|truncatechars:64}}</a>
+                      <a title="Ignore link" class="show-on-parent-hover text-gray-300" href="{% url 'ignore_hyperlink' view.community.id link.id %}">&nbsp;<i class="fas fa-eye-slash"></i></a>
                     </td>
-                    <td class="text-nowrap"><a href="?link={{link.id}}">{{link.conversation_count}}</a></td>
+                    <td class="text-nowrap">
+                      <a href="?link={{link.id}}">{{link.conversation_count}}</a>
+                    </td>
                   </tr>
                   {% endfor %}
                   </tbody>

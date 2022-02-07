@@ -1,6 +1,6 @@
 import operator
 import datetime
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Min, Max, Avg, ExpressionWrapper, fields
 from django.db.models.functions import Trunc
@@ -668,7 +668,7 @@ class Conversations(SavannahFilterView):
 
     @property
     def top_links(self):
-        links = Hyperlink.objects.filter(community=self.community)
+        links = Hyperlink.objects.filter(community=self.community, ignored=False)
         convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
         if self.source:
             if self.exclude_source:
@@ -696,7 +696,7 @@ class Conversations(SavannahFilterView):
 
     @property
     def top_link_sites(self):
-        links = Hyperlink.objects.filter(community=self.community)
+        links = Hyperlink.objects.filter(community=self.community, ignored=False)
         convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
         if self.source:
             if self.exclude_source:
@@ -752,3 +752,33 @@ class Conversations(SavannahFilterView):
         filters['conversations_chart_type'] = self.chart_type
         return filters
         
+@login_required
+def ignore_hyperlink(request, community_id, hyperlink_id):
+    try:
+        link = Hyperlink.objects.get(id=hyperlink_id)
+        community = get_object_or_404(Community, Q(owner=request.user) | Q(managers__in=request.user.groups.all()), id=community_id)
+    except:
+        messages.error(request, "Could not find hyperlink to ignore")
+
+    link.ignored = True
+    link.save()
+    undo_link = reverse('show_hyperlink', kwargs={'community_id':community.id, 'hyperlink_id':link.id})
+    messages.success(request, "You will no longer see <a href=\"%s\" target=\"_blank\">%s</a> in your results.&nbsp;&nbsp;<a href=\"%s\">Undo</a>" % (link.url, link.url, undo_link))
+
+    return redirect('conversations', community_id=community.id)
+
+@login_required
+def show_hyperlink(request, community_id, hyperlink_id):
+    try:
+        link = Hyperlink.objects.get(id=hyperlink_id)
+        community = get_object_or_404(Community, Q(owner=request.user) | Q(managers__in=request.user.groups.all()), id=community_id)
+    except:
+        messages.error(request, "Could not find hyperlink to ignore")
+
+    link.ignored = False
+    link.save()
+    undo_link = reverse('show_hyperlink', kwargs={'community_id':community.id, 'hyperlink_id':link.id})
+    messages.success(request, "Link has been restored to your results")
+
+    return redirect('conversations', community_id=community.id)
+    
