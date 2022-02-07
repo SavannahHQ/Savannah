@@ -209,7 +209,7 @@ class PluginImporter:
                             pass # host is an IP
                         except:
                             try:
-                                int(host_parts[-3]['0'])
+                                int(host_parts[-3][0])
                                 # 3-rd level subdomain starts with a number and is likely generated
                                 host = '.'.join(host_parts[-2:])
                             except:
