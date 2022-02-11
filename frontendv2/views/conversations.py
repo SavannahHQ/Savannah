@@ -242,7 +242,7 @@ class Conversations(SavannahFilterView):
             if self.filter_link:
                 convos = convos.filter(links=self.filter_link)
 
-            total = self.conversation_count
+            total = convos.filter(thread_start__isnull=True).count()
             if total == 0:
                 return 0
             responded = convos.annotate(reponse_count=Count('replies', unique=True)).filter(reponse_count__gt=0).count()
