@@ -51,15 +51,28 @@
                   </div>
                 </div>
               </div>
-              <div class="card border-left-info shadow py-2">
+              <div class="card border-left-info shadow py-2 mb-3">
                 <div class="card-body">
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Response Time</div>
+                      <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Average Response Time <i class="fas fa-question-circle text-sm" title="Replies in threads. Not all Sources have a measurable response time."></i></div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.median_response_time|duration|default:"N/A"}}</div>
                     </div>
                     <div class="col-auto">
                       <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card border-left-connection shadow py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-connection text-uppercase mb-1">Response Rate <i class="fas fa-question-circle text-sm" title="Replies in threads. Not all Sources have a measurable response rate."></i></div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.response_rate|floatformat:2|default:"N/A"}}%</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-reply-all fa-2x text-gray-300"></i>
                     </div>
                   </div>
                 </div>
