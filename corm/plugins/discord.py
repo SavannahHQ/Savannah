@@ -290,6 +290,11 @@ class DiscordImporter(PluginImporter):
 
             has_more = False
             cursor = None
+            thread_start = None
+            try:
+                thread_start = Conversation.objects.get(channel=channel, origin_id=thread.get('id'))
+            except:
+                print("No conversation for thread id: %s" % thread.get('id'))
             resp = self.api_call(url)
             if resp.status_code == 200:
                 data = resp.json()
@@ -303,7 +308,7 @@ class DiscordImporter(PluginImporter):
                             tstamp_str = message.get('timestamp')[:19]
                             tstamp = self.strptime(tstamp_str)
                             if self.full_import or tstamp >= from_date:
-                                self.import_message(channel, message, tstamp, participants=participants)
+                                self.import_message(channel, message, tstamp, participants=participants, thread_start=thread_start)
                                 has_more = True
                                 cursor = message['id']
                     except Exception as e:
@@ -315,7 +320,7 @@ class DiscordImporter(PluginImporter):
 
         return
 
-    def import_message(self, channel, message, tstamp, participants=None):
+    def import_message(self, channel, message, tstamp, participants=None, thread_start=None):
         source = channel.source
 
         if participants is None:
@@ -344,6 +349,6 @@ class DiscordImporter(PluginImporter):
                 member.role = Member.BOT
                 member.save()
 
-        convo = self.make_conversation(origin_id=discord_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=discord_convo_link)
+        convo = self.make_conversation(origin_id=discord_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=discord_convo_link, thread=thread_start)
         self.add_participants(convo, participants)
         return convo
