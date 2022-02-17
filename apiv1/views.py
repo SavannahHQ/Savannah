@@ -50,7 +50,7 @@ class SourceAdd(SavannahView):
         icon_choices = [
             ('fas fa-cogs', 'Custom Integration'),
             ('Generic Icons', [('fas fa-%s' % icon, icon.title()) for icon in generic_icons]),
-            ('Brand Icons', [('fas fa-%s' % icon, icon.title()) for icon in brand_icons]),
+            ('Brand Icons', [('fab fa-%s' % icon, icon.title()) for icon in brand_icons]),
         ]
 
         form = APISourceForm(instance=new_source)
