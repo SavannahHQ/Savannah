@@ -394,6 +394,7 @@ class SavannahFilterView(SavannahView):
         filters['rangestart'] = request.session.get('rangestart', None)
         filters['rangeend'] = request.session.get('rangeend', None)
         filters['timefilter'] = request.session.get('timefilter', 'timespan')
+        filters['timespan'] = request.session.get('timespan', self.MAX_TIMESPAN)
         return filters
 
     @property
