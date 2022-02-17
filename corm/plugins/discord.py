@@ -159,7 +159,7 @@ class DiscordPlugin(BasePlugin):
     def get_identity_url(self, contact):
         if contact.origin_id:
             discord_id = contact.origin_id.split("/")[-1]
-            return "%s/team/%s" % (contact.source.server, discord_id)
+            return "https://discordapp.com/users/%s" % discord_id
         else:
             return None
 
@@ -302,7 +302,7 @@ class DiscordImporter(PluginImporter):
                 data = resp.json()
                 for message in data:
                     if message.get('id') == thread.get('id'):
-                        continue
+                        continue # Don't import the thread start as a reply message
 
                     try:
                         if message['type'] == 0:
