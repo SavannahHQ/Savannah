@@ -360,7 +360,7 @@ class PluginImporter:
 
     def add_event_attendee(self, event, member, role=EventAttendee.GUEST):
         try:
-            attendee, created = EventAttendee.objects.update_or_create(
+            attendee, created = EventAttendee.objects.get_or_create(
                 community=self.community, 
                 event=event,
                 member=member,
