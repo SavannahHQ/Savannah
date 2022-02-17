@@ -198,7 +198,7 @@ class PluginImporter:
                     url = urllib.parse.urlparse(link)
                     if not url.hostname or not url.scheme:
                         continue
-                    if self.verbosity >= 2:
+                    if self.verbosity >= 3:
                         print(link)
                     # Clean hostname
                     host = url.hostname

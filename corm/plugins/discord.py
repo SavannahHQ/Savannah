@@ -291,16 +291,18 @@ class DiscordImporter(PluginImporter):
             has_more = False
             cursor = None
             thread_start = None
+            participants = set()
             try:
                 thread_start = Conversation.objects.get(channel=channel, origin_id=thread.get('id'))
+                participants.add(thread_start.speaker)
             except:
                 print("No conversation for thread id: %s" % thread.get('id'))
             resp = self.api_call(url)
             if resp.status_code == 200:
                 data = resp.json()
-
-                participants = set()
                 for message in data:
+                    if message.get('id') == thread.get('id'):
+                        continue
 
                     try:
                         if message['type'] == 0:
