@@ -498,18 +498,18 @@ class PluginImporter:
                 channel.import_failed_message = str(e)
                 if channel.import_failed_attempts >= settings.MAX_CHANNEL_IMPORT_FAILURES:
                     channel.enabled = False
+                    recipients = self.source.community.managers or self.source.community.owner
+                    notify.send(channel, 
+                        recipient=recipients, 
+                        verb="failed to import into",
+                        target=self.community,
+                        level='error',
+                        icon_name="fas fa-file-import",
+                        link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id}),
+                        error=str(e)
+                    )
                 channel.save()
                 failures.append(channel.name)
-                recipients = self.source.community.managers or self.source.community.owner
-                notify.send(channel, 
-                    recipient=recipients, 
-                    verb="failed to import into",
-                    target=self.community,
-                    level='error',
-                    icon_name="fas fa-file-import",
-                    link=reverse('channels', kwargs={'source_id':self.source.id, 'community_id':self.source.community.id}),
-                    error=str(e)
-                )
                 if self.verbosity:
                     print("Failed to import %s: %s" %(channel.name, e))
                 if self.debug:
