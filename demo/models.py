@@ -30,7 +30,7 @@ class Demonstration(models.Model):
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SEED)
     created = models.DateTimeField(auto_now_add=True)
     expires = models.DateTimeField(blank=True, null=True)
-    log = models.ForeignKey(DemoLog, on_delete=models.SET_NULL, null=True)
+    log = models.ForeignKey(DemoLog, on_delete=models.SET_NULL, null=True, blank=True)
 
     def delete(self, *args, **kwargs):
         if self.log is not None:
