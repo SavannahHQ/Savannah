@@ -271,6 +271,8 @@ class Conversations(SavannahFilterView):
                 conversation_filter = conversation_filter & Q(speaker_in__channel__source=self.source)
         if self.tag:
             conversation_filter = conversation_filter & Q(speaker_in__tags=self.tag)
+        if self.conversation_search:
+            conversation_filter = conversation_filter & Q(speaker_in__content__icontains=self.conversation_search)
         if self.filter_link:
             conversation_filter = conversation_filter & Q(speaker_in__links=self.filter_link)
         members = members.annotate(activity_count=Count('speaker_in', filter=conversation_filter)).filter(activity_count__gt=0)
