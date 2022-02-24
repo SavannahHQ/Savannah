@@ -99,7 +99,7 @@
                   <td>{{member.activity_count|intcomma}}</td>
                 </tr>
                 {% if member.note_count %}
-                <tr><td colspan="4">
+                <tr><td colspan="5">
                 <ul>
                 {% for note in member.note_set.all %}
                 <li><span class="note">{{note.content}}</span></li>
