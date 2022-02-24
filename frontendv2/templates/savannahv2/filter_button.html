@@ -1,5 +1,8 @@
           <span id="filter-bar" class="">
 
+            {% if view.search %}
+            <span class="btn btn-secondary"><i class="fas fa-search"></i> "{{view.search}}" <a class="text-muted" href="?search="><i class="fas fa-times"></i></a></span>
+            {% endif %}
             {% if view.conversation_search %}
             <span class="btn btn-secondary"><i class="fas fa-search"></i> "{{view.conversation_search}}" <a class="text-muted" href="?conversation_search="><i class="fas fa-times"></i></a></span>
             {% endif %}

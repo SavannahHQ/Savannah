@@ -454,7 +454,7 @@ class AllMembers(SavannahFilterView):
     @property
     def all_members(self):
         members = self.get_members()
-        if self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN:
+        if not self.search and (self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN):
             members = members.filter(activity_count__gt=0)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
@@ -490,7 +490,7 @@ class AllMembers(SavannahFilterView):
                 convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
         companies = companies.annotate(first_activity=Min('member__speaker_in__timestamp', filter=convo_filter), last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
-        if self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN:
+        if not self.search and (self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN):
             companies = companies.filter(member_count__gt=0)
 
         if self.sort_by == 'name':
