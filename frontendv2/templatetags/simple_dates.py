@@ -34,4 +34,7 @@ def duration_as_text(timedeltaobj):
         timetot += " {} mins".format(int(mins))
         secs = secs - mins*60
 
+    if secs >= 1:
+        timetot += " {} secs".format(int(secs))
+
     return timetot

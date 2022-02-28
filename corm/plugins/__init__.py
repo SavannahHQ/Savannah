@@ -80,6 +80,9 @@ class BasePlugin:
     def get_channels(self, source):
         return []
         
+    def get_channel_add_warning(self, channel):
+        return None
+
 class PluginImporter:
 
     def __init__(self, source):
@@ -129,7 +132,10 @@ class PluginImporter:
                 first_seen = tstamp
                 if first_seen is None:
                     first_seen = datetime.datetime.utcnow()
-                member = Member.objects.create(community=self.community, name=name, email_address=email_address, avatar_url=avatar_url, first_seen=first_seen, last_seen=None)
+                last_seen = None
+                if speaker and tstamp:
+                    last_seen = tstamp
+                member = Member.objects.create(community=self.community, name=name, email_address=email_address, avatar_url=avatar_url, first_seen=first_seen, last_seen=last_seen)
                 contact = Contact.objects.create(origin_id=origin_id, source=self.source, member=member, detail=detail, name=name, email_address=email_address, avatar_url=avatar_url)
                 self.update_identity(contact)
             else:
@@ -180,9 +186,12 @@ class PluginImporter:
             except:
                 pass
 
-        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel__source=channel.source, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
         if content is not None and (convo.content is None or len(convo.content) < len(content)):
             convo.content = content
+        if tstamp is not None and speaker is not None and (speaker.last_seen is None or  speaker.last_seen < tstamp):
+            speaker.last_seen = tstamp
+            speaker.save()
         if speaker is not None:
             convo.speaker = speaker
         convo.save()
@@ -191,8 +200,7 @@ class PluginImporter:
         if content is not None:
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
-                if tagged in self._member_cache:
-                    self.make_participant(convo, self._member_cache[tagged_users])
+                self.add_participants(convo, tagged_users)
             for link in self.get_links(content):
                 try:
                     url = urllib.parse.urlparse(link)
@@ -296,7 +304,8 @@ class PluginImporter:
                     for to_member in members:
                         if member.id != to_member.id:
                             member.add_connection(to_member, conversation.timestamp)
-            except:
+            except Exception as e:
+                print(e)
                 pass
 
     def make_participant(self, conversation, member):

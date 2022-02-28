@@ -788,6 +788,9 @@ class Hyperlink(models.Model):
     content_type = models.CharField(max_length=64, null=True, blank=True)
     ignored = models.BooleanField(default=False, help_text='Ignore links that are not interesting to you, or are added automatically to conversations.')
 
+    def __str__(self):
+        return self.url
+        
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)

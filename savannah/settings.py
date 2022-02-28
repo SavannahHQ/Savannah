@@ -121,13 +121,15 @@ CORM_PLUGINS = [
     "corm.plugins.discourse.DiscoursePlugin",
     "corm.plugins.github.GithubPlugin",
     "corm.plugins.gitlab.GitlabPlugin",
+    "corm.plugins.facebook.FacebookPlugin",
     "corm.plugins.ical.iCalPlugin",
     "corm.plugins.meetup.MeetupPlugin",
     "corm.plugins.reddit.RedditPlugin",
     "corm.plugins.rss.RssPlugin",
     "corm.plugins.slack.SlackPlugin",
     "corm.plugins.stackexchange.StackExchangePlugin",
-    "corm.plugins.salesforce.SalesforcePlugin"
+    "corm.plugins.salesforce.SalesforcePlugin",
+    "corm.plugins.twitter.TwitterPlugin"
 ]
 
 MIDDLEWARE = [
