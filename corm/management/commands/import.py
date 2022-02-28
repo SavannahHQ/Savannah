@@ -34,7 +34,7 @@ class Command(BaseCommand):
 
         if importer_name == 'all':
             verbosity and print("Importing all sources")
-            sources = Source.objects.filter(community__status=Community.ACTIVE, enabled=True).exclude(connector='corm.plugins.api')
+            sources = Source.objects.filter(community__status=Community.ACTIVE, enabled=True).exclude(connector='corm.plugins.api').exclude(connector='corm.plugins.null')
         elif importer_name is not None and importer_name in ConnectionManager.CONNECTOR_IMPORTERS:
             verbosity and print("Importing %s data" % importer_name)
             plugin = ConnectionManager.CONNECTOR_IMPORTERS[importer_name]
@@ -66,9 +66,13 @@ class Command(BaseCommand):
             sources = sources.filter(first_import__isnull=True)
 
         if limit:
-            sources = sources[:limit]
+            print("Sources: %s " % sources.count())
+            print("Limit: %s " % limit)
 
+        count = 0
         for source in sources:
+            if limit and count >= limit:
+                break
             print("Importing %s" % source)
             if new_only:
                 source.first_import = datetime.datetime.utcnow()
@@ -90,6 +94,7 @@ class Command(BaseCommand):
                 if verbosity >= 2:
                     print("Importing %s source: %s" % (plugin.get_source_type_name(), source))
                 importer.run(new_only, channels=channels)
+                count += 1
                 if full_import:
                     sleep(5)
             except Exception as e:
