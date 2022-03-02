@@ -1481,7 +1481,7 @@ class SuggestCompanyCreation(Suggestion):
         default_name = self.domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
         new_company = Company.objects.create(name=default_name, community=self.community, website=default_website)
         new_domain = CompanyDomains.objects.create(company=new_company, domain=default_domain)
-        members = Member.objects.filter(community=self.community, company__isnull=True, email_address__endswith=default_domain)
+        members = Member.objects.filter(community=self.community, company__isnull=True, email_address__endswith=default_domain, auto_update_company=True)
         for member in members:
             (identity, domain) = member.email_address.split('@', maxsplit=1)
             if domain == self.domain:
