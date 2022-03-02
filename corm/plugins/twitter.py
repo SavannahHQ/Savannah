@@ -129,10 +129,13 @@ class TwitterPlugin(BasePlugin):
     def search_channels(self, source, text):
         source = refresh_auth(source)
         matching = []
+
         resp = requests.get(TWITTER_SEARCH_URL, params={'query': text}, headers={'Authorization': 'Bearer %s' % source.auth_secret})
         if resp.status_code == 200:
             data = resp.json()
+            # print(data)
             recent_tags = dict()
+            recent_mentions = dict()
             if 'data' not in data:
                 return matching
             for tweet in data['data']:
@@ -143,8 +146,21 @@ class TwitterPlugin(BasePlugin):
                         recent_tags[tag] += 1
                     else:
                         recent_tags[tag] = 1
+                mentions = re.findall('@[a-zA-Z0-9]+', tweet['text'])
+                for username in mentions:
+                    username = username.lower()
+                    if username in recent_mentions:
+                        recent_mentions[username] += 1
+                    else:
+                        recent_mentions[username] = 1
+            for username, count in sorted(recent_mentions.items(), key=lambda c: c[1], reverse=True)[:5]:
+                matching.append({'id': username, 'topic': 'Tweets that mention '+username, 'name': username, 'count':count})
             for tag, count in recent_tags.items():
                 matching.append({'id': tag, 'topic': 'Tweets tagged with '+tag, 'name': tag, 'count':count})
+            if text.startswith('@'):
+                username = text.split(' ')[0]
+                if username not in recent_mentions:
+                    matching.append({'id': username, 'topic': 'Tweets that mention '+username, 'name': username, 'count':1000000})
             return matching
         else:
             raise RuntimeError("Hashtag search failed: %s" % resp.content)
