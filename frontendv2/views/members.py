@@ -1117,6 +1117,18 @@ class MemberEditForm(forms.ModelForm):
         self.fields['company'].widget.choices = [('', '-----')] + [(company.id, company.name) for company in Company.objects.filter(community=community).order_by(Lower('name'))]
 
 
+class MemberSettingsForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = [
+            # 'auto_update_name', 
+            'auto_update_company', 
+            # 'auto_update_role', 
+            # 'auto_update_email', 
+            # 'auto_update_avatar'
+            ]
+
+
 class MemberEdit(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
@@ -1136,6 +1148,14 @@ class MemberEdit(SavannahView):
         form.limit_to(self.community)
         return form
 
+    @property
+    def settings_form(self):
+        if self.request.method == 'POST':
+            form = MemberSettingsForm(instance=self.member, data=self.request.POST)
+        else:
+            form = MemberSettingsForm(instance=self.member)
+        return form
+
     @login_required
     def as_view(request, member_id):
         view = MemberEdit(request, member_id)
@@ -1143,6 +1163,31 @@ class MemberEdit(SavannahView):
         if request.method == "POST" and view.form.is_valid():
             view.form.save()
             return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/member_edit.html', view.context)
+
+class MemberSettings(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            form = MemberSettingsForm(instance=self.member, data=self.request.POST)
+        else:
+            form = MemberSettingsForm(instance=self.member)
+        return form
+
+    @login_required
+    def as_view(request, member_id):
+        view = MemberSettings(request, member_id)
+        
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            messages.info(request, "Member settings have been updated.")
+            return redirect('member_edit', member_id=member_id)
 
         return render(request, 'savannahv2/member_edit.html', view.context)
 

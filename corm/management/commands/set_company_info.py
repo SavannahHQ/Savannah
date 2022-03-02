@@ -25,7 +25,7 @@ class Command(BaseCommand):
           communities = Community.objects.filter(status=Community.ACTIVE)
 
       for community in communities:
-        members = Member.objects.filter(community=community, company__isnull=True)
+        members = Member.objects.filter(community=community, company__isnull=True, auto_update_company=True)
         print("Updating info from %s members in %s" % (members.count(), community))
         domain_cache = dict([(d.domain, d.company) for d in CompanyDomains.objects.filter(company__community=community)])
         unknown_domain_counts = dict()
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 member.save()
 
         # Ensure that all members with a company have their role and tag set
-        for member in Member.objects.filter(community=community, company__isnull=False):
+        for member in Member.objects.filter(community=community, company__isnull=False, auto_update_role=True):
             if member.company.is_staff and member.role == Member.COMMUNITY:
                 member.role = Member.STAFF
                 member.save()

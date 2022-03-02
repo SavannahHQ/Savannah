@@ -343,6 +343,13 @@ class Member(TaggableModel):
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
 
+    # Settings
+    auto_update_name = models.BooleanField(default=True, verbose_name='Auto Update Name')
+    auto_update_role = models.BooleanField(default=True, verbose_name='Auto Update Role')
+    auto_update_company = models.BooleanField(default=True, verbose_name='Auto Update Company')
+    auto_update_email = models.BooleanField(default=True, verbose_name='Auto Update Email Address')
+    auto_update_avatar = models.BooleanField(default=True, verbose_name='Auto Update Avatar')
+
     def set_company(self, company):
         if company is None:
             if self.company.is_staff and self.role == Member.STAFF:
@@ -790,7 +797,7 @@ class Hyperlink(models.Model):
 
     def __str__(self):
         return self.url
-        
+
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)
