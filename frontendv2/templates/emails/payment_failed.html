@@ -1,6 +1,6 @@
 <h3>There was an error processing your payment</h3>
 
-<p>We were unable to process your subscription payment of {{price}} for {{community.name}} on {{SITE_NAME}}.</p>
+<p>We were unable to process your subscription payment of ${{price|floatformat:2}} for {{community.name}} on {{SITE_NAME}}.</p>
 
 <p>You can view and pay your invoice at <a href="{{invoice_url}}">{{invoice_url}}</a>.</p>
 {% if next_attempt %}

@@ -1,6 +1,6 @@
 # There was an error processing your payment
 
-We were unable to process your subscription payment of {{price}} for {{community.name}} on {{SITE_NAME}}.
+We were unable to process your subscription payment of ${{price|floatformat:2}} for {{community.name}} on {{SITE_NAME}}.
 
 You can view and pay your invoice at {{invoice_url}}
 
