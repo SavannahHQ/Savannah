@@ -34,7 +34,7 @@ names==0.3.0
 oauthlib==3.1.0
 perceval==0.12.24
 pilkit==2.0
-Pillow==8.3.2
+Pillow==9.0.0
 pylint==2.4.4
 python-dateutil==2.8.1
 python-lorem==1.1.2
