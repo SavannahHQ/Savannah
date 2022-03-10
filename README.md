@@ -1,8 +1,10 @@
 # Savannah
 
-Join the beta testing program at [SavannahHQ.com](https://savannahhq.com)
+Learn more at [SavannahHQ.com](https://savannahhq.com)
 
 ![Community Dashboard](./docs/screenshots/Dashboard.png)
+
+Try a live demo at [demo.savannahhq.com](https://demo.savannahhq.com)!
 
 ## Create a Development environment
 
@@ -35,8 +37,6 @@ Finally run the development server:
 
 ## Setting up Savannah
 
-**WARNING** Savannah is still in very early development and still has a lot of usability rough edges and missing functionality.
-
 To log in to Savannah go to http://localhost:8000/login and log in.
 
 Once logged in you will need to go to the Django admin (http://localhost:8000/admin) and create a new `Community` record.
@@ -51,7 +51,7 @@ Savannah can import data from Slack, Github, Discourse and RSS feeds. To import,
 Once you've created your `Source` you can run the importers with
 
 ```
-./env/bin/python manage.py import (slack|github|discourse|rss)
+./env/bin/python manage.py import all
 ```
 
 ### Tagging data
