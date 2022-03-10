@@ -27,9 +27,9 @@
                 <thead>
                   <tr>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by == "name" %}-{% endif %}name">Name&nbsp;<i class="{% if view.sort_by == "name" %}fas fa-sort-down{% elif view.sort_by == "-name" %}fas fa-sort-up{% endif %}"></i></a></th>
-                    <th scope="col">Members</th>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">First Seen&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-activity_count" %}-{% endif %}activity_count">Members&nbsp;<i class="{% if view.sort_by == "activity_count" %}fas fa-sort-down{% elif view.sort_by == "-activity_count" %}fas fa-sort-up{% endif %}"></i></a></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -42,9 +42,9 @@
                     </a>
                     {% include 'savannahv2/tag_list.html' with tag=company.tag %}
                   </td>
-                  <td >{{company.member_count|intcomma}}</td>
-                  <td >{{company.first_activity|date}}</td>
-                  <td >{{company.last_activity|date}}</td>
+                  <td>{{company.first_activity|date}}</td>
+                  <td>{{company.last_activity|date}}</td>
+                  <td>{{company.member_count|intcomma}}</td>
                 </tr>
                 {% endfor %}
                 </tbody>
@@ -65,8 +65,12 @@
 
               <!-- All Members -->
               <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Members</h6>
+                <div class="card-header d-sm-flex align-items-center justify-content-between py-3">
+                  <span class="justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary d-inline">Members</h6>
+                    {% include 'savannahv2/filter_pills.html' %}
+                    </span>
+                  <a class="btn btn-sm btn-primary" href="{% url 'members_csv' view.community.id %}"><i class="fas fa-file-csv"> </i> Download</a>
                 </div>
                 <div class="card-body p-0 table-responsive">
                 <table class="table">
@@ -77,6 +81,7 @@
                     <th scope="col">Role</th>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-first_seen" %}-{% endif %}first_seen">First Seen&nbsp;<i class="{% if view.sort_by == "first_seen" %}fas fa-sort-down{% elif view.sort_by == "-first_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
                     <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-last_seen" %}-{% endif %}last_seen">Last Seen&nbsp;<i class="{% if view.sort_by == "last_seen" %}fas fa-sort-down{% elif view.sort_by == "-last_seen" %}fas fa-sort-up{% endif %}"></i></a></th>
+                    <th scope="col"><a href="?{% if view.search %}search={{view.search}}&{% endif %}sort={% if view.sort_by != "-activity_count" %}-{% endif %}activity_count">Activities&nbsp;<i class="{% if view.sort_by == "activity_count" %}fas fa-sort-down{% elif view.sort_by == "-activity_count" %}fas fa-sort-up{% endif %}"></i></a></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,9 +96,10 @@
                   <td>{{member.get_role_display}}</td>
                   <td>{{member.first_seen}}</td>
                   <td>{{member.last_seen}}</td>
+                  <td>{{member.activity_count|intcomma}}</td>
                 </tr>
                 {% if member.note_count %}
-                <tr><td colspan="4">
+                <tr><td colspan="6">
                 <ul>
                 {% for note in member.note_set.all %}
                 <li><span class="note">{{note.content}}</span></li>
@@ -126,7 +132,9 @@
                   </ul>
                 </nav>
                 {% endif %}
-
+                <div class="d-flex justify-content-center mb-2">
+                  {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Members
+                  </div>
                 </div>
               </div>
 

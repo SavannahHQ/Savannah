@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-      for community in Community.objects.all():
+      for community in Community.objects.filter(status=Community.ACTIVE):
         print("Tagging contributions in  %s" % community.name)
         keywords = dict()
         for tag in community.tag_set.filter(keywords__isnull=False):

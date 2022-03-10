@@ -1,6 +1,8 @@
 import operator
 from functools import reduce
 import datetime
+import csv
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Min, Max, Avg
@@ -12,7 +14,7 @@ from django.contrib import messages
 from corm.models import *
 from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView, SavannahFilterView
-from frontendv2.views.charts import PieChart
+from frontendv2.views.charts import PieChart, LineChart
 from savannah.utils import safe_int
 from frontendv2 import colors as savannah_colors
 from frontendv2.models import PublicDashboard
@@ -27,7 +29,16 @@ class Members(SavannahFilterView):
         self._tagsChart = None
         self._rolesChart = None
         self._dauPercent = None
-
+        self.filter.update({
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
+            'member_company': True,
+            'tag': False,
+            'source': True,
+            'contrib_type': False,
+        })
     def suggestion_count(self):
         return SuggestMemberMerge.objects.filter(community=self.community, status__isnull=True).count()
 
@@ -43,6 +54,12 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            if self.exclude_source:
+                members = members.exclude(contact__source=self.source)
+            else:
+                members = members.filter(contact__source=self.source)
+
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         return members
 
@@ -58,6 +75,12 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            if self.exclude_source:
+                members = members.exclude(contact__source=self.source)
+            else:
+                members = members.filter(contact__source=self.source)
+
         members = members.filter(first_seen__gte=self.rangestart, first_seen__lte=self.rangeend)
         members = members.prefetch_related('tags')
 
@@ -75,14 +98,19 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            if self.exclude_source:
+                members = members.exclude(contact__source=self.source)
+            else:
+                members = members.filter(contact__source=self.source)
             
-        members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__isnull=False)))
-        members = members.filter(last_active__gte=self.rangestart, last_active__lte=self.rangeend)
+        members = members.annotate(last_active=Max('activity__timestamp', filter=Q(activity__timestamp__lte=self.rangeend)))
+        members = members.filter(last_active__gte=self.rangestart)
         members = members.prefetch_related('tags')
  
         return members.order_by('-last_active')[:10]
 
-    def getMembersChart(self):
+    def membersChart(self):
         if not self._membersChart:
             months = list()
             counts = dict()
@@ -98,6 +126,11 @@ class Members(SavannahFilterView):
                     members = members.exclude(role=self.role)
                 else:
                     members = members.filter(role=self.role)
+            if self.source:
+                if self.exclude_source:
+                    members = members.exclude(contact__source=self.source)
+                else:
+                    members = members.filter(contact__source=self.source)
 
             seen = members.annotate(month=Trunc('first_seen', self.trunc_span)).values('month').annotate(member_count=Count('id', distinct=True)).order_by('month')
             for m in seen:
@@ -116,34 +149,23 @@ class Members(SavannahFilterView):
                     if month not in months:
                         months.append(month)
                     monthly_active[month] = a['member_count']
-            self._membersChart = (sorted(months), counts, monthly_active)
+
+            self._membersChart = LineChart('members_graph', 'Members')
+            self._membersChart.set_keys(self.timespan_chart_keys(sorted(months)))
+            self._membersChart.add('New', counts, savannah_colors.MEMBER.JOINED)
+            self._membersChart.add('Active', monthly_active, savannah_colors.MEMBER.ACTIVE)
+            self._membersChart.add('Returning', self.calculate_returning(self._membersChart.keys, counts, monthly_active), savannah_colors.MEMBER.RETURNING)
+        self.charts.add(self._membersChart)
         return self._membersChart
 
-    @property
-    def members_chart_months(self):
-        (months, counts, monthly_active) = self.getMembersChart()
-        return self.timespan_chart_keys(months)
-
-    @property
-    def members_chart_counts(self):
-        (months, counts, monthly_active) = self.getMembersChart()
-        return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
-
-    @property
-    def members_chart_monthly_active(self):
-        (months, counts, monthly_active) = self.getMembersChart()
-        return [monthly_active.get(month, 0) for month in self.timespan_chart_keys(months)]
-
-    @property
-    def members_chart_monthly_returning(self):
-        (months, joined, active) = self.getMembersChart()
-        data = []
+    def calculate_returning(self, months, joined, active):
+        data = dict()
         month_keys = self.timespan_chart_keys(months)
         for i, month in enumerate(month_keys):
             returned = active.get(month, 0) - joined.get(month, 0)
             if returned < 0:
                 returned = 0
-            data.append(returned)
+            data[month] = returned
         return data
 
     @property 
@@ -158,6 +180,11 @@ class Members(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            if self.exclude_source:
+                members = members.exclude(contact__source=self.source)
+            else:
+                members = members.filter(contact__source=self.source)
 
         members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
         return members.count()
@@ -175,10 +202,22 @@ class Members(SavannahFilterView):
             else:
                 members = members.filter(role=self.role)
 
-        members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
+        activity_filter = Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend)
+        if self.source:
+            if self.exclude_source:
+                activity_filter = activity_filter & ~Q(activity__channel__source=self.source)
+            else:
+                activity_filter = activity_filter & Q(activity__channel__source=self.source)
+        members = members.annotate(activity_count=Count('activity', distinct=True, filter=activity_filter)).filter(activity_count__gt=0)
         member_count = members.count()
 
-        convo_count = Conversation.objects.filter(speaker__in=members, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend).count()
+        convo_count = Conversation.objects.filter(speaker__in=members, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+        if self.source:
+            if self.exclude_source:
+                convo_count = convo_count.exclude(channel__source=self.source)
+            else:
+                convo_count = convo_count.filter(channel__source=self.source)
+        convo_count = convo_count.count()
         if member_count > 0:
             return convo_count / member_count
         else:
@@ -198,7 +237,10 @@ class Members(SavannahFilterView):
                 else:
                     members = members.filter(role=self.role)
             if self.source:
-                members = members.filter(contact__source=self.source)
+                if self.exclude_source:
+                    members = members.exclude(contact__source=self.source)
+                else:
+                    members = members.filter(contact__source=self.source)
                 
             members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
 
@@ -229,7 +271,10 @@ class Members(SavannahFilterView):
                 else:
                     identity_filter = identity_filter & Q(contact__member__role=self.role)
             if self.source:
-                identity_filter = identity_filter & Q(contact__source=self.source)
+                if self.exclude_source:
+                    identity_filter = identity_filter & ~Q(contact__source=self.source)
+                else:
+                    identity_filter = identity_filter & Q(contact__source=self.source)
             sources = Source.objects.filter(community=self.community).annotate(identity_count=Count('contact', filter=identity_filter))
             for source in sources:
                 if source.identity_count == 0:
@@ -266,6 +311,11 @@ class Members(SavannahFilterView):
                     members = members.exclude(role=self.role)
                 else:
                     members = members.filter(role=self.role)
+            if self.source:
+                if self.exclude_source:
+                    members = members.exclude(contact__source=self.source)
+                else:
+                    members = members.filter(contact__source=self.source)
 
             members = members.annotate(activity_count=Count('activity', filter=Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend))).filter(activity_count__gt=0)
 
@@ -294,6 +344,11 @@ class Members(SavannahFilterView):
                     member_filter = member_filter & ~Q(member__role=self.role)
                 else:
                     member_filter = member_filter & Q(member__role=self.role)
+            if self.source:
+                if self.exclude_source:
+                    member_filter = member_filter & ~Q(member__contact__source=self.source)
+                else:
+                    member_filter = member_filter & Q(member__contact__source=self.source)
 
             tags = tags.annotate(member_count=Count('member', distinct=True, filter=member_filter))
             tags = tags.filter(member_count__gt=0).order_by('-member_count')
@@ -329,12 +384,22 @@ class AllMembers(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "members"
+        self.filter.update({
+            'timespan': True,
+            'custom_timespan': True,
+            'member_role': True,
+            'member_tag': True,
+            'member_company': True,
+            'tag': False,
+            'source': True,
+            'contrib_type': False,
+        })
 
         self.RESULTS_PER_PAGE = 25
         self.community = get_object_or_404(Community, id=community_id)
 
         self.sort_by = request.session.get("sort_members", "name")
-        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'company', '-company', 'first_seen', '-first_seen', 'last_seen', '-last_seen'):
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'company', '-company', 'first_seen', '-first_seen', 'last_seen', '-last_seen', 'activity_count', '-activity_count'):
             self.sort_by = request.GET.get('sort') 
             request.session['sort_members'] = self.sort_by
 
@@ -349,9 +414,9 @@ class AllMembers(SavannahFilterView):
             self.search = None
         self.result_count = 0
     
-    @property
-    def all_members(self):
+    def get_members(self):
         members = Member.objects.filter(community=self.community)
+        activity_filter = Q()
         if self.search:
             members = members.filter(Q(name__icontains=self.search) | Q(company__name__icontains=self.search) | Q(email_address__icontains=self.search) | Q(contact__detail__icontains=self.search) | Q(contact__email_address__icontains=self.search) | Q(note__content__icontains=self.search))
 
@@ -366,16 +431,31 @@ class AllMembers(SavannahFilterView):
                 members = members.exclude(role=self.role)
             else:
                 members = members.filter(role=self.role)
+        if self.source:
+            if self.exclude_source:
+                members = members.exclude(contact__source=self.source)
+                activity_filter = activity_filter & ~Q(activity__channel__source=self.source)
+            else:
+                members = members.filter(contact__source=self.source)
+                activity_filter = activity_filter & Q(activity__channel__source=self.source)
 
-        if self.timespan < 365:
-            members = members.filter(last_seen__gte=self.rangestart, last_seen__lte=self.rangeend)
+        activity_filter = activity_filter & Q(activity__timestamp__gte=self.rangestart, activity__timestamp__lte=self.rangeend)
+
+        members = members.annotate(activity_count=Count('activity', distinct=True, filter=activity_filter))
+
         if self.sort_by == 'name':
             members = members.order_by(Lower('name'))
         elif self.sort_by == '-name':
             members = members.order_by(Lower('name').desc())
         else:
             members = members.order_by(self.sort_by)
+        return members
 
+    @property
+    def all_members(self):
+        members = self.get_members()
+        if not self.search and (self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN):
+            members = members.filter(activity_count__gt=0)
         members = members.annotate(note_count=Count('note'), tag_count=Count('tags'))
         self.result_count = members.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
@@ -410,7 +490,7 @@ class AllMembers(SavannahFilterView):
                 convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
         companies = companies.annotate(first_activity=Min('member__speaker_in__timestamp', filter=convo_filter), last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
-        if self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN:
+        if not self.search and (self.timefilter == 'custom' or self.timespan < self.MAX_TIMESPAN):
             companies = companies.filter(member_count__gt=0)
 
         if self.sort_by == 'name':
@@ -425,6 +505,10 @@ class AllMembers(SavannahFilterView):
             companies = companies.order_by('last_activity')
         elif self.sort_by == '-last_seen':
             companies = companies.order_by('-last_activity')
+        elif self.sort_by == 'activity_count':
+            companies = companies.order_by('member_count')
+        elif self.sort_by == '-activity_count':
+            companies = companies.order_by('-member_count')
         else:
             companies = companies.order_by(self.sort_by)
         return companies
@@ -450,11 +534,45 @@ class AllMembers(SavannahFilterView):
             offset = 1
         return [page+offset for page in range(min(10, pages))]
 
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
+
     @login_required
     def as_view(request, community_id):
         view = AllMembers(request, community_id)
 
         return render(request, 'savannahv2/all_members.html', view.context)
+
+    @login_required
+    def as_csv(request, community_id):
+        view = AllMembers(request, community_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="members.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Member', 'Company', 'Role', 'First Seen', 'Last Seen', 'Activity Count', 'Tags'])
+        writer.writeheader()
+        for member in view.get_members():
+            company_name = ''
+            if member.company:
+                company_name = member.company.name
+            writer.writerow({
+                'Member': member.name, 
+                'Company':company_name, 
+                'Role': member.get_role_display(),
+                'First Seen':member.first_seen, 
+                'Last Seen':member.last_seen, 
+                'Activity Count':member.activity_count,
+                'Tags': ",".join([tag.name for tag in member.tags.all()])
+            })
+        return response
 
 class MemberNoteForm(forms.ModelForm):
     class Meta:
@@ -497,14 +615,25 @@ class MemberProfile(SavannahView):
     @property 
     def recent_connections(self):
         connections = MemberConnection.objects.filter(from_member=self.member).order_by('-last_connected')[:10]
-        connections.select_related('to_member').prefetch_related('to_member__tags')
+        connections = connections.select_related('to_member').prefetch_related('to_member__tags')
         return connections
 
     @property 
     def top_connections(self):
         connections = MemberConnection.objects.filter(from_member=self.member).order_by('-connection_count')[:10]
-        connections.select_related('to_member').prefetch_related('to_member__tags')
+        connections = connections.select_related('to_member').prefetch_related('to_member__tags')
         return connections
+
+    @property
+    def recent_events(self):
+        attendance = EventAttendee.objects.filter(member=self.member).select_related('event').order_by('-event__start_timestamp')[:10]
+        return attendance
+
+    @property
+    def journey(self):
+        activity_filter = Q(channel__activity__member=self.member)
+        touches = Source.objects.filter(community=self.community).annotate(first_seen=Min('channel__activity__timestamp', filter=activity_filter)).filter(first_seen__isnull=False).order_by('first_seen')
+        return touches
 
     @login_required
     def as_view(request, member_id):
@@ -798,6 +927,87 @@ class PromoteToContribution(SavannahView):
 
         return render(request, 'savannahv2/promote_to_contribution.html', view.context)
 
+class NewContributionForm(forms.ModelForm):
+    class Meta:
+        model = Contribution
+        fields = ['title', 'contribution_type', 'channel', 'timestamp', 'location']
+
+    def limit_to(self, community):
+        current_source = None
+        choices = [(None, '--------')]
+        for contrib_type in ContributionType.objects.filter(community=community, source__isnull=False).select_related('source').order_by(Lower('source__connector')):
+            source_name = '%s (%s)' % (contrib_type.source.connector_name, contrib_type.source.name)
+            if source_name != current_source:
+                current_source = source_name
+                choices.append((source_name, []))
+            choices[-1][1].append((contrib_type.id, contrib_type.name))
+        self.fields['contribution_type'].widget.choices = choices
+
+        current_source = None
+        choices = [(None, '--------')]
+        for channel in Channel.objects.filter(source__community=community).select_related('source').order_by(Lower('source__connector'), Lower('name')):
+            source_name = '%s (%s)' % (channel.source.connector_name, channel.source.name)
+            if source_name != current_source:
+                current_source = source_name
+                choices.append((source_name, []))
+            choices[-1][1].append((channel.id, channel.name))
+        self.fields['channel'].widget.choices = choices
+        self.fields['channel'].required = True
+
+        self.fields['location'].label = "Link to Contribution"
+
+
+class AddContribution(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    @property
+    def form(self):
+        try:
+            last_activity = Activity.objects.filter(member=self.member, contribution__isnull=True).order_by('-timestamp')[0]
+            default_channel = last_activity.channel
+            default_timestamp = last_activity.timestamp
+            default_link = last_activity.location
+            default_type = ContributionType.objects.filter(source=default_channel.source).annotate(use_count=Count('contribution')).order_by('-use_count')[0]
+            default_title = "%s in %s on %s" % (default_type.name, default_channel.name, default_channel.source.connector_name)
+        except:
+            default_channel = None
+            default_type = None
+            default_title = ""
+            default_timestamp = datetime.datetime.utcnow()
+            default_link = None
+        new_contrib = Contribution(
+            community=self.community, 
+            contribution_type=default_type,
+            title=default_title,
+            author=self.member, 
+            channel=default_channel,
+            timestamp=default_timestamp, 
+            location=default_link
+        )
+
+        if self.request.method == 'POST':
+            form = NewContributionForm(instance=new_contrib, data=self.request.POST)
+        else:
+            form = NewContributionForm(instance=new_contrib)
+        form.limit_to(self.community)
+        return form
+
+    @login_required
+    def as_view(request, member_id):
+        view = AddContribution(request, member_id)
+
+        if request.method == 'POST':
+            if view.form.is_valid():
+                contrib = view.form.save()
+                contrib.update_activity()
+                messages.success(request, "Contribution has been recorded")
+                return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/add_contribution.html', view.context)
+
 class MemberMergeHistory(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
@@ -907,6 +1117,18 @@ class MemberEditForm(forms.ModelForm):
         self.fields['company'].widget.choices = [('', '-----')] + [(company.id, company.name) for company in Company.objects.filter(community=community).order_by(Lower('name'))]
 
 
+class MemberSettingsForm(forms.ModelForm):
+    class Meta:
+        model = Member
+        fields = [
+            # 'auto_update_name', 
+            'auto_update_company', 
+            # 'auto_update_role', 
+            # 'auto_update_email', 
+            # 'auto_update_avatar'
+            ]
+
+
 class MemberEdit(SavannahView):
     def __init__(self, request, member_id):
         self.member = get_object_or_404(Member, id=member_id)
@@ -926,6 +1148,14 @@ class MemberEdit(SavannahView):
         form.limit_to(self.community)
         return form
 
+    @property
+    def settings_form(self):
+        if self.request.method == 'POST':
+            form = MemberSettingsForm(instance=self.member, data=self.request.POST)
+        else:
+            form = MemberSettingsForm(instance=self.member)
+        return form
+
     @login_required
     def as_view(request, member_id):
         view = MemberEdit(request, member_id)
@@ -933,6 +1163,31 @@ class MemberEdit(SavannahView):
         if request.method == "POST" and view.form.is_valid():
             view.form.save()
             return redirect('member_profile', member_id=member_id)
+
+        return render(request, 'savannahv2/member_edit.html', view.context)
+
+class MemberSettings(SavannahView):
+    def __init__(self, request, member_id):
+        self.member = get_object_or_404(Member, id=member_id)
+        super().__init__(request, self.member.community_id)
+        self.active_tab = "members"
+
+    @property
+    def form(self):
+        if self.request.method == 'POST':
+            form = MemberSettingsForm(instance=self.member, data=self.request.POST)
+        else:
+            form = MemberSettingsForm(instance=self.member)
+        return form
+
+    @login_required
+    def as_view(request, member_id):
+        view = MemberSettings(request, member_id)
+        
+        if request.method == "POST" and view.form.is_valid():
+            view.form.save()
+            messages.info(request, "Member settings have been updated.")
+            return redirect('member_edit', member_id=member_id)
 
         return render(request, 'savannahv2/member_edit.html', view.context)
 

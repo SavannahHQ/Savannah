@@ -1,6 +1,7 @@
 from corm.plugins import BasePlugin, PluginImporter
 import datetime
 import re
+import json
 from corm.models import *
 from urllib.parse import urlparse, parse_qs
 from requests_oauthlib import OAuth2Session
@@ -8,6 +9,9 @@ from django.conf import settings
 from django.shortcuts import redirect, get_object_or_404, reverse
 from django.urls import path
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+import hmac
 import requests
 
 AUTHORIZATION_BASE_URL = 'https://slack.com/oauth/authorize'
@@ -30,6 +34,7 @@ def authenticate(request):
         'groups:read',
         'groups:history',
         'team:read',
+        'commands',
     ]
     callback_uri = request.build_absolute_uri(reverse('slack_callback'))
     client = OAuth2Session(client_id, scope=slack_auth_scope, redirect_uri=callback_uri)
@@ -45,9 +50,12 @@ def authenticate(request):
 def callback(request):
     client_id = settings.SLACK_CLIENT_ID
     client_secret = settings.SLACK_CLIENT_SECRET
+    community = get_object_or_404(Community, id=request.session.get('community'))
+    if 'oauth_state' not in request.session or not request.session['oauth_state']:
+        messages.add_message(request, messages.ERROR, 'Unable to validate your Slack authentication: Missing oauth_state')
+        return redirect(reverse('sources', kwargs={'community_id':community.id}))
     callback_uri = request.build_absolute_uri(reverse('slack_callback'))
     client = OAuth2Session(client_id, state=request.session['oauth_state'], redirect_uri=callback_uri)
-    community = get_object_or_404(Community, id=request.session.get('community'))
 
     try:
         token = client.fetch_token(TOKEN_URL, code=request.GET.get('code', None), client_secret=client_secret)
@@ -63,9 +71,102 @@ def callback(request):
         messages.add_message(request, messages.ERROR, 'Unable to connect your Slack workspace: %s' % e)
         return redirect(reverse('sources', kwargs={'community_id':community.id}))
 
+import urllib
+import hashlib
+import time
+def verify_request(request):
+    # Convert your signing secret to bytes
+    slack_signing_secret = bytes(settings.SLACK_SIGNING_SECRET, "utf-8")
+    request_body = request.body.decode()
+    slack_request_timestamp = request.headers["X-Slack-Request-Timestamp"]
+    slack_signature = request.headers["X-Slack-Signature"]
+    # Check that the request is no more than 60 seconds old
+    if (int(time.time()) - int(slack_request_timestamp)) > 60:
+        print("Verification failed. Request is out of date.")
+        return False
+    # Create a basestring by concatenating the version, the request timestamp, and the request body
+    basestring = f"v0:{slack_request_timestamp}:{request_body}".encode("utf-8")
+    # Hash the basestring using your signing secret, take the hex digest, and prefix with the version number
+    my_signature = (
+        "v0=" + hmac.new(slack_signing_secret, basestring, hashlib.sha256).hexdigest()
+    )
+    # Compare the resulting signature with the signature on the request to verify the request
+    if hmac.compare_digest(my_signature, slack_signature):
+        return True
+    else:
+        print("Verification failed. Signature invalid.")
+        return False
+        
+@csrf_exempt
+def handle_shortcuts(request):
+    if not verify_request(request):
+        return HttpResponse("Signature verfication failed", status=400)
+
+    try:
+        if request.method == 'POST' and 'payload' in request.POST:
+            payload = json.loads(urllib.parse.unquote_plus(request.POST.get('payload')))
+            payload_type = payload['type']
+            if payload_type == 'message_action':
+                response_url = payload.get('response_url', None)
+                callback_id = payload['callback_id']
+                action_user = payload['user']['id']
+                slack_team = payload['team']['id']
+                slack_channel = payload['channel']['id']
+                target_user = payload['message']['user']
+                channel = None
+                target_member = None
+                sources = Source.objects.filter(connector="corm.plugins.slack", auth_id=slack_team)
+                if sources.count() == 0:
+                    return HttpResponse("Failed to find matcing Savannah source for: %s" % slack_team, status=400)
+                if sources.count() > 1:
+                    return HttpResponse("Multiple matches found for Slack source: %s" % slack_team, status=400)
+                source = sources[0]
+                try:
+                    action_contact = Contact.objects.get(source=source, origin_id="slack.com/"+action_user)
+                    if action_contact.member.managerprofile_set.count() == 1:
+                        action_user = action_contact.member.managerprofile_set.all()[0].user
+                        channel = Channel.objects.get(source=source, origin_id=slack_channel)
+                        target_contact = Contact.objects.get(source=source, origin_id="slack.com/"+target_user)
+                        target_member = target_contact.member
+                    else:
+                        return HttpResponse("Slack user is not a manager in Savannah: %s" % action_user, status=400)
+                except:
+                    pass
+
+                if not action_user:
+                    return HttpResponse("Failed to locate matching Savannah user: %s" % action_user, status=400)
+                if not channel:
+                    return HttpResponse("Failed to locate matching Savannah channel: %s" % slack_channel, status=400)
+                if not target_member:
+                    return HttpResponse("Failed to locate matching Savannah member: %s" % target_user, status=400)
+
+                if callback_id == 'add_note':
+                    content = '**%s**: %s' % (target_contact.detail, payload['message']['text'])
+                    Note.objects.update_or_create(member=target_member, author=action_user, timestamp=datetime.datetime.utcnow(), content=content)
+                    return HttpResponse(status=200)
+                elif callback_id == 'make_contrib':
+                    server = source.server or 'slack.com'
+                    tstamp = datetime.datetime.fromtimestamp(float(payload['message']['ts']))
+                    slack_convo_id = "%s/archives/%s/p%s" % (server, channel.origin_id, payload['message']['ts'].replace(".", ""))
+                    convo = Conversation.objects.get_or_create(origin_id=slack_convo_id, channel=channel, speaker=target_member, defaults={'content': payload['message']['text'], 'timestamp':tstamp})
+
+                    return HttpResponse("Being worked on", content_type='text/plain', status=200)
+                else:
+                    return HttpResponse("Unknown callback_id: %s" % callback_id, status=400)
+            else:
+                return HttpResponse("%s type is not supported" % payload_type, status=400)
+        else:
+            return HttpResponse("Missing payload", status=400)
+    except Exception as e:
+        print(e)
+        return HttpResponse("Malformed JSON", status=400)
+
+    raise RuntimeError("Not Implemented")
+
 urlpatterns = [
     path('auth', authenticate, name='slack_auth'),
     path('callback', callback, name='slack_callback'),
+    path('shortcuts', handle_shortcuts, name='slack_shortcuts'),
 ]
 
 class SlackPlugin(BasePlugin):
@@ -365,7 +466,7 @@ class SlackImporter(PluginImporter):
             return
         slack_user_id = "slack.com/%s" % user_id
         speaker = self.make_member(slack_user_id, channel=channel, detail=user_name, email_address=user_email, tstamp=tstamp, speaker=True, name=user_real_name)
-        if user_isbot and speaker.role != Member.BOT:
+        if user_isbot and speaker.role == Member.COMMUNITY:
             speaker.role = Member.BOT
             speaker.save()
 

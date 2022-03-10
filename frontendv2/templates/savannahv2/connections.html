@@ -11,7 +11,7 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Connections</h1>
-            {% include 'savannahv2/filter_button.html' with current_tag=view.tag members_only=True %}
+            {% include 'savannahv2/filter_button.html' %}
           </div>
 
           <!-- Content Row -->
@@ -22,8 +22,8 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-left">
-                  <h6 class="m-0 font-weight-bold text-primary">Community Network{% if view.timespan > 31 %} (30 Days){% endif %}</h6>
-                  {% include 'savannahv2/filter_pills.html' %}
+                  <h6 class="m-0 font-weight-bold text-primary">Community Network</h6>
+                  {% include 'savannahv2/filter_pills.html' with show_timespan=True%}
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">

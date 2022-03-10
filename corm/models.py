@@ -64,7 +64,7 @@ class ManagementPermissionMixin(object):
 
     def can_add_source(self):
         if self.sources > 0:
-            return self.community.source_set.all().count() < self.sources
+            return self.community.source_set.filter(enabled=True).exclude(connector='corm.plugins.null').count() < self.sources
         else:
             return True
 
@@ -198,7 +198,15 @@ class Community(models.Model):
     suggest_merge = models.BooleanField(default=True, help_text="Suggest merging accounts belonging to the same person")
     suggest_contribution = models.BooleanField(default=True, help_text="Suggest Contributions based on Conversation text")
     suggest_task = models.BooleanField(default=True, help_text="Suggest Tasks to help engage with your Members")
-    
+
+    inactivity_threshold_previous_activity = models.PositiveSmallIntegerField(default=50, help_text="Amount of previous activity required before you will be notified that a member has become inactive.")
+    inactivity_threshold_previous_days = models.PositiveSmallIntegerField(default=90, help_text="Number of days into the past to check for activity to meet the notification threshold")
+    inactivity_threshold_days = models.PositiveSmallIntegerField(default=30, help_text="Number of days of inactivity before triggering a notification")
+
+    resuming_threshold_previous_activity = models.PositiveSmallIntegerField(default=20, help_text="Amount of previous activity required before you will be notified that an inactive member had become active again")
+    resuming_threshold_previous_days = models.PositiveSmallIntegerField(default=90, help_text="Number of days into the past to check for activity to meet the notification threshold")
+    resuming_threshold_days = models.PositiveSmallIntegerField(default=30, help_text="Number of days of inactivity before triggering a notification on new activity")
+
     @property
     def manual_source(self):
         source, created = Source.objects.get_or_create(community=self, name="Manual Entry", connector='corm.plugins.null', icon_name='fas fa-edit')
@@ -334,6 +342,13 @@ class Member(TaggableModel):
     company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True)
 
     connections = models.ManyToManyField('Member', through='MemberConnection')
+
+    # Settings
+    auto_update_name = models.BooleanField(default=True, verbose_name='Auto Update Name')
+    auto_update_role = models.BooleanField(default=True, verbose_name='Auto Update Role')
+    auto_update_company = models.BooleanField(default=True, verbose_name='Auto Update Company')
+    auto_update_email = models.BooleanField(default=True, verbose_name='Auto Update Email Address')
+    auto_update_avatar = models.BooleanField(default=True, verbose_name='Auto Update Avatar')
 
     def set_company(self, company):
         if company is None:
@@ -768,6 +783,20 @@ class Activity(TaggableModel):
         else:
             return Member.objects.none()
         
+class Hyperlink(models.Model):
+    """
+    For tracking links people mention in conversations
+    """
+
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    url = models.URLField()
+    host = models.CharField(max_length=256)
+    path = models.CharField(max_length=512)
+    content_type = models.CharField(max_length=64, null=True, blank=True)
+    ignored = models.BooleanField(default=False, help_text='Ignore links that are not interesting to you, or are added automatically to conversations.')
+
+    def __str__(self):
+        return self.url
 
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
@@ -779,6 +808,7 @@ class Conversation(TaggableModel, ImportedDataModel):
     location = models.URLField(max_length=512, null=True, blank=True)
     thread_start = models.ForeignKey('Conversation', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
     contribution = models.OneToOneField('Contribution', related_name='conversation', on_delete=models.SET_NULL, null=True, blank=True)
+    links = models.ManyToManyField(Hyperlink)
 
     @property
     def participants(self):
@@ -1047,6 +1077,10 @@ class Event(ImportedDataModel):
     def speakers(self):
         return Member.objects.filter(event_attendance__event=self, event_attendance__role=EventAttendee.SPEAKER)
 
+    @property
+    def staff(self):
+        return Member.objects.filter(event_attendance__event=self, event_attendance__role=EventAttendee.STAFF)
+
     def __str__(self):
         return "%s (%s)" % (self.title, self.community)
 
@@ -1054,15 +1088,18 @@ class EventAttendee(models.Model):
     GUEST = "guest"
     HOST = "host"
     SPEAKER = "speaker"
+    STAFF = "staff"
     ATTENDEE_ROLE = [
         (GUEST, 'Guest'),
         (HOST, 'Host'),
         (SPEAKER, 'Speaker'),
+        (STAFF, "Staff"),
     ]
     ROLE_NAME = {
         GUEST: "Guest",
         HOST: "Host",
-        SPEAKER: "Speaker"
+        SPEAKER: "Speaker",
+        STAFF: "Staff",
     }    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
@@ -1427,7 +1464,10 @@ class SourceGroup(ImportedDataModel):
     name = models.CharField(max_length=256)
 
     def get_external_url(self):
-        return self.source.plugin.get_company_url(self)
+        try:
+            return self.source.plugin.get_company_url(self)
+        except:
+            return None
 
     def __str__(self):
         return self.name
@@ -1441,7 +1481,7 @@ class SuggestCompanyCreation(Suggestion):
         default_name = self.domain.rsplit('.', maxsplit=1)[0].replace('-', ' ').title()
         new_company = Company.objects.create(name=default_name, community=self.community, website=default_website)
         new_domain = CompanyDomains.objects.create(company=new_company, domain=default_domain)
-        members = Member.objects.filter(community=self.community, company__isnull=True, email_address__endswith=default_domain)
+        members = Member.objects.filter(community=self.community, company__isnull=True, email_address__endswith=default_domain, auto_update_company=True)
         for member in members:
             (identity, domain) = member.email_address.split('@', maxsplit=1)
             if domain == self.domain:
@@ -1486,3 +1526,4 @@ class EmailRecord(models.Model):
     subject = models.CharField(null=False, max_length=128)
     body = models.TextField(null=False, max_length=1024)
     ok = models.BooleanField(null=False, default=True)
+

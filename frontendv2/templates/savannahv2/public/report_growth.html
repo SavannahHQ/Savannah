@@ -1,0 +1,617 @@
+{% extends "savannahv2/public/base.html"%}
+{% load static simple_math %}
+
+{% block page_content %}
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-xl-6 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">New Members {% if view.new_member_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_member_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="joinedChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Area Chart -->
+            <div class="col-xl-6 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Active Members {% if view.active_member_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.active_member_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="activeChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {% if view.has_company_data and dashboard.show_companies %}
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Most Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="60%">Company</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.top_company_activity %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if company.is_staff %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-building">&nbsp;</i>
+                      {% endif %}
+                    {{ company.company_name }}
+                  </td>
+                  <td>{{company.conversations}}
+                  {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributing Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="60%">Company</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.top_company_contributions %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if company.is_staff %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-building">&nbsp;</i>
+                      {% endif %}
+                    {{ company.company_name }}
+                  </td>
+                  <td>{{company.contributions}}
+                  {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+          {% endif %}
+
+          {% if view.has_support_data %}
+          <!-- Content Row -->
+          <div class="row">
+
+            {% if dashboard.show_companies %}
+            <!-- Area Chart -->
+            <div class="col-xl-4 col-lg-4">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Supported Companies</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="{{view.supported_companies.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Area Chart -->
+            <div class="col-xl-4 col-lg-4">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Supported Members by Tag</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="{{view.supported_members_by_tag.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Area Chart -->
+            <div class="col-xl-4 col-lg-4">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Supporters by Role</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="{{view.supporters_by_role.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          {% endif %}
+
+         {% if dashboard.show_members %}
+         <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Most Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for supporter in view.top_supporters %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if supporter.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif supporter.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ supporter.member_name }}
+                  </td>
+                  <td>{{supporter.conversations}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.top_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </td>
+                  <td>{{member.contributions}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+            {% if view.has_support_data %}
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Top Supporters-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Supporters</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Cases</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.top_support_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </td>
+                  <td>{{member.contributions}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            {% endif %}
+
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- New Contributors -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.new_contributor_count}} New Contributors {% if view.new_contributor_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_contributor_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.new_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </td>
+                  <td>{{member.first_contrib}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Content Column -->
+            <div class="col-lg-6 mb-4">
+
+              <!-- New Members -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.new_member_count}} New Members {% if view.new_member_diff >= 0 %}<span class="text-success">(<i class="fas fa-caret-up"></i> {% else %}<span class="text-danger">(<i class="fas fa-caret-down"></i> {% endif %}{{view.new_member_diff|abs|floatformat:-2}}%)</span></h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Joined</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.new_members %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                    {{ member.member_name }}
+                  </td>
+                  <td>{{member.joined}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          {% endif %}
+          
+       </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("activeChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.members_chart_keys|safe}},
+    datasets: [
+    {
+      label: "{{view.month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.ACTIVITY.BASE}}22",
+      borderColor: "#{{colors.ACTIVITY}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.ACTIVITY}}",
+      pointBorderColor: "#{{colors.ACTIVITY}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.ACTIVITY}}",
+      pointHoverBorderColor: "#{{colors.ACTIVITY}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_active|safe}},
+    },
+    {
+      label: "{{view.previous_month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.ACTIVITY.LIGHT}}22",
+      borderColor: "#{{colors.ACTIVITY.LIGHT}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.ACTIVITY.LIGHT}}",
+      pointBorderColor: "#{{colors.ACTIVITY.LIGHT}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.ACTIVITY.LIGHT}}",
+      pointHoverBorderColor: "#{{colors.ACTIVITY.LIGHT}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_previous_active|safe}},
+    }
+    ],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("joinedChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.members_chart_keys|safe}},
+    datasets: [
+    {
+      label: "{{view.month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.MEMBER}}22",
+      borderColor: "#{{colors.MEMBER}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.MEMBER}}",
+      pointBorderColor: "#{{colors.MEMBER}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.MEMBER}}",
+      pointHoverBorderColor: "#{{colors.MEMBER}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_counts|safe}},
+    },
+    {
+      label: "{{view.previous_month_name}}",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.MEMBER.LIGHT}}22",
+      borderColor: "#{{colors.MEMBER.LIGHT}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.MEMBER.LIGHT}}",
+      pointBorderColor: "#{{colors.MEMBER.LIGHT}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.MEMBER.LIGHT}}",
+      pointHoverBorderColor: "#{{colors.MEMBER.LIGHT}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_previous_counts|safe}},
+    }
+    ],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+
+{% endblock %}

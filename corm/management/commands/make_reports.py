@@ -32,7 +32,8 @@ class Command(BaseCommand):
             print("Using Community: %s" % community.name)
             communities = [community]
         else:
-            communities = Community.objects.all()
+            communities = Community.objects.filter(status=Community.ACTIVE)
+            
         if for_date:
             self.tstamp = dateutil.parser.parse(for_date)
         else:
@@ -338,6 +339,8 @@ class AnnualReporter(Reporter):
             'contribution_types': self.get_contribution_types(),
             'top_supporters': self.get_top_supporters(),
             'top_contributors': self.get_top_contributors(),
+            'top_company_contributions': self.get_top_company_contributions(),
+            'top_company_activity': self.get_top_company_activity(),
         }
 
     def get_counts(self):
@@ -348,11 +351,24 @@ class AnnualReporter(Reporter):
         contributions = Contribution.objects.filter(community=self.community)
         contributions = contributions.filter(timestamp__gte=self.start, timestamp__lte=self.end)
         counts['contributions'] = contributions.count()
+        connections = MemberConnection.objects.filter(from_member__community=self.community)
+        connections = connections.filter(last_connected__gte=self.start, last_connected__lte=self.end)
+        counts['connections'] = int(connections.count() / 2)
+        events = Event.objects.filter(community=self.community)
+        events = events.filter(start_timestamp__gte=self.start, start_timestamp__lte=self.end)
+        counts['events'] = events.count()
+        gifts = Gift.objects.filter(community=self.community)
+        gifts = gifts.filter(sent_date__gte=self.start, sent_date__lte=self.end)
+        counts['gifts'] = gifts.count()
 
         members = Member.objects.filter(community=self.community)
         counts['new_members'] = members.filter(first_seen__gte=self.start, first_seen__lte=self.end).count()
         members = members.annotate(first_contrib=Min('contribution__timestamp'))
         counts['new_contributors'] =  members.filter(first_contrib__gte=self.start, first_contrib__lte=self.end).count()
+        companies = Company.objects.filter(community=self.community)
+        companies = companies.annotate(first_activity=Min('member__speaker_in__timestamp'))
+        companies = companies.filter(first_activity__gte=self.start, first_activity__lte=self.end)
+        counts['new_companies'] = companies.count()
         return counts
 
     def get_conversation_sources(self):
@@ -415,3 +431,16 @@ class AnnualReporter(Reporter):
             'joined': [joined.get(month, 0) for month in months], 
             'active': [active.get(month, 0) for month in months], 
         }
+
+    def get_top_company_contributions(self):
+        contrib_filter = Q(member__contribution__timestamp__gte=self.start, member__contribution__timestamp__lte=self.end)
+        companies = Company.objects.filter(community=self.community, is_staff=False).annotate(contrib_count=Count('member__contribution', filter=contrib_filter)).filter(contrib_count__gt=0).order_by('-contrib_count')
+        companies = companies[:20]
+        return [{'company_id': company.id, 'company_name': company.name, 'is_staff': company.is_staff, 'contributions':company.contrib_count} for company in companies]
+
+    def get_top_company_activity(self):
+        convo_filter = Q(member__speaker_in__timestamp__gte=self.start, member__speaker_in__timestamp__lte=self.end)
+        companies = Company.objects.filter(community=self.community, is_staff=False).annotate(convo_count=Count('member__speaker_in', filter=convo_filter)).filter(convo_count__gt=0).order_by('-convo_count')
+        companies = companies[:20]
+        return [{'company_id': company.id, 'company_name': company.name, 'is_staff': company.is_staff, 'conversations':company.convo_count} for company in companies]
+

@@ -5,7 +5,7 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'sources' view.community.id %}"><i class="fas fa-arrow-left"></i></a> {{view.source.name}}</h1>
+            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'sources' view.community.id %}"><i class="fas fa-arrow-left"></i></a> <i class="{{view.source.icon_name}}"></i> {{view.source.name}}</h1>
             {% if view.source.connector == 'corm.plugins.api' %}<div>API Token: {{ view.source.api_key }} <a href="https://docs.savannahhq.com/api/" target="savannah_docs" title="API Docs"><i class="fa fa-question-circle">&nbsp;</i></a></div>
             {% elif  view.source.connector == 'corm.plugins.salesforce' %}<div>API Token: {{ view.source.api_key }} <a href="{{view.source.server}}/lightning/setup/NamedCredential/home" target="salesforce" title="Add to Savannah_CRM_API Named Credential"><i class="fa fa-question-circle">&nbsp;</i></a></div>
             {% endif %}
@@ -30,7 +30,7 @@
                   <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Tag</th>
-                    <th scope="col">Conversations</th>
+                    <th scope="col">Activities</th>
                     <th scope="col">Last Import</th>
                     <th class="text-center" width="100px" scope="col">Action</th>
                   </tr>
@@ -64,7 +64,7 @@
                         </div>
                       </span>
                   </td>
-                  <td>{{channel.conversation_count}}</td>
+                  <td>{{channel.activity_count}}</td>
                   <td>{{channel.last_import|default:"-"}}</td>
                   <td class="text-center">
                     <form class="inline-form" action="{% url 'channels' view.community.id view.source.id %}" method="POST">

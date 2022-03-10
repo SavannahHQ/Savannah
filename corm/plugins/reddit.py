@@ -246,7 +246,7 @@ class RedditImporter(PluginImporter):
         identity.member.save()
 
     def import_channel(self, channel, from_date, full_import=False):
-        self.from_timestamp = self.strftime(from_date)
+        self.from_timestamp = self.strftime(from_date - datetime.timedelta(days=5))
         cursor = ''
         has_more = True
         while has_more:

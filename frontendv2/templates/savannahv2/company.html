@@ -168,19 +168,20 @@
 
             </div>
 
-            <!-- Contacts List -->
+            
             <div class="col-xl-4 col-lg-5">
 
-              <div class="card shadow mb-4">
+            <!-- Members List -->
+            <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Members</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Members</h6>
                   <a class="text-gray-500" href="{% url 'company_merge' view.company.id %}" title="Merge"><i class="fas fa-people-arrows"></i></a>
                 </div>
                 <!-- Card Body -->
                 <div class="card-body">
                   <div class="ml-3">
-                  {% for member in view.all_members %}
+                  {% for member in view.recent_members %}
                     <div class="mb-3">
                       {{member|avatar_icon}}
                       <a href="{% url 'member_profile' member.id %}">{{member}}</a>
@@ -201,8 +202,40 @@
                       </a>
                       {% endif %}
                     </div>
-                  {% endfor %}
+                    {% if forloop.last and forloop.counter == 10 %}
+                      <div class="mb-3 text-center"><a href="{% url 'all_members' view.community.id %}?clear=all&member_company={{view.company.id}}"><b>View All Members</b></a></div>
+                    {% endif %}
+                    {% endfor %}
                   </div>
+                </div>
+              </div>
+
+              <!-- Top Connections-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Connections</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th class="text-right" scope="col">Connections</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for connection in view.top_connections %}
+                <tr>
+                  <td>
+                    {{connection.to_member|avatar}}
+                    <a href="{% url 'member_profile' connection.to_member.id %}">{{ connection.to_member.name }}</a>
+                    {% include 'savannahv2/tag_list.html' with tags=member.tags.all %}
+                  </td>
+                  <td class="text-right pr-4">{{connection.connection_sum}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
                 </div>
               </div>
 

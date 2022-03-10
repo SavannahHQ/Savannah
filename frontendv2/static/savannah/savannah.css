@@ -136,3 +136,11 @@
 .show-on-parent-hover {
     visibility: hidden;
 }
+
+.display-children-on-hover:hover .display-on-parent-hover {
+    display: inherit;
+}
+
+.display-on-parent-hover {
+    display: none;
+}

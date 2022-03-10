@@ -4,7 +4,7 @@ import re
 import string
 from django.db.models import Count, Q, F, Value as V, fields, Min
 from django.db.models.functions import Concat
-from corm.models import Conversation, Community, Source, ConnectionManager, MemberConnection, Participant
+from corm.models import Conversation, Community, Source, ConnectionManager, MemberConnection, Participant, Project
 
 class Command(BaseCommand):
     help = 'Auto-Connect participants in conversations'
@@ -60,11 +60,17 @@ class Command(BaseCommand):
             to_member_id = int(to_member_id)
             MemberConnection.objects.filter(from_member_id=from_member_id, to_member_id=to_member_id, id__gt=con['min_id']).delete()
 
+        default_project = Project.objects.get(community=community, default_project=True)
+
+        # Zero out old connections
+        MemberConnection.objects.filter(last_connected__lt=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).update(connection_count=0)
+
         # Count connection events
         print("Calculating number of connection")
         found = set()
-        participants = Participant.objects.filter(community=community, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=365)).exclude(member=F('initiator'))
-        participants = participants.values('initiator', 'member').annotate(connection_count=Count('conversation', distinct=True))
+        participants = Participant.objects.filter(community=community, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)).exclude(member=F('initiator'))
+        participants = participants.values('initiator', 'member').annotate(connection_count=Count('conversation', filter=Q(conversation__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=default_project.threshold_period)), distinct=True))
+        participants = participants.order_by('-connection_count')
         for connection in participants:
             from_to = "%s-%s" % (connection['initiator'], connection['member'])
             to_from = "%s-%s" % (connection['member'], connection['initiator'])
@@ -75,5 +81,5 @@ class Command(BaseCommand):
                 continue
             found.add(from_to)
             found.add(to_from)
-            MemberConnection.objects.filter(from_member_id=connection['initiator'], to_member_id=connection['member'], connection_count__lt=connection['connection_count']).update(connection_count=connection['connection_count'])
-            MemberConnection.objects.filter(to_member_id=connection['initiator'], from_member_id=connection['member'], connection_count__lt=connection['connection_count']).update(connection_count=connection['connection_count'])
+            MemberConnection.objects.filter(from_member_id=connection['initiator'], to_member_id=connection['member']).update(connection_count=connection['connection_count'])
+            MemberConnection.objects.filter(to_member_id=connection['initiator'], from_member_id=connection['member']).update(connection_count=connection['connection_count'])

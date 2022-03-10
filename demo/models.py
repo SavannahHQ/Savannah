@@ -1,7 +1,16 @@
+import datetime
 from django.db import models
+from django.contrib.auth.models import User, Group
 from corm.models import Community
 
 # Create your models here.
+class DemoLog(models.Model):
+    name = models.CharField(max_length=256)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField()
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True)
+    
 class Demonstration(models.Model):
     SEED = 0
     READY = 1
@@ -21,4 +30,10 @@ class Demonstration(models.Model):
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SEED)
     created = models.DateTimeField(auto_now_add=True)
     expires = models.DateTimeField(blank=True, null=True)
+    log = models.ForeignKey(DemoLog, on_delete=models.SET_NULL, null=True, blank=True)
 
+    def delete(self, *args, **kwargs):
+        if self.log is not None:
+            self.log.deleted_at = datetime.datetime.utcnow()
+            self.log.save()
+        return super(Demonstration, self).delete(*args, **kwargs)

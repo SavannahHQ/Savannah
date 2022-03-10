@@ -50,7 +50,7 @@ class SourceAdd(SavannahView):
         icon_choices = [
             ('fas fa-cogs', 'Custom Integration'),
             ('Generic Icons', [('fas fa-%s' % icon, icon.title()) for icon in generic_icons]),
-            ('Brand Icons', [('fas fa-%s' % icon, icon.title()) for icon in brand_icons]),
+            ('Brand Icons', [('fab fa-%s' % icon, icon.title()) for icon in brand_icons]),
         ]
 
         form = APISourceForm(instance=new_source)
@@ -120,7 +120,7 @@ class IdentityList(SavannahIntegrationView):
     """
 
     def get(self, request, format=None):
-        identities = Contact.objects.filter(source=request.source)
+        identities = Contact.objects.filter(source=request.source).select_related('member').prefetch_related('member__tags')
         serializer = IdentitySerializer(identities, many=True)
         return Response(serializer.data)
 

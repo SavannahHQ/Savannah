@@ -7,13 +7,14 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 from corm.models import *
-from demo.models import Demonstration
+from demo.models import Demonstration, DemoLog
 
 # Create your views here.
 class NewCommunityForm(forms.ModelForm):
     class Meta:
         model = Community
         fields = ['name', 'logo']
+
 
 @login_required
 def new_demo(request):
@@ -42,6 +43,9 @@ def new_demo(request):
                 new_community.managers = Group.objects.create(name="%s Managers (%s)" % (new_community.name, new_community.id))
                 new_community.owner.groups.add(new_community.managers)
                 new_community.save()
+            else:
+                new_community.managers.name = "%s Managers (%s)" % (new_community.name, new_community.id)
+                new_community.managers.save()
             staff_domain = new_community.name.replace(" ", "").lower() + ".com"
             new_community.company_set.filter(is_staff=True).update(name=new_community.name, website="https://%s" % staff_domain, icon_url=settings.SITE_ROOT+new_community.icon.url)
             CompanyDomains.objects.filter(company__is_staff=True).update(domain=staff_domain)
@@ -60,6 +64,12 @@ def new_demo(request):
 
             demo.expires = datetime.datetime.utcnow() + datetime.timedelta(hours=settings.DEMO_DURATION_HOURS)
             demo.status = demo.IN_USE
+            demo.log = DemoLog.objects.create(
+                name = new_community.name,
+                created_by = request.user,
+                created_at = datetime.datetime.utcnow(),
+                managers = new_community.managers,
+            )
             demo.save()
 
             # Redirect to company creation form

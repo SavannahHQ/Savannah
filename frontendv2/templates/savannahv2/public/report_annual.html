@@ -1,0 +1,499 @@
+{% extends "savannahv2/public/base.html"%}
+{% load static humanize simple_math simple_dates member_utils %}
+
+{% block page_content %}
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Members Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-member shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">New Members</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.new_member_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contributors Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-activity shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-activity text-uppercase mb-0">New Contributors</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.new_contributor_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-user-shield fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+           <!-- Conversations Card -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-conversation shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-conversation text-uppercase mb-1">Conversations</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.conversation_count|intcomma}}</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-comments fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          <!-- Connections Card -->
+          <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-connection shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-connection text-uppercase mb-1">Connections</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.connections_count|intcomma}}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-project-diagram fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contributions Card -->
+          <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-contribution shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-contribution text-uppercase mb-1">Contributions</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.contribution_count|intcomma}}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Companies Card -->
+          <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-company shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-company text-uppercase mb-1">New Companies</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.new_company_count|intcomma}}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-building fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Events Card -->
+          <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-event shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-event text-uppercase mb-1">Events</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.events_count|intcomma}}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gifts Card -->
+          <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-gift shadow h-100 py-2">
+              <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                  <div class="col mr-2">
+                    <div class="text-xs font-weight-bold text-gift text-uppercase mb-1">Gifts</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{view.gifts_count|intcomma}}</div>
+                  </div>
+                  <div class="col-auto">
+                    <i class="fas fa-gifts fa-2x text-gray-300"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      </div>
+      <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Area Chart -->
+            <div class="col-xl-8 col-lg-8">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Members</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-area">
+                    <canvas id="membersChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Channels Chart -->
+            <div class="col-xl-4 col-lg-6">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.conversation_sources_chart.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.conversation_sources_chart.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            {% if view.has_company_data and dashboard.show_companies %}
+            <!-- Content Column -->
+            <div class="{% if dashboard.show_members %}col-lg-6{% else %}col-lg-4{% endif %} mb-4">
+
+              <!-- Most Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="60%">Company</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.top_company_activity %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if company.is_staff %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-building">&nbsp;</i>
+                      {% endif %}
+                    {{ company.company_name }}
+                  </td>
+                  <td>{{company.conversations}}
+                  {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            
+            <!-- Content Column -->
+            <div class="{% if dashboard.show_members %}col-lg-6{% else %}col-lg-4{% endif %} mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributing Companies</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col" width="60%">Company</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributed</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for company in view.top_company_contributions %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if company.is_staff %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-building">&nbsp;</i>
+                      {% endif %}
+                    {{ company.company_name }}
+                  </td>
+                  <td>{{company.contributions}}
+                  {% if company.diff > 0 %}&nbsp;&nbsp;<span class="text-success">(<i class="fas fa-caret-up"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% elif company.diff < 0 %}&nbsp;&nbsp;<span class="text-danger">(<i class="fas fa-caret-down"></i> {{company.diff|abs|floatformat:-2}}%)</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          {% endif %}
+
+            {% if dashboard.show_members %}
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Most Active -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Most Active</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Conversations</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for supporter in view.top_supporters %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if supporter.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif supporter.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                      {{ supporter.member_name }}
+                  </td>
+                  <td>{{supporter.conversations}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+            
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Top Contributors</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col"><span class="short-text"></span><span class="full-text">Contributions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for member in view.top_contributors %}
+                <tr>
+                  <td class="text-nowrap">
+                      {% if member.member_role == "bot" %}
+                      <i class="fas fa-robot">&nbsp;</i>
+                      {% elif member.member_role == "staff" %}
+                      <i class="fas fa-user-tie">&nbsp;</i>
+                      {% else %}
+                      <i class="fas fa-user">&nbsp;</i>
+                      {% endif %}
+                      {{ member.member_name }}
+                  </td>
+                  <td>{{member.contributions}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Content Column -->
+            <div class="col-lg-4 mb-4">
+
+              <!-- Top Contributors-->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Contribution Types</h6>
+                </div>
+                <div class="card-body p-0 table-responsive">
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Source</th>
+                    <th scope="col">Type</th>
+                    <th scope="col"><span class="short-text">#</span><span class="full-text">Contributions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for type in view.contribution_types %}
+                <tr>
+                  <td><i class="{{type.source__icon_name}}"></i>&nbsp;{{type.source__name}}</td>
+                  <td>{{type.name}}</td>
+                  <td>{{type.contribution_count}}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+         <!-- Content Row -->
+          <div class="row">
+
+
+          </div>
+       </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+  <script>
+// Area Chart Example
+var ctx = document.getElementById("membersChart");
+var myLineChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{view.members_chart_keys|safe}},
+    datasets: [{
+      label: "Active",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.ACTIVITY.BASE}}22",
+      borderColor: "#{{colors.ACTIVITY}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.ACTIVITY}}",
+      pointBorderColor: "#{{colors.ACTIVITY}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.ACTIVITY}}",
+      pointHoverBorderColor: "#{{colors.ACTIVITY}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_active|safe}},
+    },
+    {
+      label: "Joined",
+      lineTension: 0.3,
+      backgroundColor: "#{{colors.MEMBER}}22",
+      borderColor: "#{{colors.MEMBER}}",
+      pointRadius: 3,
+      pointBackgroundColor: "#{{colors.MEMBER}}",
+      pointBorderColor: "#{{colors.MEMBER}}",
+      pointHoverRadius: 3,
+      pointHoverBackgroundColor: "#{{colors.MEMBER}}",
+      pointHoverBorderColor: "#{{colors.MEMBER}}",
+      pointHitRadius: 10,
+      pointBorderWidth: 2,
+      data: {{view.members_chart_joined|safe}},
+    }
+    ],
+  },
+  options: {
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 10,
+        right: 25,
+        top: 25,
+        bottom: 0
+      }
+    },
+    scales: {
+      xAxes: [{
+        time: {
+          unit: 'date'
+        },
+        gridLines: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          maxTicksLimit: 7
+        }
+      }],
+      yAxes: [{
+        ticks: {
+          maxTicksLimit: 5,
+          padding: 10,
+          beginAtZero: true,
+          // Include a dollar sign in the ticks
+          callback: function(value, index, values) {
+            return value;
+          }
+        },
+        gridLines: {
+          color: "rgb(234, 236, 244)",
+          zeroLineColor: "rgb(234, 236, 244)",
+          drawBorder: false,
+          borderDash: [2],
+          zeroLineBorderDash: [2]
+        }
+      }],
+    },
+    legend: {
+      display: true
+    },
+    tooltips: {
+      backgroundColor: "rgb(255,255,255)",
+      bodyFontColor: "#858796",
+      titleMarginBottom: 10,
+      titleFontColor: '#6e707e',
+      titleFontSize: 14,
+      borderColor: '#dddfeb',
+      borderWidth: 1,
+      xPadding: 15,
+      yPadding: 15,
+      displayColors: false,
+      intersect: false,
+      mode: 'index',
+      caretPadding: 10,
+      callbacks: {
+        label: function(tooltipItem, chart) {
+          var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+          return datasetLabel + ': ' + tooltipItem.yLabel;
+        }
+      }
+    }
+  }
+});
+  </script>
+
+{% endblock %}

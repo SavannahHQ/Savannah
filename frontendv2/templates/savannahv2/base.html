@@ -415,7 +415,7 @@
   <script src="{% static 'vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
   <script>
 $(function () {
-  $('[data-toggle="tooltip"]').tooltip()
+  $('[data-toggle="tooltip"]').tooltip({boundary: 'window'})
 })
 $('.datepicker').datepicker();
 $('.input-daterange').each(function() {

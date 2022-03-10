@@ -7,7 +7,7 @@
 {% block page_content %}
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">Edit {{view.member.name}}</h1>
+            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'member_profile' view.member.id %}"><i class="fas fa-chevron-left"></i></a> Edit {{view.member.name}}</h1>
           </div>
 
           <!-- Content Row -->
@@ -38,8 +38,9 @@
               </div>
             </div>
 
-            <!-- Profile  -->
             <div class="col-xl-4 col-lg-5">
+  
+              <!-- Identities  -->
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
@@ -64,6 +65,28 @@
                   </div>
                 </div>
                 {% endfor %}
+                </div>            
+
+                </div>
+              </div>
+
+              <!-- Settings  -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Settings</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                  <form class="form" action="{% url 'member_settings' view.member.id %}" method="POST">
+                    {% csrf_token %}
+                    {{ view.settings_form|crispy }}
+                    <button class="btn btn-sm btn-primary" type="submit">Apply</button>
+                    </form>
+    
                 </div>            
 
                 </div>

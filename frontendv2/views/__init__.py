@@ -4,6 +4,7 @@ import json
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
+from django.db.models.functions import Lower
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UsernameField, SetPasswordForm
 from django.contrib import messages
@@ -174,7 +175,8 @@ class SavannahView:
             self.user_member = None
         self.active_tab = ""
         self.charts = set()
-
+        self.MAX_TIMESPAN = 365
+        self.DATE_FORMAT = '%Y-%m-%d'
         self._add_sources_message()
 
 
@@ -204,6 +206,7 @@ class SavannahView:
             "active_tab": self.active_tab,
             "view": self,
         }
+
 
 class SavannahFilterView(SavannahView):
     def __init__(self, request, community_id):
@@ -334,7 +337,7 @@ class SavannahFilterView(SavannahView):
             request.session['timefilter'] = 'timespan'
         try:
             if 'rangestart' in request.GET:
-                if request.GET.get('rangestart') == '':
+                if request.GET.get('rangestart', '') == '':
                     request.session['rangestart'] = None
                 else:
                     self.rangestart = datetime.datetime.strptime(request.GET.get('rangestart'), self.DATE_FORMAT)
@@ -344,7 +347,7 @@ class SavannahFilterView(SavannahView):
                 self.rangestart = datetime.datetime.strptime(request.session.get('rangestart'), self.DATE_FORMAT)
 
             if 'rangeend' in request.GET:
-                if request.GET.get('rangeend') == '':
+                if request.GET.get('rangeend', '') == '':
                     request.session['rangeend'] = None
                 else:
                     self.rangeend = datetime.datetime.strptime(request.GET.get('rangeend'), self.DATE_FORMAT)
@@ -376,7 +379,7 @@ class SavannahFilterView(SavannahView):
             self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
             self.rangeend = datetime.datetime.utcnow()
         else:
-            self.timespan = (self.rangeend - self.rangestart).days
+            self.timespan = (self.rangeend - self.rangestart).days + 1
 
     def filters_as_dict(self, request):
         filters = dict()
@@ -391,6 +394,7 @@ class SavannahFilterView(SavannahView):
         filters['rangestart'] = request.session.get('rangestart', None)
         filters['rangeend'] = request.session.get('rangeend', None)
         filters['timefilter'] = request.session.get('timefilter', 'timespan')
+        filters['timespan'] = request.session.get('timespan', self.MAX_TIMESPAN)
         return filters
 
     @property
@@ -409,6 +413,9 @@ class SavannahFilterView(SavannahView):
             return True
         if self.filter['contrib_type'] and self.contrib_type is not None:
             return True
+
+    def filter_button_companies(self):
+        return self.community.company_set.all().order_by(Lower('name'))
 
     @property
     def timespan_display(self):
@@ -455,8 +462,13 @@ class SavannahFilterView(SavannahView):
 
     @property
     def timespan_chart_span(self):
-        if self.timespan > 92:
-            return int(self.timespan / 30.4)
+        if self.timespan == 365:
+            return 12
+        elif self.timespan > 92:
+            if self.timespan % 30.5 > 0:
+                return int(self.timespan / 30.5)+1
+            else:
+                return int(self.timespan / 30.5)
         elif self.timespan > 5:
             return self.timespan
         else:
@@ -513,7 +525,7 @@ class SavannahFilterView(SavannahView):
         if filters.get('member_company', None):
             default_name = self.member_company.name + " " + default_name
 
-        if filters.get('timefilter', 'timespan') == 'timespan' and filters.get('timespan') < self.MAX_TIMESPAN:
+        if filters.get('timefilter', 'timespan') == 'timespan' and filters.get('timespan', self.MAX_TIMESPAN) < self.MAX_TIMESPAN:
             default_name = self.timespan_display + " " + default_name
         if filters.get('source', None):
             if int(filters.get('source', 0)) < 1:

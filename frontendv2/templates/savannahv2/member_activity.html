@@ -92,7 +92,7 @@
                   <div class="col-10">
                     <i class="{{activity.icon_name}} mr-1" > </i>
                   <b>{{activity.short_description}}</b>
-                  in <a class="pr-2" target="_blank" href="{{activity.location|default:"#"}}"><i class="{{activity.channel_icon}}"></i> {{activity.channel_name}}</a>
+                  in {% if activity.location %}<a class="pr-2" target="_blank" href="{{activity.location|default:"#"}}">{% else %}<b>{% endif %}<i class="{{activity.channel_icon}}"></i> {{activity.channel_name}}{% if activity.location %}</a>{% else %}</b>{% endif %}
                     {% if activity.tag_count > 0 %}{% include 'savannahv2/tag_list.html' with tags=activity.tags.all %}{% endif %}
                   </div>
                   <div class="col-2 text-right">{{activity.timestamp|date}}</div>

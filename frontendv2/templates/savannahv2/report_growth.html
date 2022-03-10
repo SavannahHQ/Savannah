@@ -7,6 +7,7 @@
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">{{view.report.title}}</h1>
+            <a class="btn btn-light text-muted" title="Share Report" href="{% url 'publish_report' view.community.id view.report.id %}"><i class="fas fa-share-alt"></i></a>
           </div>
 
           <!-- Content Row -->

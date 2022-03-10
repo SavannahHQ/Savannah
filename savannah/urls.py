@@ -19,24 +19,23 @@ from django.conf.urls.static import static
 from django.conf import settings
 import notifications.urls
 
+from corm.connectors import ConnectionManager
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
     path('api/v1/', include('apiv1.urls')),
     path('', include('frontendv2.urls')),
-    path('slack/', include('corm.plugins.slack')),
-    path('github/', include('corm.plugins.github')),
-    path('gitlab/', include('corm.plugins.gitlab')),
-    path('discourse/', include('corm.plugins.discourse')),
-    path('discord/', include('corm.plugins.discord')),
-    path('stackexchange/', include('corm.plugins.stackexchange')),
-    path('reddit/', include('corm.plugins.reddit')),
-    path('rss/', include('corm.plugins.rss')),
-    path('salesforce/', include('corm.plugins.salesforce')),
+
     path('inbox/notifications/', include(notifications.urls, namespace='notifications')),
     path('billing/', include('billing.urls')),
     path('demo/', include('demo.urls')),
 ] 
+
+for module, plugin in ConnectionManager.CONNECTOR_PLUGINS.items():
+    plugin_name = module.rsplit(".", maxsplit=1)[-1]
+    urlpatterns += path('%s/'%plugin_name, include(module)),
+
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

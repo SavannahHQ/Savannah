@@ -18,8 +18,8 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit, ManagerTasksCalendar
-from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution
-from frontendv2.views.conversations import Conversations
+from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, MemberSettings, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution, AddContribution
+from frontendv2.views.conversations import Conversations, ignore_hyperlink, show_hyperlink
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
@@ -27,7 +27,7 @@ from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
 from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
-from frontendv2.views.reports import Reports, view_report
+from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
 from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
 from frontendv2 import views
@@ -54,11 +54,14 @@ urlpatterns = [
     path('public/overview/<str:dashboard_id>/', Overview.public, name='public_overview'),
     path('members/<int:community_id>/', Members.as_view, name='members'),
     path('members/<int:community_id>/all', AllMembers.as_view, name='all_members'),
+    path('members/<int:community_id>/members.csv', AllMembers.as_csv, name='members_csv'),
     path('member/<int:member_id>/', MemberProfile.as_view, name='member_profile'),
     path('member/<int:member_id>/activity', MemberActivity.as_view, name='member_activity'),
+    path('member/<int:member_id>/add_contribution', AddContribution.as_view, name='add_contribution'),
     path('member/<int:member_id>/make_contribution', PromoteToContribution.as_view, name='promote_to_contribution'),
     path('member/<int:community_id>/add', MemberAdd.as_view, name='member_add'),
     path('member/<int:member_id>/edit', MemberEdit.as_view, name='member_edit'),
+    path('member/<int:member_id>/settings', MemberSettings.as_view, name='member_settings'),
     path('member/<int:member_id>/merge', MemberMerge.as_view, name='member_merge'),
     path('member/<int:member_id>/merge_history', MemberMergeHistory.as_view, name='merge_history'),
     path('member/<int:member_id>/tag', tag_member, name='member_tag_form'),
@@ -74,6 +77,8 @@ urlpatterns = [
     path('public/member/<str:dashboard_id>/', Members.public, name='public_members'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('conversations/<int:community_id>/publish', Conversations.publish, name='publish_conversations'),
+    path('conversations/<int:community_id>/link/<int:hyperlink_id>/ignore', ignore_hyperlink, name='ignore_hyperlink'),
+    path('conversations/<int:community_id>/link/<int:hyperlink_id>/show', show_hyperlink, name='show_hyperlink'),
     path('public/conversations/<str:dashboard_id>/', Conversations.public, name='public_conversations'),
     path('contributions/<int:community_id>/', Contributions.as_view, name='contributions'),
     path('contributions/<int:community_id>/contributors', Contributors.as_view, name='contributors'),
@@ -92,6 +97,8 @@ urlpatterns = [
 
     path('reports/<int:community_id>/', Reports.as_view, name='reports'),
     path('reports/<int:community_id>/view/<int:report_id>/', view_report, name='report_view'),
+    path('reports/<int:community_id>/view/<int:report_id>/publish', publish_report, name='publish_report'),
+    path('public/report/<str:dashboard_id>/', view_public_report, name='public_report'),
 
     path('projects/<int:community_id>/', Projects.as_view, name='projects'),
     path('projects/<int:community_id>/graph', ProjectsGraph.as_view, name='projects_graph'),

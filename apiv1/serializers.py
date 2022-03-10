@@ -3,7 +3,7 @@ import hashlib
 from collections import OrderedDict
 from rest_framework import serializers
 
-from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType, Tag, Event
+from corm.models import Source, Channel, Member, Contact, Conversation, Contribution, ContributionType, Tag, Event, Company
 from corm.plugins import PluginImporter
 from django.db import models
 
@@ -77,6 +77,7 @@ class ImportedModelRelatedField(serializers.Field):
                 self.corm_source = getattr(instance, self.source_from).source
         else:
             self.corm_source = getattr(instance, self.source).source
+
         try:
             return getattr(instance, self.source)
         except:
@@ -132,10 +133,12 @@ class IdentitySerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256, required=False, allow_null=True)
     email = serializers.EmailField(source='email_address', required=False, allow_null=True)
     avatar = serializers.URLField(source='avatar_url', required=False, allow_null=True)
+    company = serializers.CharField(source='member.company', required=False, allow_null=True)
     tags = TagsField(through='member', required=False)
 
     def save(self, source):
         importer = PluginImporter(source)
+
         member = importer.make_member(
             origin_id=self.validated_data.get('origin_id'), 
             detail=self.validated_data.get('detail'), 
@@ -151,6 +154,22 @@ class IdentitySerializer(serializers.Serializer):
                 })
                 member.tags.add(tag)
 
+        if 'member' in self.validated_data and 'company' in self.validated_data.get('member'):
+            company_name = self.validated_data.get('member').get('company')
+            if company_name:
+                company_domain=None
+                try:
+                    email = self.validated_data.get('email_address')
+                    if email:
+                        email_domain = email.split('@')[1]
+                        if company_name.replace(" ", "").lower() in email_domain.replace("-", "").lower():
+                            company_domain = email_domain.lower()
+                except:
+                    print("Exception creating company")
+                    pass
+                member.company = importer.make_company(name=company_name, origin_id=company_name.lower(), domain=company_domain)
+                member.save()
+            
         update_source(source)
         return Contact.objects.get(source=source, member=member, origin_id=self.validated_data.get('origin_id'))
 

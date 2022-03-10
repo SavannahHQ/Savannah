@@ -3,7 +3,7 @@ from functools import reduce
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max, Min
+from django.db.models import F, Q, Count, Max, Min, Sum
 from django.db.models.functions import Trunc, Lower
 
 from django.contrib import messages
@@ -46,8 +46,25 @@ class CompanyProfile(SavannahView):
         return members.order_by('-last_seen')
 
     @property
+    def recent_members(self):
+        members = Member.objects.filter(community=self.community, company=self.company)
+        members = members.prefetch_related('tags')
+        members = members.prefetch_related('collaborations')
+        return members.order_by(IsNull('last_seen'), '-last_seen')[:10]
+
+    @property
     def all_notes(self):
         return Note.objects.filter(member__company=self.company).select_related('member').order_by('-timestamp')
+
+    @property 
+    def top_connections(self):
+        connections = MemberConnection.objects.filter(from_member__company=self.company, connection_count__gt=0).exclude(to_member__company=self.company)
+        connections = connections.values('to_member').annotate(connection_sum=Sum('connection_count', distinct=True))
+        connections = connections.order_by('-connection_sum')[:10]
+        members = dict([(m.id, m) for m in Member.objects.filter(id__in=[c['to_member'] for c in connections])])
+        for c in connections:
+            c['to_member'] = members[c['to_member']]
+            yield(c)
 
     @property
     def tagsChart(self):
@@ -241,10 +258,28 @@ class Companies(SavannahFilterView):
             'conrib_type': False,
         })
 
+        self.RESULTS_PER_PAGE = 25
+
+        self.sort_by = request.session.get("sort_companies", "-member_count")
+        if 'sort' in request.GET and request.GET.get('sort') in ('name', '-name', 'last_activity', '-last_activity', 'member_count', '-member_count'):
+            self.sort_by = request.GET.get('sort') 
+            request.session['sort_companies'] = self.sort_by
+
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+        if 'search' in request.GET:
+            self.search = request.GET.get('search', "").lower().strip()
+        else:
+            self.search = None
+        self.result_count = 0
+
     def suggestion_count(self):
         return SuggestCompanyCreation.objects.filter(community=self.community, status__isnull=True).count()
 
-    def all_companies(self):
+    def get_companies(self):
         companies = Company.objects.filter(community=self.community)
         convo_filter = Q(member__speaker_in__timestamp__lte=self.rangeend, member__speaker_in__timestamp__gte=self.rangestart)
 
@@ -265,7 +300,53 @@ class Companies(SavannahFilterView):
         companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         companies = companies.filter(last_activity__isnull=False)
         companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0)
-        return companies.order_by(Lower('name'))
+        if self.sort_by == 'name':
+            companies = companies.order_by(Lower('name'))
+        elif self.sort_by == '-name':
+            companies = companies.order_by(Lower('name').desc())
+        else:
+            companies = companies.order_by(self.sort_by)
+        return companies
+
+    @property
+    def all_companies(self):
+        companies = self.get_companies()
+        self.result_count = companies.count()
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return companies[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        return pages
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        offset=1
+        if self.page > 5:
+            offset = self.page - 5
+        if offset + 9 > pages:
+            offset = pages - 9
+        if offset < 1:
+            offset = 1
+        return [page+offset for page in range(min(10, pages))]
+
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
 
     def assignment_chart(self):
         if not self._assignmentChart:

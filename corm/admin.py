@@ -599,3 +599,9 @@ class EmailAdmin(admin.ModelAdmin):
 
 
 admin.site.register(EmailRecord, EmailAdmin)
+
+class HyperlinkAdmin(admin.ModelAdmin):
+    list_display = ["url", "ignored", "host", "content_type"]
+    list_filter = ["ignored", "community", "content_type", "host"]
+    search_fields = ["url"]
+admin.site.register(Hyperlink, HyperlinkAdmin)

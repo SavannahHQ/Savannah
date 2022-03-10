@@ -25,7 +25,7 @@ class Command(BaseCommand):
           communities = Community.objects.filter(status=Community.ACTIVE)
 
       for community in communities:
-        members = Member.objects.filter(community=community, company__isnull=True)
+        members = Member.objects.filter(community=community, company__isnull=True, auto_update_company=True)
         print("Updating info from %s members in %s" % (members.count(), community))
         domain_cache = dict([(d.domain, d.company) for d in CompanyDomains.objects.filter(company__community=community)])
         unknown_domain_counts = dict()
@@ -50,24 +50,31 @@ class Command(BaseCommand):
                 member.save()
 
         # Ensure that all members with a company have their role and tag set
-        for member in Member.objects.filter(community=community, company__isnull=False):
+        for member in Member.objects.filter(community=community, company__isnull=False, auto_update_role=True):
             if member.company.is_staff and member.role == Member.COMMUNITY:
                 member.role = Member.STAFF
                 member.save()
             if member.company.tag:
                 member.tags.add(member.company.tag)
 
+        # Delete suggestions we already have a domain for
+        domains = set([d['domain'] for d in CompanyDomains.objects.filter(company__community=community).values('domain')])
+        SuggestCompanyCreation.objects.filter(community=community, domain__in=domains).delete()
+
         # Suggest company creation
         if community.suggest_company:
+            print("Suggesting companies by domain...")
             recipients = community.managers or community.owner
             created_count = 0
             for domain, count in unknown_domain_counts.items():
                 if domain in settings.PUBLIC_EMAIL_DOMAINS:
                     continue
                 if count >= settings.COMPANY_SUGGESTION_MATCHES:
-                    suggestion, created = SuggestCompanyCreation.objects.get_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
+                    suggestion, created = SuggestCompanyCreation.objects.update_or_create(community=community, domain=domain, defaults={'reason':'%s members with matching email' % count})
                     if created:
                         created_count += 1
+                else:
+                    SuggestCompanyCreation.objects.filter(community=community, domain=domain).delete()
             if created_count > 0:
                 notify.send(community, 
                     recipient=recipients, 

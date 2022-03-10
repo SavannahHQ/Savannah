@@ -29,7 +29,7 @@ class Sources(SavannahView):
                 super()._add_sources_message()
        
     def available_plugins(self):
-        return ConnectionManager.CONNECTOR_PLUGINS.values()
+        return sorted(ConnectionManager.CONNECTOR_PLUGINS.values(), key=lambda x: x.get_source_type_name().lower())
 
     @login_required
     def as_view(request, community_id):
@@ -41,6 +41,9 @@ class Sources(SavannahView):
                 source.save()
                 return redirect('sources', community_id=community_id)
             if 'enable_source' in request.POST:
+                if not view.community.management.can_add_source():
+                    view.community.management.upgrade_message(request, "You have reach your maximum number of Sources")
+                    return redirect('sources', community_id=community_id)
                 source = get_object_or_404(Source, id=request.POST.get('enable_source'))
                 source.enabled = True
                 source.save()
@@ -135,7 +138,7 @@ class Channels(SavannahView):
         pass
 
     def all_channels(self):
-        return Channel.objects.filter(source=self.source).annotate(conversation_count=Count('conversation', distinct=True)).order_by('name')
+        return Channel.objects.filter(source=self.source).annotate(activity_count=Count('activity', distinct=True)).order_by('name')
 
     def _get_source_channels(self, request):
         channels = []
@@ -192,6 +195,9 @@ class Channels(SavannahView):
                             messages.warning(self.request, "<h5><b>WARNING!</b></h5><b>%s</b> is a private channel, but imported conversations will be visible to all of your managers in Savannah.<br/><br/>Delete this channel if it may contain sensitive information you don't want other managers to see." % c.name)
                         else:
                             messages.success(self.request, "<b>%s</b> has been added to your community tracker, and will appear in the next import" % c.name)
+                        msg = plugin.get_channel_add_warning(c)
+                        if msg is not None:
+                            messages.warning(self.request, msg)
 
     @login_required
     def as_view(request, community_id, source_id):
@@ -230,8 +236,12 @@ class Channels(SavannahView):
                 return redirect('channels', community_id=community_id, source_id=source_id)
 
         if 'search_channels' in request.GET:
-            view.search_available_channels(request, request.GET.get('search_channels'))
-            view.search_channels = request.GET.get('search_channels')
+            if request.GET.get('search_channels', '') == '':
+                request.session['source_channels_search'] = None
+                view.search_channels = None
+            else:
+                view.search_available_channels(request, request.GET.get('search_channels'))
+                view.search_channels = request.GET.get('search_channels')
         if 'source_channels_search' in request.session and request.session['source_channels_search'] is not None and int(request.session.get('source_channels_source')) == source_id and request.session.get('source_channels_expiration') >= datetime.datetime.timestamp(datetime.datetime.utcnow()):
             view.search_available_channels(request, request.session.get('source_channels_search'))
             view.search_channels = request.session.get('source_channels_search')

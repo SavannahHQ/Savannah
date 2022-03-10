@@ -22,6 +22,8 @@ DISCORD_GUILD_URL = 'https://discord.com/api/guilds/%(guild)s'
 CONVERSATIONS_URL = 'https://discord.com/api/channels/%(channel)s/messages'
 CONVERSATIONS_NEXT_URL = 'https://discord.com/api/channels/%(channel)s/messages?before=%(lastpost)s'
 
+DISCORD_THREADS_URL = 'https://discord.com/api/guilds/%(guild)s/threads/active'
+
 class DiscordOrgForm(forms.ModelForm):
     class Meta:
         model = Source
@@ -91,8 +93,15 @@ class SourceAdd(SavannahView):
             'source_plugin': 'Discord',
             'submit_text': 'Add',
             'submit_class': 'btn btn-success',
+            'switch_account_url': reverse('discord_switch_account')
         })
         return render(request, "savannahv2/source_add.html", context)
+
+def switch(request):
+    community = get_object_or_404(Community, id=request.session['community'])
+    UserAuthCredentials.objects.filter(user=request.user, connector="corm.plugins.discord").delete()
+    return authenticate(request)
+
 
 def authenticate(request):
     community = get_object_or_404(Community, id=request.session['community'])
@@ -139,6 +148,7 @@ urlpatterns = [
     path('add', SourceAdd.as_view, name='discord_add'),
     path('auth', authenticate, name='discord_auth'),
     path('callback', callback, name='discord_callback'),
+    path('switch', switch, name='discord_switch_account'),
 ]
 
 class DiscordPlugin(BasePlugin):
@@ -149,7 +159,7 @@ class DiscordPlugin(BasePlugin):
     def get_identity_url(self, contact):
         if contact.origin_id:
             discord_id = contact.origin_id.split("/")[-1]
-            return "%s/team/%s" % (contact.source.server, discord_id)
+            return "https://discordapp.com/users/%s" % discord_id
         else:
             return None
 
@@ -240,7 +250,7 @@ class DiscordImporter(PluginImporter):
                             # Ignore Discord timestamps after the second, because they don't use a consistent format
                             tstamp_str = message.get('timestamp')[:19]
                             tstamp = self.strptime(tstamp_str)
-                            if tstamp >= from_date:
+                            if self.full_import or tstamp >= from_date:
                                 self.import_message(channel, message, tstamp)
                                 has_more = True
                                 cursor = message['id']
@@ -250,15 +260,79 @@ class DiscordImporter(PluginImporter):
                         raise e
             else:
                 print("Failed to get conversations: %s" % resp.content)
+
         return
 
-    def import_message(self, channel, message, tstamp):
+    def post_import(self, new_only, channels):
+        if self.verbosity >= 2:
+            print("Importing Threads...")
+        tracked_channels = dict([(c.origin_id, c) for c in channels])
+        resp = self.api_call(DISCORD_THREADS_URL % {'guild': self.source.auth_id})
+        if resp.status_code == 200:
+            data = resp.json()        
+            for thread in data['threads']:
+                if thread.get('parent_id', None) in tracked_channels:
+                    archive_timestamp = self.strptime(thread['thread_metadata']['archive_timestamp'][:19])
+                    self.import_thread(thread, tracked_channels[thread.get('parent_id')])
+
+    def import_thread(self, thread, channel, from_date=None):
+        if not from_date:
+            from_date = self.source.last_import
+        cursor = None
+        has_more = True
+        # Override the channel's origin_id to be the thread's ID
+        channel.origin_id = thread.get('id')
+        while has_more:
+            if cursor:
+                url = CONVERSATIONS_NEXT_URL % {'channel': channel.origin_id, 'lastpost': cursor}
+            else:
+                url = CONVERSATIONS_URL % {'channel': channel.origin_id}
+
+            has_more = False
+            cursor = None
+            thread_start = None
+            participants = set()
+            try:
+                thread_start = Conversation.objects.get(channel=channel, origin_id=thread.get('id'))
+                participants.add(thread_start.speaker)
+            except:
+                print("No conversation for thread id: %s" % thread.get('id'))
+            resp = self.api_call(url)
+            if resp.status_code == 200:
+                data = resp.json()
+                for message in data:
+                    if message.get('id') == thread.get('id'):
+                        continue # Don't import the thread start as a reply message
+
+                    try:
+                        if message['type'] == 0:
+                            # Ignore Discord timestamps after the second, because they don't use a consistent format
+                            tstamp_str = message.get('timestamp')[:19]
+                            tstamp = self.strptime(tstamp_str)
+                            if self.full_import or tstamp >= from_date:
+                                self.import_message(channel, message, tstamp, participants=participants, thread_start=thread_start)
+                                has_more = True
+                                cursor = message['id']
+                    except Exception as e:
+                        print("Failed to import message: %s" % e)
+                        print(message)
+                        raise e
+            else:
+                print("Failed to get conversations: %s" % resp.content)
+
+        return
+
+    def import_message(self, channel, message, tstamp, participants=None, thread_start=None):
         source = channel.source
 
+        if participants is None:
+            participants = set()
         user = message['author']
         discord_user_id = user.get('id')
-        speaker = self.make_member(discord_user_id, channel=channel, detail=user.get('username'), email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
-        if (user.get('bot', False) or user.get('system', False))and speaker.role != Member.BOT:
+        avatar_hash = user.get('avatar')
+        avatar_url = 'https://cdn.discordapp.com/avatars/%s/%s.png?size=64' % (discord_user_id, avatar_hash)
+        speaker = self.make_member(discord_user_id, channel=channel, detail=user.get('username'), avatar_url=avatar_url, email_address=user.get('email'), tstamp=tstamp, speaker=True, name=user.get('username'))
+        if (user.get('bot', False) or user.get('system', False))and speaker.role == Member.COMMUNITY:
             speaker.role = Member.BOT
             speaker.save()
 
@@ -268,7 +342,6 @@ class DiscordImporter(PluginImporter):
         discord_convo_link = "%s/channels/%s/%s/%s" % (server, source.auth_id, channel.origin_id, discord_convo_id)
         convo_text = message.get('content')
 
-        participants = set()
         participants.add(speaker)
         for tagged_user in message.get('mentions', []):
             member = self.make_member(tagged_user.get('id'), channel=channel, detail=tagged_user.get('username'), email_address=tagged_user.get('email'), tstamp=tstamp, speaker=False, name=tagged_user.get('username'))
@@ -278,5 +351,6 @@ class DiscordImporter(PluginImporter):
                 member.role = Member.BOT
                 member.save()
 
-        convo = self.make_conversation(origin_id=discord_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=discord_convo_link)
+        convo = self.make_conversation(origin_id=discord_convo_id, channel=channel, speaker=speaker, content=convo_text, tstamp=tstamp, location=discord_convo_link, thread=thread_start)
         self.add_participants(convo, participants)
+        return convo

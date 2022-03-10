@@ -139,7 +139,29 @@
             <!-- Narrow Right column -->
             <div class="col-xl-4 col-lg-5">
 
-            <!-- New Members -->
+            <!-- Recent Notes -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Recent Notes</h6>
+                </div>
+                <div class="card-body p-0">
+                <table class="table mb-0">
+                <thead>
+                </thead>
+                <tbody>
+                {% for note in view.recent_notes %}
+                <tr>
+                  <td>
+                    <a href="{% url 'member_profile' note.member.id %}">{{note.member.name}}</a> - <span class="small muted">{{note.timestamp|dateortime}}</span><br/><span title="{{note.content}}" data-toggle="tooltip">{{note.content|truncatechars:64}}</span>
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+             <!-- New Members -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Newest Members</h6>

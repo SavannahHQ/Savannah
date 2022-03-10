@@ -10,12 +10,14 @@ from django import forms
 from django.contrib.auth import authenticate, login as login_user, logout as logout_user
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordChangeForm
 from django.contrib.auth.views import PasswordResetView as DjangoPasswordResetView
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Div, HTML
 
 from simple_ga import api as ga
 from corm.models import *
 from corm.connectors import ConnectionManager
 
-from frontendv2.views import SavannahView, CommunityForm
+from frontendv2.views import SavannahView
 from frontendv2.models import ManagerInvite, ManagerProfile, PublicDashboard
 
 class Managers(SavannahView):
@@ -358,6 +360,44 @@ class ManagerDelete(SavannahView):
             return redirect('home')
 
         return render(request, "savannahv2/manager_leave.html", view.context)
+
+class CommunityForm(forms.ModelForm):
+
+    class Meta:
+        model = Community
+        fields = '__all__'
+        exclude = ['owner', 'managers', 'status']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag=False
+        self.helper.layout = Layout(
+            Div(
+                HTML('<h3>Display</h3>'),
+                'name', 
+                'logo', 
+                HTML('<h3>Suggestions</h3>'),
+                'suggest_tag',
+                'suggest_company',
+                'suggest_merge',
+                'suggest_contribution',
+                'suggest_task',
+                css_class="col-lg-6 col-sm-12"
+            ),
+
+            Div(
+                HTML('<h3>Notification Thresholds</h3>'),
+                'inactivity_threshold_days',
+                'inactivity_threshold_previous_activity',
+                'inactivity_threshold_previous_days',
+
+                'resuming_threshold_days',
+                'resuming_threshold_previous_activity',
+                'resuming_threshold_previous_days',
+                css_class="col-lg-6 col-sm-12"
+            )
+        )
 
 class EditCommunity(SavannahView):
 

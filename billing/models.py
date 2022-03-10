@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from corm.models import Community, ManagementPermissionMixin
+from jsonfield.fields import JSONField
 
 from djstripe.models import Customer, Subscription
 # Create your models here.
@@ -22,12 +23,15 @@ class Management(models.Model, ManagementPermissionMixin):
     subscription = models.ForeignKey(Subscription, null=True, blank=True, on_delete=models.SET_NULL,
         help_text="The team's Stripe Subscription object, if it exists"
     )
+    overrides = JSONField(null=True, blank=True)
 
     @property
     def metadata(self):
         if not hasattr(self, '_metadata'):
             if self.subscription is not None:
                 self._metadata = self.subscription.plan.metadata or {}
+                if self.overrides is not None:
+                    self._metadata.update(self.overrides)
             else:
                 self._metadata = {'name': 'No Plan'}
         return self._metadata
@@ -62,7 +66,7 @@ class Management(models.Model, ManagementPermissionMixin):
             return False
 
         sources = int(plan_data.get('sources', 0))
-        if sources > 0 and self.community.source_set.all().count() > sources:
+        if sources > 0 and self.community.source_set.filter(enabled=True).exclude(connector='corm.plugins.null').count() > sources:
             return False
 
         tags = int(plan_data.get('tags', 0))
@@ -123,5 +127,5 @@ class Management(models.Model, ManagementPermissionMixin):
 
     @property
     def sales_itegration(self):
-        return bool(self.metadata.get('sales_integration', False))
+        return self.metadata.get('sales_integration', '').lower() in ['1', 't', 'true', 'yes']
 
