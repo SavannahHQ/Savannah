@@ -333,8 +333,12 @@ class TwitterImporter(PluginImporter):
                     print(resp.content)
                 data = resp.json()
                 users = dict()
+                replied_to = dict()
                 for user in data['includes']['users']:
                     users[user['id']] = user
+                for tweet in data['includes']['tweets']:
+                    replied_to[tweet['id']] = tweet
+
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
                         continue
@@ -345,8 +349,13 @@ class TwitterImporter(PluginImporter):
                     has_more = True
 
                     thread = None
-                    if tweet.get('conversation_id', None) and tweet['conversation_id'] != tweet['id']:
-                        thread = self.make_conversation(tweet['conversation_id'], channel=channel, speaker=replied_to, tstamp=tstamp)
+                    if tweet.get('conversation_id', None) and tweet['conversation_id'] != tweet['id'] and tweet['conversation_id'] in replied_to:
+                        parent = replied_to[tweet['conversation_id']]
+                        parent_tstamp = self.strptime(parent['created_at'])
+                        parent_user = users[parent['author_id']]
+                        parent_speaker = self.make_member(parent_user['id'], detail=parent_user['username'], name=parent_user.get('name', parent_user['username']), avatar_url=parent_user.get('profile_image_url', None), speaker=True)
+                        parent_url = 'https://twitter.com/%s/status/%s' % (parent_user['username'], parent['id'])
+                        thread = self.make_conversation(tweet['conversation_id'], channel=channel, speaker=parent_speaker, tstamp=parent_tstamp, location=parent_url, content=parent['text'])
 
                     user = users[tweet['author_id']]
                     speaker = self.make_member(user['id'], detail=user['username'], name=user.get('name', user['username']), avatar_url=user.get('profile_image_url', None), speaker=True)
