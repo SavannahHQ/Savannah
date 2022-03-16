@@ -281,8 +281,9 @@ class TwitterImporter(PluginImporter):
                 replied_to = dict()
                 for user in data['includes']['users']:
                     users[user['id']] = user
-                for tweet in data['includes']['tweets']:
-                    replied_to[tweet['id']] = tweet
+                if 'tweets' in data['includes']:
+                    for tweet in data['includes']['tweets']:
+                        replied_to[tweet['id']] = tweet
 
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
@@ -336,8 +337,9 @@ class TwitterImporter(PluginImporter):
                 replied_to = dict()
                 for user in data['includes']['users']:
                     users[user['id']] = user
-                for tweet in data['includes']['tweets']:
-                    replied_to[tweet['id']] = tweet
+                if 'tweets' in data['includes']:
+                    for tweet in data['includes']['tweets']:
+                        replied_to[tweet['id']] = tweet
 
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
