@@ -23,7 +23,7 @@
             {% else %}
               <button style="white-space:nowrap;" class="btn dropdown-toggle btn-secondary" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="{{view.timespan_icon}}"></i> {{view.timespan_display}}</button>
             {% endif %}
-              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton" style="min-width: 20rem;">
+              <div class="dropdown-menu dropdown-menu-right animated--fade-in " aria-labelledby="dropdownMenuButton" style="min-width: 20rem;">
                     {% if view.MAX_TIMESPAN != 365 %}
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}timespan={{view.MAX_TIMESPAN}}"><i class="fas fa-calendar"></i> Max Range</a>
                     {% endif %}
@@ -55,7 +55,7 @@
             {% else %}
                 <button class="btn btn-light text-muted dropdown-toggle" type="button" id="memberFilterButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-users"></i> <span class="display-on-parent-hover">Members</span></button>
             {% endif %}
-              <ul class="dropdown-menu dropdown-menu-end animated--fade-in p-2" aria-labelledby="memberFilterButton">
+              <ul class="dropdown-menu dropdown-menu-right animated--fade-in p-2" aria-labelledby="memberFilterButton">
                 <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}role=&member_tag={% if view.filter.member_company %}&member_company={% endif %}"><i class="fas fa-times"></i> All Members</a></li>
                 <li class="dropdown-divider p-0"></li>
 
@@ -120,7 +120,7 @@
             {% else %}
               <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-comment"></i> <span class="display-on-parent-hover">Content</span></button>
             {% endif %}
-              <ul class="dropdown-menu dropdown-menu-end animated--fade-in p-2" aria-labelledby="memberFilterButton">
+              <ul class="dropdown-menu dropdown-menu-right animated--fade-in p-2" aria-labelledby="memberFilterButton">
                 <li><a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}&tag=&source=&channel="><i class="fas fa-times"></i> All Content</a></li>
                 <li class="dropdown-divider p-0"></li>
 
@@ -177,7 +177,7 @@
                 <button class="btn btn-light text-muted dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-shield-alt"></i> <span class="display-on-parent-hover">Type</span></button>
               {% endif %}
 
-              <div class="dropdown-menu animated--fade-in " aria-labelledby="dropdownMenuButton">
+              <div class="dropdown-menu dropdown-menu-right animated--fade-in " aria-labelledby="dropdownMenuButton">
                     <a class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}type="> All Types</a>
                     <div class="dropdown-divider"></div>
                     {% for contrib_type in view.community.contribution_type_names %}
