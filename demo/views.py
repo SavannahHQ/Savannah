@@ -47,9 +47,17 @@ def new_demo(request):
                 new_community.managers.name = "%s Managers (%s)" % (new_community.name, new_community.id)
                 new_community.managers.save()
             staff_domain = new_community.name.replace(" ", "").lower() + ".com"
-            new_community.company_set.filter(is_staff=True).update(name=new_community.name, website="https://%s" % staff_domain, icon_url=settings.SITE_ROOT+new_community.icon.url)
+            new_community.company_set.filter(is_staff=True).update(name=new_community.name, website="https://%s" % staff_domain)
+            if new_community.icon:
+                new_community.company_set.filter(is_staff=True).update(icon_url=settings.SITE_ROOT+new_community.icon.url)
             CompanyDomains.objects.filter(company__is_staff=True).update(domain=staff_domain)
 
+            for source in Source.objects.filter(community=new_community):
+                source.name = source.name.replace("Pool", new_community.name)
+                source.save()
+            
+            Project.objects.filter(community=new_community, default_project=True).update(name=new_community.name)
+            
             system_user = User.objects.get(username=settings.SYSTEM_USER)
             MemberWatch.objects.filter(member__community=new_community, manager=system_user).update(manager=request.user)
             Task.objects.filter(community=new_community, owner=system_user).update(owner=request.user)
