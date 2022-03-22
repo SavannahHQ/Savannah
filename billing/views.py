@@ -241,7 +241,7 @@ def payment_failed(event, **kwargs):
         Management.suspend(invoice['subscription'])
         msg.context["suspended"] = True
         
-    elif "next_payment_attempt" in invoice:
+    elif "next_payment_attempt" in invoice and invoice["next_payment_attempt"] is not None:
         msg.context["next_attempt"] = datetime.datetime.fromtimestamp(invoice["next_payment_attempt"])
         
     msg.send(community.owner.email)
