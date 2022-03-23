@@ -329,9 +329,9 @@ class SavannahFilterView(SavannahView):
             self.exclude_source = False
             request.session['source'] = None
 
-        self.rangestart = None
-        self.rangeend = None
         self.timespan = self.MAX_TIMESPAN
+        self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
+        self.rangeend = datetime.datetime.utcnow()
         self.DATE_FORMAT = '%Y-%m-%d'
         if 'timefilter' not in request.session:
             request.session['timefilter'] = 'timespan'
@@ -343,7 +343,7 @@ class SavannahFilterView(SavannahView):
                     self.rangestart = datetime.datetime.strptime(request.GET.get('rangestart'), self.DATE_FORMAT)
                     request.session['rangestart'] = self.rangestart.strftime(self.DATE_FORMAT)
                     request.session['timefilter'] = 'range'
-            elif 'rangestart' in request.session:
+            elif request.session.get('rangestart'):
                 self.rangestart = datetime.datetime.strptime(request.session.get('rangestart'), self.DATE_FORMAT)
 
             if 'rangeend' in request.GET:
@@ -354,7 +354,7 @@ class SavannahFilterView(SavannahView):
                     self.rangeend = self.rangeend.replace(hour=23, minute=59, second=59)
                     request.session['rangeend'] = self.rangeend.strftime(self.DATE_FORMAT)
                     request.session['timefilter'] = 'range'
-            elif 'rangeend' in request.session:
+            elif request.session.get('rangeend'):
                 self.rangeend = datetime.datetime.strptime(request.session.get('rangeend'), self.DATE_FORMAT)
 
             if 'timespan' in request.GET:
@@ -380,10 +380,6 @@ class SavannahFilterView(SavannahView):
             self.rangeend = datetime.datetime.utcnow()
         elif self.rangestart is not None and self.rangeend is not None:
             self.timespan = (self.rangeend - self.rangestart).days + 1
-        else:
-            self.timespan = self.MAX_TIMESPAN
-            self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
-            self.rangeend = datetime.datetime.utcnow()
 
     def filters_as_dict(self, request):
         filters = dict()
