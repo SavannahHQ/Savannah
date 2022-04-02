@@ -346,6 +346,10 @@ class Events(SavannahFilterView):
             self.event_search = None
         self.result_count = 0
 
+        self._sourcesChart = None
+        self._attendeeSourcesChart = None
+        self._tagsChart = None
+
     def all_events(self):
         events = Event.objects.filter(community=self.community).annotate(attendee_count=Count('rsvp')).order_by('-start_timestamp')
         self.result_count = events.count()
@@ -384,6 +388,42 @@ class Events(SavannahFilterView):
         if offset < 1:
             offset = 1
         return [page+offset for page in range(min(10, pages))]
+
+    def sourcesChart(self):
+        if not self._sourcesChart:
+            sources = Source.objects.filter(community=self.community)
+
+            sources = sources.annotate(event_count=Count('event')).filter(event_count__gt=0).order_by('-event_count')
+
+            self._sourcesChart = PieChart("sourcesChart", title="Events by Source", limit=5)
+            for source in sources:
+                self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), source.event_count)
+        self.charts.add(self._sourcesChart)
+        return self._sourcesChart
+
+    def attendeeSourcesChart(self):
+        if not self._attendeeSourcesChart:
+            sources = Source.objects.filter(community=self.community)
+
+            sources = sources.annotate(attendee_count=Count('event__rsvp')).filter(attendee_count__gt=0).order_by('-attendee_count')
+
+            self._attendeeSourcesChart = PieChart("attendeeSourcesChart", title="Attendees by Source", limit=5)
+            for source in sources:
+                self._attendeeSourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), source.attendee_count)
+        self.charts.add(self._attendeeSourcesChart)
+        return self._attendeeSourcesChart
+
+    def tagsChart(self):
+        if not self._tagsChart:
+            tags = Tag.objects.filter(community=self.community)
+
+            tags = tags.annotate(event_count=Count('event')).filter(event_count__gt=0).order_by('-event_count')
+
+            self._tagsChart = PieChart("tagsChart", title="Events by Tag", limit=8)
+            for tag in tags:
+                self._tagsChart.add(tag.name, tag.event_count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
 
     @login_required
     def as_view(request, community_id):

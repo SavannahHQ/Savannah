@@ -37,6 +37,14 @@
                     <div class="mb-2 col-lg-10">{{view.event.start_timestamp|default:''}} - {{view.event.end_timestamp|default:''}}</div>
                     {% endif %}
                   </div>
+                  {% if view.event.impact != 0 %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Impact</div>
+                    <div class="mb-2 col-lg-10">
+                      {% if view.event.impact == 0 %}--{% else %}{% if view.event.impact > 0 %}<span class="text-success"><i class="fas fa-caret-up"></i> {% else %}<span class="text-danger"><i class="fas fa-caret-down"></i> {% endif %}{{view.event.impact|abs|floatformat:-2}}%{% endif %}
+                    </div>
+                  </div>
+                  {% endif %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Attendees</div>
                     <div class="mb-2 col-lg-10">
