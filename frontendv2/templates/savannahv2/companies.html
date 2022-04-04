@@ -32,6 +32,7 @@
                   <div>
                     <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'company_add' view.community.id %}"><i class="fas fa-plus"></i> Add</a>
                     <a class="m-0 btn btn-sm btn-secondary text-white" href="{% url 'company_lookup' view.community.id %}"><i class="fas fa-lightbulb"></i> Suggest</a>
+                    <a class="btn btn-sm btn-primary" href="{% url 'companies_csv' view.community.id %}"><i class="fas fa-file-csv"> </i> Download</a>
                   </div>
                 </div>
                 <div class="card-body p-0">

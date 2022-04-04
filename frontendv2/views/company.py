@@ -1,6 +1,7 @@
 import operator
 from functools import reduce
-import datetime
+import csv
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max, Min, Sum
@@ -299,7 +300,7 @@ class Companies(SavannahFilterView):
                 convo_filter = convo_filter & Q(member__speaker_in__channel__source=self.source)
         companies = companies.annotate(last_activity=Max('member__speaker_in__timestamp', filter=convo_filter))
         companies = companies.filter(last_activity__isnull=False)
-        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter)).filter(member_count__gt=0)
+        companies = companies.annotate(member_count=Count('member', distinct=True, filter=convo_filter))
         if self.sort_by == 'name':
             companies = companies.order_by(Lower('name'))
         elif self.sort_by == '-name':
@@ -310,7 +311,7 @@ class Companies(SavannahFilterView):
 
     @property
     def all_companies(self):
-        companies = self.get_companies()
+        companies = self.get_companies().filter(member_count__gt=0)
         self.result_count = companies.count()
         start = (self.page-1) * self.RESULTS_PER_PAGE
         return companies[start:start+self.RESULTS_PER_PAGE]
@@ -490,6 +491,27 @@ class Companies(SavannahFilterView):
                 return redirect('companies', community_id=community_id)
 
         return render(request, "savannahv2/companies.html", view.context)
+
+    @login_required
+    def as_csv(request, community_id):
+        view = Companies(request, community_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="companies.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Company', 'Website', 'Tag', 'First Seen', 'Last Seen', 'Member Count'])
+        writer.writeheader()
+        for company in view.get_companies():
+            # company_name = ''
+            # if member.company:
+            #     company_name = member.company.name
+            writer.writerow({
+                'Company':company.name, 
+                'Website': company.website,
+                'Tag': company.tag,
+                'First Seen':company.first_seen, 
+                'Last Seen':company.last_seen, 
+                'Member Count':company.member_count,
+            })
+        return response
 
 class CompanyEditForm(forms.ModelForm):
     class Meta:

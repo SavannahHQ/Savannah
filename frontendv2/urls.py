@@ -136,6 +136,7 @@ urlpatterns = [
     path('companies/<int:community_id>/add', AddCompany.as_view, name='company_add'),
     path('companies/<int:community_id>/tag', tag_company, name='company_tag_form'),
     path('companies/<int:community_id>/lookup', CompanyLookup.as_view, name='company_lookup'),
+    path('companies/<int:community_id>/companies.csv', Companies.as_csv, name='companies_csv'),
     path('company/<int:company_id>/', CompanyProfile.as_view, name='company_profile'),
     path('company/<int:company_id>/edit', EditCompany.as_view, name='company_edit'),
     path('company/<int:company_id>/merge', CompanyMerge.as_view, name='company_merge'),
