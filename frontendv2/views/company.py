@@ -500,13 +500,13 @@ class Companies(SavannahFilterView):
         writer = csv.DictWriter(response, fieldnames=['Company', 'Website', 'Tag', 'First Seen', 'Last Seen', 'Member Count'])
         writer.writeheader()
         for company in view.get_companies():
-            # company_name = ''
-            # if member.company:
-            #     company_name = member.company.name
+            tag_name = ''
+            if company.tag:
+                tag_name = company.tag.name
             writer.writerow({
                 'Company':company.name, 
                 'Website': company.website,
-                'Tag': company.tag.name,
+                'Tag': tag_name,
                 'First Seen':company.first_seen, 
                 'Last Seen':company.last_seen, 
                 'Member Count':company.member_count,
