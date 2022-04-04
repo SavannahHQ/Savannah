@@ -506,7 +506,7 @@ class Companies(SavannahFilterView):
             writer.writerow({
                 'Company':company.name, 
                 'Website': company.website,
-                'Tag': company.tag,
+                'Tag': company.tag.name,
                 'First Seen':company.first_seen, 
                 'Last Seen':company.last_seen, 
                 'Member Count':company.member_count,
