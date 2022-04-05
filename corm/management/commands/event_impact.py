@@ -25,7 +25,11 @@ class Command(BaseCommand):
         if event_id:
             event = Event.objects.get(id=event_id)
             print("Calculating impact of %s" % event.title)
-            self.calculate_event_impact(event)
+            try:
+                self.calculate_event_impact(event)
+            except Exception as e:
+                print("Error calculating impact for %s:" % event.title)
+                print(e)
             return
         elif community_id:
             community = Community.objects.get(id=community_id)
@@ -36,7 +40,11 @@ class Command(BaseCommand):
 
         for community in communities:
             for event in Event.objects.filter(community=community).filter(Q(impact=0)|Q(start_timestamp__lte=datetime.datetime.utcnow(), start_timestamp__gt=datetime.datetime.utcnow() - (2 * CONTEXT_TIMESPAN))):
-                self.calculate_event_impact(event)
+                try:
+                    self.calculate_event_impact(event)
+                except Exception as e:
+                    print("Error calculating impact for %s:" % event.title)
+                    print(e)
 
     def calculate_event_impact(self, event):
         community = event.community
@@ -56,6 +64,8 @@ class Command(BaseCommand):
         attendee_bonus = conversations.filter(speaker__role=Member.COMMUNITY, speaker__in=event.attendees, timestamp__gte=impact_end, timestamp__lt=bonus_end).count()
         trend_growth = previous_count / (baseline_count+1)
         predicted_count = previous_count * trend_growth
+        if predicted_count == 0:
+            raise RuntimeError("Predicted conversation count was zero")
         actual_growth = (new_count+attendee_bonus - predicted_count) / predicted_count
         event.impact = 100 * (actual_growth)
         if event.impact > 0 and event.impact < 1:
