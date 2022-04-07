@@ -18,7 +18,7 @@ from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, Sugges
 from corm.models import pluralize
 from notifications.signals import notify
 
-CONTRIBUTION_SEARCH_SPAN = 90
+SUGGESTION_SEARCH_SPAN = 90
 
 def get_support_activity(thankful_convo):
     try:
@@ -51,11 +51,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--community', dest='community_id', type=int)
+        parser.add_argument('--timespan', dest='timespan', type=int)
 
     def handle(self, *args, **options):
         community_id = options.get('community_id')
+        self.timespan = options.get('timespan')
         self.verbosity = options.get('verbosity')
 
+        if not self.timespan:
+            self.timespan = SUGGESTION_SEARCH_SPAN
         if community_id:
             community = Community.objects.get(id=community_id)
             print("Using Community: %s" % community.name)
@@ -165,7 +169,7 @@ class Command(BaseCommand):
         suggestion_count = 0
 
         # Get potential conversations
-        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=CONTRIBUTION_SEARCH_SPAN))
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
 
 
         # From Chat-style sources
@@ -274,7 +278,7 @@ class Command(BaseCommand):
             return
 
         # Get potential conversations
-        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=CONTRIBUTION_SEARCH_SPAN))
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
 
         # Only look at thankful converstions
         convos = convos.filter(tags=thankful)
@@ -409,7 +413,7 @@ class Command(BaseCommand):
         untagged = []
 
         conversations = Conversation.objects.filter(channel__source__community=community, content__isnull=False)
-        conversations = conversations.filter(timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=60))
+        conversations = conversations.filter(timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
         conversations = conversations.exclude(speaker__role=Member.BOT)
         for c in conversations:
 
@@ -418,7 +422,7 @@ class Command(BaseCommand):
             else:
                 untagged.append(c.content)
 
-        used_keywords = set(('http', 'https', 'com', 'github', 'open', 'closed', 'merge', 'pr', 'issue', 'pull', 'issue', 'problem', 'help'))
+        used_keywords = set(('http', 'https', 'com', 'github', 'open', 'closed', 'merge', 'pr', 'issue', 'pull', 'issue', 'problem', 'help', 'like', 'want', 'know'))
         # exclude keywords already in tags
         for tag in community.tag_set.filter(keywords__isnull=False):
             for word in tag.keywords.split(","):
@@ -467,7 +471,7 @@ class Command(BaseCommand):
             print("\n===Tag Words===")
         for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True)[:25]:
             percent = 100 * v / convo_count
-            if percent >= 0.5:
+            if percent >= 0.9:
                 if self.verbosity >= 3:
                     print("%s (%0.2f%%)" % (k, percent))
                 suggestion, created = SuggestTag.objects.get_or_create(
