@@ -57,7 +57,7 @@ class ContributionSuggestions(SavannahView):
     @property
     def all_suggestions(self):
         suggestions = SuggestConversationAsContribution.objects.filter(community=self.community, status__isnull=True).order_by("-conversation__timestamp")
-        suggestions = suggestions.select_related('conversation', 'source')
+        suggestions = suggestions.select_related('conversation', 'activity', 'source')
         return suggestions
 
     @login_required

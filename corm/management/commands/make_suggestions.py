@@ -18,6 +18,7 @@ from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, Sugges
 from corm.models import pluralize
 from notifications.signals import notify
 
+CONTRIBUTION_SEARCH_SPAN = 90
 
 def get_support_activity(thankful_convo):
     try:
@@ -164,7 +165,7 @@ class Command(BaseCommand):
         suggestion_count = 0
 
         # Get potential conversations
-        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None)
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=CONTRIBUTION_SEARCH_SPAN))
 
 
         # From Chat-style sources
@@ -273,7 +274,7 @@ class Command(BaseCommand):
             return
 
         # Get potential conversations
-        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None)
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=CONTRIBUTION_SEARCH_SPAN))
 
         # Only look at thankful converstions
         convos = convos.filter(tags=thankful)
@@ -286,7 +287,7 @@ class Command(BaseCommand):
             print("%s has no #greeting tag" % community)
 
         # From Chat-style sources
-        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss'))
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss', 'corm.plugins.twitter', 'corm.plugins.facebook', 'corm.plugins.meetup'))
         convos = convos.filter(channel__source__in=chat_sources)
 
         # Involving only the speaker and one other participant
@@ -334,7 +335,7 @@ class Command(BaseCommand):
                 score -= 1
 
             # Only suggest for high positive scores
-            if score < 2:
+            if score < 1:
                 continue
 
             # Exclude conversations that are part of another contribution's thread
@@ -347,19 +348,20 @@ class Command(BaseCommand):
                 continue
             last_helped = convo.speaker
 
-            supporter = convo.participation.exclude(member_id=convo.speaker.id)[0]
-            suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
-                community=community,
-                reason="%s gave support to %s" % (supporter.member, convo.speaker),
-                conversation=convo,
-                activity=activity,
-                contribution_type=helped,
-                source_id=convo.channel.source_id,
-                score=score,
-                title="Helped %s in %s" % (convo.speaker, convo.channel),
-            )
-            if created:
-                suggestion_count += 1
+            supporters = convo.participation.exclude(member_id=convo.speaker.id)
+            for supporter in supporters:
+                suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
+                    community=community,
+                    reason="%s gave support to %s" % (supporter.member, convo.speaker),
+                    conversation=convo,
+                    activity=activity,
+                    contribution_type=helped,
+                    source_id=convo.channel.source_id,
+                    score=score,
+                    title="Helped %s in %s" % (convo.speaker, convo.channel),
+                )
+                if created:
+                    suggestion_count += 1
 
         print("Suggested %s contributions" % suggestion_count)
         if suggestion_count > 0:
