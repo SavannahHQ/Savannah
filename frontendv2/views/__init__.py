@@ -1,7 +1,7 @@
 import operator
 import datetime
 import json
-from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.shortcuts import render, get_object_or_404, Http404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
 from django.db.models.functions import Lower
@@ -62,7 +62,10 @@ def login(request):
                 raw_password = login_form.cleaned_data.get("password")
                 user = authenticate(username=username, password=raw_password)
                 login_user(request, user, backend=user.backend)
-                return redirect(next_view)
+                try:
+                    return redirect(next_view)
+                except:
+                    raise Http404("Page does not exist")
             else:
                 context["login_form"] = login_form
                 context["action"] = "login"
@@ -74,7 +77,10 @@ def login(request):
                 raw_password = signup_form.cleaned_data.get("password1")
                 user = authenticate(username=username, password=raw_password)
                 login_user(request, user, backend=user.backend)
-                return redirect(next_view)
+                try:
+                    return redirect(next_view)
+                except:
+                    raise Http404("Page does not exist")
             else:
                 context["signup_form"] = signup_form
                 context["action"] = "signup"
