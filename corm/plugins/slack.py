@@ -198,29 +198,38 @@ class SlackPlugin(BasePlugin):
 
     def get_channels(self, source):
         channels = []
-        resp = requests.get('https://slack.com/api/conversations.list?types=public_channel,private_channel&token=%s' % source.auth_secret)
-        if resp.status_code == 200:
-            data = resp.json()
-            if data['ok'] == False:
-                if data['error'] == 'missing_scope':
-                    url = reverse('slack_auth')
-                    raise RuntimeError("You may need to <a href=\"%s\">reauthorize Slack</a>" % url)
-                raise RuntimeError(data['error'])
-            for channel in data['channels']:
-                channels.append(
-                    {
-                        'id': channel['id'],
-                        'name': channel['name'],
-                        'topic': channel['topic']['value'],
-                        'count':channel.get('num_members', 0),
-                        'is_private': channel['is_private'],
-                        'is_archived': channel['is_archived'],
-                    }
-                )
-        elif resp.status_code == 403:
-            raise RuntimeError("Invalid authentication token")
-        else:
-            raise RuntimeError("%s (%s)" % (resp.reason, resp.status_code))
+        cursor = ''
+        has_more = True
+        while has_more:
+            has_more = False
+            CHANNELS_URL = 'https://slack.com/api/conversations.list?types=public_channel,private_channel&token=%s&cursor=%s' % (source.auth_secret, cursor)
+            resp = requests.get(CHANNELS_URL)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data['ok'] == False:
+                    if data['error'] == 'missing_scope':
+                        url = reverse('slack_auth')
+                        raise RuntimeError("You may need to <a href=\"%s\">reauthorize Slack</a>" % url)
+                    raise RuntimeError(data['error'])
+                cursor = data['response_metadata'].get('next_cursor')
+                if cursor:
+                    has_more = True
+
+                for channel in data['channels']:
+                    channels.append(
+                        {
+                            'id': channel['id'],
+                            'name': channel['name'],
+                            'topic': channel['topic']['value'],
+                            'count':channel.get('num_members', 0),
+                            'is_private': channel['is_private'],
+                            'is_archived': channel['is_archived'],
+                        }
+                    )
+            elif resp.status_code == 403:
+                raise RuntimeError("Invalid authentication token")
+            else:
+                raise RuntimeError("%s (%s)" % (resp.reason, resp.status_code))
 
         return channels
 
