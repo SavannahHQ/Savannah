@@ -105,9 +105,8 @@ class Command(BaseCommand):
         trigger_messages = 10
         channels = Channel.objects.filter(source__community=community)
         channels = channels.annotate(last_community_msg=Max('conversation__timestamp', filter=Q(conversation__speaker__role=Member.COMMUNITY)))
-        channels = channels.filter(last_community_msg__gte=datetime.datetime.utcnow() - datetime.timedelta(days=trigger_days))
         channels = channels.annotate(last_staff_msg=Max('conversation__timestamp', filter=Q(conversation__speaker__role=Member.STAFF)))
-        channels = channels.annotate(newer_community_msgs=Count('conversation', filter=Q(conversation__speaker__role=Member.COMMUNITY)))
+        channels = channels.annotate(newer_community_msgs=Count('conversation', filter=Q(conversation__speaker__role=Member.COMMUNITY, conversation__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=trigger_days))))
         channels = channels.filter(last_staff_msg__lte=datetime.datetime.utcnow() - datetime.timedelta(days=trigger_days))
         channels = channels.filter(newer_community_msgs__gte=trigger_messages)
         channels = channels.order_by(Lower('source__name'))
