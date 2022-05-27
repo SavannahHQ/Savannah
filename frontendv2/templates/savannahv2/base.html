@@ -275,6 +275,32 @@
               </div>
             </li>
 
+            <!-- Nav Item - Insights -->
+            <li class="nav-item dropdown no-arrow mx-1">
+              <a class="nav-link dropdown-toggle" href="#" id="insightsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-lightbulb fa-fw"></i>
+                <!-- Counter - Insights -->
+
+                <span class="badge badge-success badge-counter">{{view.unread_insights|length|default:""}}</span>
+              </a>
+              <!-- Dropdown - Insights -->
+              <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="insightsDropdown">
+                <h6 class="dropdown-header">
+                  Insights
+                </h6>
+                <div class="insights_menu">
+                  {% for insight in view.unread_insights|slice:":5" %}
+                  <a class="border-left-{{insight.level}} dropdown-item d-flex align-items-center" href="{% url 'insights' view.community.id %}?show={{insight.id}}">
+                    <div class="">
+                      <div class="small text-gray-500">{{insight.timestamp}}</div>
+                      {{insight.title|safe}}
+                    </div>
+                  </a>
+                  {% endfor %}
+                </div>
+                  <a class="dropdown-item text-center small text-gray-500" href="{% url 'insights' view.community.id %}">Show All</a>
+              </div>
+            </li>
             <!-- Nav Item - Notifications -->
             <li class="nav-item dropdown no-arrow mx-1">
               <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -293,6 +319,7 @@
                 <a class="dropdown-item text-center small text-gray-500" href="#" onClick="mark_all_as_read()">Mark as Read</a>
               </div>
             </li>
+
 
             <div class="topbar-divider d-none d-sm-block"></div>
 

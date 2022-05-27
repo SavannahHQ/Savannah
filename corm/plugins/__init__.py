@@ -58,6 +58,9 @@ class BasePlugin:
     def get_company_url(self, group):
         return None
         
+    def get_channel_url(self, channel):
+        return None
+        
     def get_connector(self):
         return self.__class__.__module__
 
@@ -402,6 +405,8 @@ class PluginImporter:
             retries = self.API_BACKOFF_ATTEMPTS
         backoff_time = 0
         resp = requests.get(url, headers=headers, params=params, timeout=timeout)
+        if resp.status_code == 503:
+            raise RuntimeError("Remote service not available")
         while resp.status_code == 429 and retries > 0:
             retries -= 1
             if settings.DEBUG:

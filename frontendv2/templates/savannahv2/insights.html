@@ -1,0 +1,123 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize member_utils simple_math %}
+
+{% block page_title %} | {{view.community.name}} Insights{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Insights into {{view.community.name}}</h1>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-lg-10 col-md-10 mb-8">
+
+              <!-- Insights -->
+              {% for insight in view.all_insights %}
+              <div id="insight-{{insight.id}}" class="card shadow mb-4">
+                <div class="card-header d-flex flex-row align-items-center justify-content-left bg-{{insight.level}}">
+                  {% if insight.unread %}
+                    <a data-insight-id="{{insight.id}}" class="insight_read_toggle {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}" title="Mark as read"><i class="fas fa-envelope"></i></a>
+                  {% else %}
+                    <a data-insight-id="{{insight.id}}" class="insight_read_toggle {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}" title="Mark as unread"><i class="far fa-envelope-open"></i></a>
+                  {% endif %}
+                  <h6 class="m-0 ml-2 {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}">{{insight.title|safe}}</h6>
+                </div>
+                <div class="card-body p-3 pt-1">
+                  
+                  {{insight.text|safe}}
+
+                  {% if insight.link %}
+                  <p><a class="btn btn-{{insight.level}}" href="{{insight.link}}" target="_blank">{{insight.cta|default:"More..."}}</a></p>
+                  {% endif %}
+                </div>
+
+              </div>
+              {% endfor %}
+
+                {% if view.has_pages %}
+                <nav aria-label="insight table pages">
+                  <ul class="pagination justify-content-center">
+                    <li class="page-item {% if view.page <= 1 %}disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page=1#events" aria-label="First">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                      </a>
+                    </li>
+                    {% for page in view.page_links %}
+                      <li class="page-item{% if view.page == page %} active{% endif %}"><a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page={{page}}#events">{{page}}</a></li>
+                    {% endfor %}
+                    <li class="page-item{% if view.page >= view.last_page %} disabled{% endif %}">
+                      <a class="page-link" href="?{% if view.event_search %}event_search={{view.event_search}}&{% endif %}page={{view.last_page}}#events" aria-label="Last">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">{{Next}}</span>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+                {% endif %}
+                <div class="d-flex justify-content-center mb-2">
+                {{view.page_start}} - {{view.page_end}} of {{ view.result_count|intcomma }} Insights
+                </div>
+
+
+            </div>
+
+            <!-- Filter Column -->
+            <div class="col-lg-2 col-md-2 mb-8">
+              <div>
+                <form method="POST" action="{% url 'insights' community_id=view.community.id %}">
+                  {% csrf_token %}
+                <input type="hidden" name="show" value="{{view.show}}"/>
+                <input type="submit" class="btn btn-sm btn-primary" value="Mark all as read">
+                </form>
+              </div>
+              <hr/>
+              <div><i class="text-secondary far fa-envelope-open"></i> <a class="{% if view.show == "read" %}font-weight-bold{% endif %}" href="?show=read">Read</a></div>
+              <div><i class="text-secondary fas fa-envelope"></i> <a class="{% if view.show == "unread" %}font-weight-bold{% endif %}" href="?show=unread">Unread</a></div>
+              <hr/>
+              <div><i class="text-success fas fa-lightbulb"></i> <a class="{% if view.show == "positive" %}font-weight-bold{% endif %}" href="?show=positive">Positive</a></div>
+              <div><i class="text-info fas fa-lightbulb"></i> <a class="{% if view.show == "informative" %}font-weight-bold{% endif %}" href="?show=informative">Informative</a></div>
+              <div><i class="text-warning fas fa-lightbulb"></i> <a class="{% if view.show == "warnings" %}font-weight-bold{% endif %}" href="?show=warnings">Warnings</a></div>
+              <div><i class="text-danger fas fa-lightbulb"></i> <a class="{% if view.show == "emergencies" %}font-weight-bold{% endif %}" href="?show=emergencies">Emergencies</a></div>
+              <hr/>
+              <div><a class="ml-3 {% if view.show == "all" %}font-weight-bold{% endif %}" href="?show=all">Show All</a></div>
+            </div>
+
+
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+<!-- {% csrf_token %}-->
+  <script>
+$('.insight_read_toggle').on('click', function (event) {
+    var insight_id = event.currentTarget.dataset.insightId;
+    $.post( "{% url 'toggle_insight_read_state' view.community.id %}", {'insight_id': insight_id, 'csrfmiddlewaretoken':'{{csrf_token}}'}, function(data) {
+        if (data.success) {
+          //var indicator = $("#")
+          if (data.unread) {
+            event.currentTarget.firstChild.classList.remove("far", "fa-envelope-open");
+            event.currentTarget.firstChild.classList.add("fas", "fa-envelope");
+            event.currentTarget.title = "Mark as read";
+          } else {
+            event.currentTarget.firstChild.classList.remove("fas", "fa-envelope");
+            event.currentTarget.firstChild.classList.add("far", "fa-envelope-open");
+            event.currentTarget.title = "Mark as unread";
+          }
+        }
+      },
+      'json' // I expect a JSON response
+    );
+});
+
+  </script>
+
+{% endblock %}

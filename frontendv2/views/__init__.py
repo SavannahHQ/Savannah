@@ -185,6 +185,8 @@ class SavannahView:
         self.DATE_FORMAT = '%Y-%m-%d'
         self._add_sources_message()
 
+    def unread_insights(self):
+        return Insight.objects.filter(community=self.community, recipient=self.request.user, unread=True).order_by('-timestamp')
 
     def _add_sources_message(self):
         if self.request.method == "GET" and self.request.user.is_authenticated:

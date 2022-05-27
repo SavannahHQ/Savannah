@@ -160,6 +160,9 @@ class StackExchangePlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        return "https://%s/questions/tagged/%s" % (channel.source.auth_id, channel.name)
+
     def get_icon_name(self):
         return 'fab fa-stack-overflow'
 
@@ -264,6 +267,7 @@ class StackExchangeImporter(PluginImporter):
         
         questions = set()
         questions_page = 1
+        retries = 5
         while questions_page:
             # Pause between pages when doing a full import
             if full_import and questions_page > 1:
@@ -303,12 +307,18 @@ class StackExchangeImporter(PluginImporter):
 
             # Questions api call failed
             else:
-                print("Question lookup failed: %s" % question_resp.content)
+                print("Question lookup failed: [%s] %s" % (question_resp.status_code, question_resp.content))
+                if retries >= 0:
+                    retries -= 1
+                    sleep(30)
+                else:
+                    raise RuntimeError("Too many request failures")
 
 
         answers = set()
         for question_convo in questions:
             answers_page = 1
+            retries = 5
             while answers_page:
                 # Pause between pages when doing a full import
                 if full_import and answers_page > 1:
@@ -364,10 +374,16 @@ class StackExchangeImporter(PluginImporter):
                 # Answers api call failed
                 else:
                     print("Answer lookup failed: %s" % answer_resp.content)
+                    if retries >= 0:
+                        retries -= 1
+                        sleep(30)
+                    else:
+                        raise RuntimeError("Too many request failures")
 
         posts = questions.union(answers)
         for post in posts:
             posts_page = 1
+            retries = 5
             while posts_page:
                 # Pause between pages when doing a full import
                 if full_import and posts_page > 1:
@@ -411,5 +427,10 @@ class StackExchangeImporter(PluginImporter):
                 # Comments api call failed
                 else:
                     print("Comments lookup failed: %s" % comments_resp.content)
+                    if retries >= 0:
+                        retries -= 1
+                        sleep(30)
+                    else:
+                        raise RuntimeError("Too many request failures")
 
     

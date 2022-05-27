@@ -113,6 +113,9 @@ class RedditPlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        return "%s/r/%s" % (channel.source.server, channel.name)
+
     def get_icon_name(self):
         return 'fab fa-reddit'
 

@@ -605,3 +605,9 @@ class HyperlinkAdmin(admin.ModelAdmin):
     list_filter = ["ignored", "community", "content_type", "host"]
     search_fields = ["url"]
 admin.site.register(Hyperlink, HyperlinkAdmin)
+
+class InsightAdmin(admin.ModelAdmin):
+    list_display = ("uid", "level", "community", "recipient", "unread", "timestamp")
+    list_filter = ("unread", "community", "level", "timestamp")
+admin.site.register(Insight, InsightAdmin)
+

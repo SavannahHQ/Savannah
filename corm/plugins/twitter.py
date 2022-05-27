@@ -107,6 +107,12 @@ class TwitterPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "https://www.twitter.com/%s" % contact.detail
 
+    def get_channel_url(self, channel):
+        if channel.name[0] == '@':
+            return "https://www.twitter.com/%s" % channel.name[1:]
+        else:
+            return 'https://twitter.com/search?q=%%23%s' % channel.name[1:]
+
     def get_company_url(self, group):
         return None
 

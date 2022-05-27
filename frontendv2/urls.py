@@ -30,6 +30,7 @@ from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, Proje
 from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
 from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
+from frontendv2.views.insights import InsightsList, toggle_insight_read_state
 from frontendv2 import views
 
 urlpatterns = [
@@ -146,4 +147,7 @@ urlpatterns = [
     path('event/<int:event_id>/', EventProfile.as_view, name='event'),
     path('event/<int:event_id>/edit', EditEvent.as_view, name='event_edit'),
     path('event/<int:event_id>/add', AddAttendee.as_view, name='attendee_add'),
+
+    path('insights/<int:community_id>/', InsightsList.as_view, name='insights'),
+    path('insights/<int:community_id>/toggle_read_state', toggle_insight_read_state, name='toggle_insight_read_state'),
 ]

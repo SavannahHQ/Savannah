@@ -74,6 +74,9 @@ class DiscoursePlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "%s/u/%s" % (contact.source.server, contact.detail)
 
+    def get_channel_url(self, channel):
+        return channel.origin_id
+
     def get_icon_name(self):
         return 'fab fa-discourse'
         

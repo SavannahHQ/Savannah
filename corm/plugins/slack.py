@@ -181,6 +181,12 @@ class SlackPlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        if channel.origin_id:
+            return "%s/messages/%s" % (channel.source.server, channel.origin_id)
+        else:
+            return None
+
     def get_icon_name(self):
         return 'fab fa-slack'
 

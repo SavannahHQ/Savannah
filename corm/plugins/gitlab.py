@@ -148,6 +148,9 @@ class GitlabPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return contact.origin_id
 
+    def get_channel_url(self, channel):
+        return '%s/%s/%s' % (channel.source.server, channel.source.auth_id, channel.name)
+
     def get_icon_name(self):
         return 'fab fa-gitlab'
 

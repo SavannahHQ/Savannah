@@ -1,7 +1,7 @@
 import datetime, pytz
 import uuid
 from django.db import models
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, QuerySet
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404, reverse
@@ -267,6 +267,46 @@ class Community(models.Model):
     def __str__(self):
         return self.name
 
+class Insight(models.Model):
+    class InsightLevel(models.TextChoices):
+        SUCCESS = "success"
+        INFO = "info"
+        WARNING = "warning"
+        DANGER = "danger"
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=256, null=False, blank=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    level = models.CharField(choices=InsightLevel.choices, default=InsightLevel.INFO, max_length=20)
+    text = models.TextField()
+    link = models.CharField(max_length=256, blank=True, null=True)
+    cta = models.CharField(max_length=256, blank=True, null=True, default='More...')
+    unread = models.BooleanField(default=True, blank=False, db_index=True)
+    uid = models.CharField(max_length=256, null=False, blank=False)
+
+    def create(community, recipient, uid, title, text, level=InsightLevel.INFO, link=None, cta="More..."):
+        if isinstance(recipient, Group):
+            recipients = recipient.user_set.all()
+        elif isinstance(recipient, (QuerySet, list)):
+            recipients = recipient
+        else:
+            recipients = [recipient]
+
+        for recipient in recipients:
+            insight, created = Insight.objects.get_or_create(
+                community=community,
+                recipient=recipient,
+                uid=uid,
+                defaults={
+                    'title':title,
+                    'level':level,
+                    'unread':True,
+                    'link':link,
+                    'cta':cta,
+                    'text':text
+                }
+            )
+            
 class Tag(models.Model):
     class Meta:
         ordering = ("name",)
@@ -630,6 +670,22 @@ class MemberWatch(models.Model):
     last_seen = models.DateTimeField(null=True, blank=True)
     last_channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, blank=True)
 
+class ImpactReport(models.Model):
+    class Meta:
+        ordering = ('start_timestamp',)
+    name = models.CharField(max_length=256)
+    start_timestamp = models.DateTimeField(null=False, blank=False)
+    impact_score = models.IntegerField(default=0, null=False, blank=False)
+    impact_1d = models.IntegerField(default=0, null=False, blank=False)
+    impact_7d = models.IntegerField(default=0, null=False, blank=False)
+    impact_15d = models.IntegerField(default=0, null=False, blank=False)
+    impact_30d = models.IntegerField(default=0, null=False, blank=False)
+    impact_60d = models.IntegerField(default=0, null=False, blank=False)
+    impact_90d = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
 class GiftType(models.Model):
     class Meta:
         ordering = ('discontinued', 'name')
@@ -727,6 +783,14 @@ class Channel(ImportedDataModel):
     @property
     def connector_name(self):
         return ConnectionManager.display_name(self.source.connector)
+
+    def get_origin_url(self):
+        try:
+            return ConnectionManager.CONNECTOR_PLUGINS[self.source.connector].get_channel_url(self)
+        except Exception as e:
+            print(e)
+            return None
+
 
     def __str__(self):
         return self.name

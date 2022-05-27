@@ -159,6 +159,9 @@ class GithubPlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        return channel.origin_id
+
     def get_icon_name(self):
         return 'fab fa-github'
 

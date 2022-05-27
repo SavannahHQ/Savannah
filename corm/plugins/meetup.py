@@ -174,6 +174,9 @@ class MeetupPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "https://www.meetup.com/members/%s" % contact.origin_id
 
+    def get_channel_url(self, channel):
+        return "https://www.meetup.com/%s" % channel.name.lower().replace(' ', '-')
+
     def get_company_url(self, group):
         return None
 

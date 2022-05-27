@@ -150,6 +150,9 @@ class FacebookPlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        return "https://www.facebook.com/groups/%s" % channel.origin_id
+
     def get_icon_name(self):
         return 'fab fa-facebook'
 
