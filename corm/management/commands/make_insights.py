@@ -104,6 +104,8 @@ class Command(BaseCommand):
         trigger_days = 3
         trigger_messages = 10
         channels = Channel.objects.filter(source__community=community)
+        channels = channels.annotate(last_community_msg=Max('conversation__timestamp', filter=Q(conversation__speaker__role=Member.COMMUNITY)))
+        channels = channels.filter(last_community_msg__gte=datetime.datetime.utcnow() - datetime.timedelta(days=trigger_days))
         channels = channels.annotate(last_staff_msg=Max('conversation__timestamp', filter=Q(conversation__speaker__role=Member.STAFF)))
         channels = channels.annotate(newer_community_msgs=Count('conversation', filter=Q(conversation__speaker__role=Member.COMMUNITY)))
         channels = channels.filter(last_staff_msg__lte=datetime.datetime.utcnow() - datetime.timedelta(days=trigger_days))
@@ -112,7 +114,7 @@ class Command(BaseCommand):
         for channel in channels:
             print("[%s] %s > %s: %s since %s" % (channel.source.connector_name, channel.source.name, channel.name, channel.newer_community_msgs, channel.last_staff_msg))
             uid = 'channel-neglect:%s:%s' % (channel.id, channel.last_staff_msg)
-            insight_text = '<p>There have been %s comments in <b>%s</b> on <b>%s</b> (%s) since the last staff comment on %s.</p>' % (channel.newer_community_msgs, channel.name, channel.source.name, channel.source.connector_name, channel.last_staff_msg.ctime())
+            insight_text = '<p>There have been %s comments in <b>%s</b> on <b>%s</b> (%s) since the last staff comment on %s.</p>' % (channel.newer_community_msgs, channel.name, channel.source.name, channel.source.connector_name, channel.last_staff_msg.strftime("%a %B %d %Y"))
             channel_url = channel.get_origin_url()
 
             Insight.create(
