@@ -66,8 +66,8 @@ class Command(BaseCommand):
             baseline_diff = 100 * (tag.insight_count - tag.baseline_count)/tag.baseline_count
             trend = (tag.trend_count / trend_days) * offset_days
             trend_diff = 100 * (tag.insight_count - trend)/trend
-            if baseline_diff > 10 and trend_diff > 50:
-                if self.verbosity >= 3:
+            if baseline_diff > 10 and trend_diff > 50 and baseline_diff > trend_diff:
+                if self.verbosity >= 2:
                     print("%s [baseline]: %s -> %s (%s%%)" % (tag.name, tag.baseline_count, tag.insight_count, baseline_diff))
                     print("%s [trend]: %s -> %s (%s%%)" % (tag.name, trend, tag.insight_count, trend_diff))
                 uid = 'trending-tag:%s' % tag.name
