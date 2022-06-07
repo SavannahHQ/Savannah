@@ -19,20 +19,23 @@
               <!-- Insights -->
               {% for insight in view.all_insights %}
               <div id="insight-{{insight.id}}" class="card shadow mb-4">
-                <div class="card-header d-flex flex-row align-items-center justify-content-left bg-{{insight.level}}">
+                <div class="card-header d-flex flex-row align-items-center justify-content-between bg-{{insight.level}}">
+                  <div class="m-0 {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}">
                   {% if insight.unread %}
-                    <a data-insight-id="{{insight.id}}" class="insight_read_toggle {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}" title="Mark as read"><i class="fas fa-envelope"></i></a>
+                    <a data-insight-id="{{insight.id}}" class="mr-2 insight_read_toggle {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}" title="Mark as read"><i class="fas fa-envelope"></i></a>
                   {% else %}
-                    <a data-insight-id="{{insight.id}}" class="insight_read_toggle {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}" title="Mark as unread"><i class="far fa-envelope-open"></i></a>
+                    <a data-insight-id="{{insight.id}}" class="mr-2 insight_read_toggle {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}" title="Mark as unread"><i class="far fa-envelope-open"></i></a>
                   {% endif %}
-                  <h6 class="m-0 ml-2 {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}">{{insight.title|safe}}</h6>
+                  {{insight.title|safe}}
+                  </div>
+                  <div class="m-0 {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}">{{insight.timestamp}}</div>
                 </div>
                 <div class="card-body p-3 pt-1">
                   
                   {{insight.text|safe}}
 
                   {% if insight.link %}
-                  <p><a class="btn btn-{{insight.level}}" href="{{insight.link}}" target="_blank">{{insight.cta|default:"More..."}}</a></p>
+                  <p><a class="btn btn-{{insight.level}}" href="{{insight.link}}" {% if insight.link|slice:":4" == "http" %}target="_blank"{% endif %}>{{insight.cta|default:"More..."}}</a></p>
                   {% endif %}
                 </div>
 

@@ -183,7 +183,7 @@ class SlackPlugin(BasePlugin):
 
     def get_channel_url(self, channel):
         if channel.origin_id:
-            return "%s/messages/%s" % (channel.source.server, channel.origin_id)
+            return "%s/archives/%s" % (channel.source.server, channel.origin_id)
         else:
             return None
 

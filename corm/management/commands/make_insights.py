@@ -45,8 +45,52 @@ class Command(BaseCommand):
 
         for community in communities:
             self.make_source_insights(community)
-            self.make_level_insights(community=community)
+            self.make_level_insights(community)
+            self.make_tag_insights(community)
 
+    def make_tag_insights(self, community):
+        offset_days = 7
+        trend_days = 60
+
+        trend_start = datetime.datetime.utcnow() - datetime.timedelta(days=(offset_days*2)+trend_days)
+        trend_end = baseline_start = datetime.datetime.utcnow() - datetime.timedelta(days=offset_days*2)
+        baseline_end = insight_start = datetime.datetime.utcnow() - datetime.timedelta(days=offset_days)
+        insight_end = datetime.datetime.utcnow()
+        tags = Tag.objects.filter(community=community)
+        tags = tags.annotate(trend_count=Count('conversation', filter=Q(conversation__timestamp__gt=trend_start, conversation__timestamp__lte=trend_end)))
+        tags = tags.annotate(baseline_count=Count('conversation', filter=Q(conversation__timestamp__gt=baseline_start, conversation__timestamp__lte=baseline_end)))
+        tags = tags.annotate(insight_count=Count('conversation', filter=Q(conversation__timestamp__gt=insight_start, conversation__timestamp__lte=insight_end)))
+        tags = tags.filter(baseline_count__gt=0, insight_count__gt=0)
+
+        for tag in tags:
+            baseline_diff = 100 * (tag.insight_count - tag.baseline_count)/tag.baseline_count
+            trend = (tag.trend_count / trend_days) * offset_days
+            trend_diff = 100 * (tag.insight_count - trend)/trend
+            if baseline_diff > 10 and trend_diff > 50:
+                if self.verbosity >= 3:
+                    print("%s [baseline]: %s -> %s (%s%%)" % (tag.name, tag.baseline_count, tag.insight_count, baseline_diff))
+                    print("%s [trend]: %s -> %s (%s%%)" % (tag.name, trend, tag.insight_count, trend_diff))
+                uid = 'trending-tag:%s' % tag.name
+                try:
+                    last_insight = Insight.objects.filter(community=community, uid=uid).order_by('-timestamp')[0]
+                    days_since_last_insight = (datetime.datetime.utcnow() - last_insight.timestamp).days
+                    if days_since_last_insight < offset_days:
+                        return
+                except:
+                    pass
+                insight_title = '%s is trending' % tag.name
+                insight_text = '<p>Over the past %s days there has been an increase is conversations tagged with <span class="tag-pill text-nowrap" style="background-color: #%s; "><span class="tag-text" style="color: #%saa;">%s</span></span>.</p>' % (offset_days, tag.color, tag.color, tag.name)
+                insight_text += '<p>There has been a %0.2f%% increase over previous %s days, and a %0.2f%% increase over the %s days prior to that.<p>' % (baseline_diff, offset_days, trend_diff, trend_days)
+                Insight.create(
+                    community=community, 
+                    recipient=community.managers or community.owner,
+                    uid=uid,
+                    level=Insight.InsightLevel.INFO,
+                    title=insight_title,
+                    text=insight_text,
+                    cta="View Conversations",
+                    link=reverse('conversations', kwargs={'community_id':community.id})+"?clear=all&tag=%s"%tag.name
+                )
     def make_level_insights(self, community):
         offset_days = 30
         try:
