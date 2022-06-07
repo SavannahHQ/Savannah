@@ -1,6 +1,8 @@
 import operator
 from functools import reduce
 import datetime
+import csv
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max, Min
@@ -82,6 +84,22 @@ class EventProfile(SavannahView):
         if offset < 1:
             offset = 1
         return [page+offset for page in range(min(10, pages))]
+
+    @login_required
+    def as_csv(request, event_id):
+        view = EventProfile(request, event_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="attendees.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Event', 'Member', 'Attended', 'Role'])
+        writer.writeheader()
+        for attendee in EventAttendee.objects.filter(event=view.event).select_related('member'):
+            writer.writerow({
+                'Event': attendee.event.title, 
+                'Member':attendee.member, 
+                'Attended': attendee.timestamp,
+                'Role':EventAttendee.ROLE_NAME[attendee.role], 
+            })
+        return response
 
     @login_required
     def as_view(request, event_id):
@@ -424,6 +442,31 @@ class Events(SavannahFilterView):
                 self._tagsChart.add(tag.name, tag.event_count, tag.color)
         self.charts.add(self._tagsChart)
         return self._tagsChart
+
+    @login_required
+    def as_csv(request, community_id):
+        view = Events(request, community_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="events.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Title', 'Start', 'End', 'Category', 'Attendee Count', 'Tag', 'Impact'])
+        writer.writeheader()
+        for event in Event.objects.filter(community=view.community).annotate(attendee_count=Count('rsvp')).order_by('-start_timestamp'):
+            tag_name = ''
+            channel_name = ''
+            if event.tag:
+                tag_name = event.tag.name
+            if event.channel:
+                channel_name = event.channel.name
+            writer.writerow({
+                'Title': event.title, 
+                'Start':event.start_timestamp, 
+                'End': event.end_timestamp,
+                'Category':channel_name, 
+                'Attendee Count':event.attendee_count,
+                'Tag': tag_name,
+                'Impact':event.impact
+            })
+        return response
 
     @login_required
     def as_view(request, community_id):

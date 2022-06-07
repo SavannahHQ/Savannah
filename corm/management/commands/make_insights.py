@@ -89,7 +89,7 @@ class Command(BaseCommand):
                     title=insight_title,
                     text=insight_text,
                     cta="View Conversations",
-                    link=reverse('conversations', kwargs={'community_id':community.id})+"?clear=all&tag=%s"%tag.name
+                    link=reverse('conversations', kwargs={'community_id':community.id})+"?clear=all&timespan=90&tag=%s"%tag.name
                 )
     def make_level_insights(self, community):
         offset_days = 30

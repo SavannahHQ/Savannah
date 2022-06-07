@@ -144,9 +144,11 @@ urlpatterns = [
     path('events/<int:community_id>/', Events.as_view, name='events'),
     path('events/<int:community_id>/add', AddEvent.as_view, name='event_add'),
     path('events/<int:community_id>/tag', tag_event, name='event_tag_form'),
+    path('events/<int:community_id>/events.csv', Events.as_csv, name='events_csv'),
     path('event/<int:event_id>/', EventProfile.as_view, name='event'),
     path('event/<int:event_id>/edit', EditEvent.as_view, name='event_edit'),
     path('event/<int:event_id>/add', AddAttendee.as_view, name='attendee_add'),
+    path('event/<int:event_id>/attendees.csv', EventProfile.as_csv, name='attendee_csv'),
 
     path('insights/<int:community_id>/', InsightsList.as_view, name='insights'),
     path('insights/<int:community_id>/toggle_read_state', toggle_insight_read_state, name='toggle_insight_read_state'),

@@ -172,12 +172,15 @@
                     <th scope="col">Events</th>
                     <th scope="col">Engagement</th>
                     <th scope="col">Last Seen</th>
-                    <th scope="col"></th>
+                    <th scope="col">
+                      <a class="m-0 btn btn-sm btn-primary text-white" href="{% url 'attendee_csv' view.event.id %}"><i class="fas fa-file-csv"></i> Download</a>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                 {% for attendee in view.all_attendees %}
                 <tr>
+
                   <td class="text-nowrap">
                     {{attendee.member|avatar_icon}}
                     <a href="{% url 'member_profile' attendee.member.id %}">{{attendee.member}}</a>
