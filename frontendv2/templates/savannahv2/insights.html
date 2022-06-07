@@ -28,7 +28,7 @@
                   {% endif %}
                   {{insight.title|safe}}
                   </div>
-                  <div class="m-0 {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}">{{insight.timestamp}}</div>
+                  <div class="m-0 {% if insight.level == "warning" %}text-gray-700{% else %}text-white{% endif %}">{{insight.timestamp.date}}</div>
                 </div>
                 <div class="card-body p-3 pt-1">
                   
