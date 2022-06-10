@@ -61,7 +61,7 @@ class Command(BaseCommand):
         sources = sources.annotate(trend_count=Count('contact__member', filter=Q(contact__member__first_seen__gt=trend_start, contact__member__first_seen__lte=trend_end)))
         sources = sources.annotate(baseline_count=Count('contact__member', filter=Q(contact__member__first_seen__gt=baseline_start, contact__member__first_seen__lte=baseline_end)))
         sources = sources.annotate(insight_count=Count('contact__member', filter=Q(contact__member__first_seen__gt=insight_start, contact__member__first_seen__lte=insight_end)))
-        sources = sources.filter(baseline_count__gt=0, insight_count__gt=0)
+        sources = sources.filter(baseline_count__gt=0, insight_count__gt=0, trend_count__gt=0)
 
         for source in sources:
             baseline_diff = 100 * (source.insight_count - source.baseline_count)/source.baseline_count
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             if self.verbosity >= 2:
                 print("%s [baseline]: %s -> %s (%s%%)" % (source.name, source.baseline_count, source.insight_count, baseline_diff))
                 print("%s [trend]: %s -> %s (%s%%)" % (source.name, trend, source.insight_count, trend_diff))
-            if source.insight_count > 10 and baseline_diff > 25 and trend_diff > 50:
+            if source.insight_count > 5 and baseline_diff >= 25 and trend_diff >= 50:
                 uid = 'new-members:%s' % source.id
                 try:
                     last_insight = Insight.objects.filter(community=community, uid=uid).order_by('-timestamp')[0]
