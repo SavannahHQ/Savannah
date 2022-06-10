@@ -58,9 +58,9 @@ class Command(BaseCommand):
         baseline_end = insight_start = datetime.datetime.utcnow() - datetime.timedelta(days=offset_days)
         insight_end = datetime.datetime.utcnow()
         sources = Source.objects.filter(community=community)
-        sources = sources.annotate(trend_count=Count('contact__member', filter=Q(contact__member__first_seen__gt=trend_start, contact__member__first_seen__lte=trend_end)))
-        sources = sources.annotate(baseline_count=Count('contact__member', filter=Q(contact__member__first_seen__gt=baseline_start, contact__member__first_seen__lte=baseline_end)))
-        sources = sources.annotate(insight_count=Count('contact__member', filter=Q(contact__member__first_seen__gt=insight_start, contact__member__first_seen__lte=insight_end)))
+        sources = sources.annotate(trend_count=Count('contact__member', distinct=True, filter=Q(contact__member__first_seen__gt=trend_start, contact__member__first_seen__lte=trend_end)))
+        sources = sources.annotate(baseline_count=Count('contact__member', distinct=True, filter=Q(contact__member__first_seen__gt=baseline_start, contact__member__first_seen__lte=baseline_end)))
+        sources = sources.annotate(insight_count=Count('contact__member', distinct=True, filter=Q(contact__member__first_seen__gt=insight_start, contact__member__first_seen__lte=insight_end)))
         sources = sources.filter(baseline_count__gt=0, insight_count__gt=0, trend_count__gt=0)
 
         for source in sources:
