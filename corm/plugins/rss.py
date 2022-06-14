@@ -95,7 +95,7 @@ class RssPlugin(BasePlugin):
     def get_channels(self, source):
         channels = []
 
-        resp = requests.get(source.server)   
+        resp = requests.get(source.server, headers={'User-agent': 'SavannahCRM'})   
         if resp.status_code == 200:
             data = resp.text
             try:
@@ -155,7 +155,7 @@ class RssImporter(PluginImporter):
       source = channel.source
       community = source.community
 
-      resp = requests.get(channel.origin_id)
+      resp = requests.get(channel.origin_id, headers={'User-agent': 'SavannahCRM'})
       if resp.status_code == 200:
           rawxml = io.StringIO(resp.text)
           tree = XMLParser.parse(rawxml)
