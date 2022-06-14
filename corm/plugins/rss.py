@@ -186,9 +186,9 @@ class RssImporter(PluginImporter):
         member = self.make_member(blog_author_id, detail=author_name, channel=channel, tstamp=tstamp, name=author_name, speaker=True)
 
         blog_content = None
-        if item.find('{http://purl.org/rss/1.0/modules/content/}encoded'):
+        if item.find('{http://purl.org/rss/1.0/modules/content/}encoded') is not None:
             blog_content = item.find('{http://purl.org/rss/1.0/modules/content/}encoded').text
-        elif item.find('description'):
+        elif item.find('description') is not None:
             blog_content = item.find('description').text
 
         if blog_content is not None:
