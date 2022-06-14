@@ -185,7 +185,12 @@ class RssImporter(PluginImporter):
         blog_author_id = '%s/%s' % (source.server, author_name)
         member = self.make_member(blog_author_id, detail=author_name, channel=channel, tstamp=tstamp, name=author_name, speaker=True)
 
-        blog_content = item.find('description').text
+        blog_content = None
+        if item.find('{http://purl.org/rss/1.0/modules/content/}encoded'):
+            blog_content = item.find('{http://purl.org/rss/1.0/modules/content/}encoded').text
+        elif item.find('description'):
+            blog_content = item.find('description').text
+
         if blog_content is not None:
             blog_content = re.sub('<[^<]+?>', '', blog_content)
         origin_parts = origin_id.split("#")
