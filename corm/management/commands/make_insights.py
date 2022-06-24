@@ -48,6 +48,7 @@ class Command(BaseCommand):
             self.make_level_insights(community)
             self.make_tag_insights(community)
             self.make_new_member_insights(community)
+            self.make_first_contrib(community)
 
     def make_new_member_insights(self, community):
         offset_days = 7
@@ -198,7 +199,7 @@ class Command(BaseCommand):
                 recipient=community.managers or community.owner,
                 uid='new-core-members',
                 level=Insight.InsightLevel.SUCCESS,
-                title='You have new Core community members!',
+                title='You have new <b>Core</b> community members!',
                 text=insight_text,
             )
 
@@ -218,6 +219,13 @@ class Command(BaseCommand):
             insight_text = '<p>There have been %s comments in <b>%s</b> on <b>%s</b> (%s) since the last staff comment on %s.</p>' % (channel.newer_community_msgs, channel.name, channel.source.name, channel.source.connector_name, channel.last_staff_msg.strftime("%a %B %d %Y"))
             channel_url = channel.get_origin_url()
 
+            try:
+                last_insight = Insight.objects.filter(community=community, uid=uid).order_by('-timestamp')[0]
+                days_since_last_insight = (datetime.datetime.utcnow() - last_insight.timestamp).days
+                if days_since_last_insight < trigger_days:
+                    return
+            except:
+                pass
             Insight.create(
                 community=community, 
                 recipient=community.managers or community.owner,
@@ -228,3 +236,73 @@ class Command(BaseCommand):
                 cta="View Channel",
                 link=channel_url
             )
+
+    def make_first_contrib(self, community):
+        offset_days = 1
+        new_since = datetime.datetime.utcnow() - datetime.timedelta(days=offset_days)
+        uid = 'new-contributor-members'
+        try:
+            last_insight = Insight.objects.filter(community=community, uid=uid).order_by('-timestamp')[0]
+            if last_insight.timestamp > new_since:
+                return
+            new_since = last_insight.timestamp
+            offset_days = (datetime.datetime.utcnow() - new_since).days
+        except:
+            pass
+        members = Member.objects.filter(community=community)
+        members = members.annotate(first_contrib=Min('contribution__timestamp'))
+        members = members.filter(first_contrib__gte=new_since)
+
+        print("New contributors: %s" % members.count())
+        if members.count() < 1:
+            return
+        source_counts = dict()
+        type_counts = dict()
+        tag_counts = dict()
+        oldest_contrib = None
+        insight_title = 'You have <b>%s</b> new Contributors!' % members.count()
+        insight_text = "<div class=\"row\"><div class=\"col-12 col-lg-6\">The following members of your community have just made their first contribution:<ul>"
+        for member in members:
+            insight_text += "<li><a href=\"%s\">%s</a></li>\n" % (reverse('member_profile', kwargs={'member_id':member.id}), member.name)
+            first_contrib = member.contribution_set.all().order_by('timestamp')[0]
+            if first_contrib.channel.source not in source_counts:
+                source_counts[first_contrib.channel.source] = 1
+            else:
+                source_counts[first_contrib.channel.source] += 1
+            if first_contrib.contribution_type not in type_counts:
+                type_counts[first_contrib.contribution_type] = 1
+            else:
+                type_counts[first_contrib.contribution_type] += 1
+            for tag in first_contrib.tags.all():
+                if tag not in tag_counts:
+                    tag_counts[tag] = 1
+                else:
+                    tag_counts[tag] += 1
+            if oldest_contrib is None or oldest_contrib > first_contrib.timestamp:
+                oldest_contrib = first_contrib.timestamp
+        insight_text += "</ul></div><div class=\"col-12 col-lg-6\">The sources of their contributions are:<ul>"
+        for source, count in source_counts.items():
+            insight_text += "<li><a href=\"%s?clear=all&source=%s\">%s</a>: %s</li>" % (reverse('contributions', kwargs={'community_id':community.id}), source.id, source.connector_name, count)
+        insight_text += "</ul>The most recent types of contributions were:<ul>"
+        for contrib_type, count in type_counts.items():
+            insight_text += "<li><a href=\"%s?clear=all&type=%s\">%s</a>: %s</li>" % (reverse('contributions', kwargs={'community_id':community.id}), contrib_type.name, contrib_type.name, count)
+        insight_text += "</ul></div></div>"
+
+        if len(tag_counts) > 0:
+            insight_text += "<p>Their primary topics were:<ul>"
+            for tag, count in sorted(tag_counts.items(), key=lambda item: item[1]):
+                insight_text += '<li><span class="tag-pill text-nowrap" style="background-color: #%s; "><span class="tag-text" style="color: #%saa;">%s</span></span> (%s contributions)</li>' % (tag.color, tag.color, tag.name, count)
+            insight_text += "</ul></p>"
+        timespan = datetime.datetime.utcnow() - oldest_contrib
+        print("Creating insight for %s new contributors" % members.count())
+
+        Insight.create(
+            community=community, 
+            recipient=community.managers or community.owner,
+            uid=uid,
+            level=Insight.InsightLevel.SUCCESS,
+            title=insight_title,
+            text=insight_text,
+            cta="View Members",
+            link=reverse('contributors', kwargs={'community_id':community.id})+"?clear=all&sort=-first_contrib"
+        )
