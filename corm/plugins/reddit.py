@@ -214,7 +214,7 @@ class RedditImporter(PluginImporter):
     def api_call(self, path):
         resp =  self.api_request(path, headers=self.API_HEADERS)
         if 'x-ratelimit-remaining' in resp.headers and float(resp.headers.get('x-ratelimit-remaining', 0)) < 10:
-            if resp.headers.get('x-ratelimit-remaining') < 1:
+            if float(resp.headers.get('x-ratelimit-remaining')) < 1:
                 raise Exception("API rate limit exceeded")
             print("API backoff, %s calls remaining" % resp.headers.get('x-ratelimit-remaining'))
             sleep(float(resp.headers.get('x-ratelimit-reset', 30)))
