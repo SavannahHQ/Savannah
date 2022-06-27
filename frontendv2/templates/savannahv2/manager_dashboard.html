@@ -6,9 +6,39 @@
 
 {% block page_content %}
           <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">My Dashboard</h1>
+          {% comment %} <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Current Activity Levels</h1>
+          </div> {% endcomment %}
+
+          <!-- Content Row -->
+          <div class="row">
+
+            {% for source in view.source_activity %}
+            <!-- {{source.connector_name}}/{{source.name}} Card -->
+            <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 mb-4">
+              <div class="card border-left-{% if source.percent > 120 %}success{% elif source.percent < 80 %}danger{% else %}info{% endif %} shadow h-100 py-2">
+                <a href="{% url source.view_name view.community.id %}?clear=all&source={{source.id}}&timespan=30" title="7-day activity level compared to previous 30 days">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-member text-uppercase mb-1">{{source.name}}</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800">{{source.percent|floatformat:0}}%</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="{{source.icon_name}} fa-2x text-gray-300"></i>
+                    </div>
+                  </div>
+                </div>
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+
           </div>
+          
+          {% comment %} <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">My Dashboard</h1>
+          </div> {% endcomment %}
 
           <!-- Content Row -->
           <div class="row">

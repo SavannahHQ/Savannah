@@ -37,6 +37,22 @@ class ManagerDashboard(SavannahView):
         self.charts = set()
 
     @property
+    def source_activity(self):
+        current_range = 7
+        average_range = 30
+        sources = Source.objects.filter(community=self.community, enabled=True)
+        sources = sources.annotate(current_count=Count('channel__activity', filter=Q(channel__enabled=True, channel__activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=current_range), channel__activity__timestamp__lte=datetime.datetime.utcnow())))
+        sources = sources.annotate(previous_count=Count('channel__activity', filter=Q(channel__enabled=True, channel__activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=average_range+current_range), channel__activity__timestamp__lte=datetime.datetime.utcnow() - datetime.timedelta(days=current_range))))
+        sources = sources.filter(previous_count__gt=0).order_by('-previous_count')[:12]
+        for source in sources:
+            source.previous_avg = source.previous_count / (average_range/current_range)
+            source.percent = 100 * source.current_count / source.previous_avg
+            source.view_name = 'conversations'
+            if source.connector in ['corm.plugins.meetup', 'corm.plugins.ical'] or 'calendar' in source.icon_name:
+                source.view_name = 'events'
+        return sources
+
+    @property
     def recent_notes(self):
         return Note.objects.filter(member__community=self.community, author=self.request.user).order_by('-timestamp')[:5]
 
