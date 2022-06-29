@@ -542,7 +542,7 @@ class Contributors(SavannahFilterView):
         view = Contributors(request, community_id)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="contributors.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Member', 'Company', 'First Contrib', 'Last Contrib', 'Contrib Count', 'Tags'])
+        writer = csv.DictWriter(response, fieldnames=['Member', 'Email', 'Company', 'First Contrib', 'Last Contrib', 'Contrib Count', 'Tags'])
         writer.writeheader()
         for member in view.all_contributors:
             company_name = ''
@@ -550,6 +550,7 @@ class Contributors(SavannahFilterView):
                 company_name = member.company.name
             writer.writerow({
                 'Member': member.name, 
+                'Email': member.email_address, 
                 'Company':company_name, 
                 'First Contrib':member.first_contrib, 
                 'Last Contrib':member.last_contrib, 

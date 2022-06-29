@@ -90,12 +90,13 @@ class EventProfile(SavannahView):
         view = EventProfile(request, event_id)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="attendees.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Event', 'Member', 'Attended', 'Role'])
+        writer = csv.DictWriter(response, fieldnames=['Event', 'Member', 'Email', 'Attended', 'Role'])
         writer.writeheader()
         for attendee in EventAttendee.objects.filter(event=view.event).select_related('member'):
             writer.writerow({
                 'Event': attendee.event.title, 
                 'Member':attendee.member, 
+                'Email':attendee.member.email_address, 
                 'Attended': attendee.timestamp,
                 'Role':EventAttendee.ROLE_NAME[attendee.role], 
             })

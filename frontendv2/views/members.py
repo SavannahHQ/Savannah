@@ -557,7 +557,7 @@ class AllMembers(SavannahFilterView):
         view = AllMembers(request, community_id)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="members.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Member', 'Company', 'Role', 'First Seen', 'Last Seen', 'Activity Count', 'Tags'])
+        writer = csv.DictWriter(response, fieldnames=['Member', 'Email', 'Company', 'Role', 'First Seen', 'Last Seen', 'Activity Count', 'Tags'])
         writer.writeheader()
         for member in view.get_members():
             company_name = ''
@@ -565,6 +565,7 @@ class AllMembers(SavannahFilterView):
                 company_name = member.company.name
             writer.writerow({
                 'Member': member.name, 
+                'Email': member.email_address, 
                 'Company':company_name, 
                 'Role': member.get_role_display(),
                 'First Seen':member.first_seen, 
