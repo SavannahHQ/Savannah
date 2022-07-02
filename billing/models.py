@@ -5,6 +5,7 @@ from corm.models import Community, ManagementPermissionMixin
 from jsonfield.fields import JSONField
 
 from djstripe.models import Customer, Subscription
+from djstripe.enums import SubscriptionStatus
 # Create your models here.
 class Organization(models.Model):
     name = models.CharField(verbose_name="Company/Organization Name", max_length=100)
@@ -25,6 +26,48 @@ class Management(models.Model, ManagementPermissionMixin):
     )
     overrides = JSONField(null=True, blank=True)
 
+    @property 
+    def is_billable(self):
+        if self.subscription is None:
+            return False
+        if self.subscription.status == SubscriptionStatus.canceled:
+            return False
+        if self.subscription.plan is None:
+            return False
+        return True
+
+    @property
+    def is_per_seat(self):
+        return self.subscription is not None and self.subscription.plan is not None and self.subscription.plan.billing_scheme == 'tiered'
+
+    @property
+    def billable_seats(self):
+        seats = self.community.managers.user_set.all().count()
+        return seats
+
+    @property
+    def monthly_cost(self):
+        try:
+            plan = self.subscription.plan
+            if self.is_per_seat:
+                manager_count = self.billable_seats
+                tier_start = 0
+                amount = 0
+                for tier in plan.tiers:
+                    if tier["up_to"] is None:
+                        tier["up_to"] = 10000
+                    if manager_count > tier_start:
+                        if tier["flat_amount"] is not None:
+                            amount += tier["flat_amount"]
+                        if tier["unit_amount"] is not None:
+                            amount += (tier["unit_amount"] * min(manager_count - tier_start, tier["up_to"]))
+                        tier_start = tier["up_to"]
+                return amount / 100
+            else:
+                return plan.amount
+        except Exception as e:
+            print(e)
+            return 0
     @property
     def metadata(self):
         if not hasattr(self, '_metadata'):
@@ -58,8 +101,19 @@ class Management(models.Model, ManagementPermissionMixin):
         except Exception as e:
             raise Exception("Failed to unsubscribe %s: %s" % (subscription_id, e))
 
+    def update(self, **kwargs):
+        if self.subscription is not None:
+            if 'plan' in kwargs:
+                self.subscription.plan = kwargs['plan']
+            quantity = 1
+            if self.is_per_seat:
+                quantity = self.billable_seats
+            kwargs['quantity'] = quantity
+            self.subscription.update(**kwargs)
+
     def can_change_to(self, plan):
         plan_data = plan.metadata
+        override_data = self.overrides or {}
 
         managers = int(plan_data.get('managers', 0))
         if managers > 0 and self.community.managers.user_set.all().count() > managers:
@@ -77,8 +131,9 @@ class Management(models.Model, ManagementPermissionMixin):
         if projects > 0 and self.community.project_set.filter(default_project=False).count() > projects:
             return False
 
-        can_have_sales = plan_data.get('sales_integration', False)
+        can_have_sales = override_data.get('sales_integration', plan_data.get('sales_integration', False))
         if not can_have_sales and self.community.source_set.filter(connector='corm.plugins.salesforce').count() > 0:
+            print("Can't change due to sales integration")
             return False
 
         return True

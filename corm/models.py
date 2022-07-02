@@ -120,10 +120,24 @@ class NoManagement(ManagementPermissionMixin):
         self.community = community
         self.metadata = metadata
 
+    def update(self):
+        pass
+
+    @property 
+    def is_billable(self):
+        return False
+
 class DemoManagement(ManagementPermissionMixin):
     def __init__(self, community):
         self.community = community
         self.metadata = {}
+
+    def update(self):
+        pass
+
+    @property 
+    def is_billable(self):
+        return False
 
     @property
     def name(self):
@@ -293,18 +307,16 @@ class Insight(models.Model):
             recipients = [recipient]
 
         for recipient in recipients:
-            insight, created = Insight.objects.get_or_create(
+            insight = Insight.objects.create(
                 community=community,
                 recipient=recipient,
                 uid=uid,
-                defaults={
-                    'title':title,
-                    'level':level,
-                    'unread':True,
-                    'link':link,
-                    'cta':cta,
-                    'text':text
-                }
+                title=title,
+                level=level,
+                unread=True,
+                link=link,
+                cta=cta,
+                text=text
             )
             
 class Tag(models.Model):

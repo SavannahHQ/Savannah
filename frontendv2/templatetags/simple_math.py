@@ -15,6 +15,12 @@ def subtract(value, arg):
     return value - arg
 
 @register.filter
+def cents(value):
+    if value is None:
+        return 0.00
+    return int(value) / 100
+
+@register.filter
 def day_duration(value, arg=None):
     value = int(value or 0)
     count = value

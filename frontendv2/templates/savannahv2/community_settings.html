@@ -1,0 +1,116 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load humanize %}
+
+{% block page_title %} | {{view.community.name}} Settings{% endblock %}
+
+{% block page_content %}
+<!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">{{view.community.name}} Settings</h1>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+
+            <!-- Content Column -->
+            <div class="col-xl-8 col-lg-9 mb-8">
+
+              <!-- Settings -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Community Settings</h6>
+                  <a class="btn btn-primary btn-sm" href="{% url 'community_edit' view.community.id %}"><i class="fas fa-edit"> </i> Edit</a>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                <p><b>Name: </b>{{view.community.name}}</p>
+                <p><b>Icon: </b><img src="{{view.community.icon_path}}" /></p>
+
+                <div class="row">
+                  <div class="col-6">
+                    <p><i class="text-primary {% if view.community.suggest_tag %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tags</p>
+                    <p><i class="text-primary {% if view.community.suggest_company %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Companies</p>
+                    <p><i class="text-primary {% if view.community.suggest_merge %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Member Merge</p>
+                    <p><i class="text-primary {% if view.community.suggest_contribution %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Contributions</p>
+                    <p><i class="text-primary {% if view.community.suggest_task %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tasks</p>
+                  </div>
+                  <div class="col-6">
+                    {% comment %} inactivity_threshold_previous_activity = models.PositiveSmallIntegerField(default=50, help_text="Amount of previous activity required before you will be notified that a member has become inactive.")
+                    inactivity_threshold_previous_days = models.PositiveSmallIntegerField(default=90, help_text="Number of days into the past to check for activity to meet the notification threshold")
+                    inactivity_threshold_days = models.PositiveSmallIntegerField(default=30, help_text="Number of days of inactivity before triggering a notification")
+                
+                    resuming_threshold_previous_activity = models.PositiveSmallIntegerField(default=20, help_text="Amount of previous activity required before you will be notified that an inactive member had become active again")
+                    resuming_threshold_previous_days = models.PositiveSmallIntegerField(default=90, help_text="Number of days into the past to check for activity to meet the notification threshold")
+                    resuming_threshold_days = models.PositiveSmallIntegerField(default=30, help_text="Number of days of inactivity before triggering a notification on new activity") {% endcomment %}
+                    <p> Inactivity Period: {{view.community.inactivity_threshold_days}} days</p>
+                    <p> Inactivity Previous : {{view.community.inactivity_threshold_previous_days}} days</p>
+                    <p> Inactivity Activation: {{view.community.inactivity_threshold_previous_activity}} conversations</p>
+                    <p> Resuming Period: {{view.community.resuming_threshold_days}}</p>
+                    <p> Resuming Previous: {{view.community.resuming_threshold_previous_days}}</p>
+                    <p> Resuming Activitation: {{view.community.resuming_threshold_previous_activity}} conversations</p>
+                  </div>
+                </div>
+
+                </div>            
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Profile  -->
+            <div class="col-xl-4 col-lg-3">
+
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Subscription</h6>
+                  {% if view.community.status == view.community.DEMO %}
+                  <a class="btn btn-sm btn-success" href="https://savannahcrm.com/community/new" target="_blank"><i class="fas fa-file-invoice"> </i> Signup Now</a>
+                  {% elif view.community.status == view.community.SETUP or not view.community.management.is_billable %}
+                  <a class="btn btn-sm btn-success" href="{% url 'billing:signup_org' view.community.id %}"><i class="fas fa-file-invoice"> </i> Signup Now</a>
+                  {% elif view.community.status != view.community.ACTIVE %}
+                  <a class="btn btn-sm btn-success" href="{% url 'billing:upgrade' view.community.id %}"><i class="fas fa-file-invoice"> </i> Update Info</a>
+                  {% else %}
+                  <a class="btn btn-sm btn-primary" href="{% url 'billing:upgrade' view.community.id %}"><i class="fas fa-file-invoice"> </i> Change Plan</a>
+                  {% endif %}
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                {% if view.community.status == view.community.ACTIVE %}
+                <p><b>Plan: </b>{{view.community.management.name}}</p>
+                  {% if view.community.management.subscription.cancel_at_period_end %}
+                  <div class="text-muted small">Ends: {{view.community.management.subscription.current_period_end|date}}</div>
+                  {% endif %}
+                {% elif view.community.status == view.community.DEMO %}
+                <p><b>Plan: </b>Demonstration</p>
+                {% else %}
+                <p><b>Plan: </b>None</p>
+                {% endif %}
+
+                {% if view.community.management.is_billable %}
+                <p><b>Seats: </b>{{view.community.management.billable_seats}}</p>
+                <p><b>Monthly price: </b>${{view.community.management.monthly_cost|floatformat:2}}</p>
+                {% endif %}
+                </div>            
+                </div>
+              </div>
+
+
+            </div>
+            
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+
+{% endblock %}

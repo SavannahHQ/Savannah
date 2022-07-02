@@ -25,7 +25,7 @@ from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
-from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
+from frontendv2.views.community import CommunitySettings, EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
 from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
@@ -116,6 +116,7 @@ urlpatterns = [
     path('gifts/<int:community_id>/add', GiftTypeManager.add_view, name='gift_type_add'),
     path('gifts/<int:community_id>/edit/<int:type_id>/', GiftTypeManager.edit_view, name='gift_type_edit'),
     path('community/<int:community_id>/change', EditCommunity.as_view, name='community_edit'),
+    path('community/<int:community_id>/settings', CommunitySettings.as_view, name='community_settings'),
     path('managers/<int:community_id>/', Managers.as_view, name='managers'),
     path('managers/<int:community_id>/invite', InviteManager.as_view, name='manager_invite'),
     path('managers/<int:community_id>/accept', AcceptManager.as_view, name='manager_accept'),

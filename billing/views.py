@@ -106,7 +106,19 @@ def signup_subscribe_session(request, community_id,):
     org = management.org
     plan_id = request.GET.get('plan', None)
     plan = get_object_or_404(djstripe.models.Plan, id=plan_id)
-
+    line_items = [
+                {
+                    "price": plan_id,
+                    "quantity": 1
+                }
+            ]
+    if plan.billing_scheme == 'tiered':
+        line_items = [
+                {
+                    "price": plan_id,
+                    "quantity": management.billable_seats
+                }
+            ]
     if request.method == 'POST':
  
         # Set Stripe API key
@@ -118,12 +130,7 @@ def signup_subscribe_session(request, community_id,):
             mode="subscription",
             client_reference_id=community.id,
             allow_promotion_codes=True,
-            line_items=[
-                {
-                    "price": plan_id,
-                    "quantity": 1
-                }
-            ],
+            line_items=line_items,
             customer=org.customer.id,
             success_url=settings.SITE_ROOT + reverse('billing:subscription_success', kwargs={'community_id': community.id}) + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url= settings.SITE_ROOT + reverse('billing:subscription_cancel', kwargs={'community_id': community.id}), # The cancel_url is typically set to the original product page
@@ -274,7 +281,7 @@ def manage_account(request, community_id):
     if 'url' in session:
         return redirect(session['url'])
     else:
-        message.error(request, "Unable to launch Stripe Customer Portal")
+        messages.error(request, "Unable to launch Stripe Customer Portal")
         return redirect('dashboard', community_id=community_id)
 
 @login_required
@@ -293,11 +300,11 @@ def change_plan(request, community_id):
     if request.method == 'POST':
         target_plan = djstripe.models.Plan.objects.get(id=request.POST.get('plan_id'))
         if management.can_change_to(target_plan):
-            management.subscription.update(plan=target_plan)
+            management.update(plan=target_plan)
             messages.success(request, "Your subscription has been changed to <b>%s</b>. You will be billed the new amount on your next billing cycle." % target_plan.nickname)
             return redirect('managers', community.id)
         else:
-            messages.error(request, "Your subscription can not be changed do this plan.<br/> Please contact <a href=\"mailto:info@savannahhq.com\">info@savannahhq.com</a> for assistance changing your plan.")
+            messages.error(request, "Your subscription can not be changed to this plan.<br/> Please contact <a href=\"mailto:info@savannahhq.com\">info@savannahhq.com</a> for assistance changing your plan.")
 
     savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
     context = {

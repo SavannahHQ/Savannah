@@ -2,12 +2,12 @@
 {% load static %}
 {% load humanize %}
 
-{% block page_title %} | {{view.community.name}} Settings{% endblock %}
+{% block page_title %} | {{view.community.name}} Managers{% endblock %}
 
 {% block page_content %}
 <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">{{view.community.name}} Settings</h1>
+            <h1 class="h3 mb-0 text-gray-800">{{view.community.name}} Managers</h1>
           </div>
 
           <!-- Content Row -->
@@ -19,7 +19,7 @@
               <!-- Managers -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Managers</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Active Managers</h6>
                   <a class="m-0 btn btn-sm btn-success text-white" href="{% url 'manager_invite' view.community.id %}"><i class="fas fa-user-plus"></i> Invite</a>
                 </div>
                 <div class="card-body p-0">
@@ -112,7 +112,7 @@
                   <h6 class="m-0 font-weight-bold text-primary">Subscription</h6>
                   {% if view.community.status == view.community.DEMO %}
                   <a class="btn btn-sm btn-success" href="https://savannahcrm.com/community/new" target="_blank"><i class="fas fa-file-invoice"> </i> Signup Now</a>
-                  {% elif view.community.status == view.community.SETUP or not view.community.management.subscription %}
+                  {% elif view.community.status == view.community.SETUP or not view.community.management.is_billable %}
                   <a class="btn btn-sm btn-success" href="{% url 'billing:signup_org' view.community.id %}"><i class="fas fa-file-invoice"> </i> Signup Now</a>
                   {% elif view.community.status != view.community.ACTIVE %}
                   <a class="btn btn-sm btn-success" href="{% url 'billing:upgrade' view.community.id %}"><i class="fas fa-file-invoice"> </i> Update Info</a>
@@ -135,30 +135,11 @@
                 <p><b>Plan: </b>None</p>
                 {% endif %}
 
+                {% if view.community.management.is_billable %}
+                <p><b>Seats: </b>{{view.community.management.billable_seats}}</p>
+                <p><b>Monthly price: </b>${{view.community.management.monthly_cost|floatformat:2}}</p>
+                {% endif %}
                 </div>            
-                </div>
-              </div>
-
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Community Settings</h6>
-                  <a class="btn btn-primary btn-sm" href="{% url 'community_edit' view.community.id %}"><i class="fas fa-edit"> </i> Edit</a>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body">
-                <div class="container-fluid">
-
-                <p><b>Name: </b>{{view.community.name}}</p>
-                <p><b>Icon: </b><img src="{{view.community.icon_path}}" /></p>
-
-                <p><i class="text-primary {% if view.community.suggest_tag %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tags</p>
-                <p><i class="text-primary {% if view.community.suggest_company %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Companies</p>
-                <p><i class="text-primary {% if view.community.suggest_merge %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Member Merge</p>
-                <p><i class="text-primary {% if view.community.suggest_contribution %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Contributions</p>
-                <p><i class="text-primary {% if view.community.suggest_task %}fas fa-check-square{% else %}far fa-square{% endif %}"></i> Suggest Tasks</p>
-                </div>            
-
                 </div>
               </div>
 

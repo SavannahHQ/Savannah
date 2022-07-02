@@ -23,17 +23,30 @@
               <div class="card shadow h-100 p-0 py-0 col border border-primary m-3">
                 <div class="card-body">
                   <h5 class="card-title">{{plan.nickname}}</h5>
-                    <div class="mb-1 font-weight-bold text-gray-800">${{plan.amount|as_int}} /{{plan.interval}}</div>
-                  <div class="card-text">
+                  {% if plan.billing_scheme == 'tiered' %}
+                  {% for tier in plan.tiers %}
+                    {% comment %} {{tier}} {% endcomment %}
+                    {% if tier.flat_amount %}
+                    <div class="mb-1 font-weight-bold text-gray-800">${{tier.flat_amount|cents|floatformat:2}} /{{plan.interval}} for up to {{tier.up_to}} Managers</div>
+                    {% endif %}
+                    {% if tier.unit_amount %}
+                    <div class="mb-1 font-weight-bold text-gray-800">+ ${{tier.unit_amount|cents|floatformat:2}} /{{plan.interval}} for each additional</div>
+                    {% endif %}
+                  {% endfor %}
+                {% else %}
+                <div class="mb-1 font-weight-bold text-gray-800">${{plan.amount|as_int}} /{{plan.interval}}</div>
+                <div class="mb-1 font-weight-bold text-gray-800">Unlimited Managers</div>
+                {% endif %}
+              <div class="card-text">
                     <div class="p-2 justify-content-left">
                         <div class="text-left">
                           <i class="fas fa-check-square text-primary"> </i> Unlimited Members
                         </div>
                         <div class="text-left">
-                            <i class="fas fa-check-square {% if plan.metadata.managers|as_int == 0 %}text-primary{% else %}text-secondary{% endif %}"> </i> 
-                            {{plan.metadata.managers|default:'Unlimited'}} Manager{% if plan.metadata.managers|as_int != 1 %}s{% endif %}
-                        </div>
-                        <div class="text-left">
+                          <i class="fas fa-check-square {% if plan.metadata.managers|as_int == 0 %}text-primary{% else %}text-secondary{% endif %}"> </i> 
+                          {{plan.metadata.managers|default:'Unlimited'}} Manager{% if plan.metadata.managers|as_int != 1 %}s{% endif %}
+                      </div>
+                      <div class="text-left">
                             <i class="fas fa-check-square {% if plan.metadata.sources|as_int == 0 %}text-primary{% else %}text-secondary{% endif %}"> </i> 
                             {{plan.metadata.sources|default:'Unlimited'}} Data Source{% if plan.metadata.sources|as_int != 1 %}s{% endif %}
                         </div>
