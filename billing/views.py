@@ -151,7 +151,7 @@ def signup_subscribe(request, community_id):
     context = {
         "community": community,
         "org": org,
-        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
+        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('interval', 'amount'),
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
     }
     ga.add_event(request, 'subcription_options_viewed', category='signup')
@@ -311,7 +311,7 @@ def change_plan(request, community_id):
         "community": community,
         "org": org,
         "current_plan" : getattr(management.subscription, 'plan', {'id': 0, 'amount': 0}),
-        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('amount'),
+        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('interval', 'amount'),
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
     }
     return render(request, 'billing/change_plan.html', context)
