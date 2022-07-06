@@ -36,6 +36,8 @@ SITE_ROOT = 'https://savannahcrm.com'
 SITE_DOMAIN = 'savannahcrm.com'
 SITE_NAME = 'Savannah CRM'
 SYSTEM_USER = 'admin'
+FONTAWESOME_KIT_URL = 'https://kit.fontawesome.com/a160749d77.js'
+
 PUBLIC_EMAIL_DOMAINS = [
     'gmail.com',
     'googlemail.com',
@@ -160,6 +162,7 @@ TEMPLATES = [
                 "totd.context_processors.tips",
                 "simple_ga.context_processors.events",
                 "frontendv2.context_processors.colors",
+                "frontendv2.context_processors.fonts",
             ],
         },
     },
