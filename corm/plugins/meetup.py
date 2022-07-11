@@ -87,15 +87,18 @@ class SourceAdd(SavannahView):
             if resp.status_code == 200:
                 data = resp.json()
                 # print(data)
-                for grp in data['data']['self']['memberships']['edges']:
-                    group_choices.append((grp['node']['id'], grp['node']['name']))
-                    group_names[grp['node']['id']] = grp['node']['name']
-                    if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
-                        pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
-                        group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
-                if  data['data']['self']['memberships']['pageInfo']['endCursor'] and  data['data']['self']['memberships']['pageInfo']['endCursor'] != cursor:
-                    cursor =  data['data']['self']['memberships']['pageInfo']['endCursor']
-                    has_more = True
+                if 'memberships' in data['data']['self'] and 'edges' in data['data']['self']['memberships']:
+                    for grp in data['data']['self']['memberships']['edges']:
+                        group_choices.append((grp['node']['id'], grp['node']['name']))
+                        group_names[grp['node']['id']] = grp['node']['name']
+                        if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
+                            pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
+                            group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
+                    if  data['data']['self']['memberships']['pageInfo']['endCursor'] and  data['data']['self']['memberships']['pageInfo']['endCursor'] != cursor:
+                        cursor =  data['data']['self']['memberships']['pageInfo']['endCursor']
+                        has_more = True
+                else:
+                    messages.error(request, "Failed to retrieve Meetup groups: No group memberships found!")
             else:
                 messages.error(request, "Failed to retrieve Meetup groups: %s"%  resp.content)
 
