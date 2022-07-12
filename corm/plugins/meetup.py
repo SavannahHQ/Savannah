@@ -87,7 +87,7 @@ class SourceAdd(SavannahView):
             if resp.status_code == 200:
                 data = resp.json()
                 # print(data)
-                if 'memberships' in data['data']['self'] and 'edges' in data['data']['self']['memberships']:
+                if data['data']['self'] is not None and 'memberships' in data['data']['self'] and 'edges' in data['data']['self']['memberships']:
                     for grp in data['data']['self']['memberships']['edges']:
                         group_choices.append((grp['node']['id'], grp['node']['name']))
                         group_names[grp['node']['id']] = grp['node']['name']
