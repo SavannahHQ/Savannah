@@ -583,9 +583,9 @@ class MemberLookup(SavannahView):
     @property
     def members(self):
         if self.search is not None:
-            return Member.objects.filter(community=self.community, name__icontains=self.search).order_by('-last_seen')
+            return Member.objects.filter(community=self.community, name__icontains=self.search).order_by(IsNull('last_seen'), '-last_seen')
         else:
-            return Member.objects.filter(community=self.community).order_by('-last_seen')
+            return Member.objects.filter(community=self.community).order_by(IsNull('last_seen'), '-last_seen')
 
     def as_json(request, community_id):
         view = MemberLookup(request, community_id)
