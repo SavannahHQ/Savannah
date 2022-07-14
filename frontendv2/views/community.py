@@ -309,8 +309,10 @@ class ManagerPreferences(SavannahView):
             form = ManagerPreferencesForm(instance=self.manager, data=self.request.POST)
         else:
             form = ManagerPreferencesForm(instance=self.manager)
-        form.fields['member'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=self.community)]
-        form.fields['member'].widget.choices.insert(0, ('', '-----'))
+        if self.manager.member is not None:
+            form.fields['member'].widget.choices = [(self.manager.member.id, self.manager.member.name)]
+        else:
+            form.fields['member'].widget.choices = []
         return form
 
     @login_required

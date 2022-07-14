@@ -589,7 +589,7 @@ class MemberLookup(SavannahView):
 
     def as_json(request, community_id):
         view = MemberLookup(request, community_id)
-        memberdata = []
+        memberdata = [{'id':'', 'text':'-----'}]
         for member in view.members[:100]:
             text = member.name
             if member.company:
