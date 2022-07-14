@@ -170,9 +170,12 @@ class EventAttendeeForm(forms.ModelForm):
         model = EventAttendee
         fields = ['member', 'role', 'timestamp']
 
-    def limit_to(self, community):
-        self.fields['member'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=community).order_by(Lower('name'))]
-        self.fields['member'].widget.choices.insert(0, ('', '-----'))
+    def limit(self):
+        if self.instance and hasattr(self.instance, 'member'):
+            self.fields['member'].widget.choices = [(self.instance.member.id, self.instance.member.name)]
+        else:
+            self.fields['member'].widget.choices = []
+
 
 class AddAttendee(SavannahView):
     def __init__(self, request, event_id):
@@ -198,7 +201,7 @@ class AddAttendee(SavannahView):
             form = EventAttendeeForm(instance=self.edit_attendee, data=self.request.POST)
         else:
             form = EventAttendeeForm(instance=self.edit_attendee)
-        form.limit_to(self.community)
+        form.limit()
         return form
 
     @login_required

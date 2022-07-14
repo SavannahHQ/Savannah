@@ -159,7 +159,7 @@ class ManagerTaskEdit(SavannahView):
             form = TaskForm(instance=self.task)
         form.fields['owner'].widget.choices = [(user.id, user.username) for user in User.objects.filter(groups=self.community.managers)]
         form.fields['project'].widget.choices = [(project.id, project.name) for project in Project.objects.filter(community=self.community).order_by('-default_project', 'name')]
-        form.fields['stakeholders'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=self.community)]
+        form.fields['stakeholders'].widget.choices = [(member.id, member.name) for member in self.task.stakeholders.all()]
         return form
 
     @login_required

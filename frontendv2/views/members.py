@@ -575,6 +575,29 @@ class AllMembers(SavannahFilterView):
             })
         return response
 
+class MemberLookup(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.search = request.GET.get('q', None)
+
+    @property
+    def members(self):
+        if self.search is not None:
+            return Member.objects.filter(community=self.community, name__icontains=self.search).order_by('-last_seen')
+        else:
+            return Member.objects.filter(community=self.community).order_by('-last_seen')
+
+    def as_json(request, community_id):
+        view = MemberLookup(request, community_id)
+        memberdata = []
+        for member in view.members[:100]:
+            text = member.name
+            if member.company:
+                text += ' (%s)' % member.company.name
+
+            memberdata.append({'id': member.id, 'text': text})
+        return JsonResponse({'search': view.search, 'members': memberdata})
+
 class MemberNoteForm(forms.ModelForm):
     class Meta:
         model = Note
