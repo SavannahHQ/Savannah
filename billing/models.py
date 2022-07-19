@@ -102,6 +102,8 @@ class Management(models.Model, ManagementPermissionMixin):
             raise Exception("Failed to unsubscribe %s: %s" % (subscription_id, e))
 
     def update(self, **kwargs):
+        if self.subscription.status in ['canceled', 'incomplete_expired']:
+            return
         if self.subscription is not None:
             if 'plan' in kwargs:
                 self.subscription.plan = kwargs['plan']
