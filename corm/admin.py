@@ -612,3 +612,9 @@ class InsightAdmin(admin.ModelAdmin):
     search_fields = ["uid"]
 admin.site.register(Insight, InsightAdmin)
 
+class UploadedFileAdmin(admin.ModelAdmin):
+    list_display = ("name", "status", "uploaded_by", "uploaded_at")
+    list_filter = ("status", "community", "uploaded_by", "uploaded_at")
+    search_fields = ["uploaded_to"]
+admin.site.register(UploadedFile, UploadedFileAdmin)
+

@@ -1,0 +1,59 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Import File{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'import_list' view.community.id %}"><i class="fas fa-chevron-left"></i></a> File Import</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Import Status</h6>
+                  {% if view.file.status < view.file.COMPLETE %}
+                  <form class="inline-form" action="{% url 'import_cancel' view.file.community.id view.file.id %}" method="POST">
+                  {% csrf_token %}
+
+                  <button class="btn btn-danger" type="submit" name="cancel_import" value="{{view.file.id}}">Cancel Import</a>
+                  </form>
+                  {% endif %}
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                    <p><b>Status: </b>{{view.file.get_status_display}}</p>
+                    <p><b>Name: </b>{{view.file.name}}</p>
+                    <p><b>File: </b>{{view.file.uploaded_to}}</p>
+                    <p><b>Records: </b>{{view.file.record_length}}</p>
+                    <p><b>Uploaded by: </b>{{view.file.uploaded_by}}</p>
+                    <p><b>Uploaded at: </b>{{view.file.uploaded_at}}</p>
+                    <p></p>
+                    <h4 class="mt-5">Field Mapping {% if view.file.status < view.file.PROCESSING %}<a class="btn btn-primary btn-sm" href="{% url 'import_map' view.file.community.id view.file.id %}">Edit</a>{% endif %}</h4>
+                    {% for column, field in view.file.mapping.items %}
+                    {% if field %}
+                    <p><b>{{column}}</b> -> {{field|title}}</p>
+                    {% endif %}
+                    {% endfor %}
+                </div>            
+
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

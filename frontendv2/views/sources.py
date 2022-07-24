@@ -3,9 +3,11 @@ from functools import reduce
 import datetime
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, fields
+from django.db.models.fields.related import RelatedField
 from django.contrib import messages
 from django.http import JsonResponse
+from django import forms
 
 from corm.models import *
 from corm.connectors import ConnectionManager
@@ -269,3 +271,152 @@ def tag_channel(request, community_id, source_id):
             return JsonResponse({'success':False, 'errors':str(e)})
     return JsonResponse({'success':False, 'errors':'Only POST method supported'})
     
+class FileUploadForm(forms.ModelForm):
+    class Meta:
+        model = UploadedFile
+        fields = ['name', 'uploaded_to', 'source']
+
+    def __init__(self, *args, **kwargs):
+        super(FileUploadForm, self).__init__(*args, **kwargs)
+        self.fields['other'] = forms.CharField(label="Source Name", required=False)
+
+    def limit_to(self, community):
+        self.fields['source'].widget.choices = [(source.id, "%s (%s)" % (source.name, source.connector_name)) for source in Source.objects.filter(community=community)]
+        self.fields['source'].widget.choices.insert(0, ('', '-----'))
+        self.fields['source'].widget.choices.append(("other", "New Source..."))
+
+
+class ImportMappingForm(forms.Form):
+
+    def __init__(self, instance, data=None, choices=[]):
+        super().__init__(data=data)
+        self.instance = instance
+        self.choice_list = [('', '-----')] + [(n, n.replace('_', ' ').title()) for n in choices]
+
+        for c in self.instance.columns:
+            self.fields[c] = forms.ChoiceField(label=c, choices=self.choice_list, required=False, initial=self.instance.mapping.get(c, ''))
+
+class ImportList(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "sources"
+
+    def all_uploads(self):
+        return UploadedFile.objects.filter(community_id=self.community.id)
+
+    def as_view(request, community_id):
+        view = ImportList(request, community_id)
+        return render(request, 'savannahv2/imports_list.html', view.context)
+
+class ImportInfo(SavannahView):
+    def __init__(self, request, community_id, upload_id):
+        super().__init__(request, community_id)
+        self.active_tab = "sources"
+        self.upload_id = upload_id
+
+    @property
+    def file(self):
+        return UploadedFile.objects.get(id=self.upload_id)
+
+    def as_view(request, community_id, upload_id):
+        view = ImportInfo(request, community_id, upload_id)
+        return render(request, 'savannahv2/import_info.html', view.context)
+
+class ImportUpload(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "sources"
+
+    def form(self):
+        upload_form = FileUploadForm(instance=self.upload)
+        upload_form.limit_to(self.community)
+        return upload_form
+    def as_view(request, community_id):
+        view = ImportUpload(request, community_id)
+        view.upload = UploadedFile(community=view.community, uploaded_by=request.user, status=UploadedFile.UPLOADED)
+        if request.method == 'POST':
+            form_data = dict(request.POST.items())
+            if form_data.get('source') == 'other':
+                form_data['source'] = ''
+            form = FileUploadForm(data=form_data, files=request.FILES, instance=view.upload)
+            form.limit_to(view.community)
+            if form.is_valid():
+                view.upload = form.save(commit=False)
+                if request.POST.get('source') == 'other':
+                    view.upload.source = Source.objects.create(community=view.community, name=form.cleaned_data['other'], connector='corm.plugins.null', icon_name='fas fa-file-arrow-up')
+                view.upload.save()
+                messages.success(request, "File uploaded!")            
+                return redirect('import_map', community_id=community_id, upload_id=view.upload.id)
+            else:
+                view.form = form
+                messages.error(request, "Upload failed")
+        return render(request, 'savannahv2/import_upload.html', view.context)
+
+class ImportMap(SavannahView):
+    def __init__(self, request, community_id, upload_id):
+        super().__init__(request, community_id)
+        self.upload = get_object_or_404(UploadedFile, id=upload_id)
+        self.active_tab = "sources"
+        self.target_fields = ['name', 'origin_id', 'email_address', 'phone_number', 'mailing_address', 'avatar_url', 'company', 'tags']
+
+    def form(self):
+        mapping_form = ImportMappingForm(instance=self.upload, choices=self.target_fields)
+        return mapping_form
+
+    def as_view(request, community_id, upload_id):
+        view = ImportMap(request, community_id, upload_id)
+        if view.upload.status == UploadedFile.PROCESSING:
+            messages.warning(request, "Cannot change field mapping because this import has already started")
+            return redirect('import_info', community_id=view.community.id, upload_id=view.upload.id)
+        if view.upload.status == UploadedFile.COMPLETE or view.upload.status == UploadedFile.FAILED:
+            messages.warning(request, "Cannot change field mapping because this import has already finished")
+            return redirect('import_info', community_id=view.community.id, upload_id=view.upload.id)
+        if view.upload.status == UploadedFile.CANCELED:
+            messages.warning(request, "Cannot change field mapping because this import has been canceled")
+            return redirect('import_info', community_id=view.community.id, upload_id=view.upload.id)
+
+        if request.method == 'POST':
+            form = ImportMappingForm(data=request.POST, instance=view.upload, choices=view.target_fields)
+            if form.is_valid():
+                view.upload.mapping = dict()
+                for src, dst in form.cleaned_data.items():
+                    view.upload.mapping[src] = dst
+                # view.upload.save()
+                if view.upload.source and not 'origin_id' in form.cleaned_data.values():
+                    messages.error(request, "You must map a field to Origin ID when importing to a Source")
+                    return render(request, 'savannahv2/import_map.html', view.context)
+                if not view.upload.source and 'origin_id' in form.cleaned_data.values():
+                    messages.error(request, "You cannot map a field to Origin ID because you haven't assigned a Source")
+                    return render(request, 'savannahv2/import_map.html', view.context)
+                view.upload.status = UploadedFile.PENDING
+                view.upload.save()
+                messages.success(request, "Your upload will begin shortly")            
+                return redirect('import_info', community_id=community_id, upload_id=view.upload.id)
+            else:
+                view.form = form
+                messages.error(request, "Mapping failed")
+        return render(request, 'savannahv2/import_map.html', view.context)
+
+class ImportCancel(SavannahView):
+    def __init__(self, request, community_id, upload_id):
+        super().__init__(request, community_id)
+        self.upload = get_object_or_404(UploadedFile, id=upload_id)
+
+    def as_view(request, community_id, upload_id):
+        view = ImportCancel(request, community_id, upload_id)
+        if view.upload.status == UploadedFile.COMPLETE or view.upload.status == UploadedFile.FAILED:
+            messages.warning(request, "Cannot cancel an import that is already finished")
+            return redirect('import_info', community_id=view.community.id, upload_id=view.upload.id)
+
+        if request.method == 'POST':
+            if 'cancel_import' in request.POST:
+                context = view.context
+                context.update({'action_name':'Cancel', 'object_type':"Import", 'object_name': view.upload.name, 'object_id': view.upload.id})
+                return render(request, "savannahv2/delete_confirm.html", context)
+            elif 'delete_confirm' in request.POST:
+                view.upload.status = UploadedFile.CANCELED
+                view.upload.save()
+                messages.success(request, "Canceled import: <b>%s</b>" % view.upload.name)
+
+                return redirect('import_list', community_id=community_id)
+        return redirect('import_list', community_id=community_id)

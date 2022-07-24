@@ -1,0 +1,58 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load static humanize simple_dates member_utils %}
+
+{% block page_title %} | Imports{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Member Imports</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Files  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Uploaded Files</h6>
+                  <a class="btn btn-success" href="{% url 'import_upload' view.community.id %}"><i class="fas fa-file-arrow-up"></i> New Import</a>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0 table-responsive">
+                    <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">File</th>
+                        <th scope="col">Records</th>
+                        <th scope="col">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for file in view.all_uploads %}
+                    <tr>
+                      <td class="text-nowrap">{{file.uploaded_at|dateortime}}</td>
+                      <td class="text-nowrap"><a href="{% url 'import_info' file.community.id file.id %}">{{file.name}}</a></td>
+                      <td class="text-nowrap">{{file.record_length}}</td>
+                      <td class="text-nowrap">{{file.get_status_display}}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>           
+
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

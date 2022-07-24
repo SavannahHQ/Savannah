@@ -22,7 +22,7 @@ from frontendv2.views.members import Members, MemberProfile, MemberActivity, Mem
 from frontendv2.views.conversations import Conversations, ignore_hyperlink, show_hyperlink
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
-from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
+from frontendv2.views.sources import Sources, Channels, tag_channel, add_source, ImportUpload, ImportMap, ImportList, ImportInfo, ImportCancel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
 from frontendv2.views.community import CommunitySettings, EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
@@ -131,6 +131,11 @@ urlpatterns = [
     path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),
     path('sources/<int:community_id>/channels/<int:source_id>/tag', tag_channel, name='channel_tag_form'),
+    path('sources/<int:community_id>/import/', ImportList.as_view, name='import_list'),
+    path('sources/<int:community_id>/import/upload', ImportUpload.as_view, name='import_upload'),
+    path('sources/<int:community_id>/import/<int:upload_id>/map', ImportMap.as_view, name='import_map'),
+    path('sources/<int:community_id>/import/<int:upload_id>/status', ImportInfo.as_view, name='import_info'),
+    path('sources/<int:community_id>/import/<int:upload_id>/cancel', ImportCancel.as_view, name='import_cancel'),
     path('tags/<int:community_id>/', Tags.as_view, name='tags'),
     path('tags/<int:community_id>/add', AddTag.as_view, name='tag_add'),
     path('tag/<int:tag_id>/edit', EditTag.as_view, name='tag_edit'),

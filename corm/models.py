@@ -8,6 +8,7 @@ from django.shortcuts import redirect, get_object_or_404, reverse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.messages.constants import DEFAULT_TAGS, WARNING
+from django.utils.safestring import mark_safe
 from jsonfield.fields import JSONField
 
 from imagekit import ImageSpec
@@ -1602,4 +1603,73 @@ class EmailRecord(models.Model):
     subject = models.CharField(null=False, max_length=128)
     body = models.TextField(null=False, max_length=1024)
     ok = models.BooleanField(null=False, default=True)
+
+class UploadedFile(models.Model):
+    UPLOADED = 0
+    PENDING = 1
+    PROCESSING = 2
+    COMPLETE = 3
+    FAILED = 4
+    CANCELED = 5
+    STATUS_CHOICES = [
+        (UPLOADED, 'Uploaded'),
+        (PENDING, 'Pending'),
+        (PROCESSING, 'Processing'),
+        (COMPLETE, 'Complete'),
+        (FAILED, 'Failed'),
+        (CANCELED, 'Canceled'),
+    ]
+    STATUS_NAMES = {
+        UPLOADED: "Uploaded",
+        PENDING: "Pending",
+        PROCESSING: "Processing",
+        COMPLETE: "Complete",
+        FAILED: "Failed",
+        CANCELED: "Canceled",
+    }
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=512)
+    mime_type = models.CharField(max_length=64, null=True, blank=True)
+    record_length = models.PositiveIntegerField(default=0)
+    header = models.CharField(max_length=512, null=True, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_to = models.FileField()
+    mapping = models.JSONField(default=dict())
+    status = models.PositiveSmallIntegerField(default=UPLOADED, choices=STATUS_CHOICES)
+    status_msg = models.CharField(max_length=256, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    def get_status_display(self):
+        if self.status == self.CANCELED:
+            return mark_safe('<span class="text-muted font-weight-bold">Canceled</span>')
+        elif self.status == self.FAILED:
+            return mark_safe('<span class="text-danger font-weight-bold" title="%s">Failed</span>' % self.status_msg.replace('"', '&quot;'))
+        elif self.status == self.COMPLETE:
+            return mark_safe('<span class="text-success font-weight-bold">Complete</span>')
+        elif self.status == self.PROCESSING:
+            return mark_safe('<span class="text-primary font-weight-bold">Processing</span>')
+        elif self.status == self.PENDING:
+            return mark_safe('<span class="text-info font-weight-bold">Ready</span>')
+        elif self.status == self.UPLOADED:
+            return mark_safe('<span class="text-savannah-orange font-weight-bold">Needs Mapping</span>')
+        else:
+            return mark_safe('<span class="text-muted font-weight-bold">%s</span>' % self.STATUS_NAMES[self.status])
+    @property
+    def columns(self):
+        return [f.replace('"', '') for f in self.header.split(',')]
+
+    def save(self, *args, **kwargs):
+        header_lines = 1
+        if self.header is None:
+            self.header = self.uploaded_to.file.readline().decode(getattr(self.uploaded_to, 'encoding', 'utf-8')).strip().replace('"', '')
+            header_lines = 0
+        if self.mime_type is None and hasattr(self.uploaded_to.file, 'content_type'):
+            self.mime_type = self.uploaded_to.file.content_type
+        if self.record_length == 0:
+            self.record_length = len(self.uploaded_to.file.readlines()) - header_lines
+        super(UploadedFile, self).save(*args, **kwargs)
 

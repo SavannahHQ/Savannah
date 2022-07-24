@@ -381,6 +381,10 @@
                   Sources
                   <i class="fas fa-database fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
+                <a class="dropdown-item text-right" href="{% url 'import_list' view.community.id %}">
+                  Imports
+                  <i class="fas fa-file-arrow-up fa-fw mr-2 ml-2 text-gray-600"></i>
+                </a>
                 <a class="dropdown-item text-right" href="{% url 'community_settings' view.community.id %}">
                   Settings
                   <i class="fas fa-cogs fa-fw mr-2 ml-2 text-gray-600"></i>

@@ -17,13 +17,13 @@
               <!-- New Members-->
               <div class="card shadow mb-4 border-danger">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Delete {{object_name}}?</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">{{action_name|default:"Delete"|title}} {{object_name}}?</h6>
                 </div>
                 <div class="card-body">
-                  <h4 class="h-4">Are you sure you want to delete {{object_type}}: <b>{{object_name}}</b>?</h4>
+                  <h4 class="h-4">Are you sure you want to {{action_name|default:"Delete"|lower}} {{object_type}}: <b>{{object_name}}</b>?</h4>
                   {% if warning_msg %}<p>{{warning_msg}}</p>{% endif %}
                   {% if object_dependencies %}
-                  It will also delete:
+                  It will also {{action_name|default:"Delete"|lower}}:
                   <ul>
                     {% for count, objects in object_dependencies %}
                     <li>{{count|intcomma}} {{objects}}
