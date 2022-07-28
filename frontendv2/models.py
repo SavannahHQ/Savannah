@@ -103,6 +103,8 @@ class PasswordResetRequest(models.Model):
     def send(cls, email):
         try:
             user = User.objects.get(email=email)
+        except User.MultipleObjectsReturned:
+            user = User.objects.filter(email=email).order_by('-last_login').first()
         except User.DoesNotExist:
             try:
                 manager = ManagerProfile.objects.get(contact_email=email)
