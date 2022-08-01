@@ -118,7 +118,7 @@ class Command(BaseCommand):
         tags = tags.annotate(trend_count=Count('conversation', filter=Q(conversation__timestamp__gt=trend_start, conversation__timestamp__lte=trend_end)))
         tags = tags.annotate(baseline_count=Count('conversation', filter=Q(conversation__timestamp__gt=baseline_start, conversation__timestamp__lte=baseline_end)))
         tags = tags.annotate(insight_count=Count('conversation', filter=Q(conversation__timestamp__gt=insight_start, conversation__timestamp__lte=insight_end)))
-        tags = tags.filter(baseline_count__gt=0, insight_count__gt=0)
+        tags = tags.filter(baseline_count__gt=0, insight_count__gt=0, trend_count__gt=0)
 
         for tag in tags:
             baseline_diff = 100 * (tag.insight_count - tag.baseline_count)/tag.baseline_count
