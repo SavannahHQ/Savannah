@@ -139,6 +139,14 @@ class Command(BaseCommand):
                 insight_title = '%s is trending' % tag.name
                 insight_text = '<p>Over the past %s days there has been an increase is conversations tagged with <span class="tag-pill text-nowrap" style="background-color: #%s; "><span class="tag-text" style="color: #%saa;">%s</span></span>.</p>' % (offset_days, tag.color, tag.color, tag.name)
                 insight_text += '<p>There has been a %0.2f%% increase over previous %s days, and a %0.2f%% increase over the %s days prior to that.<p>' % (baseline_diff, offset_days, trend_diff, trend_days)
+
+                insight_text += '<p>These conversations are coming from:<ul>'
+                roles = Conversation.objects.filter(tags=tag, timestamp__gt=insight_start, timestamp__lte=insight_end)
+                total = roles.count()
+                roles = roles.values('speaker__role').annotate(count=Count('speaker__role')).filter(count__gt=0).order_by('-count')
+                for role in roles:
+                    insight_text += '<li>%s: %0.0f%%</li>' % (role['speaker__role'].title(), 100 * role['count']/total)
+                insight_text += '</ul></p>'
                 Insight.create(
                     community=community, 
                     recipient=community.managers or community.owner,
