@@ -27,6 +27,7 @@ class Command(BaseCommand):
       else:
           communities = Community.objects.filter(status=Community.ACTIVE)
 
+      past_year = datetime.datetime.utcnow() - datetime.timedelta(days=365)
       for community in communities:
         print("Tagging conversations in  %s" % community.name)
         keywords = dict()
@@ -40,7 +41,7 @@ class Command(BaseCommand):
               keywords[word] = set()
             keywords[word].add(tag)
 
-        conversations = Conversation.objects.filter(channel__source__community=community)
+        conversations = Conversation.objects.filter(channel__source__community=community, timestamp__gte=past_year)
         if source_id:
             conversations = conversations.filter(channel__source_id=source_id)
         if connector:
