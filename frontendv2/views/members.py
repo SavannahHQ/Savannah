@@ -448,7 +448,7 @@ class AllMembers(SavannahFilterView):
         elif self.sort_by == '-name':
             members = members.order_by(Lower('name').desc())
         elif self.sort_by == 'last_seen':
-            memebers = members.order_by(IsNull('last_seen'), 'last_seen')
+            members = members.order_by(IsNull('last_seen'), 'last_seen')
         else:
             members = members.order_by(self.sort_by)
         return members
