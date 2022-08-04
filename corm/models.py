@@ -475,6 +475,8 @@ class Member(TaggableModel):
 
         if self.user is None and other_member.user is not None :
             self.user = other_member.user
+            other_member.user = None
+            other_member.save()
         if other_member.first_seen is not None and (self.first_seen is None or self.first_seen > other_member.first_seen):
             self.first_seen = other_member.first_seen
         if other_member.last_seen is not None and (self.last_seen is None or self.last_seen < other_member.last_seen):
