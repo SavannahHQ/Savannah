@@ -1,0 +1,145 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>{{dashboard.community.name}} | {{dashboard.display_name}}</title>
+
+  <!-- Custom fonts for this template-->
+  <script src="https://kit.fontawesome.com/a160749d77.js" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-datepicker/css/bootstrap-datepicker.standalone.min.css' %}" rel="stylesheet">
+  <link href="{% static 'savannah/savannah.css' %}" rel="stylesheet">
+
+  <link rel="icon" href="{% static 'savannah/Savannah32.png' %}" type="image/png" sizes="32x32">
+  <link rel="icon" href="{% static 'savannah/Savannah64.png' %}" type="image/png" sizes="64x64">
+  <link rel="icon" href="{% static 'savannah/Savannah128.png' %}" type="image/png" sizes="128x128">
+
+	<link rel="canonical" href="{{SITE_ROOT}}{{dashboard.get_absolute_url}}"/>
+	<meta name="description" content="{{dashboard.get_page_display}} dashboard for {{dashboard.community.name}}."/>
+	<meta property="og:locale" content="en_US"/>
+	<meta property="og:type" content="website"/>
+	<meta property="og:title" content="{{dashboard.display_name}}"/>
+	<meta property="og:description" content="{{dashboard.get_page_display}} dashboard for {{dashboard.community.name}}."/>
+	<meta property="og:url" content="{{SITE_ROOT}}{{dashboard.get_absolute_url}}"/>
+	<meta property="og:site_name" content="Savannah CRM"/>
+	<meta property="article:modified_time" content="{{dashboard.created_at|date:'c'}}"/>
+	<meta property="og:image" content="{% static 'savannah/CardHeader.png' %}"/>
+	<meta property="og:image:width" content="1545"/>
+	<meta property="og:image:height" content="666"/>
+	<meta name="twitter:card" content="summary_large_image"/>
+	<meta name="twitter:title" content="{{dashboard.display_name}}"/>
+	<meta name="twitter:description" content="{{dashboard.get_page_display}} dashboard for {{dashboard.community.name}}."/>
+	<meta name="twitter:image" content="{% static 'savannah/CardHeader.png' %}"/>
+	<meta name="twitter:site" content="@savannah_crm"/>
+	<meta name="twitter:label1" content="Est. reading time"/>
+	<meta name="twitter:data1" content="2 minutes"/>
+
+  {% if GOOGLE_ANALYTICS_ID %}
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{GOOGLE_ANALYTICS_ID}}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '{{GOOGLE_ANALYTICS_ID}}');
+
+      // GA Events
+      {% for event in ga_events %}
+      {{ event.gtag }}
+      {% endfor %}
+      {% block extra_google_analytics %}{% endblock %}
+      </script>
+    {% endif %}
+    {% block page_styles %}{% endblock %}
+
+</head>
+
+<body id="page-top" class="bg-gradient-savannah-blue">
+
+  <!-- Page Container -->
+  <div class="container-fluid">
+
+        {% if tip %}
+        <div class="alerts">
+            <div class="m-3 alert {{ tip.tags }}"><strong>{% trans "Tip:" %} </strong>{{ tip.text|safe }}</div>
+        </div>
+        {% endif %}
+
+        {% if messages %}
+        <div class="alerts">
+            {% for message in messages %}
+            <div class="m-3 alert{% if message.tags %} {{ message.tags }}{% endif %}">{{ message|safe }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+      <div class="row justify-content-center">
+        <div class="col-xl-12 m-3 align-items-center">
+            <div class="card shadow h-100 py-2">
+            <div class="card-body">
+                <div class="container-fluid">
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                      <h1 class="h3 mb-0 text-gray-800">{{dashboard.display_name}}</h1>
+                      <h1 class="h4 mb-0 text-gray-800">{{dashboard.community.name}} <img style="vertical-align: bottom;" src="{{dashboard.community.icon_path}}"></h1>
+                    </div>
+
+                      {{view.page_content}}
+                    <center>Powered by <a target="_blank" href="https://savannahhq.com"> Savannah CRM <img src="{% static 'savannah/Savannah32.png' %}"></a></center> 
+                </div>
+            </div>
+      </div>
+
+  </div>
+  <!-- End of Page Container -->
+
+    <!-- Bootstrap core JavaScript-->
+  <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+  <script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+$('.datepicker').datepicker();
+$('.input-daterange').each(function() {
+    $(this).datepicker({
+      format: 'yyyy-mm-dd'
+    });
+});
+  </script>
+  <!-- Core plugin JavaScript-->
+  <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+  <!-- Page level plugins -->
+  <script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+  <script src="{% static 'vendor/chart-funnel.js/chart.funnel.js' %}"></script>
+
+<!-- Chart scripts -->
+{% block chart_scripts %}
+{% for chart in view.charts %}
+  <!-- {{chart.id}} -->
+  {% include chart.script_template %}
+{% endfor %}
+{% endblock %}
+
+  <!-- Page level custom scripts -->
+{% block page_scripts %}{% endblock %}
+
+</body>
+
+</html>

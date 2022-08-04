@@ -618,3 +618,9 @@ class UploadedFileAdmin(admin.ModelAdmin):
     search_fields = ["uploaded_to"]
 admin.site.register(UploadedFile, UploadedFileAdmin)
 
+class OpportunityAdmin(admin.ModelAdmin):
+    list_display = ("name", "status", "contribution_type", "community", "created_by", "created_at")
+    list_filter = ("status", "community", "created_at", "closed_at")
+    search_fields = ("name", )
+    raw_id_fields = ('member', 'source', 'contribution_type', 'activities')
+admin.site.register(Opportunity, OpportunityAdmin)

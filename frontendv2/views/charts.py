@@ -84,13 +84,14 @@ class PieChart(Chart):
         return [data[3] or "" for data in self.processed_data]
 
 class FunnelChart(Chart):
-    def __init__(self, id, title, stages, colors=None):
+    def __init__(self, id, title, stages, colors=None, invert=False):
         super(FunnelChart, self).__init__(id, title)
         self.script_template = 'savannahv2/funnelchart_script.html'
         self.stages = stages
-        self.colors = ChartColors([savannah_colors.LEVEL.CORE, savannah_colors.LEVEL.CONTRIBUTOR, savannah_colors.LEVEL.PARTICIPANT, savannah_colors.LEVEL.VISITOR])
+        self.colors = colors or ChartColors([savannah_colors.LEVEL.CORE, savannah_colors.LEVEL.CONTRIBUTOR, savannah_colors.LEVEL.PARTICIPANT, savannah_colors.LEVEL.VISITOR])
         self._raw_data = dict()
         self._processed_data = None
+        self.invert = invert
 
     def add(self, data_name, data_value):
         self._raw_data[data_name] = data_value
@@ -100,9 +101,15 @@ class FunnelChart(Chart):
         if self._processed_data is None:
             total = 0
             self._processed_data = []
-            for name, label in self.stages:
+            stages = self.stages
+            if not self.invert:
+                stages.reverse()
+            for name, label in stages:
                 total += self._raw_data.get(name, 0)
                 self._processed_data.append((name, total))
+            if not self.invert:
+                self._processed_data.reverse()
+
         return self._processed_data
 
     def get_data_names(self):

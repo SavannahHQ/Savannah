@@ -41,6 +41,13 @@
   --company: #f6723e;
   --event: #be164e;
   --gift: #a234c4;
+  --opportunity-identified: #9930d3;
+  --opportunity-proposed: #6a39d5;
+  --opportunity-agreed: #386ad3;
+  --opportunity-submitted: #29b2cc;
+  --opportunity-complete: #1DC294;
+  --opportunity-declined: #E6006D;
+  --opportunity-rejected: #f52f52;
   --breakpoint-xs: 0;
   --breakpoint-sm: 576px;
   --breakpoint-md: 768px;
@@ -2007,6 +2014,146 @@ pre code {
   background-color: #dcb2e8;
 }
 
+.table-opportunity-identified,
+.table-opportunity-identified > th,
+.table-opportunity-identified > td {
+  background-color: #e2c5f3;
+}
+.table-opportunity-identified th,
+.table-opportunity-identified td,
+.table-opportunity-identified thead th,
+.table-opportunity-identified tbody + tbody {
+  border-color: #ca93e8;
+}
+
+.table-hover .table-opportunity-identified:hover {
+  background-color: #d7b0ef;
+}
+.table-hover .table-opportunity-identified:hover > td,
+.table-hover .table-opportunity-identified:hover > th {
+  background-color: #d7b0ef;
+}
+
+.table-opportunity-proposed,
+.table-opportunity-proposed > th,
+.table-opportunity-proposed > td {
+  background-color: #d5c8f3;
+}
+.table-opportunity-proposed th,
+.table-opportunity-proposed td,
+.table-opportunity-proposed thead th,
+.table-opportunity-proposed tbody + tbody {
+  border-color: #b298e9;
+}
+
+.table-hover .table-opportunity-proposed:hover {
+  background-color: #c5b3ee;
+}
+.table-hover .table-opportunity-proposed:hover > td,
+.table-hover .table-opportunity-proposed:hover > th {
+  background-color: #c5b3ee;
+}
+
+.table-opportunity-agreed,
+.table-opportunity-agreed > th,
+.table-opportunity-agreed > td {
+  background-color: #c7d5f3;
+}
+.table-opportunity-agreed th,
+.table-opportunity-agreed td,
+.table-opportunity-agreed thead th,
+.table-opportunity-agreed tbody + tbody {
+  border-color: #98b2e8;
+}
+
+.table-hover .table-opportunity-agreed:hover {
+  background-color: #b2c5ef;
+}
+.table-hover .table-opportunity-agreed:hover > td,
+.table-hover .table-opportunity-agreed:hover > th {
+  background-color: #b2c5ef;
+}
+
+.table-opportunity-submitted,
+.table-opportunity-submitted > th,
+.table-opportunity-submitted > td {
+  background-color: #c3e9f1;
+}
+.table-opportunity-submitted th,
+.table-opportunity-submitted td,
+.table-opportunity-submitted thead th,
+.table-opportunity-submitted tbody + tbody {
+  border-color: #90d7e4;
+}
+
+.table-hover .table-opportunity-submitted:hover {
+  background-color: #aee1ec;
+}
+.table-hover .table-opportunity-submitted:hover > td,
+.table-hover .table-opportunity-submitted:hover > th {
+  background-color: #aee1ec;
+}
+
+.table-opportunity-complete,
+.table-opportunity-complete > th,
+.table-opportunity-complete > td {
+  background-color: #c0eee1;
+}
+.table-opportunity-complete th,
+.table-opportunity-complete td,
+.table-opportunity-complete thead th,
+.table-opportunity-complete tbody + tbody {
+  border-color: #89dfc7;
+}
+
+.table-hover .table-opportunity-complete:hover {
+  background-color: #ace9d7;
+}
+.table-hover .table-opportunity-complete:hover > td,
+.table-hover .table-opportunity-complete:hover > th {
+  background-color: #ace9d7;
+}
+
+.table-opportunity-declined,
+.table-opportunity-declined > th,
+.table-opportunity-declined > td {
+  background-color: #f8b8d6;
+}
+.table-opportunity-declined th,
+.table-opportunity-declined td,
+.table-opportunity-declined thead th,
+.table-opportunity-declined tbody + tbody {
+  border-color: #f27ab3;
+}
+
+.table-hover .table-opportunity-declined:hover {
+  background-color: #f6a1c9;
+}
+.table-hover .table-opportunity-declined:hover > td,
+.table-hover .table-opportunity-declined:hover > th {
+  background-color: #f6a1c9;
+}
+
+.table-opportunity-rejected,
+.table-opportunity-rejected > th,
+.table-opportunity-rejected > td {
+  background-color: #fcc5cf;
+}
+.table-opportunity-rejected th,
+.table-opportunity-rejected td,
+.table-opportunity-rejected thead th,
+.table-opportunity-rejected tbody + tbody {
+  border-color: #fa93a5;
+}
+
+.table-hover .table-opportunity-rejected:hover {
+  background-color: #fbadbb;
+}
+.table-hover .table-opportunity-rejected:hover > td,
+.table-hover .table-opportunity-rejected:hover > th {
+  background-color: #fbadbb;
+}
+
 .table-active,
 .table-active > th,
 .table-active > td {
@@ -3182,6 +3329,195 @@ fieldset:disabled a.btn {
   box-shadow: 0 0 0 0.2rem rgba(176, 82, 205, 0.5);
 }
 
+.btn-opportunity-identified {
+  color: #fff;
+  background-color: #9930d3;
+  border-color: #9930d3;
+}
+.btn-opportunity-identified:hover {
+  color: #fff;
+  background-color: #8327b6;
+  border-color: #7b24ac;
+}
+.btn-opportunity-identified:focus, .btn-opportunity-identified.focus {
+  box-shadow: 0 0 0 0.2rem rgba(168, 79, 218, 0.5);
+}
+.btn-opportunity-identified.disabled, .btn-opportunity-identified:disabled {
+  color: #fff;
+  background-color: #9930d3;
+  border-color: #9930d3;
+}
+.btn-opportunity-identified:not(:disabled):not(.disabled):active, .btn-opportunity-identified:not(:disabled):not(.disabled).active, .show > .btn-opportunity-identified.dropdown-toggle {
+  color: #fff;
+  background-color: #7b24ac;
+  border-color: #7422a1;
+}
+.btn-opportunity-identified:not(:disabled):not(.disabled):active:focus, .btn-opportunity-identified:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-identified.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(168, 79, 218, 0.5);
+}
+
+.btn-opportunity-proposed {
+  color: #fff;
+  background-color: #6a39d5;
+  border-color: #6a39d5;
+}
+.btn-opportunity-proposed:hover {
+  color: #fff;
+  background-color: #5829bf;
+  border-color: #5326b5;
+}
+.btn-opportunity-proposed:focus, .btn-opportunity-proposed.focus {
+  box-shadow: 0 0 0 0.2rem rgba(128, 87, 219, 0.5);
+}
+.btn-opportunity-proposed.disabled, .btn-opportunity-proposed:disabled {
+  color: #fff;
+  background-color: #6a39d5;
+  border-color: #6a39d5;
+}
+.btn-opportunity-proposed:not(:disabled):not(.disabled):active, .btn-opportunity-proposed:not(:disabled):not(.disabled).active, .show > .btn-opportunity-proposed.dropdown-toggle {
+  color: #fff;
+  background-color: #5326b5;
+  border-color: #4e24aa;
+}
+.btn-opportunity-proposed:not(:disabled):not(.disabled):active:focus, .btn-opportunity-proposed:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-proposed.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(128, 87, 219, 0.5);
+}
+
+.btn-opportunity-agreed {
+  color: #fff;
+  background-color: #386ad3;
+  border-color: #386ad3;
+}
+.btn-opportunity-agreed:hover {
+  color: #fff;
+  background-color: #2958bb;
+  border-color: #2754b1;
+}
+.btn-opportunity-agreed:focus, .btn-opportunity-agreed.focus {
+  box-shadow: 0 0 0 0.2rem rgba(86, 128, 218, 0.5);
+}
+.btn-opportunity-agreed.disabled, .btn-opportunity-agreed:disabled {
+  color: #fff;
+  background-color: #386ad3;
+  border-color: #386ad3;
+}
+.btn-opportunity-agreed:not(:disabled):not(.disabled):active, .btn-opportunity-agreed:not(:disabled):not(.disabled).active, .show > .btn-opportunity-agreed.dropdown-toggle {
+  color: #fff;
+  background-color: #2754b1;
+  border-color: #254fa6;
+}
+.btn-opportunity-agreed:not(:disabled):not(.disabled):active:focus, .btn-opportunity-agreed:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-agreed.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(86, 128, 218, 0.5);
+}
+
+.btn-opportunity-submitted {
+  color: #fff;
+  background-color: #29b2cc;
+  border-color: #29b2cc;
+}
+.btn-opportunity-submitted:hover {
+  color: #fff;
+  background-color: #2396ac;
+  border-color: #208da2;
+}
+.btn-opportunity-submitted:focus, .btn-opportunity-submitted.focus {
+  box-shadow: 0 0 0 0.2rem rgba(73, 190, 212, 0.5);
+}
+.btn-opportunity-submitted.disabled, .btn-opportunity-submitted:disabled {
+  color: #fff;
+  background-color: #29b2cc;
+  border-color: #29b2cc;
+}
+.btn-opportunity-submitted:not(:disabled):not(.disabled):active, .btn-opportunity-submitted:not(:disabled):not(.disabled).active, .show > .btn-opportunity-submitted.dropdown-toggle {
+  color: #fff;
+  background-color: #208da2;
+  border-color: #1e8497;
+}
+.btn-opportunity-submitted:not(:disabled):not(.disabled):active:focus, .btn-opportunity-submitted:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-submitted.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(73, 190, 212, 0.5);
+}
+
+.btn-opportunity-complete {
+  color: #fff;
+  background-color: #1DC294;
+  border-color: #1DC294;
+}
+.btn-opportunity-complete:hover {
+  color: #fff;
+  background-color: #18a17b;
+  border-color: #169672;
+}
+.btn-opportunity-complete:focus, .btn-opportunity-complete.focus {
+  box-shadow: 0 0 0 0.2rem rgba(63, 203, 164, 0.5);
+}
+.btn-opportunity-complete.disabled, .btn-opportunity-complete:disabled {
+  color: #fff;
+  background-color: #1DC294;
+  border-color: #1DC294;
+}
+.btn-opportunity-complete:not(:disabled):not(.disabled):active, .btn-opportunity-complete:not(:disabled):not(.disabled).active, .show > .btn-opportunity-complete.dropdown-toggle {
+  color: #fff;
+  background-color: #169672;
+  border-color: #158b6a;
+}
+.btn-opportunity-complete:not(:disabled):not(.disabled):active:focus, .btn-opportunity-complete:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-complete.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(63, 203, 164, 0.5);
+}
+
+.btn-opportunity-declined {
+  color: #fff;
+  background-color: #E6006D;
+  border-color: #E6006D;
+}
+.btn-opportunity-declined:hover {
+  color: #fff;
+  background-color: #c0005b;
+  border-color: #b30055;
+}
+.btn-opportunity-declined:focus, .btn-opportunity-declined.focus {
+  box-shadow: 0 0 0 0.2rem rgba(234, 38, 131, 0.5);
+}
+.btn-opportunity-declined.disabled, .btn-opportunity-declined:disabled {
+  color: #fff;
+  background-color: #E6006D;
+  border-color: #E6006D;
+}
+.btn-opportunity-declined:not(:disabled):not(.disabled):active, .btn-opportunity-declined:not(:disabled):not(.disabled).active, .show > .btn-opportunity-declined.dropdown-toggle {
+  color: #fff;
+  background-color: #b30055;
+  border-color: #a6004f;
+}
+.btn-opportunity-declined:not(:disabled):not(.disabled):active:focus, .btn-opportunity-declined:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-declined.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(234, 38, 131, 0.5);
+}
+
+.btn-opportunity-rejected {
+  color: #fff;
+  background-color: #f52f52;
+  border-color: #f52f52;
+}
+.btn-opportunity-rejected:hover {
+  color: #fff;
+  background-color: #f20c34;
+  border-color: #e60b32;
+}
+.btn-opportunity-rejected:focus, .btn-opportunity-rejected.focus {
+  box-shadow: 0 0 0 0.2rem rgba(247, 78, 108, 0.5);
+}
+.btn-opportunity-rejected.disabled, .btn-opportunity-rejected:disabled {
+  color: #fff;
+  background-color: #f52f52;
+  border-color: #f52f52;
+}
+.btn-opportunity-rejected:not(:disabled):not(.disabled):active, .btn-opportunity-rejected:not(:disabled):not(.disabled).active, .show > .btn-opportunity-rejected.dropdown-toggle {
+  color: #fff;
+  background-color: #e60b32;
+  border-color: #da0a2f;
+}
+.btn-opportunity-rejected:not(:disabled):not(.disabled):active:focus, .btn-opportunity-rejected:not(:disabled):not(.disabled).active:focus, .show > .btn-opportunity-rejected.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(247, 78, 108, 0.5);
+}
+
 .btn-outline-primary {
   color: #0b4fbc;
   border-color: #0b4fbc;
@@ -3730,6 +4066,181 @@ fieldset:disabled a.btn {
 }
 .btn-outline-gift:not(:disabled):not(.disabled):active:focus, .btn-outline-gift:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-gift.dropdown-toggle:focus {
   box-shadow: 0 0 0 0.2rem rgba(162, 52, 196, 0.5);
+}
+
+.btn-outline-opportunity-identified {
+  color: #9930d3;
+  border-color: #9930d3;
+}
+.btn-outline-opportunity-identified:hover {
+  color: #fff;
+  background-color: #9930d3;
+  border-color: #9930d3;
+}
+.btn-outline-opportunity-identified:focus, .btn-outline-opportunity-identified.focus {
+  box-shadow: 0 0 0 0.2rem rgba(153, 48, 211, 0.5);
+}
+.btn-outline-opportunity-identified.disabled, .btn-outline-opportunity-identified:disabled {
+  color: #9930d3;
+  background-color: transparent;
+}
+.btn-outline-opportunity-identified:not(:disabled):not(.disabled):active, .btn-outline-opportunity-identified:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-identified.dropdown-toggle {
+  color: #fff;
+  background-color: #9930d3;
+  border-color: #9930d3;
+}
+.btn-outline-opportunity-identified:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-identified:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-identified.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(153, 48, 211, 0.5);
+}
+
+.btn-outline-opportunity-proposed {
+  color: #6a39d5;
+  border-color: #6a39d5;
+}
+.btn-outline-opportunity-proposed:hover {
+  color: #fff;
+  background-color: #6a39d5;
+  border-color: #6a39d5;
+}
+.btn-outline-opportunity-proposed:focus, .btn-outline-opportunity-proposed.focus {
+  box-shadow: 0 0 0 0.2rem rgba(106, 57, 213, 0.5);
+}
+.btn-outline-opportunity-proposed.disabled, .btn-outline-opportunity-proposed:disabled {
+  color: #6a39d5;
+  background-color: transparent;
+}
+.btn-outline-opportunity-proposed:not(:disabled):not(.disabled):active, .btn-outline-opportunity-proposed:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-proposed.dropdown-toggle {
+  color: #fff;
+  background-color: #6a39d5;
+  border-color: #6a39d5;
+}
+.btn-outline-opportunity-proposed:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-proposed:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-proposed.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(106, 57, 213, 0.5);
+}
+
+.btn-outline-opportunity-agreed {
+  color: #386ad3;
+  border-color: #386ad3;
+}
+.btn-outline-opportunity-agreed:hover {
+  color: #fff;
+  background-color: #386ad3;
+  border-color: #386ad3;
+}
+.btn-outline-opportunity-agreed:focus, .btn-outline-opportunity-agreed.focus {
+  box-shadow: 0 0 0 0.2rem rgba(56, 106, 211, 0.5);
+}
+.btn-outline-opportunity-agreed.disabled, .btn-outline-opportunity-agreed:disabled {
+  color: #386ad3;
+  background-color: transparent;
+}
+.btn-outline-opportunity-agreed:not(:disabled):not(.disabled):active, .btn-outline-opportunity-agreed:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-agreed.dropdown-toggle {
+  color: #fff;
+  background-color: #386ad3;
+  border-color: #386ad3;
+}
+.btn-outline-opportunity-agreed:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-agreed:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-agreed.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(56, 106, 211, 0.5);
+}
+
+.btn-outline-opportunity-submitted {
+  color: #29b2cc;
+  border-color: #29b2cc;
+}
+.btn-outline-opportunity-submitted:hover {
+  color: #fff;
+  background-color: #29b2cc;
+  border-color: #29b2cc;
+}
+.btn-outline-opportunity-submitted:focus, .btn-outline-opportunity-submitted.focus {
+  box-shadow: 0 0 0 0.2rem rgba(41, 178, 204, 0.5);
+}
+.btn-outline-opportunity-submitted.disabled, .btn-outline-opportunity-submitted:disabled {
+  color: #29b2cc;
+  background-color: transparent;
+}
+.btn-outline-opportunity-submitted:not(:disabled):not(.disabled):active, .btn-outline-opportunity-submitted:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-submitted.dropdown-toggle {
+  color: #fff;
+  background-color: #29b2cc;
+  border-color: #29b2cc;
+}
+.btn-outline-opportunity-submitted:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-submitted:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-submitted.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(41, 178, 204, 0.5);
+}
+
+.btn-outline-opportunity-complete {
+  color: #1DC294;
+  border-color: #1DC294;
+}
+.btn-outline-opportunity-complete:hover {
+  color: #fff;
+  background-color: #1DC294;
+  border-color: #1DC294;
+}
+.btn-outline-opportunity-complete:focus, .btn-outline-opportunity-complete.focus {
+  box-shadow: 0 0 0 0.2rem rgba(29, 194, 148, 0.5);
+}
+.btn-outline-opportunity-complete.disabled, .btn-outline-opportunity-complete:disabled {
+  color: #1DC294;
+  background-color: transparent;
+}
+.btn-outline-opportunity-complete:not(:disabled):not(.disabled):active, .btn-outline-opportunity-complete:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-complete.dropdown-toggle {
+  color: #fff;
+  background-color: #1DC294;
+  border-color: #1DC294;
+}
+.btn-outline-opportunity-complete:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-complete:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-complete.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(29, 194, 148, 0.5);
+}
+
+.btn-outline-opportunity-declined {
+  color: #E6006D;
+  border-color: #E6006D;
+}
+.btn-outline-opportunity-declined:hover {
+  color: #fff;
+  background-color: #E6006D;
+  border-color: #E6006D;
+}
+.btn-outline-opportunity-declined:focus, .btn-outline-opportunity-declined.focus {
+  box-shadow: 0 0 0 0.2rem rgba(230, 0, 109, 0.5);
+}
+.btn-outline-opportunity-declined.disabled, .btn-outline-opportunity-declined:disabled {
+  color: #E6006D;
+  background-color: transparent;
+}
+.btn-outline-opportunity-declined:not(:disabled):not(.disabled):active, .btn-outline-opportunity-declined:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-declined.dropdown-toggle {
+  color: #fff;
+  background-color: #E6006D;
+  border-color: #E6006D;
+}
+.btn-outline-opportunity-declined:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-declined:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-declined.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(230, 0, 109, 0.5);
+}
+
+.btn-outline-opportunity-rejected {
+  color: #f52f52;
+  border-color: #f52f52;
+}
+.btn-outline-opportunity-rejected:hover {
+  color: #fff;
+  background-color: #f52f52;
+  border-color: #f52f52;
+}
+.btn-outline-opportunity-rejected:focus, .btn-outline-opportunity-rejected.focus {
+  box-shadow: 0 0 0 0.2rem rgba(245, 47, 82, 0.5);
+}
+.btn-outline-opportunity-rejected.disabled, .btn-outline-opportunity-rejected:disabled {
+  color: #f52f52;
+  background-color: transparent;
+}
+.btn-outline-opportunity-rejected:not(:disabled):not(.disabled):active, .btn-outline-opportunity-rejected:not(:disabled):not(.disabled).active, .show > .btn-outline-opportunity-rejected.dropdown-toggle {
+  color: #fff;
+  background-color: #f52f52;
+  border-color: #f52f52;
+}
+.btn-outline-opportunity-rejected:not(:disabled):not(.disabled):active:focus, .btn-outline-opportunity-rejected:not(:disabled):not(.disabled).active:focus, .show > .btn-outline-opportunity-rejected.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(245, 47, 82, 0.5);
 }
 
 .btn-link {
@@ -5751,6 +6262,97 @@ a.badge-gift:focus, a.badge-gift.focus {
   box-shadow: 0 0 0 0.2rem rgba(162, 52, 196, 0.5);
 }
 
+.badge-opportunity-identified {
+  color: #fff;
+  background-color: #9930d3;
+}
+a.badge-opportunity-identified:hover, a.badge-opportunity-identified:focus {
+  color: #fff;
+  background-color: #7b24ac;
+}
+a.badge-opportunity-identified:focus, a.badge-opportunity-identified.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(153, 48, 211, 0.5);
+}
+
+.badge-opportunity-proposed {
+  color: #fff;
+  background-color: #6a39d5;
+}
+a.badge-opportunity-proposed:hover, a.badge-opportunity-proposed:focus {
+  color: #fff;
+  background-color: #5326b5;
+}
+a.badge-opportunity-proposed:focus, a.badge-opportunity-proposed.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(106, 57, 213, 0.5);
+}
+
+.badge-opportunity-agreed {
+  color: #fff;
+  background-color: #386ad3;
+}
+a.badge-opportunity-agreed:hover, a.badge-opportunity-agreed:focus {
+  color: #fff;
+  background-color: #2754b1;
+}
+a.badge-opportunity-agreed:focus, a.badge-opportunity-agreed.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(56, 106, 211, 0.5);
+}
+
+.badge-opportunity-submitted {
+  color: #fff;
+  background-color: #29b2cc;
+}
+a.badge-opportunity-submitted:hover, a.badge-opportunity-submitted:focus {
+  color: #fff;
+  background-color: #208da2;
+}
+a.badge-opportunity-submitted:focus, a.badge-opportunity-submitted.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(41, 178, 204, 0.5);
+}
+
+.badge-opportunity-complete {
+  color: #fff;
+  background-color: #1DC294;
+}
+a.badge-opportunity-complete:hover, a.badge-opportunity-complete:focus {
+  color: #fff;
+  background-color: #169672;
+}
+a.badge-opportunity-complete:focus, a.badge-opportunity-complete.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(29, 194, 148, 0.5);
+}
+
+.badge-opportunity-declined {
+  color: #fff;
+  background-color: #E6006D;
+}
+a.badge-opportunity-declined:hover, a.badge-opportunity-declined:focus {
+  color: #fff;
+  background-color: #b30055;
+}
+a.badge-opportunity-declined:focus, a.badge-opportunity-declined.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(230, 0, 109, 0.5);
+}
+
+.badge-opportunity-rejected {
+  color: #fff;
+  background-color: #f52f52;
+}
+a.badge-opportunity-rejected:hover, a.badge-opportunity-rejected:focus {
+  color: #fff;
+  background-color: #e60b32;
+}
+a.badge-opportunity-rejected:focus, a.badge-opportunity-rejected.focus {
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(245, 47, 82, 0.5);
+}
+
 .jumbotron {
   padding: 2rem 1rem;
   margin-bottom: 2rem;
@@ -6058,6 +6660,90 @@ a.badge-gift:focus, a.badge-gift.focus {
 }
 .alert-gift .alert-link {
   color: #33103e;
+}
+
+.alert-opportunity-identified {
+  color: #50196e;
+  background-color: #ebd6f6;
+  border-color: #e2c5f3;
+}
+.alert-opportunity-identified hr {
+  border-top-color: #d7b0ef;
+}
+.alert-opportunity-identified .alert-link {
+  color: #321044;
+}
+
+.alert-opportunity-proposed {
+  color: #371e6f;
+  background-color: #e1d7f7;
+  border-color: #d5c8f3;
+}
+.alert-opportunity-proposed hr {
+  border-top-color: #c5b3ee;
+}
+.alert-opportunity-proposed .alert-link {
+  color: #231347;
+}
+
+.alert-opportunity-agreed {
+  color: #1d376e;
+  background-color: #d7e1f6;
+  border-color: #c7d5f3;
+}
+.alert-opportunity-agreed hr {
+  border-top-color: #b2c5ef;
+}
+.alert-opportunity-agreed .alert-link {
+  color: #122346;
+}
+
+.alert-opportunity-submitted {
+  color: #155d6a;
+  background-color: #d4f0f5;
+  border-color: #c3e9f1;
+}
+.alert-opportunity-submitted hr {
+  border-top-color: #aee1ec;
+}
+.alert-opportunity-submitted .alert-link {
+  color: #0d383f;
+}
+
+.alert-opportunity-complete {
+  color: #0f654d;
+  background-color: #d2f3ea;
+  border-color: #c0eee1;
+}
+.alert-opportunity-complete hr {
+  border-top-color: #ace9d7;
+}
+.alert-opportunity-complete .alert-link {
+  color: #08392b;
+}
+
+.alert-opportunity-declined {
+  color: #780039;
+  background-color: #facce2;
+  border-color: #f8b8d6;
+}
+.alert-opportunity-declined hr {
+  border-top-color: #f6a1c9;
+}
+.alert-opportunity-declined .alert-link {
+  color: #450021;
+}
+
+.alert-opportunity-rejected {
+  color: #7f182b;
+  background-color: #fdd5dc;
+  border-color: #fcc5cf;
+}
+.alert-opportunity-rejected hr {
+  border-top-color: #fbadbb;
+}
+.alert-opportunity-rejected .alert-link {
+  color: #54101c;
 }
 
 @keyframes progress-bar-stripes {
@@ -6589,6 +7275,104 @@ a.badge-gift:focus, a.badge-gift.focus {
   color: #fff;
   background-color: #541b66;
   border-color: #541b66;
+}
+
+.list-group-item-opportunity-identified {
+  color: #50196e;
+  background-color: #e2c5f3;
+}
+.list-group-item-opportunity-identified.list-group-item-action:hover, .list-group-item-opportunity-identified.list-group-item-action:focus {
+  color: #50196e;
+  background-color: #d7b0ef;
+}
+.list-group-item-opportunity-identified.list-group-item-action.active {
+  color: #fff;
+  background-color: #50196e;
+  border-color: #50196e;
+}
+
+.list-group-item-opportunity-proposed {
+  color: #371e6f;
+  background-color: #d5c8f3;
+}
+.list-group-item-opportunity-proposed.list-group-item-action:hover, .list-group-item-opportunity-proposed.list-group-item-action:focus {
+  color: #371e6f;
+  background-color: #c5b3ee;
+}
+.list-group-item-opportunity-proposed.list-group-item-action.active {
+  color: #fff;
+  background-color: #371e6f;
+  border-color: #371e6f;
+}
+
+.list-group-item-opportunity-agreed {
+  color: #1d376e;
+  background-color: #c7d5f3;
+}
+.list-group-item-opportunity-agreed.list-group-item-action:hover, .list-group-item-opportunity-agreed.list-group-item-action:focus {
+  color: #1d376e;
+  background-color: #b2c5ef;
+}
+.list-group-item-opportunity-agreed.list-group-item-action.active {
+  color: #fff;
+  background-color: #1d376e;
+  border-color: #1d376e;
+}
+
+.list-group-item-opportunity-submitted {
+  color: #155d6a;
+  background-color: #c3e9f1;
+}
+.list-group-item-opportunity-submitted.list-group-item-action:hover, .list-group-item-opportunity-submitted.list-group-item-action:focus {
+  color: #155d6a;
+  background-color: #aee1ec;
+}
+.list-group-item-opportunity-submitted.list-group-item-action.active {
+  color: #fff;
+  background-color: #155d6a;
+  border-color: #155d6a;
+}
+
+.list-group-item-opportunity-complete {
+  color: #0f654d;
+  background-color: #c0eee1;
+}
+.list-group-item-opportunity-complete.list-group-item-action:hover, .list-group-item-opportunity-complete.list-group-item-action:focus {
+  color: #0f654d;
+  background-color: #ace9d7;
+}
+.list-group-item-opportunity-complete.list-group-item-action.active {
+  color: #fff;
+  background-color: #0f654d;
+  border-color: #0f654d;
+}
+
+.list-group-item-opportunity-declined {
+  color: #780039;
+  background-color: #f8b8d6;
+}
+.list-group-item-opportunity-declined.list-group-item-action:hover, .list-group-item-opportunity-declined.list-group-item-action:focus {
+  color: #780039;
+  background-color: #f6a1c9;
+}
+.list-group-item-opportunity-declined.list-group-item-action.active {
+  color: #fff;
+  background-color: #780039;
+  border-color: #780039;
+}
+
+.list-group-item-opportunity-rejected {
+  color: #7f182b;
+  background-color: #fcc5cf;
+}
+.list-group-item-opportunity-rejected.list-group-item-action:hover, .list-group-item-opportunity-rejected.list-group-item-action:focus {
+  color: #7f182b;
+  background-color: #fbadbb;
+}
+.list-group-item-opportunity-rejected.list-group-item-action.active {
+  color: #fff;
+  background-color: #7f182b;
+  border-color: #7f182b;
 }
 
 .close {
@@ -7562,6 +8346,76 @@ button.bg-gift:focus {
   background-color: #81299c !important;
 }
 
+.bg-opportunity-identified {
+  background-color: #9930d3 !important;
+}
+
+a.bg-opportunity-identified:hover, a.bg-opportunity-identified:focus,
+button.bg-opportunity-identified:hover,
+button.bg-opportunity-identified:focus {
+  background-color: #7b24ac !important;
+}
+
+.bg-opportunity-proposed {
+  background-color: #6a39d5 !important;
+}
+
+a.bg-opportunity-proposed:hover, a.bg-opportunity-proposed:focus,
+button.bg-opportunity-proposed:hover,
+button.bg-opportunity-proposed:focus {
+  background-color: #5326b5 !important;
+}
+
+.bg-opportunity-agreed {
+  background-color: #386ad3 !important;
+}
+
+a.bg-opportunity-agreed:hover, a.bg-opportunity-agreed:focus,
+button.bg-opportunity-agreed:hover,
+button.bg-opportunity-agreed:focus {
+  background-color: #2754b1 !important;
+}
+
+.bg-opportunity-submitted {
+  background-color: #29b2cc !important;
+}
+
+a.bg-opportunity-submitted:hover, a.bg-opportunity-submitted:focus,
+button.bg-opportunity-submitted:hover,
+button.bg-opportunity-submitted:focus {
+  background-color: #208da2 !important;
+}
+
+.bg-opportunity-complete {
+  background-color: #1DC294 !important;
+}
+
+a.bg-opportunity-complete:hover, a.bg-opportunity-complete:focus,
+button.bg-opportunity-complete:hover,
+button.bg-opportunity-complete:focus {
+  background-color: #169672 !important;
+}
+
+.bg-opportunity-declined {
+  background-color: #E6006D !important;
+}
+
+a.bg-opportunity-declined:hover, a.bg-opportunity-declined:focus,
+button.bg-opportunity-declined:hover,
+button.bg-opportunity-declined:focus {
+  background-color: #b30055 !important;
+}
+
+.bg-opportunity-rejected {
+  background-color: #f52f52 !important;
+}
+
+a.bg-opportunity-rejected:hover, a.bg-opportunity-rejected:focus,
+button.bg-opportunity-rejected:hover,
+button.bg-opportunity-rejected:focus {
+  background-color: #e60b32 !important;
+}
+
 .bg-white {
   background-color: #fff !important;
 }
@@ -7696,6 +8550,34 @@ button.bg-gift:focus {
 
 .border-gift {
   border-color: #a234c4 !important;
+}
+
+.border-opportunity-identified {
+  border-color: #9930d3 !important;
+}
+
+.border-opportunity-proposed {
+  border-color: #6a39d5 !important;
+}
+
+.border-opportunity-agreed {
+  border-color: #386ad3 !important;
+}
+
+.border-opportunity-submitted {
+  border-color: #29b2cc !important;
+}
+
+.border-opportunity-complete {
+  border-color: #1DC294 !important;
+}
+
+.border-opportunity-declined {
+  border-color: #E6006D !important;
+}
+
+.border-opportunity-rejected {
+  border-color: #f52f52 !important;
 }
 
 .border-white {
@@ -11392,6 +12274,62 @@ a.text-gift:hover, a.text-gift:focus {
   color: #702488 !important;
 }
 
+.text-opportunity-identified {
+  color: #9930d3 !important;
+}
+
+a.text-opportunity-identified:hover, a.text-opportunity-identified:focus {
+  color: #6c2097 !important;
+}
+
+.text-opportunity-proposed {
+  color: #6a39d5 !important;
+}
+
+a.text-opportunity-proposed:hover, a.text-opportunity-proposed:focus {
+  color: #4922a0 !important;
+}
+
+.text-opportunity-agreed {
+  color: #386ad3 !important;
+}
+
+a.text-opportunity-agreed:hover, a.text-opportunity-agreed:focus {
+  color: #224a9c !important;
+}
+
+.text-opportunity-submitted {
+  color: #29b2cc !important;
+}
+
+a.text-opportunity-submitted:hover, a.text-opportunity-submitted:focus {
+  color: #1c7a8c !important;
+}
+
+.text-opportunity-complete {
+  color: #1DC294 !important;
+}
+
+a.text-opportunity-complete:hover, a.text-opportunity-complete:focus {
+  color: #137f61 !important;
+}
+
+.text-opportunity-declined {
+  color: #E6006D !important;
+}
+
+a.text-opportunity-declined:hover, a.text-opportunity-declined:focus {
+  color: #9a0049 !important;
+}
+
+.text-opportunity-rejected {
+  color: #f52f52 !important;
+}
+
+a.text-opportunity-rejected:hover, a.text-opportunity-rejected:focus {
+  color: #ce0a2c !important;
+}
+
 .text-body {
   color: #6e707e !important;
 }
@@ -11746,6 +12684,48 @@ a:focus {
   background-size: cover;
 }
 
+.bg-gradient-opportunity-identified {
+  background-color: #9930d3;
+  background-image: linear-gradient(180deg, #9930d3 10%, #6c2097 100%);
+  background-size: cover;
+}
+
+.bg-gradient-opportunity-proposed {
+  background-color: #6a39d5;
+  background-image: linear-gradient(180deg, #6a39d5 10%, #4922a0 100%);
+  background-size: cover;
+}
+
+.bg-gradient-opportunity-agreed {
+  background-color: #386ad3;
+  background-image: linear-gradient(180deg, #386ad3 10%, #224a9c 100%);
+  background-size: cover;
+}
+
+.bg-gradient-opportunity-submitted {
+  background-color: #29b2cc;
+  background-image: linear-gradient(180deg, #29b2cc 10%, #1c7a8c 100%);
+  background-size: cover;
+}
+
+.bg-gradient-opportunity-complete {
+  background-color: #1DC294;
+  background-image: linear-gradient(180deg, #1DC294 10%, #137f61 100%);
+  background-size: cover;
+}
+
+.bg-gradient-opportunity-declined {
+  background-color: #E6006D;
+  background-image: linear-gradient(180deg, #E6006D 10%, #9a0049 100%);
+  background-size: cover;
+}
+
+.bg-gradient-opportunity-rejected {
+  background-color: #f52f52;
+  background-image: linear-gradient(180deg, #f52f52 10%, #ce0a2c 100%);
+  background-size: cover;
+}
+
 .bg-gray-100 {
   background-color: #f8f9fc !important;
 }
@@ -12013,6 +12993,62 @@ a:focus {
 
 .border-bottom-gift {
   border-bottom: 0.25rem solid #a234c4 !important;
+}
+
+.border-left-opportunity-identified {
+  border-left: 0.25rem solid #9930d3 !important;
+}
+
+.border-bottom-opportunity-identified {
+  border-bottom: 0.25rem solid #9930d3 !important;
+}
+
+.border-left-opportunity-proposed {
+  border-left: 0.25rem solid #6a39d5 !important;
+}
+
+.border-bottom-opportunity-proposed {
+  border-bottom: 0.25rem solid #6a39d5 !important;
+}
+
+.border-left-opportunity-agreed {
+  border-left: 0.25rem solid #386ad3 !important;
+}
+
+.border-bottom-opportunity-agreed {
+  border-bottom: 0.25rem solid #386ad3 !important;
+}
+
+.border-left-opportunity-submitted {
+  border-left: 0.25rem solid #29b2cc !important;
+}
+
+.border-bottom-opportunity-submitted {
+  border-bottom: 0.25rem solid #29b2cc !important;
+}
+
+.border-left-opportunity-complete {
+  border-left: 0.25rem solid #1DC294 !important;
+}
+
+.border-bottom-opportunity-complete {
+  border-bottom: 0.25rem solid #1DC294 !important;
+}
+
+.border-left-opportunity-declined {
+  border-left: 0.25rem solid #E6006D !important;
+}
+
+.border-bottom-opportunity-declined {
+  border-bottom: 0.25rem solid #E6006D !important;
+}
+
+.border-left-opportunity-rejected {
+  border-left: 0.25rem solid #f52f52 !important;
+}
+
+.border-bottom-opportunity-rejected {
+  border-bottom: 0.25rem solid #f52f52 !important;
 }
 
 .progress-sm {
@@ -12725,67 +13761,67 @@ form.user .btn-user {
 
 @keyframes noise-anim {
   0% {
-    clip: rect(55px, 9999px, 52px, 0);
+    clip: rect(66px, 9999px, 86px, 0);
   }
   5% {
-    clip: rect(19px, 9999px, 47px, 0);
+    clip: rect(20px, 9999px, 91px, 0);
   }
   10% {
-    clip: rect(69px, 9999px, 38px, 0);
+    clip: rect(61px, 9999px, 91px, 0);
   }
   15% {
-    clip: rect(95px, 9999px, 83px, 0);
+    clip: rect(8px, 9999px, 95px, 0);
   }
   20% {
-    clip: rect(4px, 9999px, 3px, 0);
+    clip: rect(98px, 9999px, 66px, 0);
   }
   25% {
-    clip: rect(7px, 9999px, 52px, 0);
+    clip: rect(3px, 9999px, 5px, 0);
   }
   30% {
-    clip: rect(89px, 9999px, 13px, 0);
+    clip: rect(74px, 9999px, 4px, 0);
   }
   35% {
-    clip: rect(17px, 9999px, 15px, 0);
+    clip: rect(15px, 9999px, 25px, 0);
   }
   40% {
-    clip: rect(62px, 9999px, 89px, 0);
+    clip: rect(72px, 9999px, 62px, 0);
   }
   45% {
-    clip: rect(69px, 9999px, 41px, 0);
+    clip: rect(55px, 9999px, 98px, 0);
   }
   50% {
-    clip: rect(53px, 9999px, 96px, 0);
+    clip: rect(11px, 9999px, 12px, 0);
   }
   55% {
-    clip: rect(91px, 9999px, 55px, 0);
+    clip: rect(86px, 9999px, 94px, 0);
   }
   60% {
-    clip: rect(91px, 9999px, 55px, 0);
+    clip: rect(61px, 9999px, 45px, 0);
   }
   65% {
-    clip: rect(52px, 9999px, 78px, 0);
+    clip: rect(33px, 9999px, 99px, 0);
   }
   70% {
-    clip: rect(97px, 9999px, 16px, 0);
+    clip: rect(45px, 9999px, 1px, 0);
   }
   75% {
-    clip: rect(95px, 9999px, 92px, 0);
+    clip: rect(43px, 9999px, 39px, 0);
   }
   80% {
-    clip: rect(7px, 9999px, 59px, 0);
+    clip: rect(96px, 9999px, 96px, 0);
   }
   85% {
-    clip: rect(99px, 9999px, 67px, 0);
+    clip: rect(65px, 9999px, 24px, 0);
   }
   90% {
-    clip: rect(63px, 9999px, 2px, 0);
+    clip: rect(1px, 9999px, 13px, 0);
   }
   95% {
-    clip: rect(13px, 9999px, 78px, 0);
+    clip: rect(90px, 9999px, 56px, 0);
   }
   100% {
-    clip: rect(23px, 9999px, 70px, 0);
+    clip: rect(30px, 9999px, 2px, 0);
   }
 }
 .error:after {
@@ -12803,67 +13839,67 @@ form.user .btn-user {
 
 @keyframes noise-anim-2 {
   0% {
-    clip: rect(34px, 9999px, 80px, 0);
+    clip: rect(10px, 9999px, 78px, 0);
   }
   5% {
-    clip: rect(70px, 9999px, 79px, 0);
+    clip: rect(86px, 9999px, 71px, 0);
   }
   10% {
-    clip: rect(1px, 9999px, 23px, 0);
+    clip: rect(85px, 9999px, 2px, 0);
   }
   15% {
-    clip: rect(4px, 9999px, 64px, 0);
+    clip: rect(46px, 9999px, 50px, 0);
   }
   20% {
-    clip: rect(75px, 9999px, 39px, 0);
+    clip: rect(54px, 9999px, 10px, 0);
   }
   25% {
-    clip: rect(12px, 9999px, 92px, 0);
+    clip: rect(62px, 9999px, 26px, 0);
   }
   30% {
-    clip: rect(3px, 9999px, 84px, 0);
+    clip: rect(69px, 9999px, 64px, 0);
   }
   35% {
-    clip: rect(75px, 9999px, 56px, 0);
+    clip: rect(58px, 9999px, 49px, 0);
   }
   40% {
-    clip: rect(27px, 9999px, 95px, 0);
+    clip: rect(19px, 9999px, 3px, 0);
   }
   45% {
-    clip: rect(45px, 9999px, 48px, 0);
+    clip: rect(65px, 9999px, 45px, 0);
   }
   50% {
-    clip: rect(81px, 9999px, 96px, 0);
+    clip: rect(100px, 9999px, 3px, 0);
   }
   55% {
-    clip: rect(54px, 9999px, 14px, 0);
+    clip: rect(98px, 9999px, 26px, 0);
   }
   60% {
-    clip: rect(69px, 9999px, 5px, 0);
+    clip: rect(64px, 9999px, 87px, 0);
   }
   65% {
-    clip: rect(60px, 9999px, 49px, 0);
+    clip: rect(55px, 9999px, 100px, 0);
   }
   70% {
-    clip: rect(70px, 9999px, 27px, 0);
+    clip: rect(4px, 9999px, 43px, 0);
   }
   75% {
-    clip: rect(9px, 9999px, 50px, 0);
+    clip: rect(28px, 9999px, 48px, 0);
   }
   80% {
-    clip: rect(55px, 9999px, 98px, 0);
+    clip: rect(91px, 9999px, 53px, 0);
   }
   85% {
-    clip: rect(46px, 9999px, 17px, 0);
+    clip: rect(59px, 9999px, 64px, 0);
   }
   90% {
-    clip: rect(85px, 9999px, 72px, 0);
+    clip: rect(97px, 9999px, 91px, 0);
   }
   95% {
-    clip: rect(75px, 9999px, 44px, 0);
+    clip: rect(46px, 9999px, 12px, 0);
   }
   100% {
-    clip: rect(36px, 9999px, 49px, 0);
+    clip: rect(92px, 9999px, 83px, 0);
   }
 }
 .error:before {

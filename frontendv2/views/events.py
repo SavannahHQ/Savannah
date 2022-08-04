@@ -169,6 +169,9 @@ class EventAttendeeForm(forms.ModelForm):
     class Meta:
         model = EventAttendee
         fields = ['member', 'role', 'timestamp']
+        widgets = {
+            'timestamp': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
 
     def limit(self):
         if self.instance and hasattr(self.instance, 'member'):

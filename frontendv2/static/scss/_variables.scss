@@ -34,6 +34,13 @@ $event: #be164e;
 $event-light: #d4507c;
 $gift: #a234c4;
 $gift-light: #c071d8;
+$opportunity-identified: #9930d3;
+$opportunity-proposed: #6a39d5;
+$opportunity-agreed: #386ad3;
+$opportunity-submitted: #29b2cc;
+$opportunity-complete: #1DC294;
+$opportunity-declined: #E6006D;
+$opportunity-rejected: #f52f52;
 
 $primary: lighten($savannah-blue, 5%);
 $success: $savannah-green;
@@ -83,6 +90,13 @@ $theme-colors: (
     "company": $company,
     "event": $event,
     "gift": $gift,
+    "opportunity-identified": $opportunity-identified,
+    "opportunity-proposed":   $opportunity-proposed,
+    "opportunity-agreed":     $opportunity-agreed,
+    "opportunity-submitted":  $opportunity-submitted,
+    "opportunity-complete":        $opportunity-complete,
+    "opportunity-declined":   $opportunity-declined,
+    "opportunity-rejected":   $opportunity-rejected
 );
 
 // Set Contrast Threshold

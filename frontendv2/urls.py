@@ -31,6 +31,7 @@ from frontendv2.views.reports import Reports, view_report, publish_report, view_
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
 from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
 from frontendv2.views.insights import InsightsList, toggle_insight_read_state
+from frontendv2.views.opportunities import Opportunities, AddOpportunity, EditOpportunity
 from frontendv2 import views
 
 urlpatterns = [
@@ -50,6 +51,7 @@ urlpatterns = [
     path('dashboard/<int:community_id>/task/done', ManagerTaskEdit.mark_task_done, name='manager_task_done'),
     path('manager/<str:secret_key>/savannah_tasks.ical', ManagerTasksCalendar(), name='manager_task_ical'),
     path('dashboard/<int:community_id>/gift/received', ManagerDashboard.mark_gift_received, name='manager_gift_received'),
+    path('dashboard/<int:community_id>/opportunity/update', ManagerDashboard.update_opportunity, name='manager_opportunity_update'),
     path('overview/<int:community_id>/', Overview.as_view, name='overview'),
     path('overview/<int:community_id>/publish', Overview.publish, name='publish_overview'),
     path('public/overview/<str:dashboard_id>/', Overview.public, name='public_overview'),
@@ -89,6 +91,10 @@ urlpatterns = [
     path('contributions/<int:community_id>/contributors.csv', Contributors.as_csv, name='contributors_csv'),
     path('contributions/<int:community_id>/publish', Contributions.publish, name='publish_contributions'),
     path('public/contributions/<str:dashboard_id>/', Contributions.public, name='public_contributions'),
+    path('opportunities/<int:community_id>/', Opportunities.as_view, name='opportunities'),
+    path('opportunities/<int:community_id>/update', Opportunities.update_opportunity, name='opportunity_update'),
+    path('opportunities/<int:community_id>/add', AddOpportunity.as_view, name='opportunity_add'),
+    path('opportunities/<int:community_id>/edit/<int:opp_id>/', EditOpportunity.as_view, name='opportunity_edit'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),

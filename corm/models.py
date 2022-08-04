@@ -269,7 +269,7 @@ class Community(models.Model):
     @property    
     def contribution_type_names(self):
         ctype_query = self.contributiontype_set.all().order_by('name')
-        ctype_query = ctype_query.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0)
+        # ctype_query = ctype_query.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0)
         try:
             return [ctype.name for ctype in ctype_query.distinct('name')]
         except:
@@ -860,6 +860,9 @@ class Activity(TaggableModel):
         else:
             return Member.objects.none()
         
+    def __str__(self):
+        return self.short_description
+
 class Hyperlink(models.Model):
     """
     For tracking links people mention in conversations
@@ -1673,3 +1676,93 @@ class UploadedFile(models.Model):
             self.record_length = len(self.uploaded_to.file.readlines()) - header_lines
         super(UploadedFile, self).save(*args, **kwargs)
 
+class Opportunity(models.Model):
+    class Meta:
+        verbose_name_plural = "Opportunities"
+        # ordering = ("-created_at")
+    REJECTED = -2
+    DECLINED = -1
+    IDENTIFIED = 0
+    PROPOSED = 1
+    AGREED = 2
+    SUBMITTED = 3
+    COMPLETE = 4
+    CLOSED_STATUSES = (REJECTED, DECLINED, COMPLETE)
+    STATUS_CHOICES = [
+        (REJECTED, "Rejected"),
+        (DECLINED, "Declined"),
+        (IDENTIFIED, "Identified"),
+        (PROPOSED, "Proposed"),
+        (AGREED, "Agreed"),
+        (SUBMITTED, "Submitted"),
+        (COMPLETE, "Complete"),
+        
+    ]
+    STATUS_MAP = dict(STATUS_CHOICES)
+    STATUS_ICONS = {
+        IDENTIFIED: 'fas fa-shield',
+        PROPOSED: 'fas fa-shield-exclamation',
+        AGREED: 'fas fa-shield-heart',
+        SUBMITTED: 'fas fa-shield-plus',
+        COMPLETE: 'fas fa-shield-check',
+        DECLINED: 'fas fa-shield-minus',
+        REJECTED: 'fas fa-shield-xmark',
+    }
+    STATUS_COLORS = {
+        IDENTIFIED: 'secondary',
+        PROPOSED: 'primary',
+        AGREED: 'info',
+        SUBMITTED: 'success',
+        COMPLETE: 'success',
+        DECLINED: 'danger',
+        REJECTED: 'danger',
+    }
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='opportunities')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='opportunities')
+    name = models.CharField(max_length=512)
+    description = models.TextField()
+    contribution_type = models.ForeignKey(ContributionType, on_delete=models.CASCADE, related_name='opportunities')
+    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities')
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=IDENTIFIED)
+    deadline = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities_created')
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities_closed')
+    activities = models.ManyToManyField(Activity, null=True, blank=True, related_name='opportunities')
+
+    @property
+    def past_due(self):
+        return self.deadline < datetime.datetime.utcnow()
+
+    @property
+    def is_done(self):
+        return self.closed_at is not None
+
+    def __str__(self):
+        return self.name
+
+    def get_next_options(self):
+        options = []
+        if self.status == self.IDENTIFIED:
+            options = [
+                self.PROPOSED,
+                self.REJECTED,
+            ]
+        if self.status == self.PROPOSED:
+            options = [
+                self.AGREED,
+                self.DECLINED,
+            ]
+        if self.status == self.AGREED:
+            options = [
+                self.SUBMITTED,
+                self.DECLINED,
+            ]
+        if self.status == self.SUBMITTED:
+            options = [
+                self.COMPLETE,
+                self.REJECTED,
+            ]
+
+        return [(self.STATUS_MAP[o], o, self.STATUS_ICONS[o], 'opportunity-%s' % self.STATUS_MAP[o].lower()) for o in options]

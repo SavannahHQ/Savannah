@@ -111,6 +111,13 @@
           <span>Contributions</span></a>
       </li>
 
+      <!-- Nav Item - Contributions -->
+      <li class="nav-item {% if active_tab == "contributions" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'opportunities' request.session.community %}">
+          <i class="fas fa-fw fa-file-shield"></i>
+          <span>Opportunities</span></a>
+      </li>
+
       <!-- Nav Item - Events -->
       <li class="nav-item {% if active_tab == "events" %}active{% endif %}">
         <a class="nav-link" href="{% url 'events' request.session.community %}">

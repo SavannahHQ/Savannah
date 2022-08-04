@@ -46,47 +46,89 @@
             <div class="col-xl-8 col-lg-7">
 
             <!-- Tasks -->
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks"></i> Open Tasks</h6>
-                  <a title="Add to Calendar" href="{% url 'manager_task_ical' view.manager_profile.secret_key %}"><i class="fas fa-calendar-alt"></i></a>
-                </div>
-                <!-- Card Body -->
-                <div class="card-body p-0">
-                <form action="{% url 'manager_task_done' view.community.id %}" method="POST">
-                {% csrf_token %}
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Due</th>
-                    <th scope="col">Task</th>
-                    <th scope="col">Stakeholders</th>
-                    <th scope="col">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for task in view.open_tasks %}
-                <tr {% if task.past_due %}class="font-weight-bold"{% endif %}>
-                  <td>{{task.due|date}}</td>
-                  <td><a href="{% url 'manager_task_edit' view.community.id task.id %}" title="{{task.detail}}" data-toggle="tooltip">{{task.name}}</a></td>
-                  <td>
-                  {% if task.stakeholders.all.count > 0 %}
-                  {% for member in task.stakeholders.all %}
-                      <a href="{% url 'member_profile' member.id %}">{{member.name}}</a><br/>
-                  {% endfor %}
-                  {% endif %}
-                  </td>
-                  <td>
-                    <button class="btn btn-sm {% if task.past_due %}btn-danger{% else %}btn-success{% endif %} text-nowrap" title="Mark as Done" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i></a>
-                  </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-                </form>
-                </div>
+            <div class="card shadow mb-4">
+              <!-- Card Header - Dropdown -->
+              <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-tasks"></i> Open Tasks</h6>
+                <a title="Add to Calendar" href="{% url 'manager_task_ical' view.manager_profile.secret_key %}"><i class="fas fa-calendar-alt"></i></a>
               </div>
+              <!-- Card Body -->
+              <div class="card-body p-0">
+              <form action="{% url 'manager_task_done' view.community.id %}" method="POST">
+              {% csrf_token %}
+              <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Due</th>
+                  <th scope="col">Task</th>
+                  <th scope="col">Stakeholders</th>
+                  <th scope="col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for task in view.open_tasks %}
+              <tr {% if task.past_due %}class="font-weight-bold"{% endif %}>
+                <td>{{task.due|date}}</td>
+                <td><a href="{% url 'manager_task_edit' view.community.id task.id %}" title="{{task.detail}}" data-toggle="tooltip">{{task.name}}</a></td>
+                <td>
+                {% if task.stakeholders.all.count > 0 %}
+                {% for member in task.stakeholders.all %}
+                    <a href="{% url 'member_profile' member.id %}">{{member.name}}</a><br/>
+                {% endfor %}
+                {% endif %}
+                </td>
+                <td>
+                  <button class="btn btn-sm {% if task.past_due %}btn-danger{% else %}btn-success{% endif %} text-nowrap" title="Mark as Done" name="mark_done" value="{{task.id}}"><i class="fas fa-check"></i></a>
+                </td>
+              </tr>
+              {% endfor %}
+              </tbody>
+              </table>
+              </form>
+              </div>
+            </div>
+
+            <!-- Opportunities -->
+            <div class="card shadow mb-4">
+              <!-- Card Header - Dropdown -->
+              <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-shield-halved"></i> Contribution Opportunities</h6>
+              </div>
+              <!-- Card Body -->
+              <div class="card-body p-0">
+              <form action="{% url 'manager_opportunity_update' view.community.id %}" method="POST">
+              {% csrf_token %}
+              <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Opportunity</th>
+                  <th scope="col">Member</th>
+                  <th scope="col">Target</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Move To</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for opp in view.open_opportunities %}
+              <tr {% if opp.past_due %}class="font-weight-bold"{% endif %}>
+                <td><a href="{% url 'opportunity_edit' view.community.id opp.id %}" title="{{opp.description}}" data-toggle="tooltip">{{opp.name}}</a></td>
+                <td>
+                    <a href="{% url 'member_profile' opp.member.id %}">{{opp.member.name}}</a><br/>
+                </td>
+                <td>{{opp.deadline|date}}</td>
+                <td class="text-opportunity-{{opp.get_status_display|lower}}">{{opp.get_status_display}}</td>
+                <td>
+                  {% for action, status, icon, color in opp.get_next_options %}
+                  <button class="btn btn-sm btn-{{color}} text-nowrap" title="{{action}}" name="move_to" value="{{opp.id}}:{{status}}"><i class="{{icon}}"></i> </button>
+                  {% endfor %}
+                </td>
+              </tr>
+              {% endfor %}
+              </tbody>
+              </table>
+              </form>
+              </div>
+            </div>
 
               <!-- Gift Checkin -->
               <div class="card shadow mb-4">

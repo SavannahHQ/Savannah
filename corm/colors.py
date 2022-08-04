@@ -1,6 +1,8 @@
 #OLD CHART_COLORS = ['4e73df', '1cc88a', '36b9cc', '7dc5fe', 'cceecc']
 # http://paletton.com/#uid=73y2l0kq7Bhf0HFkUCM-7CFGssV
 # http://paletton.com/#uid=72z2l0kq7Bhf0HFkUCM-7CFGssV
+
+
 CHART_COLORS = ['4987BB', '3AA8C7', '43C28C', '9DEB52', 'E3FA57', 'FFE758', 'FFB959', 'FF752F', 'F4556E', 'E866B5', 'C16DCA', '8A79D6']
 TAG_COLORS = [
  '800000', #maroon
@@ -172,3 +174,25 @@ class LEVEL(object):
 
     def __str__(self):
         return self.VISITOR
+
+class OPPORTUNITY(object):
+    IDENTIFIED = '9930D3'
+    PROPOSED = '6A39D5'
+    AGREED = '386AD3'
+    SUBMITTED = '29B2CC'
+    COMPLETE = '1DC294'
+    DECLINED = 'E6006D'
+    REJECTED = 'F52F52'
+
+    colors = [
+        REJECTED,
+        DECLINED,
+        IDENTIFIED,
+        PROPOSED,
+        AGREED,
+        SUBMITTED,
+        COMPLETE,
+    ]
+
+    def __str__(self):
+        return self.IDENTIFIED

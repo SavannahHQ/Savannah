@@ -1,0 +1,126 @@
+{% extends "savannahv2/base.html"%}
+{% load static humanize member_utils %}
+
+{% block page_title %} | {{view.community.name}} Opportunities{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Contribution Opportunities</h1>
+            {% include 'savannahv2/filter_button.html' with current_tag=view.tag%}
+          </div>
+
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Opportunities funnel Chart -->
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.funnel_chart.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.funnel_chart.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            <!-- Win rate Chart -->
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.win_rate.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.win_rate.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            <!-- Contrib Type Chart -->
+            <div class="col-xl-4 col-lg-5">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">{{view.contrib_types.title}}</h6>
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                  <div class="chart-pie pt-4 pb-2">
+                    <canvas id="{{view.contrib_types.id}}"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- List of open opportunities -->
+            <div class="col-lg-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Opportunities</h6>
+                  <a class="btn btn-sm btn-success" href="{% url 'opportunity_add' view.community.id %}"><i class="fas fa-plus"></i> Add</a>
+            
+                </div>
+                <!-- Card Body -->
+                <div class="card-body p-0">
+                  <form action="{% url 'opportunity_update' view.community.id %}" method="POST">
+                  {% csrf_token %}
+                  <table class="table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Type</th>
+                      <th scope="col">Opportunity</th>
+                      <th scope="col">Owner</th>
+                      <th scope="col">Member</th>
+                      <th scope="col">Target</th>
+                      <th scope="col">Status</th>
+                      <th scope="col">Move To</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {% for opp in view.all_opportunities %}
+                  <tr {% if opp.past_due %}class="font-weight-bold"{% endif %}>
+                    <td>{{opp.contribution_type.name}}</td>
+                    <td><a href="{% url 'opportunity_edit' view.community.id opp.id %}" title="{{opp.description}}" data-toggle="tooltip">{{opp.name}}</a></td>
+                    <td>{{opp.created_by}}</td>
+                    <td>
+                        <a href="{% url 'member_profile' opp.member.id %}">{{opp.member.name}}</a><br/>
+                    </td>
+                    <td>{{opp.deadline|date}}</td>
+                    <td class="text-opportunity-{{opp.get_status_display|lower}}">{{opp.get_status_display}}</td>
+                    <td class="text-nowrap">
+                      {% for action, status, icon, color in opp.get_next_options %}
+                      <button class="btn btn-sm btn-{{color}} text-nowrap" title="{{action}}" name="move_to" value="{{opp.id}}:{{status}}"><i class="{{icon}}"></i> </button>
+                      {% endfor %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  </tbody>
+                  </table>
+                  </form>
+                  </div>
+                </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

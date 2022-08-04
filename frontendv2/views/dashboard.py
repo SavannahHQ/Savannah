@@ -61,6 +61,10 @@ class ManagerDashboard(SavannahView):
         return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due')
 
     @property
+    def open_opportunities(self):
+        return Opportunity.objects.filter(community=self.community, created_by=self.request.user, closed_at__isnull=True).order_by('deadline')
+
+    @property
     def open_gifts(self):
         return Gift.objects.filter(community=self.community, received_date__isnull=True).order_by('sent_date')
 
@@ -137,6 +141,33 @@ class ManagerDashboard(SavannahView):
                 gift.save()
             except:
                 messages.error(request, "Gift not found, could not mark as received.")
+        return redirect('dashboard', community_id=community_id)
+
+    @login_required
+    def update_opportunity(request, community_id):
+        if request.method == "POST":
+            try:
+                opp_id, status = request.POST.get('move_to').split(':')
+                opp_id = int(opp_id)
+                status = int(status)
+            except:
+                messages.error(request, 'Bad opportunity or status, can not update.')
+                return redirect('dashboard', community_id=community_id)
+            try:
+                opp = Opportunity.objects.get(id=opp_id, community_id=community_id)
+                opp.status = status
+                if opp.status in Opportunity.CLOSED_STATUSES:
+                    if opp.closed_at is None:
+                        opp.closed_at = datetime.datetime.utcnow()
+                    if opp.closed_by is None:
+                        opp.closed_by = request.user
+                else:
+                    opp.closed_at = None
+                    opp.closed_by = None
+                messages.success(request, "Opportunity status updated to %s." % opp.get_status_display())
+                opp.save()
+            except:
+                messages.error(request, "Opportunity not found, can not update its status.")
         return redirect('dashboard', community_id=community_id)
 
     @login_required
@@ -440,7 +471,7 @@ class Overview(SavannahFilterView):
     def levels_chart(self):
         if self._levelsChart is None:
             project = get_object_or_404(Project, community=self.community, default_project=True)
-            self._levelsChart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES)
+            self._levelsChart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES, invert=True)
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=project, level=level)
                 levels = levels.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
