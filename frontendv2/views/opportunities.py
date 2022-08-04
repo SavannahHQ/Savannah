@@ -33,9 +33,14 @@ class Opportunities(SavannahFilterView):
             'source': True,
             'contrib_type': True,
         })
+        self.RESULTS_PER_PAGE = 25
 
-    @property
-    def all_opportunities(self):
+        try:
+            self.page = int(request.GET.get('page', 1))
+        except:
+            self.page = 1
+
+    def _displayed_opportunities(self):
         opps = Opportunity.objects.filter(community=self.community)
         opps = opps.filter(created_at__gte=self.rangestart, created_at__lte=self.rangeend)
         if self.member_company:
@@ -51,8 +56,48 @@ class Opportunities(SavannahFilterView):
             opps = opps.filter(source=self.source)
         if self.contrib_type:
             opps = opps.filter(contribution_type__name=self.contrib_type)
-        opps = opps.order_by('-deadline')
+        self.result_count = opps.count()
         return opps
+
+    @property
+    def all_opportunities(self):
+        opps = self._displayed_opportunities().select_related('member').prefetch_related('member__tags').order_by('-deadline')
+        
+        start = (self.page-1) * self.RESULTS_PER_PAGE
+        return opps[start:start+self.RESULTS_PER_PAGE]
+
+    @property
+    def page_start(self):
+        return ((self.page-1) * self.RESULTS_PER_PAGE) + 1
+
+    @property
+    def page_end(self):
+        end = ((self.page-1) * self.RESULTS_PER_PAGE) + self.RESULTS_PER_PAGE
+        if end > self.result_count:
+            return self.result_count
+        else:
+            return end
+            
+    @property
+    def has_pages(self):
+        return self.result_count > self.RESULTS_PER_PAGE
+
+    @property
+    def last_page(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        return pages
+
+    @property
+    def page_links(self):
+        pages = int(self.result_count / self.RESULTS_PER_PAGE)+1
+        offset=1
+        if self.page > 5:
+            offset = self.page - 5
+        if offset + 9 > pages:
+            offset = pages - 9
+        if offset < 1:
+            offset = 1
+        return [page+offset for page in range(min(10, pages))]
 
     @property
     def funnel_chart(self):
@@ -166,6 +211,10 @@ class Opportunities(SavannahFilterView):
                     opp.closed_by = None
                 opp.save()
                 messages.success(request, "Opportunity status updated to %s." % opp.get_status_display())
+                if request.GET.get('member_id', None):
+                    return redirect('member_profile', member_id=request.GET.get('member_id'))
+                else:
+                    return redirect('opportunities', community_id=community_id)
             except:
                 messages.error(request, "Opportunity not found, can not update its status.")
         return redirect('opportunities', community_id=community_id)
@@ -200,9 +249,14 @@ class AddOpportunity(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "opportunities"
-        self.opportunity = Opportunity(community=self.community, created_by=request.user, deadline=datetime.datetime.utcnow() + datetime.timedelta(days=7))
+        member = None
         self.back_url = reverse('opportunities', kwargs={'community_id':community_id})
         self.self_url = reverse('opportunity_add', kwargs={'community_id':community_id})
+        if request.GET.get('member_id', None):
+            member = Member.objects.get(community=self.community, id=request.GET.get('member_id'))
+            self.back_url = reverse('member_profile', kwargs={'member_id':request.GET.get('member_id')})
+            self.self_url = self.self_url + '?member_id=' + request.GET.get('member_id')
+        self.opportunity = Opportunity(community=self.community, member=member, created_by=request.user, deadline=datetime.datetime.utcnow() + datetime.timedelta(days=7))
 
     def form(self, data=None):
         self._form = OpportunityForm(instance=self.opportunity, data=data)
@@ -228,7 +282,10 @@ class AddOpportunity(SavannahView):
                 opp.save()
 
                 messages.success(request, 'Opportunity has been added')
-                return redirect('opportunities', community_id=view.community.id)
+                if request.GET.get('member_id', None):
+                    return redirect('member_profile', member_id=request.GET.get('member_id'))
+                else:
+                    return redirect('opportunities', community_id=view.community.id)
         return render(request, 'savannahv2/opportunity_add.html', view.context)
 
 class EditOpportunity(SavannahView):
@@ -238,6 +295,9 @@ class EditOpportunity(SavannahView):
         self.opportunity = get_object_or_404(Opportunity, id=opp_id, community=self.community)
         self.back_url = reverse('opportunities', kwargs={'community_id':community_id})
         self.self_url = reverse('opportunity_edit', kwargs={'community_id':community_id, 'opp_id':opp_id})
+        if request.GET.get('member_id', None):
+            self.back_url = reverse('member_profile', kwargs={'member_id':request.GET.get('member_id')})
+            self.self_url = self.self_url + '?member_id=' + request.GET.get('member_id')
 
     def form(self, data=None):
         self._form = OpportunityForm(instance=self.opportunity, data=data)
@@ -263,5 +323,8 @@ class EditOpportunity(SavannahView):
                 opp.save()
 
                 messages.success(request, 'Opportunity has been updated')
-                return redirect('opportunities', community_id=view.community.id)
+                if request.GET.get('member_id', None):
+                    return redirect('member_profile', member_id=request.GET.get('member_id'))
+                else:
+                    return redirect('opportunities', community_id=view.community.id)
         return render(request, 'savannahv2/opportunity_edit.html', view.context)

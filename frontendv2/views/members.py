@@ -630,6 +630,10 @@ class MemberProfile(SavannahView):
         return Gift.objects.filter(community=self.community, member=self.member)
 
     @property
+    def open_opportunities(self):
+        return Opportunity.objects.filter(community=self.community, member=self.member, closed_at__isnull=True).order_by('-created_at')[:10]
+
+    @property
     def all_contributions(self):
         contributions = Contribution.objects.filter(community=self.member.community, author=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
 

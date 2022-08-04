@@ -193,6 +193,45 @@
                 </div>
               </div>
 
+              <!-- Opportunities -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Open Opportunities</h6>
+                  <a href="{% url 'opportunity_add' view.community.id %}?member_id={{view.member.id}}" class="text-gray-500"><i class="fas fa-shield-plus"></i> Add</a>
+                </div>
+                <div class="card-body p-0">
+                <form action="{% url 'opportunity_update' view.community.id %}?member_id={{view.member.id}}" method="POST">
+                {% csrf_token %}
+                <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Type</th>
+                    <th scope="col">Opportunity</th>
+                    <th scope="col">Target</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Move To</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for opp in view.open_opportunities %}
+                <tr {% if opp.past_due %}class="font-weight-bold"{% endif %}>
+                  <td>{{opp.contribution_type.name}}</td>
+                  <td><a href="{% url 'opportunity_edit' view.community.id opp.id %}?member_id={{view.member.id}}" title="{{opp.description}}" data-toggle="tooltip">{{opp.name}}</a></td>
+                  <td>{{opp.deadline|date}}</td>
+                  <td class="text-opportunity-{{opp.get_status_display|lower}}">{{opp.get_status_display}}</td>
+                  <td class="text-nowrap">
+                    {% for action, status, icon, color in opp.get_next_options %}
+                    <button class="btn btn-sm btn-{{color}} text-nowrap" title="{{action}}" name="move_to" value="{{opp.id}}:{{status}}"><i class="{{icon}}"></i> </button>
+                    {% endfor %}
+                  </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                </table>
+                </div>
+              </div>
+
+              <!-- Tasks -->
               <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Tasks</h6>
@@ -289,7 +328,6 @@
                 </table>
                 </div>
               </div>
-
 
               <!-- Contributions -->
               <div class="card shadow mb-4">
