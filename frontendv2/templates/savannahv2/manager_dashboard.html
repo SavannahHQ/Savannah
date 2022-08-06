@@ -15,7 +15,7 @@
 
             {% for source in view.source_activity %}
             <!-- {{source.connector_name}}/{{source.name}} Card -->
-            <div class="col-lg-3 col-6 col-xs-12 mb-4">
+            <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 mb-4">
               <div class="card border-left-{% if source.percent > 120 %}success{% elif source.percent < 80 %}danger{% else %}info{% endif %} shadow h-100">
                 <a href="{% url source.view_name view.community.id %}?clear=all&source={{source.id}}&timespan=30" title="7-day activity level compared to previous 30 days">
                 <div class="card-body">
