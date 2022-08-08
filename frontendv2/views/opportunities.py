@@ -223,7 +223,7 @@ class Opportunities(SavannahFilterView):
 class OpportunityForm(forms.ModelForm):
     class Meta:
         model = Opportunity
-        fields = ['member', 'name', 'contribution_type', 'status', 'deadline', 'description']
+        fields = ['member', 'name', 'contribution_type', 'status', 'created_by', 'deadline', 'description']
         widgets = {
             'deadline': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
         }
@@ -231,19 +231,23 @@ class OpportunityForm(forms.ModelForm):
     def limit(self):
         community = self.instance.community
         if hasattr(self.instance, 'member'):
-            self.fields['member'].widget.choices = [(self.instance.member.id, self.instance.member.name)]
+            self.fields['member'].queryset = Member.objects.filter(id=self.instance.member.id)
         else:
-            self.fields['member'].widget.choices = [('', '-----')]
+            self.fields['member'].queryset = Member.objects.none()
+
+        self.fields['created_by'].label = 'Owner'
+        self.fields['created_by'].queryset = community.managers.user_set.all()
             
         current_source = None
         choices = [('', '-----')]
-        for contrib_type in ContributionType.objects.filter(community=community, source__isnull=False).select_related('source').order_by(Lower('source__connector')):
+        for contrib_type in ContributionType.objects.filter(community=community, source__isnull=False).select_related('source').order_by(Lower('source__connector'), 'source__name', 'name'):
             source_name = '%s (%s)' % (contrib_type.source.connector_name, contrib_type.source.name)
             if source_name != current_source:
                 current_source = source_name
                 choices.append((source_name, []))
             choices[-1][1].append((contrib_type.id, contrib_type.name))
         self.fields['contribution_type'].widget.choices = choices
+
 
 class AddOpportunity(SavannahView):
     def __init__(self, request, community_id):
