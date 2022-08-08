@@ -231,13 +231,16 @@ class OpportunityForm(forms.ModelForm):
     def limit(self):
         community = self.instance.community
         if hasattr(self.instance, 'member'):
-            self.fields['member'].queryset = Member.objects.filter(id=self.instance.member.id)
+            self.fields['member'].widget.choices = [(self.instance.member.id, self.instance.member.name)]
         else:
-            self.fields['member'].queryset = Member.objects.none()
+            self.fields['member'].widget.choices = [('', '-----')]
 
         self.fields['created_by'].label = 'Owner'
-        self.fields['created_by'].queryset = community.managers.user_set.all()
-            
+        if hasattr(self.instance, 'managers'):
+            self.fields['created_by'].queryset = community.managers.user_set.all()
+        else:
+            self.fields['created_by'].queryset = User.objects.filter(id=community.owner.id)
+
         current_source = None
         choices = [('', '-----')]
         for contrib_type in ContributionType.objects.filter(community=community, source__isnull=False).select_related('source').order_by(Lower('source__connector'), 'source__name', 'name'):
