@@ -201,7 +201,10 @@ class PublicDashboard(models.Model):
             view.rangeend = datetime.datetime.utcnow()
 
         if self.pin_time:
-            view.rangeend = datetime.datetime.strptime(filters.get('rangeend', self.created_at), view.DATE_FORMAT)
+            if 'rangeend' in filters and filters.get('rangeend') is not None:
+                view.rangeend = datetime.datetime.strptime(filters.get('rangeend'), view.DATE_FORMAT)
+            else:
+                view.rangeend = self.created_at
             if 'rangestart' in filters and filters.get('rangestart') is not None:
                 view.rangestart = datetime.datetime.strptime(filters.get('rangestart'), view.DATE_FORMAT)
             else:
