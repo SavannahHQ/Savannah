@@ -1768,3 +1768,25 @@ class Opportunity(models.Model):
             ]
 
         return [(self.STATUS_MAP[o], o, self.STATUS_ICONS[o], 'opportunity-%s' % self.STATUS_MAP[o].lower()) for o in options]
+
+    @property
+    def current_history(self):
+        return self.history.filter(opportunity=self, ended_at__isnull=True).order_by('-started_at').first()
+
+    def save(self, *args, **kwargs):
+        r = super().save(*args, **kwargs)
+        c = self.current_history
+        if c is not None:
+            if c.stage != self.status:
+                c.ended_at = datetime.datetime.now()
+                c.save()
+                c = OpportunityHistory.objects.create(community=self.community, opportunity=self, stage=self.status, started_at=datetime.datetime.now())
+        else:
+            c = OpportunityHistory.objects.create(community=self.community, opportunity=self, stage=self.status, started_at=datetime.datetime.now())
+
+class OpportunityHistory(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE, related_name='history')
+    stage = models.SmallIntegerField(choices=Opportunity.STATUS_CHOICES, default=Opportunity.IDENTIFIED)
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
