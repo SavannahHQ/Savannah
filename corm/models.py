@@ -1634,6 +1634,7 @@ class UploadedFile(models.Model):
     }
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField(max_length=512)
     mime_type = models.CharField(max_length=64, null=True, blank=True)
     record_length = models.PositiveIntegerField(default=0)

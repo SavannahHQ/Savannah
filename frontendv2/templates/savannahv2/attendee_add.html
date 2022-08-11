@@ -6,8 +6,9 @@
 
 {% block page_content %}
           <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4 col-lg-7 col-xl-8">
             <h1 class="h3 mb-0 text-gray-800">{% if view.edit_attendee.member  %}Edit {{view.edit_attendee.member}}{% else %}Add Attendee{% endif %}</h1>
+            <a class="btn btn-primary" href="{% url 'import_upload' view.community.id %}?event={{view.event.id}}"><i class="fas fa-file-arrow-up"></i> Import from file</a>
           </div>
 
           <!-- Content Row -->

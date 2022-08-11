@@ -28,6 +28,10 @@
 
                 <form class="form" action="{% url 'import_upload' view.community.id %}" method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
+                {% if view.upload.event %}
+                <div id="div_id_event" class="form-group"> Event: <span class="ml-3 font-weight-bold"> <a href="{% url 'event' view.upload.event.id %}">{{view.upload.event.title}}</a> </span> </div>
+                <input type="hidden" name="event" value="{{view.upload.event.id}}" />
+                {% endif %}
                 {{ view.form|crispy }}
                 <button class="btn btn-primary" type="submit">Upload</button>
                 </form>

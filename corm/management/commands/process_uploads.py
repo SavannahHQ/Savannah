@@ -8,7 +8,7 @@ import csv
 import random
 from io import TextIOWrapper
 from time import sleep
-from corm.models import Community, Member, Contact, Company, Tag, UploadedFile
+from corm.models import Community, Member, Contact, Company, Tag, UploadedFile, Event, EventAttendee
 from corm import colors
 
 
@@ -71,25 +71,47 @@ class Command(BaseCommand):
             for i, header in enumerate(headers):
                 columns[header] = i
             print(columns)
+            origin_id_column = None
+            if upload.source:
+                for c, field in upload.mapping.items():
+                    if field == 'origin_id':
+                        origin_id_column = columns[c]
+                        break
             for record in reader:
                 member = Member(community=upload.community, first_seen=datetime.datetime.utcnow())
+                if upload.source and origin_id_column is not None:
+                    member = self.get_member_by_origin(upload.source, record[origin_id_column])
+                managed_fields = {}
                 for c, field in upload.mapping.items():
                     if field:
                         if self.verbosity >= 3:
                             print("%s = %s" % (field, record[columns[c]]))
 
                         if field == 'origin_id':
-                            self.process_origin_field(member, upload.source, record[columns[c]])
+                            pass
                         elif field == 'company':
                             self.process_company_field(member, field, record[columns[c]])
                         elif field == 'tags':
                             self.process_tags_field(member, field, record[columns[c]])
                         else:
-                            self.process_char_field(member, field, record[columns[c]])
+                            if field not in managed_fields:
+                                managed_fields[field] = not getattr(member, field)
+                            if managed_fields[field]:
+                                self.process_char_field(member, field, record[columns[c]])
 
                 if self.verbosity >= 3:
                     print(member)
+                    print()
                 member.save()
+                if upload.event is not None:
+                    a, created = EventAttendee.objects.get_or_create(community=upload.event.community, event=upload.event, member=member, defaults={'timestamp':upload.event.start_timestamp, 'role':EventAttendee.GUEST})
+                    if created:
+                        a.update_activity()
+                        if upload.event.start_timestamp < member.first_seen:
+                            member.first_seen = upload.event.start_timestamp
+                        if member.last_seen is None or upload.event.start_timestamp > member.last_seen:
+                            member.last_seen = upload.event.start_timestamp
+                        member.save()
         except Exception as e:
             print(e)
             if self.debug:
@@ -103,12 +125,20 @@ class Command(BaseCommand):
         upload.save()
         return "Complete"
 
-    def process_origin_field(self, member, source, value):
+    def get_member_by_origin(self, source, origin_id):
         if source is None:
             raise RuntimeError("Can not map Origin ID field because no the import has no Source assigned.")
-        if not member.id:
-            member.save()
-        identity, created = Contact.objects.get_or_create(source=source, member=member, origin_id=value, detail=value, name=value)
+        try:
+            identity = Contact.objects.get(source=source, origin_id=origin_id)
+            if self.verbosity >= 3:
+                print("Found identity for %s" % origin_id)
+            return identity.member
+        except:
+            if self.verbosity >= 3:
+                print("Creating new identity for %s" % origin_id)
+            member = Member.objects.create(community=source.community, first_seen=datetime.datetime.utcnow())
+            identity, created = Contact.objects.get_or_create(source=source, member=member, origin_id=origin_id, detail=origin_id, name=origin_id)
+            return member
 
     def process_company_field(self, member, field, value):
         if not member.id:

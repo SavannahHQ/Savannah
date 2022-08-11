@@ -334,6 +334,12 @@ class ImportUpload(SavannahView):
     def as_view(request, community_id):
         view = ImportUpload(request, community_id)
         view.upload = UploadedFile(community=view.community, uploaded_by=request.user, status=UploadedFile.UPLOADED)
+        if 'event' in request.GET:
+            try:
+                view.upload.event = get_object_or_404(Event, community=view.community, id=request.GET.get('event'))
+            except Exception as e:
+                print(e)
+                messages.error(request, "Unknown event, you can proceed with the import but members will not be added as Attendees")
         if request.method == 'POST':
             form_data = dict(request.POST.items())
             if form_data.get('source') == 'other':
@@ -342,6 +348,12 @@ class ImportUpload(SavannahView):
             form.limit_to(view.community)
             if form.is_valid():
                 view.upload = form.save(commit=False)
+                if 'event' in request.POST:
+                    try:
+                        view.upload.event = get_object_or_404(Event, community=view.community, id=request.POST.get('event'))
+                    except Exception as e:
+                        print(e)
+                        messages.error(request, "Unknown event, you can proceed with the import but members will not be added as Attendees")
                 if request.POST.get('source') == 'other':
                     view.upload.source = Source.objects.create(community=view.community, name=form.cleaned_data['other'], connector='corm.plugins.null', icon_name='fas fa-file-arrow-up')
                 view.upload.save()

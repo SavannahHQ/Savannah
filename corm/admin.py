@@ -615,6 +615,7 @@ admin.site.register(Insight, InsightAdmin)
 class UploadedFileAdmin(admin.ModelAdmin):
     list_display = ("name", "status", "uploaded_by", "uploaded_at")
     list_filter = ("status", "community", "uploaded_by", "uploaded_at")
+    raw_id_fields = ("event", )
     search_fields = ["uploaded_to"]
 admin.site.register(UploadedFile, UploadedFileAdmin)
 
@@ -622,7 +623,7 @@ class OpportunityHistoryInline(admin.TabularInline):
     model = OpportunityHistory
     fk_name = "opportunity"
     extra=0
-    
+
 class OpportunityAdmin(admin.ModelAdmin):
     list_display = ("name", "status", "contribution_type", "community", "created_by", "created_at")
     list_filter = ("status", "community", "created_at", "closed_at")
