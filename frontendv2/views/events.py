@@ -156,7 +156,10 @@ def tag_event(request, community_id):
             event = Event.objects.get(community=community, id=event_id)
             tag_id = request.POST.get('tag_select')
             try:
-                event.tag = Tag.objects.get(id=tag_id, community=community_id)
+                if tag_id == '':
+                    event.tag = None
+                else:
+                    event.tag = Tag.objects.get(id=tag_id, community=community_id)
                 event.save()
             except:
                 messages.error(request, "Unkown tag")
