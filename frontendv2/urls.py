@@ -29,7 +29,7 @@ from frontendv2.views.community import CommunitySettings, EditCommunity, Manager
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
 from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
-from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
+from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee, QuickAddAttendee
 from frontendv2.views.insights import InsightsList, toggle_insight_read_state
 from frontendv2.views.opportunities import Opportunities, AddOpportunity, EditOpportunity
 from frontendv2 import views
@@ -162,6 +162,7 @@ urlpatterns = [
     path('event/<int:event_id>/edit', EditEvent.as_view, name='event_edit'),
     path('event/<int:event_id>/add', AddAttendee.as_view, name='attendee_add'),
     path('event/<int:event_id>/attendees.csv', EventProfile.as_csv, name='attendee_csv'),
+    path('event/<int:event_id>/signup/quick', QuickAddAttendee.as_view, name='attendee_quickadd'),
 
     path('insights/<int:community_id>/', InsightsList.as_view, name='insights'),
     path('insights/<int:community_id>/toggle_read_state', toggle_insight_read_state, name='toggle_insight_read_state'),

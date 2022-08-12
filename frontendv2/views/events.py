@@ -2,6 +2,7 @@ import operator
 from functools import reduce
 import datetime
 import csv
+import re
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
@@ -599,5 +600,70 @@ class EditEvent(SavannahView):
 
             return redirect('event', event_id=edited_event.id)
 
-        return render(request, "savannahv2/event_edit.html", view.context)
 
+class AttendeeSignupForm(forms.Form):
+    name = forms.CharField(label="Name")
+    company = forms.CharField(label="Company", required=False)
+    email_address = forms.CharField(label="Email Address", required=False)
+    phone_number = forms.CharField(label="Phone Number", required=False)
+    note = forms.CharField(label="Notes", required=False, widget=forms.Textarea(attrs={'cols': 40, 'rows': 3}))
+    followup = forms.BooleanField(label="Follow-up", required=False)
+
+class QuickAddAttendee(SavannahView):
+    def __init__(self, request, event_id):
+        self.event = get_object_or_404(Event, id=event_id)
+        super().__init__(request, self.event.community.id)
+        self._form = None
+
+    @property
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = AttendeeSignupForm(data=self.request.POST)
+            else:
+                self._form = AttendeeSignupForm()
+        return self._form
+
+    def as_view(request, event_id):
+        view = QuickAddAttendee(request, event_id)
+        if request.method == 'POST':
+            if view.form.is_valid():
+                if view.form.cleaned_data['company'] != '':
+                    company, created = Company.objects.get_or_create(community=view.community, name=view.form.cleaned_data['company'])
+                else:
+                    company=None
+                new_member = Member.objects.create(
+                    community=view.community,
+                    name=view.form.cleaned_data['name'],
+                    email_address=view.form.cleaned_data['email_address'],
+                    phone_number=view.form.cleaned_data['phone_number'],
+                    company=company,
+                    first_seen=datetime.datetime.utcnow(),
+                    last_seen=datetime.datetime.utcnow(),
+                )
+                if view.form.cleaned_data['note'] != '':
+                    Note.objects.create(
+                        member=new_member,
+                        author=request.user,
+                        timestamp=datetime.datetime.utcnow(),
+                        content=view.form.cleaned_data['note']
+                    )
+                if view.form.cleaned_data['followup']:
+                    new_task = Task.objects.create(
+                        community=view.community,
+                        project=view.community.default_project,
+                        owner=request.user,
+                        name='Followup after %s' % view.event.title,
+                        detail=view.form.cleaned_data['note'],
+                        due=view.event.end_timestamp + datetime.timedelta(days=2)
+                    )         
+                    new_task.stakeholders.add(new_member)           
+                EventAttendee.objects.create(
+                    community=view.community, 
+                    event=view.event, 
+                    member=new_member,
+                    timestamp=datetime.datetime.utcnow(), 
+                    role=EventAttendee.GUEST
+                ).update_activity()
+                return redirect('attendee_quickadd', event_id=view.event.id)
+        return render(request, "savannahv2/attendee_quickadd.html", view.context)
