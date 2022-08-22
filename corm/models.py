@@ -508,6 +508,7 @@ class Member(TaggableModel):
         Contribution.objects.filter(author=other_member).update(author=self)
         Gift.objects.filter(member=other_member).update(member=self)
         MemberWatch.objects.filter(member=other_member).update(member=self)
+        Opportunity.objects.filter(member=other_member).update(member=self)
 
         for tag in other_member.tags.all():
             self.tags.add(tag)
@@ -579,6 +580,7 @@ class MemberMergeRecord(models.Model):
             'event_attendance': [c.id for c in EventAttendee.objects.filter(member=member)],
             'watches': [w.id for w in MemberWatch.objects.filter(member=member)],
             'tasks': [t.id for t in Task.objects.filter(stakeholders=member)],
+            'opportunities': [o.id for o in Opportunity.objects.filter(member=member)],
             'levels': dict([(level.project_id, (level.level, level.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'))) for level in MemberLevel.objects.filter(member=member)])
         }
         return data
