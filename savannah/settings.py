@@ -246,3 +246,5 @@ GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
 GITHUB_SCOPE = "read:org,public_repo"
 
 TOTD_EXCLUDE_NS = ['admin']
+
+DJSTRIPE_WEBHOOK_EVENT_CALLBACK = "billing.callbacks.stripe_event_callback"
