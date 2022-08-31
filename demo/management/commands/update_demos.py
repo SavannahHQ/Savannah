@@ -38,14 +38,15 @@ class Command(BaseCommand):
         print("Making Conversations...")
         tags = [None]
         tag_weights = [70]
-        members = list(community.member_set.all())
-        member_count = len(members)
+        members = community.member_set.all()
+        member_count = members.count()
         for tag in Tag.objects.filter(community=community).order_by('last_changed'):
             tags.append(tag)
             tag_weights.append(tag_weights[-1]+5)
             if tag_weights[-1] >= 95:
                 break
-        for from_member in random.sample(members, int(member_count/100)):
+        members = members.annotate(activity_count=Count('speaker_in')).order_by('-activity_count')
+        for from_member in random.sample(list(members[:int(member_count/2)]), int(member_count/200)):
             conversation_count = random.randint(1, 3)
             print("Adding %s conversations for %s" % (conversation_count, from_member))
             tag_counts = dict()
@@ -95,7 +96,7 @@ class Command(BaseCommand):
         print("Making Contributions...")
         github = community.source_set.get(connector="corm.plugins.github")
         pr, created = ContributionType.objects.get_or_create(community=community, source=github, name="Pull Request")
-        skip = random.randint(0, 5)
+        skip = random.randint(0, 20)
         if not skip:
             for contributor in random.sample(members, k=random.randint(0, int(member_count/100))):
                 for i in range(random.choices([5, 4, 3, 2, 1], cum_weights=[5, 10, 20, 50, 90], k=1)[0]):
@@ -108,7 +109,7 @@ class Command(BaseCommand):
                         contribution.tags.add(feature_tag)
                     contribution.update_activity()
 
-        skip = random.randint(0, 5)
+        skip = random.randint(0, 10)
         if not skip:
             slack = community.source_set.get(connector="corm.plugins.slack")
             support, created = ContributionType.objects.get_or_create(community=community, source=slack, name="Support")

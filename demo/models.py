@@ -36,4 +36,11 @@ class Demonstration(models.Model):
         if self.log is not None:
             self.log.deleted_at = datetime.datetime.utcnow()
             self.log.save()
+        if self.community is not None:
+            self.community.delete()
         return super(Demonstration, self).delete(*args, **kwargs)
+
+    def __str__(self):
+        if self.community:
+            return "Demonstration object (%s)" % self.community.name
+        return "Demonstration object (%s)" % self.id
