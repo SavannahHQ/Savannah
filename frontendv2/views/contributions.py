@@ -12,13 +12,17 @@ from corm.models import *
 from frontendv2.views import SavannahFilterView
 from frontendv2.views.charts import PieChart
 from frontendv2.models import PublicDashboard
+from frontendv2 import colors as savannah_colors
 
 class Contributions(SavannahFilterView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "contributions"
         self._membersChart = None
+        self._typesChart = None
         self._channelsChart = None
+        self._tagsChart = None
+        self._rolesChart = None
 
         self.filter.update({
             'timespan': True,
@@ -345,6 +349,48 @@ class Contributions(SavannahFilterView):
         (months, counts) = self.getContributionsChart()
         return [counts.get(month, 0) for month in self.timespan_chart_keys(months)]
 
+    def types_chart(self):
+        if not self._typesChart:
+            types = list()
+            counts = dict()
+
+
+            types = ContributionType.objects.filter(community=self.community)
+            contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+            if self.contrib_type:
+                contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
+            if self.tag:
+                contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+            if self.source:
+                if self.exclude_source:
+                    contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+                else:
+                    contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
+            if self.member_company:
+                contrib_filter = contrib_filter & Q(contribution__author__company=self.member_company)
+            if self.member_tag:
+                contrib_filter = contrib_filter & Q(contribution__author__tags=self.member_tag)
+            if self.role:
+                if self.role == Member.BOT:
+                    contrib_filter = contrib_filter & ~Q(contribution__author__role=self.role)
+                else:
+                    contrib_filter = contrib_filter & Q(contribution__author__role=self.role)
+
+            types = types.annotate(contribution_count=Count('contribution', filter=contrib_filter))
+            types = types.annotate(source_icon=F('source__icon_name'), source_connector=F('source__connector'))
+            for t in types:
+                if t.contribution_count == 0:
+                    continue
+                if t.name in counts:
+                    counts[t.name] += t.contribution_count
+                else:
+                    counts[t.name] = t.contribution_count
+            self._typesChart = PieChart("typesChart", title="Contributions by Type", limit=8)
+            for t, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._typesChart.add(t, count)
+        self.charts.add(self._typesChart)
+        return self._typesChart
+
     def channels_chart(self):
         if not self._channelsChart:
             channels = list()
@@ -383,6 +429,83 @@ class Contributions(SavannahFilterView):
                 self._channelsChart.add("%s (%s)" % (channel.name, ConnectionManager.display_name(channel.source_connector)), count, channel.color)
         self.charts.add(self._channelsChart)
         return self._channelsChart
+
+    def tags_chart(self):
+        if not self._tagsChart:
+            counts = dict()
+            tags = Tag.objects.filter(community=self.community)
+            contrib_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+            if self.contrib_type:
+                contrib_filter = contrib_filter & Q(contribution__contribution_type__name=self.contrib_type)
+            if self.source:
+                if self.exclude_source:
+                    contrib_filter = contrib_filter & ~Q(contribution__channel__source=self.source)
+                else:
+                    contrib_filter = contrib_filter & Q(contribution__channel__source=self.source)
+            if self.tag:
+                contrib_filter = contrib_filter & Q(contribution__tags=self.tag)
+                tags = tags.exclude(id=self.tag.id)
+            if self.member_company:
+                contrib_filter = contrib_filter & Q(contribution__author__company=self.member_company)
+            if self.member_tag:
+                contrib_filter = contrib_filter & Q(contribution__author__tags=self.member_tag)
+            if self.role:
+                if self.role == Member.BOT:
+                    contrib_filter = contrib_filter & ~Q(contribution__author__role=self.role)
+                else:
+                    contrib_filter = contrib_filter & Q(contribution__author__role=self.role)
+
+
+            tags = tags.annotate(contribution_count=Count('contribution', filter=contrib_filter))
+
+            for t in tags:
+                counts[t] = t.contribution_count
+            self._tagsChart = PieChart("tagsChart", title="Contributions by Tag", limit=12)
+            for tag, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                if count > 0:
+                    self._tagsChart.add(tag.name, count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
+
+    def roles_chart(self):
+        if not self._rolesChart:
+            counts = dict()
+            colors = {
+                Member.COMMUNITY: savannah_colors.MEMBER.COMMUNITY,
+                Member.STAFF: savannah_colors.MEMBER.STAFF,
+                Member.BOT: savannah_colors.MEMBER.BOT
+            }
+            members = Member.objects.filter(community=self.community)
+            convo_filter = Q(contribution__timestamp__gte=self.rangestart, contribution__timestamp__lte=self.rangeend)
+            if self.source:
+                if self.exclude_source:
+                    convo_filter = convo_filter & ~Q(contribution__channel__source=self.source)
+                else:
+                    convo_filter = convo_filter & Q(contribution__channel__source=self.source)
+            if self.tag:
+                convo_filter = convo_filter & Q(contribution__tags=self.tag)
+            if self.member_company:
+                members = members.filter(company=self.member_company)
+            if self.member_tag:
+                members = members.filter(tags=self.member_tag)
+            if self.role:
+                if self.role == Member.BOT:
+                    members = members.exclude(role=self.role)
+                else:
+                    members = members.filter(role=self.role)
+
+            members = members.annotate(contribution_count=Count('contribution', filter=convo_filter)).filter(contribution_count__gt=0)
+
+            for m in members:
+                if m.role in counts:
+                    counts[m.role] += m.contribution_count
+                else:
+                    counts[m.role] = m.contribution_count
+            self._rolesChart = PieChart("rolesChart", title="Contribution by Role")
+            for role, count in sorted(counts.items(), key=operator.itemgetter(1), reverse=True):
+                self._rolesChart.add(Member.ROLE_NAME[role], count, colors[role])
+        self.charts.add(self._rolesChart)
+        return self._rolesChart
 
     @login_required
     def as_view(request, community_id):
