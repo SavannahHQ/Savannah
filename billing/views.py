@@ -9,6 +9,7 @@ from django.db.models import Q
 
 import json
 import datetime
+import operator
 
 import stripe, djstripe
 from djstripe import webhooks
@@ -148,10 +149,26 @@ def signup_subscribe(request, community_id):
     org = management.org
 
     savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
+    plans = djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('created', 'amount')
+    costs = dict()
+    for plan in plans:
+        if plan.billing_scheme == 'tiered':
+            cost = 0
+            for tier in plan.tiers:
+                if tier['flat_amount']:
+                    cost += tier['flat_amount']
+                    plan.has_flat_amount = True
+                if tier['unit_amount']:
+                    cost += tier['unit_amount']
+                    plan.has_unit_amount = True
+            costs[plan] = cost / 100
+        else:
+            costs[plan] = plan.amount
+
     context = {
         "community": community,
         "org": org,
-        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('created', 'amount'),
+        "plans": [p for p, c in sorted(costs.items(), key=operator.itemgetter(1), reverse=False)],
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
     }
     ga.add_event(request, 'subcription_options_viewed', category='signup')
@@ -307,11 +324,27 @@ def change_plan(request, community_id):
             messages.error(request, "Your subscription can not be changed to this plan.<br/> Please contact <a href=\"mailto:info@savannahhq.com\">info@savannahhq.com</a> for assistance changing your plan.")
 
     savannah_crm = djstripe.models.Product.objects.get(id=settings.STRIPE_PRODUCT_ID)
+    plans = djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('created', 'amount')
+    costs = dict()
+    for plan in plans:
+        if plan.billing_scheme == 'tiered':
+            cost = 0
+            for tier in plan.tiers:
+                if tier['flat_amount']:
+                    cost += tier['flat_amount']
+                    plan.has_flat_amount = True
+                if tier['unit_amount']:
+                    cost += tier['unit_amount']
+                    plan.has_unit_amount = True
+            costs[plan] = cost / 100
+        else:
+            costs[plan] = plan.amount
+
     context = {
         "community": community,
         "org": org,
         "current_plan" : getattr(management.subscription, 'plan', {'id': 0, 'amount': 0}),
-        "plans": djstripe.models.Plan.objects.filter(product=savannah_crm, active=True).order_by('created', 'amount'),
+        "plans": [p for p, c in sorted(costs.items(), key=operator.itemgetter(1), reverse=False)],
         "STRIPE_KEY": settings.STRIPE_PUBLIC_KEY,
     }
     return render(request, 'billing/change_plan.html', context)

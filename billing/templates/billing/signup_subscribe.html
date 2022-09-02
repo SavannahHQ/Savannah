@@ -30,7 +30,11 @@
                     <div class="mb-1 font-weight-bold text-gray-800">${{tier.flat_amount|cents|floatformat:2}} /{{plan.interval}} for up to {{tier.up_to}} Managers</div>
                     {% endif %}
                     {% if tier.unit_amount %}
-                    <div class="mb-1 font-weight-bold text-gray-800">+ ${{tier.unit_amount|cents|floatformat:2}} /{{plan.interval}} for each additional</div>
+                      {% if plan.has_flat_amount %}
+                        <div class="mb-1 font-weight-bold text-gray-800">+ ${{tier.unit_amount|cents|floatformat:2}} /{{plan.interval}} for each additional</div>
+                      {% else %}
+                      <div class="mb-1 font-weight-bold text-gray-800">${{tier.unit_amount|cents|floatformat:2}} /{{plan.interval}} per Manager</div>
+                      {% endif %}
                     {% endif %}
                   {% endfor %}
                 {% else %}
