@@ -12,7 +12,7 @@
 
 <!-- Content Row -->
 <div class="row mt-5 justify-content-center">
-<div class="col-xl-10 col-md-12 mb-5 mt-8 align-items-center">
+<div class="col-12 mb-5 mt-8 align-items-center">
 <center>
     <div class="card shadow h-100 py-2">
     <div class="card-body">
@@ -27,7 +27,7 @@
                   {% for tier in plan.tiers %}
                     {% comment %} {{tier}} {% endcomment %}
                     {% if tier.flat_amount %}
-                    <div class="mb-1 font-weight-bold text-gray-800">${{tier.flat_amount|cents|floatformat:2}} /{{plan.interval}} for up to {{tier.up_to}} Managers</div>
+                    <div class="mb-1 font-weight-bold text-gray-800">${{tier.flat_amount|cents|floatformat:2}} /{{plan.interval}} for {{tier.up_to}} Managers</div>
                     {% endif %}
                     {% if tier.unit_amount %}
                       {% if plan.has_flat_amount %}
