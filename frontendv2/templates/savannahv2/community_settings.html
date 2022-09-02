@@ -96,7 +96,11 @@
 
                 {% if view.community.management.is_billable %}
                 <p><b>Seats: </b>{{view.community.management.billable_seats}}</p>
-                <p><b>Monthly price: </b>${{view.community.management.monthly_cost|floatformat:2}}</p>
+                {% if view.community.management.monthly_invoice_url %}
+                <p><b>Monthly cost: </b><a href="{{view.community.management.monthly_invoice_url}}" target="_blank">${{view.community.management.monthly_cost|floatformat:2}}</a></p>
+                {% else %}
+                <p><b>Monthly cost: </b>${{view.community.management.monthly_cost|floatformat:2}}</p>
+                {% endif %}
                 {% endif %}
                 </div>            
                 </div>

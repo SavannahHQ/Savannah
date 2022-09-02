@@ -46,7 +46,22 @@ class Management(models.Model, ManagementPermissionMixin):
         return seats
 
     @property
+    def monthly_invoice_url(self):
+        try:
+            invoice = self.subscription.invoices.all().order_by('-period_end').first()
+            return invoice.hosted_invoice_url
+        except:
+            return None
+
+    @property
     def monthly_cost(self):
+        print("Monthly cost")
+        try:
+            invoice = self.subscription.invoices.all().order_by('-period_end').first()
+            return invoice.total
+        except:
+            # Fallback to calculating the expected monthly cost
+            pass
         try:
             plan = self.subscription.plan
             if self.is_per_seat:
