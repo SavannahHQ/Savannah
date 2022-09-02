@@ -83,6 +83,7 @@ class CommunityAdmin(admin.ModelAdmin):
     search_fields = ("name", "owner__username", "owner__email")
     actions = ('download_owners',)
     date_hierarchy='created'
+    ordering = ('-created',)
 
     def get_queryset(self, request):
         qs = super(CommunityAdmin, self).get_queryset(request)

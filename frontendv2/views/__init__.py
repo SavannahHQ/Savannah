@@ -197,9 +197,16 @@ class SavannahView:
             elif self.community.status == Community.ARCHIVED:
                 messages.info(self.request, "This community has been archived and will no longer receive updates.")
             elif self.community.source_set.all().count() == 0:
-                messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-file-import\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                    messages.error(self.request, "We can't import data for <b>%s</b> until you've added add your first data source. You can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-database\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+                else:
+                    messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-database\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                    messages.info(self.request, "You can try demo of Savannah CRM using sample data on <b><a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a></b>.")
             elif self.community.status == Community.SETUP:
                 messages.success(self.request, "Your community is all set! <a href=\"%s\">Start you subsription now</a> and Savannah will begin importing your data." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                    messages.info(self.request, "You can try demo of Savannah CRM using sample data on <a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a>.")
         
     @property
     def context(self):
