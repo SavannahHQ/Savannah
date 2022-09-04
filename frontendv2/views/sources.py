@@ -338,7 +338,7 @@ class ImportUpload(SavannahView):
             try:
                 view.upload.event = get_object_or_404(Event, community=view.community, id=request.GET.get('event'))
             except Exception as e:
-                print(e)
+                # print(e)
                 messages.error(request, "Unknown event, you can proceed with the import but members will not be added as Attendees")
         if request.method == 'POST':
             form_data = dict(request.POST.items())

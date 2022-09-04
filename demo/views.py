@@ -57,6 +57,7 @@ def new_demo(request):
                 source.save()
             
             Project.objects.filter(community=new_community, default_project=True).update(name=new_community.name)
+            Opportunity.objects.filter(community=new_community).update(created_by=request.user)
             
             system_user = User.objects.get(username=settings.SYSTEM_USER)
             MemberWatch.objects.filter(member__community=new_community, manager=system_user).update(manager=request.user)

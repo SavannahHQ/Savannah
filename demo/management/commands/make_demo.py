@@ -11,6 +11,53 @@ from django.contrib.auth.models import User, Group
 from django.db.models import Min
 from corm.models import *
 
+# TODO:
+# - Use sources:
+#   - Github
+#   - Slack
+#   - Meetup
+#   - RSS
+#   - Twitter
+# - Determine members shape
+#   - Define 
+#     - 2% core contributors 
+#       - github, RSS
+#       - 1 inactivity notification
+#       - Add to feature project
+#       - New core contributor insight
+#     - 0.5% potential core 
+#       - github, slack, RSS
+#       - 1 level-up task suggestion
+#       - Add to feature project
+#       - New contributor insight
+#     - 1% ambassadors 
+#       - meetup, twitter, RSS
+#       - 1 gift sent but not delivered
+#       - Add to Ambassadors project
+#     - 2 VIP 
+#       - Twitter, Slack
+#       - Member watch
+#       - Member notes
+#     - 2 problematic 
+#       - slack
+#       - Member watch
+#       - Member notes
+#       - 1 watch notification
+#     - 1 hero 
+#       - slack, twitter
+#       - Lots of individual connections
+#
+#   - Use this when generating contributions, opportunities, tasks, suggestions, insights, etc
+#   - Tag members according to this rather than randomly
+#   - Set project levels based on this
+# - Bulk-add conversations rather than one at a time
+# - Generate events if an event-source is 
+# - Generate notes on core, ambassador, problematic members
+# - Generate insights
+# - Generate suggestions
+# - Update company names, domains and member emails
+
+
 class Command(BaseCommand):
     help = 'Generate a Community with mock data'
 
@@ -60,11 +107,13 @@ class Command(BaseCommand):
         self.tags, self.tag_weights = self.make_tags()
         self.sources = self.make_sources()
         self.companies, self.company_wieght = self.make_companies()
+        self.make_projects()
+        self.make_events()
+
         self.members = self.make_members()
         most_connected = Member.objects.filter(community=self.community).annotate(con_count=Count('connections')).order_by('-con_count')[0]
         self.manager_profile = ManagerProfile.objects.create(community=self.community, user=self.owner, member=most_connected)
 
-        self.make_projects()
         # self.make_notes()
         # self.make_notifications()
         self.make_connections()
@@ -72,10 +121,12 @@ class Command(BaseCommand):
         self.make_watches()
         self.make_gifts()
         self.make_tasks()
+        self.make_opportunities()
 
         call_command('set_company_info', community=self.community.id)
         call_command('level_check', community=self.community.id)
         call_command('gift_impact', community=self.community.id)
+        call_command('event_impact', community=self.community.id)
         call_command('make_connections', community=self.community.id)
         call_command('make_suggestions', community=self.community.id)
 
@@ -106,7 +157,7 @@ class Command(BaseCommand):
         sources = list()
 
         ambassadors = Tag.objects.get(name="ambassador", community=self.community)
-        slack = self.community.source_set.create(name="%s Chat"%self.community_name, connector="corm.plugins.slack", icon_name="fab fa-slack", enabled=False)
+        slack = self.community.source_set.create(name="%s Chat"%self.community_name, connector="corm.plugins.slack", icon_name="fab fa-slack", enabled=True)
         slack.channel_set.create(name="general")
         slack.channel_set.create(name="random")
         slack.channel_set.create(name="community", tag=ambassadors)
@@ -115,18 +166,26 @@ class Command(BaseCommand):
 
         featurex = Tag.objects.get(name="feature-x", community=self.community)
         featurey = Tag.objects.get(name="feature-y", community=self.community)
-        github = self.community.source_set.create(name="%s Org"%self.community_name, connector="corm.plugins.github", icon_name="fab fa-github", enabled=False)
+        github = self.community.source_set.create(name="%s Org"%self.community_name, connector="corm.plugins.github", icon_name="fab fa-github", enabled=True)
         github.channel_set.create(name="Demo Src")
         github.channel_set.create(name="Demo Docs")
         github.channel_set.create(name="Feature X Src", tag=featurex)
         github.channel_set.create(name="Feature Y Src", tag=featurey)
         sources.append(github)
 
-        discourse = self.community.source_set.create(name="%s Forum"%self.community_name, connector="corm.plugins.discourse", icon_name="fab fa-discourse", enabled=False)
+        discourse = self.community.source_set.create(name="%s Forum"%self.community_name, connector="corm.plugins.discourse", icon_name="fab fa-discourse", enabled=True)
         discourse.channel_set.create(name="General")
         discourse.channel_set.create(name="Features")
         discourse.channel_set.create(name="Help")
         sources.append(discourse)
+        
+        meetup = self.community.source_set.create(name="%s Meetups"%self.community_name, connector="corm.plugins.meetup", icon_name="fab fa-meetup", enabled=True)
+        meetup.channel_set.create(name="San Francisco Meetup")
+        meetup.channel_set.create(name="New York Meetup")
+        meetup.channel_set.create(name="Atlanta Meetup")
+        meetup.channel_set.create(name="London Meetup")
+        meetup.channel_set.create(name="Paris Meetup")
+        sources.append(meetup)
         
         random.shuffle(sources)
         return sources
@@ -154,7 +213,81 @@ class Command(BaseCommand):
         companies = [None, staff_company, large_co, medium_co, small_co, tiny_co]
         company_weights = [70, 89, 93, 96, 98, 99]
         return (companies, company_weights)
-        
+
+    def make_events(self):
+        print("Making Events...")
+        meetup = self.community.source_set.get(connector="corm.plugins.meetup")
+        for channel in meetup.channel_set.all():
+            #random.sample(self.members, k=random.randint(int(self.member_count/11), int(self.member_count/9))):
+            event_count = random.randint(1, 10)
+            for i in range(event_count):
+                event_title = lorem.get_sentence(count=1, word_range=(5, 10))
+                event_description = lorem.get_sentence(count=random.randint(1, 3), word_range=(8, 20))
+                event_start = datetime.datetime.utcnow() + datetime.timedelta(days=30) - datetime.timedelta(days=random.randrange(1, self.max_history_days))
+                event_end = event_start + datetime.timedelta(hours=random.randint(1,3))
+                event_tag = random.choices(self.tags, cum_weights=[25, 25, 25, 50, 75], k=1)[0]
+                event = Event.objects.create(
+                    community=self.community,
+                    source=meetup,
+                    channel=channel,
+                    title=event_title,
+                    description = event_description,
+                    start_timestamp=event_start,
+                    end_timestamp=event_end,
+                    tag=event_tag,
+                )
+
+    def make_opportunities(self):
+        print("Making Opportunities...")
+        slack = self.community.source_set.get(connector="corm.plugins.slack")
+        discourse = self.community.source_set.get(connector="corm.plugins.discourse")
+        meetup = self.community.source_set.get(connector="corm.plugins.meetup")
+        github = self.community.source_set.get(connector="corm.plugins.github")
+        support, created = ContributionType.objects.get_or_create(community=self.community, source=slack, name="Support")
+        hosted, created = ContributionType.objects.get_or_create(community=self.community, source=meetup, name="Hosted")
+        pr, created = ContributionType.objects.get_or_create(community=self.community, source=github, name="Pull Request")
+        potential_supporters=self.community.member_set.filter(speaker_in__channel__source=slack)
+        potential_hosts=self.community.member_set.filter(speaker_in__channel__source=meetup)
+        potential_coders=self.community.member_set.filter(speaker_in__channel__source=github)
+        # REJECTED = -2
+        # DECLINED = -1
+        # IDENTIFIED = 0
+        # PROPOSED = 1
+        # AGREED = 2
+        # SUBMITTED = 3
+        # COMPLETE = 4
+        oppo_weights = [2, 5, 40, 60, 75, 80, 90]
+        oppo_types = [
+            (slack, potential_supporters, support, 'Provide support in %s'),
+            (meetup, potential_hosts, hosted, 'Host an event at %s'),
+            (github, potential_coders, pr, 'Submit patch to %s'),
+        ]
+        for source, members, contrib, title in oppo_types:
+            # Opportunities
+            for i in range(1, random.randint(3, 8)):
+                member = random.choice(members)
+                channel = random.choice(source.channel_set.all())
+                status = random.choices(Opportunity.STATUS_CHOICES, cum_weights=oppo_weights, k=1)[0][0]
+                if status in Opportunity.CLOSED_STATUSES:
+                    closer = self.owner
+                    closed_at = datetime.datetime.utcnow()
+                else:
+                    closer = None
+                    closed_at = None
+                Opportunity.objects.create(
+                    created_by=self.owner,
+                    community=self.community,
+                    member=member,
+                    source=channel.source,
+                    contribution_type=contrib,
+                    name=title % channel,
+                    description=lorem.get_sentence(count=1, word_range=(8, 12)),
+                    status=status,
+                    closed_by=closer,
+                    closed_at=closed_at,
+                    deadline=datetime.datetime.utcnow() + datetime.timedelta(days=random.randint(-1, 30))
+                )
+
     def make_projects(self):
         print("Making Projects...")
         default = self.community.default_project
@@ -262,7 +395,7 @@ class Command(BaseCommand):
             contact_counts = [1, 2, 3]
             contact_weights = [50, 80, 90]
             contact_count = random.choices(contact_counts, cum_weights=contact_weights, k=1)[0]
-            source_weights = [10, 30, 70]
+            source_weights = [10, 30, 70, 95]
             for source in random.choices(self.sources, cum_weights=source_weights, k=contact_count):
                 Contact.objects.get_or_create(member=new_member, source=source, detail=username, origin_id='demo-%s'%new_member.id)
         return members
@@ -326,7 +459,7 @@ class Command(BaseCommand):
     def make_activity(self):
         print("Making Conversations...")
         for from_member in self.members:
-            conversation_count = random.randint(1, 20)
+            conversation_count = random.randint(1, 10)
             tag_counts = dict()
             convo_range = (from_member.last_seen-from_member.first_seen).days+1
             for i in range(conversation_count):
@@ -336,6 +469,7 @@ class Command(BaseCommand):
                 conversation_date = from_member.last_seen - datetime.timedelta(days=random.randrange(0, convo_range))
 
                 conversation = Conversation.objects.create(channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
+
                 if from_member.connections.count() > 1:
                     participant_count = random.randint(1, min(5, from_member.connections.count()))
                     participants = random.sample(list(from_member.connections.all()), participant_count)
@@ -349,6 +483,7 @@ class Command(BaseCommand):
                         member=participant,
                         timestamp=conversation_date
                     )
+
                 Participant.objects.update_or_create(
                     community=self.community, 
                     conversation=conversation,
@@ -372,7 +507,8 @@ class Command(BaseCommand):
                 if count > (conversation_count/2):
                     from_member.tags.add(tag)
 
-        print("Making Contributions...")
+
+        print("Making Pull Requests...")
         github = self.community.source_set.get(connector="corm.plugins.github")
         pr, created = ContributionType.objects.get_or_create(community=self.community, source=github, name="Pull Request")
         for contributor in random.sample(self.members, k=random.randint(int(self.member_count/11), int(self.member_count/9))):
@@ -381,24 +517,49 @@ class Command(BaseCommand):
                 contribution_date = datetime.datetime.utcnow() - datetime.timedelta(days=random.randrange(1, self.max_history_days))
                 contribution_channel = random.choice(github.channel_set.all())
                 contribution = Contribution.objects.create(community=self.community, contribution_type=pr, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=contribution_date)
-                feature_tag = random.choices(self.tags, cum_weights=self.tag_weights, k=1)[0]
-                if feature_tag:
-                    contribution.tags.add(feature_tag)
+                if contribution_channel.tag:
+                    contribution.tags.add(contribution_channel.tag)
                 contribution.update_activity()
 
+        print("Making Support...")
         slack = self.community.source_set.get(connector="corm.plugins.slack")
         support, created = ContributionType.objects.get_or_create(community=self.community, source=slack, name="Support")
-        for contributor in random.sample(self.members, k=random.randint(int(self.member_count/11), int(self.member_count/9))):
-            contribution_count = random.choices([10, 8, 6, 4, 2], cum_weights=[5, 10, 20, 50, 90], k=1)[0]
-            from_conversations = contributor.speaker_in.filter(channel__source=slack, tags__name='thankful').all()
-            for convo in random.choices(from_conversations, k=min(from_conversations.count(), contribution_count)):
+        thankfuls = Conversation.objects.filter(channel__source=slack, tags__name='thankful')
+        thankful_count = thankfuls.count()
+        for convo in random.sample(list(thankfuls), k=random.randint(int(thankful_count/5), int(thankful_count/2))):
+            contribution_date = convo.timestamp
+            contribution_channel = convo.channel
+            contribution_title = "Helped in %s" % contribution_channel.name
+            contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
+            contribution.tags.set(convo.tags.exclude(name='thankful'))
+            contribution.update_activity(convo.activity)
+
+        print("Making Attendees...")
+        meetup = self.community.source_set.get(connector="corm.plugins.meetup")
+        for attending_member in random.sample(self.members, k=random.randint(int(self.member_count/11), int(self.member_count/9))):
+            event_count = random.randint(1, 5)
+            tag_counts = dict()
+            convo_range = (from_member.last_seen-from_member.first_seen).days+1
+            channel = random.choices(meetup.channel_set.all(), k=1)[0]
+            for i in range(event_count):
+                event = random.choices(self.community.event_set.filter(source=meetup, channel=channel), k=1)[0]
+                attendee = EventAttendee.objects.create(community=self.community, event=event, member=attending_member, timestamp=event.start_timestamp)
+                attendee.update_activity()
+
+        print("Making Hosts...")
+        hosted, created = ContributionType.objects.get_or_create(community=self.community, source=meetup, name="Hosted")
+        for event in self.community.event_set.all():
+            if event.rsvp.all().count() > 0:
+                attendee = random.choices(event.rsvp.all(), k=1)[0]
+                contribution_title = "Hosted %s" % lorem.get_sentence(count=1, word_range=(3, 6))
                 contribution_date = datetime.datetime.utcnow() - datetime.timedelta(days=random.randrange(1, self.max_history_days))
-                contribution_channel = random.choice(slack.channel_set.all())
-                contribution_title = "Helped in %s" % contribution_channel.name
-                contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
-                contribution.tags.set(convo.tags.all())
-                contribution.update_activity(convo.activity)
+                contribution_channel = attendee.event.channel
+                contribution = Contribution.objects.create(community=self.community, contribution_type=hosted, title=contribution_title, channel=contribution_channel, author=attendee.member, timestamp=contribution_date)
+                contribution.update_activity()
+                attendee.role = EventAttendee.HOST
+                attendee.save()
 
         for from_member in self.members:
             from_member.first_seen = from_member.activity.all().aggregate(first=Min('timestamp'))['first']
-            from_member.save()
+            if from_member.first_seen:
+                from_member.save()
