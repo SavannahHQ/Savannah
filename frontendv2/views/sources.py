@@ -274,7 +274,7 @@ def tag_channel(request, community_id, source_id):
 class FileUploadForm(forms.ModelForm):
     class Meta:
         model = UploadedFile
-        fields = ['name', 'uploaded_to', 'source']
+        fields = ['name', 'uploaded_to', 'source', 'import_tag']
 
     def __init__(self, *args, **kwargs):
         super(FileUploadForm, self).__init__(*args, **kwargs)
@@ -284,6 +284,9 @@ class FileUploadForm(forms.ModelForm):
         self.fields['source'].widget.choices = [(source.id, "%s (%s)" % (source.name, source.connector_name)) for source in Source.objects.filter(community=community)]
         self.fields['source'].widget.choices.insert(0, ('', '-----'))
         self.fields['source'].widget.choices.append(("other", "New Source..."))
+
+        self.fields['import_tag'].widget.choices = [(tag.id, tag.name) for tag in Tag.objects.filter(community=community)]
+        self.fields['import_tag'].widget.choices.insert(0, ('', '-----'))
 
 
 class ImportMappingForm(forms.Form):

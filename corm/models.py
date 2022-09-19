@@ -1647,6 +1647,7 @@ class UploadedFile(models.Model):
     mapping = models.JSONField(default=dict())
     status = models.PositiveSmallIntegerField(default=UPLOADED, choices=STATUS_CHOICES)
     status_msg = models.CharField(max_length=256, null=True, blank=True)
+    import_tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True, help_text="Tag all Members in this file")
 
     def __str__(self):
         return self.name

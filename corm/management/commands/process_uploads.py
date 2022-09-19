@@ -116,6 +116,8 @@ class Command(BaseCommand):
                         if member.last_seen is None or upload.event.start_timestamp > member.last_seen:
                             member.last_seen = upload.event.start_timestamp
                         member.save()
+                if upload.import_tag is not None:
+                    member.tags.add(upload.import_tag)
         except Exception as e:
             print(e)
             if self.debug:

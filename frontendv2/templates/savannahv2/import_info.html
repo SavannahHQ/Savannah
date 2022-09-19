@@ -44,6 +44,9 @@
                     {% if view.file.event %}
                     <p><b>Event: </b><a href="{% url 'event' view.file.event.id %}">{{view.file.event.title}}</a></p>
                     {% endif %}
+                    {% if view.file.import_tag %}
+                    <p><b>Tag: </b>{% include 'savannahv2/tag_list.html' with tag=view.file.import_tag %}</p>
+                    {% endif %}
                     <p></p>
                     <h4 class="mt-5">Field Mapping {% if view.file.status < view.file.PROCESSING %}<a class="btn btn-primary btn-sm" href="{% url 'import_map' view.file.community.id view.file.id %}">Edit</a>{% endif %}</h4>
                     {% for column, field in view.file.mapping.items %}

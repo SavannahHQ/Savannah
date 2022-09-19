@@ -38,7 +38,7 @@
                     {% for file in view.all_uploads %}
                     <tr>
                       <td class="text-nowrap">{{file.uploaded_at|dateortime}}</td>
-                      <td class="text-nowrap"><a href="{% url 'import_info' file.community.id file.id %}">{{file.name}}</a></td>
+                      <td class="text-nowrap"><a href="{% url 'import_info' file.community.id file.id %}">{{file.name}}</a> {% include 'savannahv2/tag_list.html' with tag=file.import_tag %}</td>
                       <td class="text-nowrap">{{file.record_length}}</td>
                       <td class="text-nowrap">{{file.get_status_display}}</td>
                     </tr>
