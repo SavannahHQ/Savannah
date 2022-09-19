@@ -1,13 +1,15 @@
 import enum
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models.fields import CharField
 import datetime
+import dateutil.parser as timestamp_parser
 import re
 import subprocess
 import requests
 import csv
 import random
 from io import TextIOWrapper
-from time import sleep
+from time import sleep, strptime
 from corm.models import Community, Member, Contact, Company, Tag, UploadedFile, Event, EventAttendee
 from corm import colors
 
@@ -93,6 +95,8 @@ class Command(BaseCommand):
                             self.process_company_field(member, field, record[columns[c]])
                         elif field == 'tags':
                             self.process_tags_field(member, field, record[columns[c]])
+                        elif field == 'first_seen' or field == 'last_seen':
+                            self.process_timestamp_field(member, field, record[columns[c]])
                         else:
                             if field not in managed_fields:
                                 managed_fields[field] = not getattr(member, field)
@@ -158,8 +162,26 @@ class Command(BaseCommand):
             tag, created = Tag.objects.get_or_create(community=member.community, name=t, defaults={'color': random_tag_color()})
             member.tags.add(tag)
 
-    def process_char_field(self, member, field, value):
-        if getattr(member, field):
-            setattr(member, field, getattr(member, field)+' '+value)
-        else:
-            setattr(member, field, value)
+    def process_char_field(self, member, field_name, value):
+        field = member._meta.get_field(field_name)
+        if isinstance(field, CharField):
+            value = value[:field.max_length]
+            try:
+                if getattr(member, field_name):
+                    setattr(member, field_name, getattr(member, field_name)+' '+value)
+                else:
+                    setattr(member, field_name, value)
+            except Exception as e:
+                raise RuntimeError("Error setting field %s to '%s'. %s" % (field_name, value, str(e)))
+
+    def process_timestamp_field(self, member, field_name, value):
+        try:
+            value = timestamp_parser.parse(value)
+        except:
+            raise RuntimeError("Unknown timestamp format: %s" % value)
+
+        setattr(member, field_name, value)
+        if field_name == 'first_seen' and (member.last_seen is None or value > member.last_seen):
+            member.last_seen = value
+        if field_name == 'last_seen' and (member.first_seen is None or value < member.first_seen):
+            member.first_seen = value

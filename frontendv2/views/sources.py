@@ -369,7 +369,7 @@ class ImportMap(SavannahView):
         super().__init__(request, community_id)
         self.upload = get_object_or_404(UploadedFile, id=upload_id)
         self.active_tab = "sources"
-        self.target_fields = ['name', 'origin_id', 'email_address', 'phone_number', 'mailing_address', 'avatar_url', 'company', 'tags']
+        self.target_fields = ['name', 'origin_id', 'first_seen', 'last_seen', 'email_address', 'phone_number', 'mailing_address', 'avatar_url', 'company', 'tags']
 
     def form(self):
         mapping_form = ImportMappingForm(instance=self.upload, choices=self.target_fields)
