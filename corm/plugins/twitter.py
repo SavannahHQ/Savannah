@@ -224,10 +224,10 @@ class TwitterImporter(PluginImporter):
         resp = requests.get(TWITTER_USER_LOOKUP, params={'usernames': user_id}, headers={'Authorization': 'Bearer %s' % self.source.auth_secret})
         if resp.status_code == 200:
             data = resp.json()
-            self._users[user_id] = data['data'][0]
-            return self._users[user_id]
-        else:
-            print("Failed to lookup identity info: %s" % resp.content)
+            if 'data' in data:
+                self._users[user_id] = data['data'][0]
+                return self._users[user_id]
+        print("Failed to lookup identity info: %s" % resp.content)
         return None
 
     def update_identity(self, identity):
@@ -292,6 +292,10 @@ class TwitterImporter(PluginImporter):
                         for tweet in data['includes']['tweets']:
                             replied_to[tweet['id']] = tweet
 
+                if 'data' not in data:
+                    print(resp.content)
+                    raise RuntimeError("Failed to retreive username mentions")
+                    
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
                         continue
@@ -348,6 +352,10 @@ class TwitterImporter(PluginImporter):
                     if 'tweets' in data['includes']:
                         for tweet in data['includes']['tweets']:
                             replied_to[tweet['id']] = tweet
+
+                if 'data' not in data:
+                    print(resp.content)
+                    raise RuntimeError("Failed to retreive hashtag mentions")
 
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
