@@ -2,45 +2,6 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-from django.db.models import F, Subquery, OuterRef
-
-def noop(apps, schema_editor):
-    pass
-
-def set_community_source(apps, schema_editor):
-    Source = apps.get_model('corm', 'Source')
-    Channel = apps.get_model('corm', 'Channel')
-    ContributionType = apps.get_model('corm', 'ContributionType')
-    Activity = apps.get_model('corm', 'Activity')
-    Conversation = apps.get_model('corm', 'Conversation')
-    Contribution = apps.get_model('corm', 'Contribution')
-    Event = apps.get_model('corm', 'Event')
-
-    print()
-    print("Updating Activities...")
-    Activity.objects.all().update(
-        source_id=Subquery(Channel.objects.filter(id=OuterRef('channel_id')).values('source_id')[:1]),
-        community_id=Subquery(Channel.objects.filter(id=OuterRef('channel_id')).values('source__community_id')[:1])
-    )
-    print("Updating Conversations...")
-    Conversation.objects.all().update(
-        source_id=Subquery(Channel.objects.filter(id=OuterRef('channel_id')).values('source_id')[:1]),
-        community_id=Subquery(Channel.objects.filter(id=OuterRef('channel_id')).values('source__community_id')[:1])
-    )
-    print("Updating Contributions...")
-    Contribution.objects.all().update(
-        source_id=Subquery(ContributionType.objects.filter(id=OuterRef('contribution_type_id')).values('source_id')[:1]),
-    )
-    print("Updating Events...")
-    Event.objects.filter(source__isnull=True).update(
-        source_id=Subquery(Channel.objects.filter(id=OuterRef('channel_id')).values('source_id')[:1]),
-    )
-    for e in Event.objects.filter(channel__isnull=True):
-        source, created = Source.objects.get_or_create(community=e.community, name="Manual Entry", connector='corm.plugins.null', icon_name='fas fa-edit')
-        channel, created = Channel.objects.get_or_create(source=source, name="Event")
-        e.channel = channel
-        e.source = source
-        e.save()
 
 class Migration(migrations.Migration):
 
@@ -75,37 +36,4 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='corm.source'),
         ),
 
-        # Set values
-        migrations.RunPython(set_community_source, noop),
-
-        migrations.AlterField(
-            model_name='activity',
-            name='community',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corm.community'),
-        ),
-        migrations.AlterField(
-            model_name='activity',
-            name='source',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corm.source'),
-        ),
-        migrations.AlterField(
-            model_name='contribution',
-            name='source',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corm.source'),
-        ),
-        migrations.AlterField(
-            model_name='conversation',
-            name='community',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corm.community'),
-        ),
-        migrations.AlterField(
-            model_name='conversation',
-            name='source',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corm.source'),
-        ),        
-        migrations.AlterField(
-            model_name='event',
-            name='source',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='corm.source'),
-        ),
     ]
