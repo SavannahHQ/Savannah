@@ -236,6 +236,7 @@ class AddAttendee(SavannahView):
                 if attendee.role == EventAttendee.HOST:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -252,6 +253,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.SPEAKER:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -267,6 +269,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.STAFF:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -284,6 +287,7 @@ class AddAttendee(SavannahView):
                     try:
                         contrib = Contribution.objects.get(
                             community=view.event.community,
+                            source=view.event.source,
                             channel=view.event.channel,
                             author=attendee.member,
                             activity__event_attendance__event=view.event,
@@ -300,6 +304,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.HOST:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -315,6 +320,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.SPEAKER:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -330,6 +336,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.STAFF:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -499,6 +506,7 @@ class Events(SavannahFilterView):
                 try:
                     Contribution.objects.filter(
                         community=event.community,
+                        source=event.source,
                         channel=event.channel,
                         activity__event_attendance__event=event,
                     ).delete()
@@ -536,8 +544,8 @@ class EventEditForm(forms.ModelForm):
         super(EventEditForm, self).__init__(*args, **kwargs)
         self.fields['start_timestamp'].input_formats = ["%Y-%m-%dT%H:%M"]
         self.fields['end_timestamp'].input_formats = ["%Y-%m-%dT%H:%M"]
-        if self.initial.get('channel', None) is not None:
-            self.initial['channel'] = self.instance.channel.name
+
+        self.initial['channel'] = self.instance.channel.name
         self.fields['channel'].label = "Category"
         self.fields['channel'].help_text = "Category for your events, such as Conference or Meetup."
 
@@ -555,7 +563,8 @@ class EventEditForm(forms.ModelForm):
 class AddEvent(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
-        self.edit_event = Event(community=self.community, source=self.community.manual_source)
+        event_channel, created =Channel.objects.get_or_create(source=self.community.manual_source, name="Event")
+        self.edit_event = Event(community=self.community, source=self.community.manual_source, channel=event_channel)
         self.active_tab = "events"
 
     @property
@@ -595,13 +604,16 @@ class EditEvent(SavannahView):
             edited_event = view.form.save()
             if old_channel != edited_event.channel and edited_event.channel is not None:
                 for attendee in edited_event.rsvp.all():
+                    attendee.activity.source = edited_event.source
                     attendee.activity.channel = edited_event.channel
                     attendee.activity.save()
                     if attendee.activity.contribution is not None:
+                        attendee.activity.contribution.source = edited_event.source
                         attendee.activity.contribution.channel = edited_event.channel
                         attendee.activity.contribution.save()
 
             return redirect('event', event_id=edited_event.id)
+        return render(request, 'savannahv2/event_edit.html', view.context)
 
 
 class AttendeeSignupForm(forms.Form):

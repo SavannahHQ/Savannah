@@ -189,7 +189,7 @@ class PluginImporter:
             except:
                 pass
 
-        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, channel=channel, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
         if content is not None and (convo.content is None or len(convo.content) < len(content)):
             convo.content = content
         if tstamp is not None and speaker is not None and (speaker.last_seen is None or  speaker.last_seen < tstamp):
@@ -330,7 +330,7 @@ class PluginImporter:
     def make_event(self, origin_id, channel, title, description, start, end, location=None, dedup=False):
         if dedup:
             try:
-                return Event.objects.filter(origin_id=origin_id, channel__source__community=self.community)[0]
+                return Event.objects.filter(origin_id=origin_id, community=self.community)[0]
             except:
                 pass
         event, created = Event.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, channel=channel, defaults={'title':title, 'description':description, 'start_timestamp':start, 'end_timestamp':end, 'location':location})

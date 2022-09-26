@@ -248,7 +248,7 @@ class DiscourseImporter(PluginImporter):
 
                         if post.get('accepted_answer') == True: # Removed to allow self-answers // and thread_post.speaker.id != author.id:
                             title = "Answered: %s" % topic['title']
-                            contrib, created = Contribution.objects.update_or_create(origin_id=discourse_post_id, community=community, defaults={'contribution_type':self.ANSWER_CONTRIBUTION, 'channel':channel, 'author':author, 'timestamp':post_tstamp, 'title':title, 'location':post_url})
+                            contrib, created = Contribution.objects.update_or_create(origin_id=discourse_post_id, community=community, source=source, defaults={'contribution_type':self.ANSWER_CONTRIBUTION, 'channel':channel, 'author':author, 'timestamp':post_tstamp, 'title':title, 'location':post_url})
                             contrib.update_activity(post_convo.activity)
                             if channel.tag:
                                 contrib.tags.add(channel.tag)

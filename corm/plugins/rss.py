@@ -201,12 +201,12 @@ class RssImporter(PluginImporter):
             if article_title.startswith("Comment on "):
                 # Wordpress comments prefix this to the article title
                 article_title = article_title[11:]
-            contrib, created = Contribution.objects.get_or_create(community=community, origin_id=origin_parts[0], contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':None, 'timestamp':tstamp, 'location':origin_parts[0]})
+            contrib, created = Contribution.objects.get_or_create(community=community, source=source, origin_id=origin_parts[0], contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':None, 'timestamp':tstamp, 'location':origin_parts[0]})
             convo = self.make_conversation(origin_id=origin_id, channel=channel, speaker=member, content=blog_content, tstamp=tstamp, location=origin_id, thread=getattr(contrib, 'conversation', None))
         else:
             if self.verbosity >= 2:
                 print("Found article: %s" % origin_id)
-            contrib, created = Contribution.objects.update_or_create(community=community, origin_id=origin_id, contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
+            contrib, created = Contribution.objects.update_or_create(community=community, source=source, origin_id=origin_id, contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
             convo = self.make_conversation(origin_id=origin_id, channel=channel, speaker=member, content=blog_content, tstamp=tstamp, location=origin_id, contribution=contrib)
             if channel.tag:
                 contrib.tags.add(channel.tag)

@@ -356,7 +356,7 @@ class StackExchangeImporter(PluginImporter):
                         if answer.get('is_accepted'):
                             #print(answer)
                             title = "Answered: %s" % question_convo.title
-                            contrib, created = Contribution.objects.update_or_create(origin_id=answer.get('answer_id'), community=self.community, defaults={'contribution_type':self.ANSWER_CONTRIBUTION, 'channel':channel, 'author':speaker, 'timestamp':tstamp, 'title':title, 'location':answer_link})
+                            contrib, created = Contribution.objects.update_or_create(origin_id=answer.get('answer_id'), community=self.community, source=self.source, defaults={'contribution_type':self.ANSWER_CONTRIBUTION, 'channel':channel, 'author':speaker, 'timestamp':tstamp, 'title':title, 'location':answer_link})
                             # Not all comments should get the channel tag, but all PRs should
                             if channel.tag:
                                 contrib.tags.add(channel.tag)

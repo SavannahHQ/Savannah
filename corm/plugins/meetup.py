@@ -391,6 +391,7 @@ class MeetupImporter(PluginImporter):
                 attendee = self.add_event_attendee(new_event, h, EventAttendee.HOST)
                 contrib, contrib_created = Contribution.objects.get_or_create(
                     community=self.community,
+                    source=self.source,
                     channel=channel,
                     author=h,
                     contribution_type=self.HOST_CONTRIBUTION,

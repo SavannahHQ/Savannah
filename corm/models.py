@@ -845,6 +845,8 @@ class Activity(TaggableModel):
     class Meta:
         ordering = ("-timestamp",)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='activity', on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
@@ -885,6 +887,8 @@ class Hyperlink(models.Model):
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     speaker = models.ForeignKey(Member, related_name='speaker_in', on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField(null=True, blank=True)
@@ -939,6 +943,8 @@ class Conversation(TaggableModel, ImportedDataModel):
         activity, created = Activity.objects.get_or_create(
             conversation=self,
             defaults = {
+                'community':self.community,
+                'source':self.source,
                 'channel':self.channel,
                 'member':self.speaker,
                 'timestamp':self.timestamp,
@@ -1081,6 +1087,7 @@ class Contribution(TaggableModel, ImportedDataModel):
         verbose_name_plural = _("Contributions")
         ordering = ('-timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     contribution_type = models.ForeignKey(ContributionType, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=256)
@@ -1099,6 +1106,8 @@ class Contribution(TaggableModel, ImportedDataModel):
         activity, created = Activity.objects.update_or_create(
             contribution=self,
             defaults = {
+                'community':self.community,
+                'source':self.source,
                 'channel':self.channel,
                 'member':self.author,
                 'timestamp':self.timestamp,
@@ -1138,8 +1147,8 @@ class Event(ImportedDataModel):
         verbose_name_plural = _("Events")
         ordering = ('start_timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
-    channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     description = models.TextField(null=True, blank=True)
     start_timestamp = models.DateTimeField(db_index=True)
@@ -1203,6 +1212,8 @@ class EventAttendee(models.Model):
         activity, created = Activity.objects.get_or_create(
             event_attendance=self,
             defaults = {
+                'community':self.community,
+                'source':self.event.source,
                 'channel':self.event.channel,
                 'member':self.member,
                 'timestamp':self.timestamp,

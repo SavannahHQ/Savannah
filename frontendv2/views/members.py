@@ -918,6 +918,7 @@ class PromoteToContribution(SavannahView):
             contribution_type=default_type,
             title=default_title,
             author=self.conversation.speaker, 
+            source=self.conversation.source, 
             channel=self.conversation.channel, 
             timestamp=self.conversation.timestamp, 
             location=self.conversation.location
@@ -1013,6 +1014,7 @@ class AddContribution(SavannahView):
             contribution_type=default_type,
             title=default_title,
             author=self.member, 
+            source=default_channel.source,
             channel=default_channel,
             timestamp=default_timestamp, 
             location=default_link
@@ -1031,7 +1033,9 @@ class AddContribution(SavannahView):
 
         if request.method == 'POST':
             if view.form.is_valid():
-                contrib = view.form.save()
+                contrib = view.form.save(commit=False)
+                contrib.source = contrib.channel.source
+                contrib.save()
                 contrib.update_activity()
                 messages.success(request, "Contribution has been recorded")
                 return redirect('member_profile', member_id=member_id)
