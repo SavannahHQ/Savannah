@@ -318,6 +318,7 @@ class ContributionSerializer(serializers.Serializer):
         contrib, created = Contribution.objects.update_or_create(
             origin_id=self.validated_data.get('origin_id'), 
             community=source.community, 
+            source=source,
             defaults={
                 'contribution_type':contribution_type, 
                 'channel':channel, 
