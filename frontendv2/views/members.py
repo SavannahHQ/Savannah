@@ -662,8 +662,11 @@ class MemberProfile(SavannahView):
     @property
     def journey(self):
         activity_filter = Q(channel__activity__member=self.member)
-        touches = Source.objects.filter(community=self.community).annotate(first_seen=Min('channel__activity__timestamp', filter=activity_filter)).filter(first_seen__isnull=False).order_by('first_seen')
-        return touches
+        touches = Source.objects.filter(community=self.community)
+        touches = touches.values('name', 'connector', 'icon_name')
+        touches = touches.annotate(first_seen=Min('channel__activity__timestamp', filter=activity_filter))
+        touches = touches.order_by('first_seen')
+        return [touch for touch in touches if touch['first_seen'] is not None]
 
     @login_required
     def as_view(request, member_id):
