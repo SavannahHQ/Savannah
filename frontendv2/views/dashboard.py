@@ -41,8 +41,8 @@ class ManagerDashboard(SavannahView):
         current_range = 7
         average_range = 30
         sources = Source.objects.filter(community=self.community, enabled=True)
-        sources = sources.annotate(current_count=Count('channel__activity', filter=Q(channel__enabled=True, channel__activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=current_range), channel__activity__timestamp__lte=datetime.datetime.utcnow())))
-        sources = sources.annotate(previous_count=Count('channel__activity', filter=Q(channel__enabled=True, channel__activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=average_range+current_range), channel__activity__timestamp__lte=datetime.datetime.utcnow() - datetime.timedelta(days=current_range))))
+        sources = sources.annotate(current_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=current_range), activity__timestamp__lte=datetime.datetime.utcnow())))
+        sources = sources.annotate(previous_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=average_range+current_range), activity__timestamp__lte=datetime.datetime.utcnow() - datetime.timedelta(days=current_range))))
         sources = sources.filter(previous_count__gt=0).order_by('-previous_count')[:12]
         for source in sources:
             source.previous_avg = source.previous_count / (average_range/current_range)

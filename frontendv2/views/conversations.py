@@ -2,7 +2,7 @@ import operator
 import datetime
 from django.shortcuts import render, get_object_or_404, reverse
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q, Count, Min, Max, Avg, ExpressionWrapper, fields
+from django.db.models import F, Q, Count, Min, Max, Avg, ExpressionWrapper, fields, Subquery
 from django.db.models.functions import Trunc
 from django.utils.safestring import mark_safe
 
@@ -90,13 +90,13 @@ class Conversations(SavannahFilterView):
 
     def _displayed_conversations(self):
         if self._allConversations is None:
-            conversations = Conversation.objects.filter(channel__source__community=self.community)
+            conversations = Conversation.objects.filter(community=self.community)
             conversations = conversations.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
                 if self.exclude_source:
-                    conversations = conversations.exclude(channel__source=self.source)
+                    conversations = conversations.exclude(source=self.source)
                 else:
-                    conversations = conversations.filter(channel__source=self.source)
+                    conversations = conversations.filter(source=self.source)
 
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
@@ -123,8 +123,12 @@ class Conversations(SavannahFilterView):
         return self._allConversations
 
     @property
+    def conversation_ids(self):
+        return Subquery(self._displayed_conversations().values('id'))
+
+    @property
     def all_conversations(self):
-        conversations = self._displayed_conversations().select_related('channel', 'channel__source', 'speaker').prefetch_related('tags').order_by('-timestamp')
+        conversations = self._displayed_conversations().select_related('channel', 'source', 'speaker').prefetch_related('tags').order_by('-timestamp')
         
         start = (self.page-1) * self.RESULTS_PER_PAGE
         return conversations[start:start+self.RESULTS_PER_PAGE]
@@ -167,12 +171,12 @@ class Conversations(SavannahFilterView):
         if self._responseTimes:
             return self._responseTimes
         else:
-            replies = Conversation.objects.filter(speaker__community_id=self.community, thread_start__isnull=True, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+            replies = Conversation.objects.filter(community_id=self.community, thread_start__isnull=True, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
                 if self.exclude_source:
-                    replies = replies.exclude(channel__source=self.source)
+                    replies = replies.exclude(source=self.source)
                 else:
-                    replies = replies.filter(channel__source=self.source)
+                    replies = replies.filter(source=self.source)
             if self.tag:
                 replies = replies.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
 
@@ -215,12 +219,12 @@ class Conversations(SavannahFilterView):
         if self._responseRate:
             return self._responseRate
         else:
-            convos = Conversation.objects.filter(speaker__community_id=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+            convos = Conversation.objects.filter(community_id=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
                 if self.exclude_source:
-                    convos = convos.exclude(channel__source=self.source)
+                    convos = convos.exclude(source=self.source)
                 else:
-                    convos = convos.filter(channel__source=self.source)
+                    convos = convos.filter(source=self.source)
             if self.tag:
                 convos = convos.filter(Q(tags=self.tag) | Q(replies__tags=self.tag))
 
@@ -266,9 +270,9 @@ class Conversations(SavannahFilterView):
         conversation_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.source:
             if self.exclude_source:
-                conversation_filter = conversation_filter & ~Q(speaker_in__channel__source=self.source)
+                conversation_filter = conversation_filter & ~Q(speaker_in__source=self.source)
             else:
-                conversation_filter = conversation_filter & Q(speaker_in__channel__source=self.source)
+                conversation_filter = conversation_filter & Q(speaker_in__source=self.source)
         if self.tag:
             conversation_filter = conversation_filter & Q(speaker_in__tags=self.tag)
         if self.conversation_search:
@@ -298,12 +302,12 @@ class Conversations(SavannahFilterView):
             months = list()
             counts = dict()
 
-            conversations = Conversation.objects.filter(channel__source__community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
+            conversations = Conversation.objects.filter(community=self.community, timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)
             if self.source:
                 if self.exclude_source:
-                    conversations = conversations.exclude(channel__source=self.source)
+                    conversations = conversations.exclude(source=self.source)
                 else:
-                    conversations = conversations.filter(channel__source=self.source)
+                    conversations = conversations.filter(source=self.source)
 
             if self.tag:
                 conversations = conversations.filter(tags=self.tag)
@@ -344,34 +348,7 @@ class Conversations(SavannahFilterView):
             months = list()
             counts = dict()
 
-            conversations = Q(conversation__channel__source__community=self.community, conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
-            if self.source:
-                if self.exclude_source:
-                    conversations = conversations & ~Q(conversation__channel__source=self.source)
-                else:
-                    conversations = conversations & Q(conversation__channel__source=self.source)
-
-            if self.tag:
-                conversations = conversations & Q(conversation__tags=self.tag)
-
-            if self.member_company:
-                conversations = conversations & Q(conversation__speaker__company=self.member_company)
-
-            if self.member_tag:
-                conversations = conversations & Q(conversation__speaker__tags=self.member_tag)
-
-            if self.role:
-                if self.role == Member.BOT:
-                    conversations = conversations & ~Q(conversation__speaker__role=self.role)
-                else:
-                    conversations = conversations & Q(conversation__speaker__role=self.role)
-
-            if self.conversation_search:
-                conversations = conversations & Q(conversation__content__icontains=self.conversation_search)
-            if self.filter_link:
-                conversations = conversations & Q(conversation__links=self.filter_link)
-
-            seen = Tag.objects.filter(community=self.community).annotate(month=Trunc('conversation__timestamp', self.trunc_span, filter=conversations)).values('month', 'name', 'color').annotate(convo_count=Count('conversation__id', distinct=True, filter=conversations)).order_by('month')
+            seen = Tag.objects.filter(community=self.community).annotate(month=Trunc('conversation__timestamp', self.trunc_span, filter=Q(conversation__id__in=self.conversation_ids))).values('month', 'name', 'color').annotate(convo_count=Count('conversation__id', distinct=True, filter=Q(conversation__id__in=self.conversation_ids))).order_by('month')
 
             for tag in seen:
                 if tag.get('month') is None:
@@ -400,35 +377,8 @@ class Conversations(SavannahFilterView):
             months = list()
             counts = dict()
 
-            conversations = Q(channel__conversation__timestamp__gte=self.rangestart, channel__conversation__timestamp__lte=self.rangeend)
-            if self.source:
-                if self.exclude_source:
-                    conversations = conversations & ~Q(channel__source=self.source)
-                else:
-                    conversations = conversations & Q(channel__source=self.source)
-
-            if self.tag:
-                conversations = conversations & Q(channel__conversation__tags=self.tag)
-
-            if self.member_company:
-                conversations = conversations & Q(channel__conversation__speaker__company=self.member_company)
-
-            if self.member_tag:
-                conversations = conversations & Q(channel__conversation__speaker__tags=self.member_tag)
-
-            if self.role:
-                if self.role == Member.BOT:
-                    conversations = conversations & ~Q(channel__conversation__speaker__role=self.role)
-                else:
-                    conversations = conversations & Q(channel__conversation__speaker__role=self.role)
-
-            if self.conversation_search:
-                conversations = conversations & Q(channel__conversation__content__icontains=self.conversation_search)
-            if self.filter_link:
-                conversations = conversations & Q(channel__conversation__links=self.filter_link)
-
             seen = Source.objects.filter(community=self.community)
-            seen = seen.annotate(month=Trunc('channel__conversation__timestamp', self.trunc_span, filter=conversations)).values('month', 'name', 'connector').annotate(convo_count=Count('channel__conversation__id', distinct=True, filter=conversations)).order_by('-convo_count')
+            seen = seen.annotate(month=Trunc('conversation__timestamp', self.trunc_span, filter=Q(conversation__id__in=self.conversation_ids))).values('month', 'name', 'connector').annotate(convo_count=Count('conversation__id', distinct=True, filter=Q(conversation__id__in=self.conversation_ids))).order_by('-convo_count')
             for tag in seen:
                 if tag.get('month') is None:
                     continue;
@@ -456,35 +406,8 @@ class Conversations(SavannahFilterView):
             months = list()
             counts = dict()
 
-            conversations = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
-            if self.source:
-                if self.exclude_source:
-                    conversations = conversations & ~Q(speaker_in__channel__source=self.source)
-                else:
-                    conversations = conversations & Q(speaker_in__channel__source=self.source)
-
-            if self.tag:
-                conversations = conversations & Q(speaker_in__tags=self.tag)
-
-            if self.member_company:
-                conversations = conversations & Q(company=self.member_company)
-
-            if self.member_tag:
-                conversations = conversations & Q(tags=self.member_tag)
-
-            if self.role:
-                if self.role == Member.BOT:
-                    conversations = conversations & ~Q(role=self.role)
-                else:
-                    conversations = conversations & Q(role=self.role)
-
-            if self.conversation_search:
-                conversations = conversations & Q(speaker_in__content__icontains=self.conversation_search)
-            if self.filter_link:
-                conversations = conversations & Q(speaker_in__links=self.filter_link)
-
             seen = Member.objects.filter(community=self.community)
-            seen = seen.annotate(month=Trunc('speaker_in__timestamp', self.trunc_span, filter=conversations)).values('month', 'role').annotate(convo_count=Count('speaker_in', distinct=True, filter=conversations)).order_by('month')
+            seen = seen.annotate(month=Trunc('speaker_in__timestamp', self.trunc_span, filter=Q(speaker_in__id__in=self.conversation_ids))).values('month', 'role').annotate(convo_count=Count('speaker_in', distinct=True, filter=Q(speaker_in__id__in=self.conversation_ids))).order_by('month')
 
             for tag in seen:
                 if tag.get('month') is None:
@@ -518,29 +441,8 @@ class Conversations(SavannahFilterView):
             channels = list()
             counts = dict()
             channels = Channel.objects.filter(source__community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
-            if self.source:
-                if self.exclude_source:
-                    channels = channels.exclude(source=self.source)
-                else:
-                    channels = channels.filter(source=self.source)
-            if self.tag:
-                convo_filter = convo_filter & Q(conversation__tags=self.tag)
-            if self.member_company:
-                convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
-            if self.member_tag:
-                convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
-            if self.role:
-                if self.role == Member.BOT:
-                    convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
-                else:
-                    convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
-            if self.conversation_search:
-                convo_filter = convo_filter & Q(conversation__content__icontains=self.conversation_search)
-            if self.filter_link:
-                convo_filter = convo_filter & Q(conversation__links=self.filter_link)
 
-            channels = channels.annotate(conversation_count=Count('conversation', filter=convo_filter))
+            channels = channels.annotate(conversation_count=Count('conversation', filter=Q(conversation__id__in=self.conversation_ids)))
 
             channels = channels.annotate(source_connector=F('source__connector'), source_icon=F('source__icon_name'), color=F('tag__color'))
             for c in channels:
@@ -557,30 +459,8 @@ class Conversations(SavannahFilterView):
         if not self._tagsChart:
             counts = dict()
             tags = Tag.objects.filter(community=self.community)
-            convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
-            if self.source:
-                if self.exclude_source:
-                    convo_filter = convo_filter & ~Q(conversation__channel__source=self.source)
-                else:
-                    convo_filter = convo_filter & Q(conversation__channel__source=self.source)
-            if self.tag:
-                convo_filter = convo_filter & Q(conversation__tags=self.tag)
-                tags = tags.exclude(id=self.tag.id)
-            if self.member_company:
-                convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
-            if self.member_tag:
-                convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
-            if self.role:
-                if self.role == Member.BOT:
-                    convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
-                else:
-                    convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
-            if self.conversation_search:
-                convo_filter = convo_filter & Q(conversation__content__icontains=self.conversation_search)
-            if self.filter_link:
-                convo_filter = convo_filter & Q(conversation__links=self.filter_link)
 
-            tags = tags.annotate(conversation_count=Count('conversation', filter=convo_filter))
+            tags = tags.annotate(conversation_count=Count('conversation', filter=Q(conversation__id__in=self.conversation_ids)))
 
             for t in tags:
                 counts[t] = t.conversation_count
@@ -603,9 +483,9 @@ class Conversations(SavannahFilterView):
             convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
             if self.source:
                 if self.exclude_source:
-                    convo_filter = convo_filter & ~Q(speaker_in__channel__source=self.source)
+                    convo_filter = convo_filter & ~Q(speaker_in__source=self.source)
                 else:
-                    convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
+                    convo_filter = convo_filter & Q(speaker_in__source=self.source)
             if self.tag:
                 convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
             if self.member_company:
@@ -642,9 +522,9 @@ class Conversations(SavannahFilterView):
         convo_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.source:
             if self.exclude_source:
-                convo_filter = convo_filter & ~Q(speaker_in__channel__source=self.source)
+                convo_filter = convo_filter & ~Q(speaker_in__source=self.source)
             else:
-                convo_filter = convo_filter & Q(speaker_in__channel__source=self.source)
+                convo_filter = convo_filter & Q(speaker_in__source=self.source)
         if self.tag:
             convo_filter = convo_filter & Q(speaker_in__tags=self.tag)
         if self.member_company:
@@ -661,8 +541,8 @@ class Conversations(SavannahFilterView):
         if self.filter_link:
             convo_filter = convo_filter & Q(speaker_in__links=self.filter_link)
 
-        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).filter(conversation_count__gt=0).prefetch_related('tags').order_by('-conversation_count')
-        return members[:20]
+        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).prefetch_related('tags').order_by('-conversation_count')
+        return [member for member in members[:20] if member.conversation_count > 0]
 
     @property
     def most_connected(self):
@@ -692,58 +572,16 @@ class Conversations(SavannahFilterView):
     @property
     def top_links(self):
         links = Hyperlink.objects.filter(community=self.community, ignored=False)
-        convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
-        if self.source:
-            if self.exclude_source:
-                convo_filter = convo_filter & ~Q(conversation__channel__source=self.source)
-            else:
-                convo_filter = convo_filter & Q(conversation__channel__source=self.source)
-        if self.tag:
-            convo_filter = convo_filter & Q(conversation__tags=self.tag)
-        if self.member_company:
-            convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
-        if self.member_tag:
-            convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
-        if self.role:
-            if self.role == Member.BOT:
-                convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
-            else:
-                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
-        if self.conversation_search:
-            convo_filter = convo_filter & Q(conversation__content__icontains=self.conversation_search)
-        if self.filter_link:
-            convo_filter = convo_filter & Q(conversation__links=self.filter_link)
 
-        links = links.annotate(conversation_count=Count('conversation', filter=convo_filter)).filter(conversation_count__gt=0).order_by('-conversation_count')
-        return links[:10]
+        links = links.annotate(conversation_count=Count('conversation', filter=Q(conversation__id__in=self.conversation_ids))).order_by('-conversation_count')
+        return [link for link in links[:10] if link.conversation_count > 0]
 
     @property
     def top_link_sites(self):
         links = Hyperlink.objects.filter(community=self.community, ignored=False)
-        convo_filter = Q(conversation__timestamp__gte=self.rangestart, conversation__timestamp__lte=self.rangeend)
-        if self.source:
-            if self.exclude_source:
-                convo_filter = convo_filter & ~Q(conversation__channel__source=self.source)
-            else:
-                convo_filter = convo_filter & Q(conversation__channel__source=self.source)
-        if self.tag:
-            convo_filter = convo_filter & Q(conversation__tags=self.tag)
-        if self.member_company:
-            convo_filter = convo_filter & Q(conversation__speaker__company=self.member_company)
-        if self.member_tag:
-            convo_filter = convo_filter & Q(conversation__speaker__tags=self.member_tag)
-        if self.role:
-            if self.role == Member.BOT:
-                convo_filter = convo_filter & ~Q(conversation__speaker__role=self.role)
-            else:
-                convo_filter = convo_filter & Q(conversation__speaker__role=self.role)
-        if self.conversation_search:
-            convo_filter = convo_filter & Q(conversation__content__icontains=self.conversation_search)
-        if self.filter_link:
-            convo_filter = convo_filter & Q(conversation__links=self.filter_link)
 
-        links = links.values('host').annotate(conversation_count=Count('conversation', filter=convo_filter)).filter(conversation_count__gt=0).order_by('-conversation_count')
-        return links[:10]
+        links = links.values('host').annotate(conversation_count=Count('conversation', filter=Q(conversation__id__in=self.conversation_ids))).order_by('-conversation_count')
+        return [link for link in links[:10] if link['conversation_count'] > 0]
 
 
     @login_required

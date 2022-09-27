@@ -211,7 +211,7 @@ class SavannahView:
     @property
     def context(self):
         if self.request.user.is_authenticated:
-            communities = Community.objects.filter(Q(status__lte=Community.SUSPENDED)|Q(status=Community.DEMO)).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+            communities = Community.objects.exclude(status=Community.DEACTIVE).exclude(status=Community.ARCHIVED).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
         else:
             communities = []
         return {
