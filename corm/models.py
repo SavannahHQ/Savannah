@@ -468,7 +468,12 @@ class Member(TaggableModel):
             return "fas fa-user"
 
     def __str__(self):
-        return self.name
+        if self.name:
+            return self.name
+        elif self.email_address:
+            return self.email_address
+        else:
+            return self.id
 
     def merge_with(self, other_member):
         merge_record = MemberMergeRecord.from_member(other_member, self)
