@@ -1361,7 +1361,7 @@ class SuggestConversationAsContribution(Suggestion):
         supporters = self.conversation.participation.exclude(member_id=self.conversation.speaker.id)
         for supporter in supporters:
             contrib, created = Contribution.objects.get_or_create(
-                community=self.contribution.community,
+                community=self.conversation.community,
                 contribution_type=self.contribution_type,
                 source=self.conversation.source,
                 channel=self.conversation.channel,
