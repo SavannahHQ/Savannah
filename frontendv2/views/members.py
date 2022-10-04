@@ -1002,12 +1002,14 @@ class AddContribution(SavannahView):
         try:
             last_activity = Activity.objects.filter(member=self.member, contribution__isnull=True).order_by('-timestamp')[0]
             default_channel = last_activity.channel
+            default_source = default_channel.source
             default_timestamp = last_activity.timestamp
             default_link = last_activity.location
             default_type = ContributionType.objects.filter(source=default_channel.source).annotate(use_count=Count('contribution')).order_by('-use_count')[0]
             default_title = "%s in %s on %s" % (default_type.name, default_channel.name, default_channel.source.connector_name)
         except:
             default_channel = None
+            default_source = None
             default_type = None
             default_title = ""
             default_timestamp = datetime.datetime.utcnow()
@@ -1017,7 +1019,7 @@ class AddContribution(SavannahView):
             contribution_type=default_type,
             title=default_title,
             author=self.member, 
-            source=default_channel.source,
+            source=default_source,
             channel=default_channel,
             timestamp=default_timestamp, 
             location=default_link
