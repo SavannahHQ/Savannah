@@ -259,7 +259,7 @@ class Command(BaseCommand):
             pass
         members = Member.objects.filter(community=community)
         members = members.annotate(first_contrib=Min('contribution__timestamp'))
-        members = members.filter(first_contrib__gte=new_since)
+        members = members.filter(first_contrib__gte=new_since, first_contrib__lte=datetime.datetime.utcnow())
 
         print("New contributors: %s" % members.count())
         if members.count() < 1:
