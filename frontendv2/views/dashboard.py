@@ -43,14 +43,17 @@ class ManagerDashboard(SavannahView):
         sources = Source.objects.filter(community=self.community, enabled=True)
         sources = sources.annotate(current_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=current_range), activity__timestamp__lte=datetime.datetime.utcnow())))
         sources = sources.annotate(previous_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=average_range+current_range), activity__timestamp__lte=datetime.datetime.utcnow() - datetime.timedelta(days=current_range))))
-        sources = sources.filter(previous_count__gt=0).order_by('-previous_count')[:12]
+        sources = sources.order_by('-previous_count')[:12]
         for source in sources:
+            if source.previous_count <= 0:
+                continue
             source.previous_avg = source.previous_count / (average_range/current_range)
             source.percent = 100 * source.current_count / source.previous_avg
             source.view_name = 'conversations'
             if source.connector in ['corm.plugins.meetup', 'corm.plugins.ical'] or 'calendar' in source.icon_name:
                 source.view_name = 'events'
-        return sources
+            yield source
+        # return sources
 
     @property
     def recent_notes(self):
@@ -97,7 +100,7 @@ class ManagerDashboard(SavannahView):
     def top_connections(self):
         if self.user_member:
             members = Member.objects.filter(community=self.community)
-            members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member), distinct=True))
+            members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member)))
             members = members.order_by('connection_count')
             # members = members.select_related('company')
             return members[:10]
