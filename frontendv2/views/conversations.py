@@ -541,7 +541,7 @@ class Conversations(SavannahFilterView):
         if self.filter_link:
             convo_filter = convo_filter & Q(speaker_in__links=self.filter_link)
 
-        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).prefetch_related('tags').order_by('-conversation_count')
+        members = members.annotate(conversation_count=Count('speaker_in', filter=convo_filter)).select_related('company').prefetch_related('tags').order_by('-conversation_count')
         return [member for member in members[:20] if member.conversation_count > 0]
 
     @property

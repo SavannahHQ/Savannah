@@ -342,7 +342,7 @@
                 {% for conversation in view.all_conversations %}
                 <tr>
                   <td class="text-nowrap">{{conversation.timestamp|dateortime}}</td>
-                  <td class="text-nowrap"><i class="{{conversation.channel.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
+                  <td class="text-nowrap"><i class="{{conversation.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
                   <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker.id %}">{{conversation.speaker.name}}</a>{% endif %}</td>
                   <td class="show-children-on-hover">
                   <div class="show-on-parent-hover d-inline" style="margin-left: -1.5em">
