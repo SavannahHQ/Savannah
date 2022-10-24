@@ -96,12 +96,12 @@ class ManagerDashboard(SavannahView):
     @property 
     def top_connections(self):
         if self.user_member:
-            participants = Participant.objects.filter(initiator=self.user_member).exclude(member=self.user_member)
-            participants = participants.values('member').annotate(connection_count=Count('conversation', distinct=True))
-            for p in participants.order_by('-connection_count')[:10]:
-                m = Member.objects.get(id=p['member'])
-                m.connection_count = p['connection_count']
-                yield m
+            members = Member.objects.filter(community=self.community)
+            members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member), distinct=True))
+            members = members.order_by('connection_count')
+            members = members.select_related('company')
+            return members[:10]
+
         else:
             return []
 
