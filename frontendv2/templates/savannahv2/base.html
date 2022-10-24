@@ -583,7 +583,7 @@ function mark_all_as_read() {
   r.send();
 }
   </script>
-  {% register_notify_callbacks fetch=5 refresh_period=60 callbacks='fill_messages_list,fill_notification_badge' %}
+  {% register_notify_callbacks fetch=5 refresh_period=120 callbacks='fill_messages_list,fill_notification_badge' %}
 
 <!-- Chart scripts -->
 {% block chart_scripts %}
