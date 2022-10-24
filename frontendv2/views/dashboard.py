@@ -71,7 +71,7 @@ class ManagerDashboard(SavannahView):
     @property
     def member_watches(self):
         watches = MemberWatch.objects.filter(manager=self.request.user, member__community=self.community).order_by(IsNull('last_seen'), '-last_seen')
-        watches = watches.select_related('member').prefetch_related('member__tags')
+        watches = watches.select_related('member', 'last_channel__source').prefetch_related('member__tags')
         return watches
 
     @property
@@ -99,7 +99,7 @@ class ManagerDashboard(SavannahView):
             members = Member.objects.filter(community=self.community)
             members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member), distinct=True))
             members = members.order_by('connection_count')
-            members = members.select_related('company')
+            # members = members.select_related('company')
             return members[:10]
 
         else:
