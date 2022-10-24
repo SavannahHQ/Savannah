@@ -256,7 +256,7 @@ class Conversations(SavannahFilterView):
 
     @property 
     def speaker_count(self):
-        members = self.community.member_set.all()
+        members = Member.objects.filter(community=self.community)
         if self.member_company:
             members = members.filter(company=self.member_company)
         if self.member_tag:
@@ -267,7 +267,7 @@ class Conversations(SavannahFilterView):
             else:
                 members = members.filter(role=self.role)
 
-        conversation_filter = Q(speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
+        conversation_filter = Q(speaker_in__community=self.community, speaker_in__timestamp__gte=self.rangestart, speaker_in__timestamp__lte=self.rangeend)
         if self.source:
             if self.exclude_source:
                 conversation_filter = conversation_filter & ~Q(speaker_in__source=self.source)

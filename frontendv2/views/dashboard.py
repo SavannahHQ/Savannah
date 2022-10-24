@@ -102,7 +102,7 @@ class ManagerDashboard(SavannahView):
             members = Member.objects.filter(community=self.community)
             members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member)))
             members = members.order_by('connection_count')
-            # members = members.select_related('company')
+            members = members.select_related('company')
             return members[:10]
 
         else:
