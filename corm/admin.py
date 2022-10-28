@@ -288,7 +288,7 @@ class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
     search_fields = ("content",)
-    raw_id_fields = ('speaker', 'thread_start', 'contribution')
+    raw_id_fields = ('channel', 'source', 'speaker', 'thread_start', 'contribution', 'links')
     date_hierarchy='timestamp'
 
     def link(self, conversation):
