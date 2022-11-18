@@ -172,6 +172,11 @@ class DemoManagement(ManagementPermissionMixin):
     def sales_itegration(self):
         return True
 
+class DevelopmentManagement(DemoManagement):
+    @property
+    def name(self):
+        return "Development Testing"
+
 class Community(models.Model):
     SETUP = 0
     ACTIVE = 1
@@ -179,6 +184,7 @@ class Community(models.Model):
     DEACTIVE = 3
     ARCHIVED = 4
     DEMO = 5
+    DEVELOPMENT = 6
 
     STATUS_CHOICES = [
         (SETUP, 'Setup'),
@@ -187,6 +193,7 @@ class Community(models.Model):
         (DEACTIVE, 'Deactive'),
         (ARCHIVED, 'Archived'),
         (DEMO, 'Demonstration'),
+        (DEVELOPMENT, 'Development'),
     ]
     STATUS_NAMES = {
         SETUP: "Setup",
@@ -195,6 +202,7 @@ class Community(models.Model):
         DEACTIVE: "Deactive",
         ARCHIVED: "Archived",
         DEMO: "Demonstration",
+        DEVELOPMENT: "Development",
     }
     class Meta:
         verbose_name = _("Community")
