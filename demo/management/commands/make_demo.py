@@ -468,7 +468,7 @@ class Command(BaseCommand):
                 channel = random.choices(contact.source.channel_set.all(), k=1)[0]
                 conversation_date = from_member.last_seen - datetime.timedelta(days=random.randrange(0, convo_range))
 
-                conversation = Conversation.objects.create(channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
+                conversation = Conversation.objects.create(community=self.community, source=channel.source, channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
 
                 if from_member.connections.count() > 1:
                     participant_count = random.randint(1, min(5, from_member.connections.count()))
@@ -516,7 +516,7 @@ class Command(BaseCommand):
                 contribution_title = "PR: %s" % lorem.get_sentence(count=1, word_range=(5, 10))
                 contribution_date = datetime.datetime.utcnow() - datetime.timedelta(days=random.randrange(1, self.max_history_days))
                 contribution_channel = random.choice(github.channel_set.all())
-                contribution = Contribution.objects.create(community=self.community, contribution_type=pr, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=contribution_date)
+                contribution = Contribution.objects.create(community=self.community, contribution_type=pr, title=contribution_title, source=github, channel=contribution_channel, author=contributor, timestamp=contribution_date)
                 if contribution_channel.tag:
                     contribution.tags.add(contribution_channel.tag)
                 contribution.update_activity()
@@ -530,7 +530,7 @@ class Command(BaseCommand):
             contribution_date = convo.timestamp
             contribution_channel = convo.channel
             contribution_title = "Helped in %s" % contribution_channel.name
-            contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
+            contribution = Contribution.objects.create(community=self.community, contribution_type=support, title=contribution_title, source=slack, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
             contribution.tags.set(convo.tags.exclude(name='thankful'))
             contribution.update_activity(convo.activity)
 
@@ -554,7 +554,7 @@ class Command(BaseCommand):
                 contribution_title = "Hosted %s" % lorem.get_sentence(count=1, word_range=(3, 6))
                 contribution_date = datetime.datetime.utcnow() - datetime.timedelta(days=random.randrange(1, self.max_history_days))
                 contribution_channel = attendee.event.channel
-                contribution = Contribution.objects.create(community=self.community, contribution_type=hosted, title=contribution_title, channel=contribution_channel, author=attendee.member, timestamp=contribution_date)
+                contribution = Contribution.objects.create(community=self.community, contribution_type=hosted, title=contribution_title, source=meetup, channel=contribution_channel, author=attendee.member, timestamp=contribution_date)
                 contribution.update_activity()
                 attendee.role = EventAttendee.HOST
                 attendee.save()
