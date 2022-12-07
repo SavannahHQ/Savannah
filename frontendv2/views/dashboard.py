@@ -61,26 +61,26 @@ class ManagerDashboard(SavannahView):
 
     @property
     def open_tasks(self):
-        return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due')
+        return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due').prefetch_related('stakeholders')
 
     @property
     def open_opportunities(self):
-        return Opportunity.objects.filter(community=self.community, created_by=self.request.user, closed_at__isnull=True).order_by('deadline')
+        return Opportunity.objects.filter(community=self.community, created_by=self.request.user, closed_at__isnull=True).order_by('deadline').select_related('member')
 
     @property
     def open_gifts(self):
-        return Gift.objects.filter(community=self.community, received_date__isnull=True).order_by('sent_date')
+        return Gift.objects.filter(community=self.community, received_date__isnull=True).order_by('sent_date').select_related('gift_type', 'member')
 
     @property
     def member_watches(self):
         watches = MemberWatch.objects.filter(manager=self.request.user, member__community=self.community).order_by(IsNull('last_seen'), '-last_seen')
-        watches = watches.select_related('member', 'last_channel__source').prefetch_related('member__tags')
+        watches = watches.select_related('member', 'member__company', 'last_channel__source').prefetch_related('member__tags')
         return watches
 
     @property
     def new_members(self):
         members = Member.objects.filter(community=self.community).order_by("-first_seen")[:5]
-        members = members.prefetch_related('tags')
+        members = members.prefetch_related('tags').select_related('company')
         return members
 
     @property
