@@ -17,6 +17,11 @@ from imagekit.processors import ResizeToFill
 
 from corm.connectors import ConnectionManager
 
+from django.dispatch import receiver
+from django.db.models.signals import post_save, post_delete
+
+from .signals import hook_event
+
 class IsNull(models.Func):
     _output_field = models.BooleanField()
     arity = 1
@@ -483,6 +488,20 @@ class Member(TaggableModel):
         else:
             return self.id
 
+    def serialize(self):
+        company_name = None
+        if self.company:
+            company_name = self.company.name
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email_address,
+            'role': self.get_role_display(),
+            'company': company_name,
+            'tags': [tag.name for tag in self.tags.all()] 
+        }
+
+
     def merge_with(self, other_member):
         merge_record = MemberMergeRecord.from_member(other_member, self)
 
@@ -558,7 +577,29 @@ class Member(TaggableModel):
                 attendance.save()
 
         self.save()
+        send_hook(community=self.community, event='Member.merged', payload={'from': other_member.serialize(), 'to':self.serialize()}, sender=self.__class__)
         other_member.delete()
+
+@receiver(post_save, sender=Member, dispatch_uid='member-saved-hook')
+def member_saved(sender, instance,
+                        created,
+                        raw,
+                        using,
+                        **kwargs):
+    print("Firing model_saved event for: %s" % instance)
+    event = 'Member.created' if created else 'Member.updated'
+    send_hook(community=instance.community, event=event, payload=instance.serialize(), sender=Member)
+
+@receiver(post_delete, sender=Member, dispatch_uid='member-deleted-hook')
+def model_deleted(sender, instance,
+                          using,
+                          **kwargs):
+    """
+    Automatically triggers "deleted" actions.
+    """
+    print("Firing model_deleted event for: %s" % instance)
+    event = 'Member.deleted'
+    send_hook(community=instance.community, event=event, payload=instance.serialize(), sender=Member)
 
 class MemberMergeRecord(models.Model):
     community =  models.ForeignKey(Community, on_delete=models.CASCADE)
@@ -1819,3 +1860,50 @@ class OpportunityHistory(models.Model):
     stage = models.SmallIntegerField(choices=Opportunity.STATUS_CHOICES, default=Opportunity.IDENTIFIED)
     started_at = models.DateTimeField()
     ended_at = models.DateTimeField(null=True, blank=True)
+
+
+# Create your models here.
+class WebHook(models.Model):
+    class Meta:
+        ordering = ('-created',)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(class)ss', on_delete=models.CASCADE)
+    event = models.CharField('Event', max_length=64, db_index=True)
+    target = models.URLField('Target URL', max_length=255)
+    secret = models.UUIDField(default=uuid.uuid4, editable=False)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class WebHookEvent(models.Model):
+    class Meta:
+        ordering = ('-created',)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(auto_now_add=True)
+    hook = models.ForeignKey(WebHook, related_name='events', on_delete=models.CASCADE)
+    event = models.CharField(max_length=256)
+    payload = models.JSONField()
+    success = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class WebHookEventLog(models.Model):
+    class Meta:
+        ordering = ('-timestamp',)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(WebHookEvent, related_name='log', on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.SmallIntegerField(null=True, blank=True)
+    response = models.TextField(blank=True)
+
+    def __str__(self):
+        return str(self.id)
+
+from .webhooks import hook_triggered as send_hook

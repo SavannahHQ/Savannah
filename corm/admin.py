@@ -634,3 +634,54 @@ class OpportunityAdmin(admin.ModelAdmin):
         OpportunityHistoryInline,
     ]
 admin.site.register(Opportunity, OpportunityAdmin)
+
+from django.forms import BaseInlineFormSet
+class LimitModelFormset(BaseInlineFormSet):
+    """ Base Inline formset to limit inline Model query results. """
+    def __init__(self, *args, **kwargs):
+        super(LimitModelFormset, self).__init__(*args, **kwargs)
+        _kwargs = {self.fk.name: kwargs['instance']}
+        self.queryset = kwargs['queryset'].filter(**_kwargs).order_by(*self.model._meta.ordering)[:20]
+
+class WebhookEventInline(admin.TabularInline):
+    model=WebHookEvent
+    fields = ('created', 'event', 'payload', 'success')
+    readonly_fields = ('created', 'event', 'payload', 'success')
+    show_change_link = True
+    formset = LimitModelFormset
+
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(WebHook)
+class WebhookAdmin(admin.ModelAdmin):
+    list_display = ('event', 'community', 'user', 'target')
+    list_filter = ('community',)
+    readonly_fields = ('secret',)
+    inlines = [WebhookEventInline]
+
+class WebhookEventLogInline(admin.TabularInline):
+    model=WebHookEventLog
+    fields = ('timestamp', 'status', 'response')
+    readonly_fields = ('timestamp', 'status', 'response')
+    show_change_link = True
+    formset = LimitModelFormset
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(WebHookEvent)
+class WebhookEventAdmin(admin.ModelAdmin):
+    list_display = ('created', 'hook', 'event', 'success')
+    list_filter = ('event', 'hook__community')
+    inlines = [WebhookEventLogInline]
+
+@admin.register(WebHookEventLog)
+class WebookEventLog(admin.ModelAdmin):
+    list_display = ('timestamp', 'event', 'status')
+    list_filter = ('event__event', 'event__hook__community')

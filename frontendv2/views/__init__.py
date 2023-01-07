@@ -1,6 +1,7 @@
 import operator
 import datetime
 import json
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, Http404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
@@ -10,10 +11,17 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, User
 from django.contrib import messages
 from django.conf import settings
 from django import forms
+from django.views.decorators.csrf import csrf_exempt
 
 from corm.models import *
 from frontendv2 import colors
 from frontendv2.models import EmailMessage, PasswordResetRequest, PublicDashboard
+
+@csrf_exempt
+def dump(request):
+    print(request.get_raw_uri())
+    print(request.body)
+    return HttpResponse(content=str(request.body))
 
 # Create your views here.
 def index(request):

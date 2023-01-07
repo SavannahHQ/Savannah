@@ -36,6 +36,7 @@ from frontendv2 import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('dump/', views.dump, name='dump'),
     path('home/', views.home, name='home'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
