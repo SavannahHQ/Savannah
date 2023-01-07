@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 channel = random.choices(contact.source.channel_set.all(), k=1)[0]
                 conversation_date = datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randrange(0, 60))
 
-                conversation = Conversation.objects.create(channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
+                conversation = Conversation.objects.create(community=community, source=channel.source, channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
                 if from_member.connections.count() > 1:
                     participant_count = random.randint(1, min(5, from_member.connections.count()))
                     participants = random.sample(list(from_member.connections.all()), participant_count)
@@ -103,7 +103,7 @@ class Command(BaseCommand):
                     contribution_title = "PR: %s" % lorem.get_sentence(count=1, word_range=(5, 10))
                     contribution_date = datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randrange(0, 60))
                     contribution_channel = random.choice(github.channel_set.all())
-                    contribution = Contribution.objects.create(community=community, contribution_type=pr, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=contribution_date)
+                    contribution = Contribution.objects.create(community=community, contribution_type=pr, title=contribution_title, source=github, channel=contribution_channel, author=contributor, timestamp=contribution_date)
                     feature_tag = random.choices(tags, cum_weights=tag_weights, k=1)[0]
                     if feature_tag:
                         contribution.tags.add(feature_tag)
@@ -120,7 +120,7 @@ class Command(BaseCommand):
                     contribution_date = datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randrange(0, 60))
                     contribution_channel = random.choice(slack.channel_set.all())
                     contribution_title = "Helped in %s" % contribution_channel.name
-                    contribution = Contribution.objects.create(community=community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
+                    contribution = Contribution.objects.create(community=community, contribution_type=support, title=contribution_title, source=slack, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
                     contribution.tags.set(convo.tags.all())
                     contribution.update_activity(convo.activity)
 
