@@ -14,7 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for demo in Demonstration.objects.filter(expires__lte=datetime.datetime.utcnow()):
-            demo.community.delete()
+            # demo.community.delete()
             demo.delete()
 
         pool_size = Demonstration.objects.filter(status=Demonstration.READY).count()
