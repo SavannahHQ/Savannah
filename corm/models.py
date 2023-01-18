@@ -490,15 +490,23 @@ class Member(TaggableModel):
 
     def serialize(self):
         company_name = None
-        if self.company:
-            company_name = self.company.name
+        try:
+            if self.company:
+                company_name = self.company.name
+        except:
+            pass
+        tags = []
+        try:
+            tags = [tag.name for tag in self.tags.all()]
+        except:
+            pass
         return {
             'id': self.id,
             'name': self.name,
             'email': self.email_address,
             'role': self.get_role_display(),
             'company': company_name,
-            'tags': [tag.name for tag in self.tags.all()] 
+            'tags': tags 
         }
 
 
