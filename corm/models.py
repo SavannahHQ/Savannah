@@ -1883,6 +1883,9 @@ class WebHook(models.Model):
     event = models.CharField('Event', max_length=64, db_index=True)
     target = models.URLField('Target URL', max_length=255)
     secret = models.UUIDField(default=uuid.uuid4, editable=False)
+    enabled = models.BooleanField(default=True)
+    send_failed_attempts = models.SmallIntegerField(default=0)
+    send_failed_message = models.CharField(max_length=512, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)
@@ -1896,6 +1899,8 @@ class WebHookEvent(models.Model):
     hook = models.ForeignKey(WebHook, related_name='events', on_delete=models.CASCADE)
     event = models.CharField(max_length=256)
     payload = models.JSONField()
+    send_failed_attempts = models.SmallIntegerField(default=0)
+    send_failed_message = models.CharField(max_length=512, null=True, blank=True)
     success = models.BooleanField(default=False)
 
     def __str__(self):

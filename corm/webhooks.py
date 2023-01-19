@@ -49,7 +49,24 @@ def send(hook, event, payload):
     )
     if resp.status_code == 200:
         hook_event.success=True
-        hook_event.save()
+        if hook_event.send_failed_attempts > 0:
+            hook_event.send_failed_attempts = 0
+            hook_event.send_failed_message = None
+        if hook_event.hook.send_failed_attempts > 0:
+            hook_event.hook.send_failed_attempts = 0
+            hook_event.hook.send_failed_message = None
+            hook_event.hook.save()
+    else:
+        WEBHOOK_MAX_FAILURES = getattr(settings, 'WEBHOOK_MAX_FAILURES', 5)
+        hook_event.send_failed_attempts += 1
+        hook_event.send_failed_message = 'Server responded with %s' % resp.status_code
+        hook_event.hook.send_failed_attempts += 1
+        hook_event.hook.send_failed_message = 'Server responded with %s' % resp.status_code
+        if hook_event.hook.send_failed_attempts >= WEBHOOK_MAX_FAILURES:
+            hook_event.hook.enabled = False
+        hook_event.hook.save()
+    hook_event.save()
+
     return hook_event
 
 def enqueue(hook, event, payload):
@@ -61,7 +78,7 @@ def enqueue(hook, event, payload):
     return hook_event
 
 def get_all_webhooks(community, event, payload):
-    hooks = WebHook.objects.filter(community=community)
+    hooks = WebHook.objects.filter(community=community, enabled=True)
     for hook in hooks:
         if hook.event == event or (hook.event[-1] == '*' and event[:len(hook.event)-1] == hook.event[:-1]):
             yield(hook)

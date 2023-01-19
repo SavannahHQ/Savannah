@@ -658,8 +658,8 @@ class WebhookEventInline(admin.TabularInline):
 
 @admin.register(WebHook)
 class WebhookAdmin(admin.ModelAdmin):
-    list_display = ('event', 'community', 'user', 'target')
-    list_filter = ('community',)
+    list_display = ('event', 'community', 'user', 'target', 'enabled')
+    list_filter = ('enabled', 'community')
     readonly_fields = ('secret',)
     inlines = [WebhookEventInline]
 
