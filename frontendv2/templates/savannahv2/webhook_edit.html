@@ -14,7 +14,7 @@
 
           <div class="row">
 
-            <!-- Profile  -->
+            <!-- Hook Form  -->
             <div class="col-xl-6 col-lg-8 col-md-10 col-sm-12">
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
@@ -43,6 +43,31 @@
             </div>
 
 
+            <!-- Hook Form  -->
+            <div class="col-xl-6 col-lg-4 col-md-10 col-sm-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Events</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                {% for event in view.hook.events.all %}
+                <div class="row mb-2">
+                  <div class="col-6">{% if event.success %}<i class="text-success fas fa-circle-check"></i>{% else %}<i class="text-danger fas fa-circle-xmark"></i>{% endif %} {{event.event}}</div>
+                  <div class="col-6">{{event.created}}</div>
+                  <div class="col-12 text-muted">{{event.payload}}</div>
+
+                </div>
+                {% endfor %}
+              </div>            
+
+                </div>
+              </div>
+            </div>
 
           </div>
         </div>
