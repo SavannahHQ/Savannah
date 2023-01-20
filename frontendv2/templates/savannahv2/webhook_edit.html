@@ -26,14 +26,17 @@
                 <div class="card-body">
                 <div class="container-fluid">
 
+
                 <form class="form" action="{% url 'webhook_edit' view.community.id view.hook.id %}" method="POST">
                 {% csrf_token %}
                 {{ view.form|crispy }}
+                <p class="mt-3"><b>Secret Key:</b> {{view.hook.secret}}</p>
+
                 <button class="btn btn-primary" type="submit">Save</button>
                 <a class="btn btn-secondary" href="{% url 'community_settings' view.community.id %}">Cancel</a>
                 </form>
 
-                </div>            
+              </div>            
 
                 </div>
               </div>
