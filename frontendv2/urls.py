@@ -25,7 +25,7 @@ from frontendv2.views.connections import Connections
 from frontendv2.views.sources import Sources, Channels, tag_channel, add_source, ImportUpload, ImportMap, ImportList, ImportInfo, ImportCancel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
-from frontendv2.views.community import CommunitySettings, EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
+from frontendv2.views.community import CommunitySettings, EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards, WebhookEdit
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
 from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
@@ -133,6 +133,7 @@ urlpatterns = [
     path('managers/<int:community_id>/preferences', ManagerPreferences.as_view, name='manager_preferences'),
     path('managers/<int:community_id>/password', ManagerPasswordChange.as_view, name='manager_password'),
     path('managers/<int:community_id>/delete', ManagerDelete.as_view, name='manager_delete'),
+    path('community/<int:community_id>/webhook/<str:hook_id>/', WebhookEdit.as_view, name='webhook_edit'),
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
     path('sources/<int:community_id>/add/<str:connector>', add_source, name='add_source'),
     path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),

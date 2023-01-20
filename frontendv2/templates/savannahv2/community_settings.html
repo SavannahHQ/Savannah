@@ -60,6 +60,39 @@
                 </div>
               </div>
 
+              {% if view.all_webhooks.count > 0 %}
+              <!-- Webhooks -->
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Webhooks</h6>
+                  {% comment %}<a class="btn btn-primary btn-sm" href="{% url 'webhooks' view.community.id %}"><i class="fas fa-plus"> </i> Add</a>{% endcomment %}
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                {% for hook in view.all_webhooks %}
+                <div class="row">
+                  <div class="col-5">
+                    <p><a href="{% url 'webhook_edit' view.community.id hook.id %}">{{hook.event}}</a></p>
+                  </div>
+                  <div class="col-5">
+                    <p>{{hook.target}} </p>
+                  </div>
+                  <div class="col-2">
+                    {% if hook.enabled %}<span class="bg-success tag-pill text-white">Enabled</span>{% else %}<span class="bg-danger tag-pill text-white">Disabled</span>{% endif %}
+                  </div>
+
+                </div>
+                {% endfor %}
+
+                </div>            
+
+                </div>
+              </div>
+              {% endif %}
+            
             </div>
 
             <!-- Profile  -->

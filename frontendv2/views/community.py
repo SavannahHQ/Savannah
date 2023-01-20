@@ -39,7 +39,11 @@ class CommunitySettings(SavannahView):
 
     def plan(self):
         return self.community.management.name
-        
+
+    def all_webhooks(self):
+        hooks = WebHook.objects.filter(community=self.community)
+        return hooks
+
     @login_required
     def as_view(request, community_id):
         view = CommunitySettings(request, community_id)
@@ -219,6 +223,52 @@ def revoke_invitation(request, community_id):
         invite.delete()
         messages.success(request, "Invitation has been revoked")
     return redirect('managers', community_id=community_id)
+
+EVENT_CHOICES = (
+    ('Member.*', "Member.*"),
+    ('Member.created', "Member.created"),
+    ('Member.changed', "Member.changed"),
+    ('Member.deleted', "Member.deleted"),
+    ('Member.merged', "Member.merged"),
+    ('EngagementLevel.*', "EngagementLevel.*"),
+    ('EngagementLevel.Up', "EngagementLevel.Up"),
+    ('EngagementLevel.Down', "EngagementLevel.Down"),
+)
+class WebhookForm(forms.ModelForm):
+
+    event = forms.ChoiceField(choices=EVENT_CHOICES)
+    class Meta:
+        model = WebHook
+        fields = ['event', 'target', 'enabled']
+
+class WebhookEdit(SavannahView):
+
+    def __init__(self, request, community_id, hook_id):
+        super(WebhookEdit, self).__init__(request, community_id)
+        self.community = get_object_or_404(Community, id=community_id)
+        self.hook = get_object_or_404(WebHook, id=hook_id)
+        self.active_tab = "community"
+        self._form = None
+
+    @property 
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = WebhookForm(instance=self.hook, data=self.request.POST, files=self.request.FILES)
+            else:
+                self._form = WebhookForm(instance=self.hook)
+        return self._form
+
+    @login_required
+    def as_view(request, community_id, hook_id):
+        view = WebhookEdit(request, community_id, hook_id)
+        if request.method == "POST" and view.form.is_valid():
+            community = view.form.save()
+            messages.success(request, "Webhook updated")
+            return redirect('community_settings', community_id=community_id)
+
+        return render(request, 'savannahv2/webhook_edit.html', view.context)
+
 
 class Gifts(SavannahView):
     def __init__(self, request, community_id):
