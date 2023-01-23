@@ -231,8 +231,8 @@ EVENT_CHOICES = (
     ('Member.deleted', "Member.deleted"),
     ('Member.merged', "Member.merged"),
     ('EngagementLevel.*', "EngagementLevel.*"),
-    ('EngagementLevel.Up', "EngagementLevel.Up"),
-    ('EngagementLevel.Down', "EngagementLevel.Down"),
+    ('EngagementLevel.Up', "EngagementLevel.up"),
+    ('EngagementLevel.Down', "EngagementLevel.down"),
 )
 class WebhookForm(forms.ModelForm):
 

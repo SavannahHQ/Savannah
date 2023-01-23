@@ -594,7 +594,7 @@ def member_saved(sender, instance,
                         raw,
                         using,
                         **kwargs):
-    print("Firing model_saved event for: %s" % instance)
+    # print("Firing model_saved event for: %s" % instance)
     event = 'Member.created' if created else 'Member.updated'
     send_hook(community=instance.community, event=event, payload=instance.serialize(), sender=Member)
 
@@ -605,7 +605,7 @@ def model_deleted(sender, instance,
     """
     Automatically triggers "deleted" actions.
     """
-    print("Firing model_deleted event for: %s" % instance)
+    # print("Firing model_deleted event for: %s" % instance)
     event = 'Member.deleted'
     send_hook(community=instance.community, event=event, payload=instance.serialize(), sender=Member)
 

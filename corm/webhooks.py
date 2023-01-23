@@ -11,13 +11,17 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.dispatch import receiver
 
 from .signals import hook_event
-from .models import WebHook, WebHookEvent, WebHookEventLog
+from .models import Community, WebHook, WebHookEvent, WebHookEventLog
 
 client = requests.Session()
 
 def serialize_hook_event(hook_event, payload):
     payload_string = json.dumps(payload, cls=DjangoJSONEncoder)
-    digest = hmac.digest(hook_event.hook.secret.bytes, payload_string.encode('utf-8'), hashlib.sha256)
+    if hasattr(hmac, 'digest'):
+        digest = hmac.digest(hook_event.hook.secret.bytes, payload_string.encode('utf-8'), hashlib.sha256)
+    else:
+        digest = hmac.new(hook_event.hook.secret.bytes, payload_string.encode('utf-8'), hashlib.sha256).digest()
+
 
     return {
         'event': {
@@ -91,14 +95,17 @@ def hook_triggered(sender, community,
     """
     Manually trigger a custom action (or even a standard action).
     """
-    print("Hook event fired: %s" % event)
+    if community.status not in  (Community.ACTIVE, Community.DEVELOPMENT):
+        return # Don't process webhooks for non active communities
+
+    # print("Hook event fired: %s" % event)
     webhook_filter_module, webhook_filter_function = getattr(settings, 'WEBHOOK_FILTER', 'corm.webhooks.get_all_webhooks').rsplit('.', 1)
     module = importlib.import_module(webhook_filter_module)
     get_webhooks = getattr(module, webhook_filter_function)
     for hook in get_webhooks(community, event, payload):
-        print("Checking hook: %s" % hook.event)
+        # print("Checking hook: %s" % hook.event)
         if hook.event == event or (hook.event[-1] == '*' and event[:len(hook.event)-1] == hook.event[:-1]):
-            print("Firing hook: %s" % hook.id )
+            # print("Firing hook: %s" % hook.id )
             hook_event = send(
                 hook=hook,
                 event=event,

@@ -83,9 +83,9 @@ class Command(BaseCommand):
                     else:
                         level, created = MemberLevel.objects.get_or_create(community=community, project=project, member=member, defaults={'level':new_level, 'timestamp':member.last_contrib, 'contribution_count':member.contrib_count})
                     if created or new_level > level.level:
-                        event_name = 'EngagementLevel.Up'
+                        event_name = 'EngagementLevel.up'
                     elif new_level < level.level:
-                        event_name = 'EngagementLevel.Down'
+                        event_name = 'EngagementLevel.down'
                     else:
                         # No change in engagement level
                         continue
