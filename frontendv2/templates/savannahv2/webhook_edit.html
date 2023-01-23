@@ -57,7 +57,13 @@
 
                 {% for event in view.hook.events.all %}
                 <div class="row mb-2">
-                  <div class="col-6">{% if event.success %}<i class="text-success fas fa-circle-check"></i>{% else %}<i class="text-danger fas fa-circle-xmark"></i>{% endif %} {{event.event}}</div>
+                  <div class="col-6">
+                    {% if event.success %}
+                      <i class="text-success fas fa-circle-check"></i>
+                    {% else %}
+                      <i class="text-danger fas fa-circle-xmark" data-toggle="tooltip" data-placement="left" data-container="body" data-title="{{event.last_attempt.response}}"></i>
+                    {% endif %}
+                    {{event.event}}</div>
                   <div class="col-6">{{event.created}}</div>
                   <div class="col-12 text-muted">{{event.payload}}</div>
 

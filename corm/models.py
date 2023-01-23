@@ -1903,6 +1903,10 @@ class WebHookEvent(models.Model):
     send_failed_message = models.CharField(max_length=512, null=True, blank=True)
     success = models.BooleanField(default=False)
 
+    @property
+    def last_attempt(self):
+        return self.log.last()
+
     def __str__(self):
         return str(self.id)
 
