@@ -217,14 +217,19 @@ class SavannahView:
                     messages.info(self.request, "You can try demo of Savannah CRM using sample data on <a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a>.")
         
     @property
-    def context(self):
+    def all_user_communities(self):
+        if hasattr(self, '_user_communities'):
+            return self._user_communities
         if self.request.user.is_authenticated:
-            communities = Community.objects.exclude(status=Community.DEACTIVE).exclude(status=Community.ARCHIVED).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+            self._user_communities = Community.objects.exclude(status=Community.DEACTIVE).exclude(status=Community.ARCHIVED).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
         else:
-            communities = []
+            self._user_communities = Community.objects.none()
+        return self._user_communities
+
+    @property
+    def context(self):
         return {
             "SITE_ROOT": settings.SITE_ROOT,
-            "communities": communities,
             "active_community": self.community,
             "active_tab": self.active_tab,
             "view": self,

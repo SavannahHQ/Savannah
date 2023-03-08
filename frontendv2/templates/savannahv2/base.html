@@ -1,6 +1,6 @@
 {% load static %}
 {% load notifications_tags %}
-{% load i18n %}
+{% load i18n cache %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -410,10 +410,11 @@
                   <i class="fas fa-money-check-alt fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
                 {% endif %}
-                {% if communities.count > 1 %}
+                {% cache 500 community_dropdown view.request.user %}
+                {% if view.all_user_communities.count > 1 %}
                 <div class="dropdown-divider"></div>
                 <div class="dropdown-header">Switch Community</div>
-                {% for c in communities %}
+                {% for c in view.all_user_communities %}
                   {% if c.id != view.community.id %}
                   <a class="dropdown-item text-right" href="{% url 'dashboard' c.id %}">{{c.name}} <img class="ml-2" src="{{c.icon_path}}" /></a>
                   {% endif %}
@@ -421,6 +422,7 @@
                 <div class="dropdown-divider"></div>
                 {% endif %}
                 <a class="dropdown-item text-right" href="{% url 'add-community' %}">New Community <i class="text-lg fas fa-plus-square fa-fw m-2 text-gray-600"> </i></a>
+                {% endcache %}
               </div>
           </li>
 

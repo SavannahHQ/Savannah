@@ -266,6 +266,7 @@ class DiscordImporter(PluginImporter):
                         raise e
             else:
                 print("Failed to get conversations: %s" % resp.content)
+                raise RuntimeError("Failed to get conversations: %s" % resp.content)
 
         return
 
