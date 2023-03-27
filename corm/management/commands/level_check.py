@@ -18,10 +18,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--community', dest='community_id', type=int)
+        parser.add_argument('--force', dest='force_save', type=bool, default=False)
 
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity')
         community_id = options.get('community_id')
+        force_save = options.get('force_save')
         if community_id:
             communities = [Community.objects.get(id=community_id)]
         else:
@@ -104,7 +106,7 @@ class Command(BaseCommand):
                                 'previously': MemberLevel.LEVEL_MAP[level.level] if not created else None,
                             }
                     )
-                    if not created:
+                    if not created or force_save:
                         level.level = new_level
                         level.conversation_count = getattr(member, 'convo_count', 0)
                         level.contribution_count = getattr(member, 'contrib_count', 0)
