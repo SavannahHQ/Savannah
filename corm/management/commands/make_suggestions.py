@@ -471,9 +471,9 @@ class Command(BaseCommand):
             print("\n===Tag Words===")
         for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True)[:25]:
             percent = 100 * v / convo_count
+            if self.verbosity >= 3:
+                print("%s (%0.2f%%)" % (k, percent))
             if percent >= 0.9:
-                if self.verbosity >= 3:
-                    print("%s (%0.2f%%)" % (k, percent))
                 suggestion, created = SuggestTag.objects.get_or_create(
                     community=community,
                     keyword=k,

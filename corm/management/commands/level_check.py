@@ -106,6 +106,8 @@ class Command(BaseCommand):
                     )
                     if not created:
                         level.level = new_level
+                        level.conversation_count = getattr(member, 'convo_count', 0)
+                        level.contribution_count = getattr(member, 'contrib_count', 0)
                         level.save()
             if self.verbosity >= 3:
                 print("Time checking %s: %s\n" % (community, (datetime.datetime.utcnow() - community_start).total_seconds()))

@@ -246,10 +246,11 @@ class Conversations(SavannahFilterView):
             if self.filter_link:
                 convos = convos.filter(links=self.filter_link)
 
-            total = convos.filter(thread_start__isnull=True).count()
+            threads = convos.filter(thread_start__isnull=True)
+            total = threads.count()
             if total == 0:
                 return 0
-            responded = convos.annotate(reponse_count=Count('replies', unique=True)).filter(reponse_count__gt=0).count()
+            responded = threads.annotate(reponse_count=Count('replies', unique=True)).filter(reponse_count__gt=0).count()
             # print("total: %s\nreponded: %s" % (total, responded))
             self._responseRate = 100 * responded / total
             return self._responseRate
