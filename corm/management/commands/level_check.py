@@ -38,6 +38,8 @@ class Command(BaseCommand):
             # Check community-wide levels
             print("Checking member levels for %s" % community.name)
  
+            convo_count = dict()
+            contrib_count = dict()
             # Check per-project levels
             for project in all_projects:
                 new_levels = dict()
@@ -58,8 +60,10 @@ class Command(BaseCommand):
                 for member in Member.objects.filter(community=community).filter(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(convo_count=Count('speaker_in__id', filter=speaker_filter, distinct=True), last_convo=Max('speaker_in__timestamp', filter=speaker_filter)):
                     if member.convo_count >= project.threshold_participant:
                         new_levels[member] = MemberLevel.PARTICIPANT
+                        convo_count[member] = member.convo_count
                     elif member.convo_count >= project.threshold_user:
                         new_levels[member] = MemberLevel.USER
+                        convo_count[member] = member.convo_count
                 if self.verbosity >= 3:
                     print("%s project conversation levels: %s" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
@@ -74,16 +78,25 @@ class Command(BaseCommand):
                 for member in Member.objects.filter(community=community).filter(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(contrib_count=Count('contribution__id', filter=author_filter, distinct=True), last_contrib=Max('contribution__timestamp', filter=author_filter)):
                     if member.contrib_count >= project.threshold_core:
                         new_levels[member] = MemberLevel.CORE
+                        contrib_count[member] = member.contrib_count
                     elif member.contrib_count >= project.threshold_contributor:
                         new_levels[member] = MemberLevel.CONTRIBUTOR
+                        contrib_count[member] = member.contrib_count
                 if self.verbosity >= 3:
                     print("%s project contribition levels: %s\n" % (project.name, (datetime.datetime.utcnow() - now).total_seconds()))
 
                 for member, new_level in new_levels.items():
-                    if hasattr(member, 'last_convo'):
-                        level, created = MemberLevel.objects.get_or_create(community=community, project=project, member=member, defaults={'level':new_level, 'timestamp':member.last_convo, 'conversation_count':member.convo_count})
+                    if hasattr(member, 'last_contrib'):
+                        level, created = MemberLevel.objects.get_or_create(community=community, project=project, member=member, defaults={'level':new_level, 'timestamp':member.last_contrib, 'conversation_count':convo_count.get(member, 0), 'contribution_count':contrib_count.get(member, 0)})
                     else:
-                        level, created = MemberLevel.objects.get_or_create(community=community, project=project, member=member, defaults={'level':new_level, 'timestamp':member.last_contrib, 'contribution_count':member.contrib_count})
+                        level, created = MemberLevel.objects.get_or_create(community=community, project=project, member=member, defaults={'level':new_level, 'timestamp':member.last_convo, 'conversation_count':convo_count.get(member, 0)})
+
+                    if not created or force_save:
+                        level.level = new_level
+                        level.conversation_count = convo_count.get(member, 0)
+                        level.contribution_count = contrib_count.get(member, 0)
+                        level.save()
+
                     if created or new_level > level.level:
                         event_name = 'EngagementLevel.up'
                     elif new_level < level.level:
@@ -106,11 +119,6 @@ class Command(BaseCommand):
                                 'previously': MemberLevel.LEVEL_MAP[level.level] if not created else None,
                             }
                     )
-                    if not created or force_save:
-                        level.level = new_level
-                        level.conversation_count = getattr(member, 'convo_count', 0)
-                        level.contribution_count = getattr(member, 'contrib_count', 0)
-                        level.save()
             if self.verbosity >= 3:
                 print("Time checking %s: %s\n" % (community, (datetime.datetime.utcnow() - community_start).total_seconds()))
 
