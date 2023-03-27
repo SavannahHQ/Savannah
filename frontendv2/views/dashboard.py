@@ -99,9 +99,9 @@ class ManagerDashboard(SavannahView):
     @property 
     def top_connections(self):
         if self.user_member:
-            members = Member.objects.filter(community=self.community)
+            members = Member.objects.filter(community=self.community).exclude(id=self.user_member.id)
             members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member)))
-            members = members.order_by('connection_count')
+            members = members.filter(connection_count__gt=0).order_by('-connection_count')
             members = members.select_related('company')
             return members[:10]
 
