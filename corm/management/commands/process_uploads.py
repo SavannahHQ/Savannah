@@ -10,7 +10,7 @@ import csv
 import random
 from io import TextIOWrapper
 from time import sleep, strptime
-from corm.models import Community, Member, Contact, Company, Tag, UploadedFile, Event, EventAttendee
+from corm.models import Community, Member, Contact, Company, Tag, UploadedFile, Event, EventAttendee, Note
 from corm import colors
 
 
@@ -41,6 +41,8 @@ class Command(BaseCommand):
         self.debug = options.get('debug')
         limit = options.get('limit')
 
+        self.import_timestamp = datetime.datetime.utcnow()
+
         uploads = UploadedFile.objects.filter(status=UploadedFile.PENDING)
 
         if community_id:
@@ -66,20 +68,30 @@ class Command(BaseCommand):
         upload.save()
 
         try:
-            f = TextIOWrapper(upload.uploaded_to)
+            f = TextIOWrapper(upload.uploaded_to.file)
+            if self.verbosity >= 3:
+                print("Opening file in CSV reader...")
             reader = csv.reader(f)
+            if self.verbosity >= 3:
+                print("Reading headers...")
             headers = reader.__next__()
             columns = dict()
             for i, header in enumerate(headers):
                 columns[header] = i
-            print(columns)
+            if self.verbosity >= 3:
+                print("Headers:")
+                print(columns)
             origin_id_column = None
             if upload.source:
                 for c, field in upload.mapping.items():
                     if field == 'origin_id':
                         origin_id_column = columns[c]
                         break
+            if self.verbosity >= 3:
+                print("Reading data...")
             for record in reader:
+                if self.verbosity >= 3:
+                    print("Line: %s"%record)
                 member = Member(community=upload.community, first_seen=datetime.datetime.utcnow())
                 if upload.source and origin_id_column is not None:
                     member = self.get_member_by_origin(upload.source, record[origin_id_column])
@@ -94,9 +106,15 @@ class Command(BaseCommand):
                         elif field == 'company':
                             self.process_company_field(member, field, record[columns[c]])
                         elif field == 'tags':
-                            self.process_tags_field(member, field, record[columns[c]])
+                            self.process_tags_field(member, record[columns[c]])
                         elif field == 'first_seen' or field == 'last_seen':
                             self.process_timestamp_field(member, field, record[columns[c]])
+                        elif field == 'first_name':
+                            self.process_char_field(member, 'name', record[columns[c]], prepend=True)
+                        elif field == 'last_name':
+                            self.process_char_field(member, 'name', record[columns[c]], prepend=False)
+                        elif field == 'note':
+                            self.process_note_field(member, record[columns[c]], author=upload.uploaded_by)
                         else:
                             if field not in managed_fields:
                                 managed_fields[field] = not getattr(member, field)
@@ -156,7 +174,7 @@ class Command(BaseCommand):
             company = companies.first()
         setattr(member, field, company)
 
-    def process_tags_field(self, member, field, value):
+    def process_tags_field(self, member, value):
         if not member.id:
             member.save()
         tag_names = [t.strip() for t in value.split(',')]
@@ -164,13 +182,35 @@ class Command(BaseCommand):
             tag, created = Tag.objects.get_or_create(community=member.community, name=t, defaults={'color': random_tag_color()})
             member.tags.add(tag)
 
-    def process_char_field(self, member, field_name, value):
+    def process_note_field(self, member, value, author):
+        if not value:
+            return
+        if not member.id:
+            member.save()
+        try:
+            note = Note.objects.get(member=member, timestamp=self.import_timestamp, author=author)
+            created = False
+        except Note.DoesNotExist:
+            note = Note.objects.create(member=member, timestamp=self.import_timestamp, author=author, content=value)
+            created = True
+        if created and self.verbosity >= 2:
+            print("New note created for '%s' at %s" % (value, self.import_timestamp))
+        if created:
+            note.timestamp = timestamp=self.import_timestamp
+        else:
+            note.content += '\n'+value
+        note.save()
+
+    def process_char_field(self, member, field_name, value, prepend=False):
         field = member._meta.get_field(field_name)
         if isinstance(field, CharField):
             value = value[:field.max_length]
             try:
                 if getattr(member, field_name):
-                    setattr(member, field_name, getattr(member, field_name)+' '+value)
+                    if prepend:
+                        setattr(member, field_name, value+' '+getattr(member, field_name))
+                    else:
+                        setattr(member, field_name, getattr(member, field_name)+' '+value)
                 else:
                     setattr(member, field_name, value)
             except Exception as e:
