@@ -236,7 +236,7 @@ class OpportunityForm(forms.ModelForm):
             self.fields['member'].widget.choices = [('', '-----')]
 
         self.fields['created_by'].label = 'Owner'
-        if hasattr(self.instance, 'managers'):
+        if hasattr(community, 'managers'):
             self.fields['created_by'].queryset = community.managers.user_set.all()
         else:
             self.fields['created_by'].queryset = User.objects.filter(id=community.owner.id)
