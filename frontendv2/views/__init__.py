@@ -384,6 +384,7 @@ class SavannahFilterView(SavannahView):
                     request.session['timefilter'] = 'range'
             elif request.session.get('rangeend'):
                 self.rangeend = datetime.datetime.strptime(request.session.get('rangeend'), self.DATE_FORMAT)
+                self.rangeend = self.rangeend.replace(hour=23, minute=59, second=59)
 
             if 'timespan' in request.GET:
                 if request.GET.get('timespan') == '':
