@@ -189,7 +189,17 @@ class PluginImporter:
             except:
                 pass
 
-        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        try:
+            convo, created = Conversation.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        except Conversation.MultipleObjectsReturned:
+            convo = Conversation.objects.filter(origin_id=origin_id, community=self.community, source=self.source).order_by('id').first()
+            convo.channel = channel
+            convo.timestamp = tstamp
+            convo.location = location
+            convo.thread_start = thread
+            convo.contribution = contribution
+            created = False
+
         if content is not None and (convo.content is None or len(convo.content) < len(content)):
             convo.content = content
         if tstamp is not None and speaker is not None and (speaker.last_seen is None or  speaker.last_seen < tstamp):
