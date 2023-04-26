@@ -96,6 +96,7 @@ class PluginImporter:
         self._first_import = False
         self._full_import = False
         self._member_cache = dict()
+        self._link_cache = dict()
         self.API_HEADERS = dict()
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
         self.TAGGED_USER_MATCHER = re.compile('\@([a-zA-Z0-9]+)')
@@ -182,6 +183,62 @@ class PluginImporter:
 
         return member
 
+    def make_hyperlink(self, link):
+        if link in self._link_cache:
+            return self._link_cache[link]
+        else:
+            url = urllib.parse.urlparse(link)
+            if not url.hostname or not url.scheme:
+                raise RuntimeError("Failed to parse link: %s" % link)
+
+            # Clean hostname
+            host = url.hostname
+            host_parts = host.split('.')
+            if len(host_parts) > 2:
+                try:
+                    int(host_parts[-3])
+                    pass # host is an IP
+                except:
+                    try:
+                        int(host_parts[-3][0])
+                        # 3-rd level subdomain starts with a number and is likely generated
+                        host = '.'.join(host_parts[-2:])
+                    except:
+                        pass
+            if host[:4] == 'www.':
+                host = host[4:] # Ignore www subdomains
+            # Determine content type
+            ctype = None
+            if url.path is not None and url.path != '':
+                ext = url.path.split('.')[-1].lower()
+                if ext in ['html', 'htm']:
+                    ctype = 'Webpage'
+                elif ext in ['png', 'jpg', 'jpeg', 'gif', 'svg'] or host in ['i.imgur.com', 'media.giphy.com', 'i.reddit.com']:
+                    ctype = 'Image'
+                elif ext in ['zip', 'tar', 'gz', 'xz']:
+                    ctype = 'Archive'
+                elif ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
+                    ctype = 'Document'
+                elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
+                    ctype = 'Code'
+                elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
+                    ctype = 'Code'
+                elif host in ['youtube.com', 'youtu.be', 'vimeo.com', 'twitch.com', 'v.reddit.com']:
+                    ctype = 'Video'
+                else:
+                    ctype = 'Webpage'
+            hl, created = Hyperlink.objects.get_or_create(
+                community=self.community,
+                url=link,
+                defaults={
+                    'host':host,
+                    'path':url.path or '/',
+                    'content_type': ctype,
+                }
+            )
+            self._link_cache[link] = hl
+            return hl
+
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None, contribution=None, dedup=False):
         if dedup:
             try:
@@ -214,57 +271,10 @@ class PluginImporter:
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
                 self.add_participants(convo, tagged_users)
+
             for link in self.get_links(content):
                 try:
-                    url = urllib.parse.urlparse(link)
-                    if not url.hostname or not url.scheme:
-                        continue
-
-                    # Clean hostname
-                    host = url.hostname
-                    host_parts = host.split('.')
-                    if len(host_parts) > 2:
-                        try:
-                            int(host_parts[-3])
-                            pass # host is an IP
-                        except:
-                            try:
-                                int(host_parts[-3][0])
-                                # 3-rd level subdomain starts with a number and is likely generated
-                                host = '.'.join(host_parts[-2:])
-                            except:
-                                pass
-                    if host[:4] == 'www.':
-                        host = host[4:] # Ignore www subdomains
-                    # Determine content type
-                    ctype = None
-                    if url.path is not None and url.path != '':
-                        ext = url.path.split('.')[-1].lower()
-                        if ext in ['html', 'htm']:
-                            ctype = 'Webpage'
-                        elif ext in ['png', 'jpg', 'jpeg', 'gif', 'svg'] or host in ['i.imgur.com', 'media.giphy.com', 'i.reddit.com']:
-                            ctype = 'Image'
-                        elif ext in ['zip', 'tar', 'gz', 'xz']:
-                            ctype = 'Archive'
-                        elif ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
-                            ctype = 'Document'
-                        elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
-                            ctype = 'Code'
-                        elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
-                            ctype = 'Code'
-                        elif host in ['youtube.com', 'youtu.be', 'vimeo.com', 'twitch.com', 'v.reddit.com']:
-                            ctype = 'Video'
-                        else:
-                            ctype = 'Webpage'
-                    hl, created = Hyperlink.objects.get_or_create(
-                        community=self.community,
-                        url=link,
-                        defaults={
-                            'host':host,
-                            'path':url.path or '/',
-                            'content_type': ctype,
-                        }
-                    )
+                    hl = self.make_hyperlink(link)
                     convo.links.add(hl)
                 except:
                     pass # Keep going even if capturing the hyperlink fails
