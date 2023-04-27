@@ -236,6 +236,10 @@ class PluginImporter:
                     'content_type': ctype,
                 }
             )
+
+            if len(self._link_cache) > 1000:
+                self._link_cache.clear()
+                
             self._link_cache[link] = hl
             return hl
 
