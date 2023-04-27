@@ -104,3 +104,4 @@ class Command(BaseCommand):
                 if new_only:
                     source.first_import = None
                     source.save()
+        print("Import complete!")
