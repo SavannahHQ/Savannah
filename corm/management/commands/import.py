@@ -6,6 +6,7 @@ import requests
 from time import sleep
 from corm.models import Community, Source, Member, Contact, Channel, Conversation
 from corm.connectors import ConnectionManager
+from pid.decorator import pidfile
 
 class Command(BaseCommand):
     help = 'Import data from sources'
@@ -20,6 +21,7 @@ class Command(BaseCommand):
         parser.add_argument('--debug', dest='debug', action='store_true', help='Enter debugger on errors')
         parser.add_argument('--limit', dest='limit', type=int, help='Number of possible sources to import')
 
+    @pidfile('savannah_importer')
     def handle(self, *args, **options):
 
         importer_name = options.get('importer')
