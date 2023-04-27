@@ -12,7 +12,7 @@ from io import TextIOWrapper
 from time import sleep, strptime
 from corm.models import Community, Member, Contact, Company, Tag, UploadedFile, Event, EventAttendee, Note
 from corm import colors
-
+from pid.decorator import pidfile
 
 def random_tag_color(community=None):
     try:
@@ -34,6 +34,7 @@ class Command(BaseCommand):
         parser.add_argument('--debug', dest='debug', action='store_true', help='Enter debugger on errors')
         parser.add_argument('--limit', dest='limit', type=int, help='Number of possible files to import')
 
+    @pidfile('savannah_upload_processor')
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity')
         community_id = options.get('community_id')

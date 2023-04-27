@@ -853,6 +853,7 @@ class Channel(ImportedDataModel):
     last_import = models.DateTimeField(null=True, blank=True)
     import_failed_attempts = models.SmallIntegerField(default=0)
     import_failed_message = models.CharField(max_length=256, null=True, blank=True)
+    last_tagged = models.DateTimeField(null=True, blank=True)
     enabled = models.BooleanField(default=True)
 
     @property
