@@ -40,7 +40,7 @@ class ManagerDashboard(SavannahView):
     def source_activity(self):
         current_range = 7
         average_range = 30
-        sources = Source.objects.filter(community=self.community, enabled=True)
+        sources = Source.objects.filter(community=self.community, enabled=True).exclude(connector='corm.plugins.null')
         sources = sources.annotate(current_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=current_range), activity__timestamp__lte=datetime.datetime.utcnow())))
         sources = sources.annotate(previous_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=average_range+current_range), activity__timestamp__lte=datetime.datetime.utcnow() - datetime.timedelta(days=current_range))))
         sources = sources.order_by('-previous_count')[:12]
