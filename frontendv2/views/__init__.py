@@ -182,7 +182,7 @@ class SavannahView:
         else:
             self.community = None
         if request.user.is_authenticated:
-            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow()})
+            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow(), 'send_notifications':(not request.user.is_superuser)})
             self.user_member = self.manager_profile.member
         else:
             self.manager_profile = None
