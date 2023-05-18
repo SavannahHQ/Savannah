@@ -84,6 +84,8 @@ class Conversations(SavannahFilterView):
             self.chart_type = 'tag'
         elif 'by_source' in request.GET:
             self.chart_type = 'source'
+        elif 'by_channel' in request.GET:
+            self.chart_type = 'channel'
         elif 'by_role' in request.GET:
             self.chart_type = 'role'
         request.session['conversations_chart_type'] = self.chart_type
@@ -293,6 +295,8 @@ class Conversations(SavannahFilterView):
             return self.getConversationsChartByTag()
         elif self.chart_type == 'source':
             return self.getConversationsChartBySource()
+        elif self.chart_type == 'channel':
+            return self.getConversationsChartByChannel()
         elif self.chart_type == 'role':
             return self.getConversationsChartByRole()
         else:
@@ -399,6 +403,35 @@ class Conversations(SavannahFilterView):
             self._membersChart.set_keys(self.timespan_chart_keys(sorted(months)))
             for tag, data in counts.items():
                 self._membersChart.add("%s (%s)" % (ConnectionManager.display_name(data[1]), tag), data[0], None)
+        self.charts.add(self._membersChart)
+        return self._membersChart
+
+    def getConversationsChartByChannel(self):
+        if not self._membersChart:
+            months = list()
+            counts = dict()
+
+            seen = Channel.objects.filter(source__community=self.community)
+            seen = seen.annotate(month=Trunc('conversation__timestamp', self.trunc_span, filter=Q(conversation__id__in=self.conversation_ids))).values('month', 'name', 'source__connector').annotate(convo_count=Count('conversation__id', distinct=True, filter=Q(conversation__id__in=self.conversation_ids))).order_by('-convo_count')
+            for tag in seen:
+                if tag.get('month') is None:
+                    continue;
+                month = self.trunc_date(tag['month'])
+                if month is None or month == 'None':
+                    continue;
+
+                if tag['name'] not in counts:
+                    counts[tag['name']] = (dict(), tag['source__connector'])
+                if month not in counts[tag['name']][0]:
+                    counts[tag['name']][0][month] = tag['convo_count']
+                else:
+                    counts[tag['name']][0][month] += tag['convo_count']
+
+            self._membersChart = LineChart('conversation_graph', 'Conversations by Channel', limit=8)
+            self._membersChart.stacked = True
+            self._membersChart.set_keys(self.timespan_chart_keys(sorted(months)))
+            for tag, data in counts.items():
+                self._membersChart.add("%s (%s)" % (tag, ConnectionManager.display_name(data[1])), data[0], None)
         self.charts.add(self._membersChart)
         return self._membersChart
 
