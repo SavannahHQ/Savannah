@@ -402,7 +402,7 @@
                   <div class="ml-3">
                   {% for level in view.member_levels %}
                     <div class="mb-2">
-                      <a href="{% url 'project_overview' view.community.id level.project.id %}" title="{{level.level_name}}"><i class="fas {% if level.project.default_project %}fa-globe{% else %}fa-tasks{% endif %}"></i> {{level.project.name}}</a>
+                      <a href="{% url 'project_overview' view.community.id level.project.id %}" title="{{level.level_name}}"><i class="fas {% if level.project.default_project %}fa-globe{% else %}fa-puzzle-piece{% endif %}"></i> {{level.project.name}}</a>
                       <br/>
                       <a href="{% url 'project_overview' view.community.id level.project.id %}" title="{{level.level_name}}">
                       {% if level.level == level.CORE %}

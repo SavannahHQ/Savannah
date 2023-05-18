@@ -32,7 +32,7 @@
               <!-- Chart -->
               <div class="card {% if project.default_project %}border-left-primary{% endif %} shadow mb-4" style="border-left: #{{project.color}} 0.25rem solid;">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{% if project.default_project %}<i class="fas fa-globe"></i> All {{view.community.name}}{% else %}<i class="fas fa-puzzle-piece"></i> {{project.name}}{% endif %}</a></h6>
+                  <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{% if project.default_project %}<i class="fas fa-globe"></i> {{view.community.name}}{% else %}<i class="fas fa-puzzle-piece"></i> {{project.name}}{% endif %}</a></h6>
                   <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{{project.contrib_count}} Contributors</a></h6>
                 </div>
                 <div class="card-body">
