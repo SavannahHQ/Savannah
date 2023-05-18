@@ -85,7 +85,7 @@
                     <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag="><i class="fas fa-tags"></i> Any Tags</a></li>
                     <li class="dropdown-divider p-0"></li>
                     {% for tag in view.community.tag_set.all %}
-                    <li><a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-hashtag"></i> {{tag.name}}</span></a></li>
+                    <li><a style="white-space:nowrap; background-color: #{{tag.color}};" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}member_tag={{tag.name}}"><span style="color: #{{tag.color}}aa" class="tag-text"><i class="fas fa-tag"></i> {{tag.name}}</span></a></li>
                     {% endfor %}
                   </ul>
                 </li>
@@ -147,11 +147,11 @@
                   {% if view.source %}
                     <a class="bg-secondary text-light dropdown-item dropend p-2" href="#">{% if view.exclude_source %}<span class="fa-stack small"><i class="{{view.source.icon_name}} fa-stack-1x"></i><i class="fas fa-ban fa-stack-2x"></i></span>{% else %}<i class="{{view.source.icon_name}}"> </i>{% endif %} {{view.source.name}}</a>
                   {% else %}
-                    <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-filter"></i> Source</a>
+                    <a class="dropdown-item dropend p-2" href="#"><i class="fas fa-database"></i> Source</a>
                   {% endif %}
                   <ul class="dropdown-menu" >
 
-                    <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}source="><i class="fas fa-filter"></i> Any Source</a></li>
+                    <li><a style="white-space:nowrap; color:#5a5c69;" class="dropdown-item p-2" href="?{% if view.search %}search={{view.search}}&{% endif %}source="><i class="fas fa-database"></i> Any Source</a></li>
                     <li class="dropdown-divider p-0"></li>
                     {% for source in view.community.source_set.all %}
                     {% if view.source == source and not view.exclude_source%}
