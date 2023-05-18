@@ -131,7 +131,22 @@ class ProjectOverview(SavannahView):
         levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-contribution_count', '-timestamp').select_related('member').prefetch_related('member__tags')
         levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         return levels[:200]
-        
+
+    def participant_levels(self):
+        levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.PARTICIPANT).order_by('-conversation_count', '-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        return levels[:200]
+
+    def visitor_levels(self):
+        levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.USER).order_by('-conversation_count', '-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        return levels[:200]
+
+    def member_count(self):
+        members = MemberLevel.objects.filter(community=self.community, project=self.project)
+        members = members.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        return members.count()
+
     @property
     def levels_chart(self):
         if self._levelsChart is None:
@@ -282,10 +297,15 @@ class ProjectOverview(SavannahView):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'owner', 'tag', 'member_tag', 'channels']
-
+        fields = ['name', 'owner', 'joined_start', 'joined_end', 'tag', 'member_tag', 'channels']
+        widgets = {
+            'joined_start': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+            'joined_end': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
     def __init__(self, *args, **kwargs):
         super(ProjectForm, self).__init__(*args, **kwargs)
+        self.fields['joined_start'].input_formats = ["%Y-%m-%dT%H:%M"]
+        self.fields['joined_end'].input_formats = ["%Y-%m-%dT%H:%M"]
 
     def limit_to(self, community):
         self.fields['owner'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=community)]

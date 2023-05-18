@@ -18,7 +18,7 @@
               <div class="card shadow mb-4">
                 <!-- Card Header - Dropdown -->
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Details</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">{{ view.member_count }} Members</h6>
                   {% if view.project.default_project == False %}
                     <a class="text-gray-500" href="{% url 'project_edit' view.community.id view.project.id %}" title="Edit Segment"><i class="fas fa-edit"> </i></a>
                   {% endif %}
@@ -32,19 +32,25 @@
                     <div class="mb-2 col-lg-2 font-weight-bold">Owner</div>
                     <div class="mb-2 col-lg-10">{{view.project.owner}}</div>
                   </div>
+                  {% if view.project.joined_start and view.project.joined_end %}
+                  <div class="row mb-2">
+                    <div class="mb-2 col-lg-2 font-weight-bold">Joined</div>
+                    <div class="mb-2 col-lg-10">{{ view.project.joined_start }} - {{ view.project.joined_end}}</div>
+                  </div>
+                  {% endif %}
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Content</div>
-                    <div class="mb-2 col-lg-10">{% if view.project.tag %}<span class="tag-pill" style="background-color: #{{view.project.tag.color}};"><span class="tag-text" style="color: #{{view.project.tag.color}}aa;">{{view.project.tag.name}}</span></span>{% endif %}</div>
+                    <div class="mb-2 col-lg-10">{% if view.project.tag %}<span class="tag-pill" style="background-color: #{{view.project.tag.color}};"><span class="tag-text" style="color: #{{view.project.tag.color}}aa;">{{view.project.tag.name}}</span></span>{% else %}Any{% endif %}</div>
                   </div>
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Members</div>
-                    <div class="mb-2 col-lg-10">{% if view.project.member_tag %}<span class="tag-pill" style="background-color: #{{view.project.member_tag.color}};"><span class="tag-text" style="color: #{{view.project.member_tag.color}}aa;">{{view.project.member_tag.name}}</span></span>{% endif %}</div>
+                    <div class="mb-2 col-lg-10">{% if view.project.member_tag %}<span class="tag-pill" style="background-color: #{{view.project.member_tag.color}};"><span class="tag-text" style="color: #{{view.project.member_tag.color}}aa;">{{view.project.member_tag.name}}</span></span>{% else %}Any{% endif %}</div>
                   </div>
                   <div class="row mb-2">
                     <div class="mb-2 col-lg-2 font-weight-bold">Channels</div>
                     <div class="mb-2 col-lg-10">
                       {% if view.project.channels.count == 0 %}
-                        Any Channels
+                        Any
                       {% elif view.project.channels.count > 10 %}
                         {{view.project.channels.count}} Channels
                       {% else %}
@@ -154,86 +160,164 @@
           </div>
 
          <!-- Content Row -->
-          <div class="row">
+         <div class="row">
 
-            <!-- Content Column -->
-            <div id="Core" class="col-lg-6 mb-4">
+          <!-- Content Column -->
+          <div id="Core" class="col-lg-6 mb-4">
 
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Core Members</h6>
-                    
-                </div>
-                <!-- Card Body -->
-                <div class="card-body p-0">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Member</th>
-                    <th scope="col">Contrib.</th>
-                    <th scope="col">Latest</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for level in view.core_levels %}
+            <div class="card shadow mb-4">
+              <!-- Card Header - Dropdown -->
+              <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Core Members</h6>
+                  
+              </div>
+              <!-- Card Body -->
+              <div class="card-body p-0">
+              <table class="table">
+              <thead>
                 <tr>
-                  <td>
-                    {{level.member|avatar}}
-                    <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
-                  </td>
-                  <td>{{level.contribution_count}}</td>
-                  <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
+                  <th scope="col">Member</th>
+                  <th scope="col">Contrib.</th>
+                  <th scope="col">Latest</th>
                 </tr>
-                {% endfor %}
-                </tbody>
-                </table>
+              </thead>
+              <tbody>
+              {% for level in view.core_levels %}
+              <tr>
+                <td>
+                  {{level.member|avatar}}
+                  <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
+                  {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
+                </td>
+                <td>{{level.contribution_count}}</td>
+                <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+              </table>
 
-                </div>
-              </div>    
-            </div>
-
-            <!-- Content Column -->
-            <div id="Contributor" class="col-lg-6 mb-4">
-
-              <div class="card shadow mb-4">
-                <!-- Card Header - Dropdown -->
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
-                    
-                </div>
-                <!-- Card Body -->
-                <div class="card-body p-0">
-                <table class="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Member</th>
-                    <th scope="col">Contrib.</th>
-                    <th scope="col">Latest</th>
-                  </tr>
-                </thead>
-                <tbody>
-                {% for level in view.contrib_levels %}
-                <tr>
-                  <td>
-                    {{level.member|avatar}}
-                    <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
-                    {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
-                  </td>
-                  <td>{{level.contribution_count}}</td>
-                  <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
-                </tr>
-                {% endfor %}
-                </tbody>
-                </table>
-
-                </div>
-              </div>    
-            </div>
-
+              </div>
+            </div>    
           </div>
 
+          <!-- Content Column -->
+          <div id="Contributor" class="col-lg-6 mb-4">
+
+            <div class="card shadow mb-4">
+              <!-- Card Header - Dropdown -->
+              <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Contributors</h6>
+                  
+              </div>
+              <!-- Card Body -->
+              <div class="card-body p-0">
+              <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Member</th>
+                  <th scope="col">Contrib.</th>
+                  <th scope="col">Latest</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for level in view.contrib_levels %}
+              <tr>
+                <td>
+                  {{level.member|avatar}}
+                  <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
+                  {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
+                </td>
+                <td>{{level.contribution_count}}</td>
+                <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+              </table>
+
+              </div>
+            </div>    
+          </div>
+
+        </div>
+        <div class="row">
+
+          <!-- Content Column -->
+          <div id="Core" class="col-lg-6 mb-4">
+
+            <div class="card shadow mb-4">
+              <!-- Card Header - Dropdown -->
+              <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Participants</h6>
+                  
+              </div>
+              <!-- Card Body -->
+              <div class="card-body p-0">
+              <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Member</th>
+                  <th scope="col">Convos.</th>
+                  <th scope="col">Latest</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for level in view.participant_levels %}
+              <tr>
+                <td>
+                  {{level.member|avatar}}
+                  <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
+                  {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
+                </td>
+                <td>{{level.conversation_count}}</td>
+                <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+              </table>
+
+              </div>
+            </div>    
+          </div>
+
+          <!-- Content Column -->
+          <div id="Contributor" class="col-lg-6 mb-4">
+
+            <div class="card shadow mb-4">
+              <!-- Card Header - Dropdown -->
+              <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Visitors</h6>
+                  
+              </div>
+              <!-- Card Body -->
+              <div class="card-body p-0">
+              <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Member</th>
+                  <th scope="col">Convos.</th>
+                  <th scope="col">Latest</th>
+                </tr>
+              </thead>
+              <tbody>
+              {% for level in view.visitor_levels %}
+              <tr>
+                <td>
+                  {{level.member|avatar}}
+                  <a href="{% url 'member_profile' level.member.id %}">{{level.member}}</a>
+                  {% include 'savannahv2/tag_list.html' with tags=level.member.tags.all %}
+                </td>
+                <td>{{level.conversation_count}}</td>
+                <td class="text-nowrap">{{level.timestamp|dateortime}}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+              </table>
+
+              </div>
+            </div>    
+          </div>
+
+        </div>
         </div>
         <!-- /.container-fluid -->
 {% endblock %}

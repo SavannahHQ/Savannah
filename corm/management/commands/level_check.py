@@ -55,7 +55,12 @@ class Command(BaseCommand):
                     speaker_filter = speaker_filter | Q(tags=project.member_tag)
                 if project.channels.count() > 0:
                     speaker_filter = speaker_filter | Q(speaker_in__channel__in=project.channels.all())
-                for member in Member.objects.filter(community=community).filter(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(convo_count=Count('speaker_in__id', filter=speaker_filter, distinct=True), last_convo=Max('speaker_in__timestamp', filter=speaker_filter)):
+                members = Member.objects.filter(community=community).filter(speaker_in__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(convo_count=Count('speaker_in__id', filter=speaker_filter, distinct=True), last_convo=Max('speaker_in__timestamp', filter=speaker_filter))
+                if project.joined_start:
+                    members = members.filter(first_seen__gte=project.joined_start)
+                if project.joined_end:
+                    members = members.filter(first_seen__lte=project.joined_end)
+                for member in members:
                     if member.convo_count >= project.threshold_participant:
                         new_levels[member] = MemberLevel.PARTICIPANT
                         convo_count[member.id] = member.convo_count
@@ -73,7 +78,12 @@ class Command(BaseCommand):
                     author_filter = author_filter | Q(tags=project.member_tag)
                 if project.channels.count() > 0:
                     author_filter = author_filter | Q(contribution__channel__in=project.channels.all())
-                for member in Member.objects.filter(community=community).filter(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(contrib_count=Count('contribution__id', filter=author_filter, distinct=True), last_contrib=Max('contribution__timestamp', filter=author_filter)):
+                members = Member.objects.filter(community=community).filter(contribution__timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=project.threshold_period)).annotate(contrib_count=Count('contribution__id', filter=author_filter, distinct=True), last_contrib=Max('contribution__timestamp', filter=author_filter))
+                if project.joined_start:
+                    members = members.filter(first_seen__gte=project.joined_start)
+                if project.joined_end:
+                    members = members.filter(first_seen__lte=project.joined_end)
+                for member in members:
                     if member.contrib_count >= project.threshold_core:
                         new_levels[member] = MemberLevel.CORE
                         contrib_count[member.id] = member.contrib_count
