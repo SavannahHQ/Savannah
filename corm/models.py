@@ -1045,9 +1045,9 @@ class Project(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     owner = models.ForeignKey(Member, related_name='owned_projects', on_delete=models.SET_NULL, null=True, blank=True)
     default_project = models.BooleanField(default=False)
-    tag = models.ForeignKey(Tag, verbose_name="Content tag", related_name='projects_by_content', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any content with this tag will be included in this project\'s activity')
-    member_tag = models.ForeignKey(Tag, verbose_name="Member tag", related_name='projects_by_member', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any activity by a member with this tag will be included in this project\'s activity')
-    channels = models.ManyToManyField(Channel, blank=True, help_text='Any activity in these channels will be included in this project\'s activity')
+    tag = models.ForeignKey(Tag, verbose_name="Content tag", related_name='projects_by_content', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any content with this tag will be included in this segment\'s activity')
+    member_tag = models.ForeignKey(Tag, verbose_name="Member tag", related_name='projects_by_member', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any activity by a member with this tag will be included in this segment\'s activity')
+    channels = models.ManyToManyField(Channel, blank=True, help_text='Any activity in these channels will be included in this segment\'s activity')
     threshold_period = models.SmallIntegerField(verbose_name="Activity Period", default=365, help_text="Timerange in days to look at for level activity")
     threshold_user = models.SmallIntegerField(verbose_name="Visitor level", default=1, help_text="Number of conversations needed to become a Visitor")
     threshold_participant = models.SmallIntegerField(verbose_name="Participant level", default=3, help_text="Number of conversations needed to become a Participant")
@@ -1089,7 +1089,7 @@ class MemberLevel(models.Model):
     ]
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='collaborations', on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='Segment')
     level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=USER, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     conversation_count = models.IntegerField(default=0)
@@ -1103,7 +1103,7 @@ class Task(TaggableModel):
     class Meta:
         ordering = ("done", "due",)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=False, blank=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=False, blank=False, verbose_name='Segment')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     name = models.CharField(max_length=256)
     detail = models.TextField(null=True, blank=True)
@@ -1377,7 +1377,7 @@ class SuggestTag(Suggestion):
 
 class SuggestTask(Suggestion):
     stakeholder = models.ForeignKey(Member, related_name='task_suggestions', on_delete=models.CASCADE)    
-    project = models.ForeignKey(Project, related_name='task_suggestions', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name='task_suggestions', on_delete=models.CASCADE, verbose_name='Segment')
     due_in_days = models.SmallIntegerField(default=0)
     name = models.CharField(max_length=256)
     description = models.TextField()

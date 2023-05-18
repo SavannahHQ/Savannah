@@ -2,7 +2,7 @@
 {% load static %}
 {% load humanize %}
 
-{% block page_title %} | {{view.community.name}} Projects{% endblock %}
+{% block page_title %} | {{view.community.name}} Segments{% endblock %}
 
 {% block page_alerts %}
           {% if view.suggestion_count %}
@@ -15,10 +15,10 @@
 {% block page_content %}
         <!-- Page Heading -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Projects</h1>
+        <h1 class="h3 mb-0 text-gray-800">Segments</h1>
         <span>
         <a class="btn btn-secondary" href="{% url 'projects_graph' community_id=view.community.id %}"><i class="fas fa-project-diagram"></i> Graph</a>
-        <a class="btn btn-success" href="{% url 'project_add' community_id=view.community.id %}"><i class="fas fa-plus"></i> Project</a>
+        <a class="btn btn-success" href="{% url 'project_add' community_id=view.community.id %}"><i class="fas fa-plus"></i> Segment</a>
         </span>
         </div>
         
@@ -32,7 +32,7 @@
               <!-- Chart -->
               <div class="card {% if project.default_project %}border-left-primary{% endif %} shadow mb-4" style="border-left: #{{project.color}} 0.25rem solid;">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}"><i class="fas {% if project.default_project %}fa-globe{% else %}fa-tasks{% endif %}"></i> {{project.name}}</a></h6>
+                  <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{% if project.default_project %}<i class="fas fa-globe"></i> All {{view.community.name}}{% else %}<i class="fas fa-puzzle-piece"></i> {{project.name}}{% endif %}</a></h6>
                   <h6 class="m-0 font-weight-bold text-primary"><a href="{% url 'project_overview' view.community.id project.id %}">{{project.contrib_count}} Contributors</a></h6>
                 </div>
                 <div class="card-body">

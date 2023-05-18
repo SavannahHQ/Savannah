@@ -5,12 +5,12 @@
 <script src="https://d3js.org/d3.v5.min.js"></script>
 {% endblock %}
 
-{% block page_title %} | {{view.community.name}} Projects{% endblock %}
+{% block page_title %} | {{view.community.name}} Segments{% endblock %}
 
 {% block page_content %}
         <!-- Page Heading -->
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'projects' community_id=view.community.id %}"><i class="fas fa-chevron-left"></i></a> Project Graph</h1>
+        <h1 class="h3 mb-0 text-gray-800"><a href="{% url 'projects' community_id=view.community.id %}"><i class="fas fa-chevron-left"></i></a> Connection Graph</h1>
         </div>
 
           {% if view.community.source_set.all.count > 1 %}

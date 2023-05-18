@@ -1,7 +1,7 @@
 {% extends "savannahv2/base.html"%}
 {% load static simple_dates member_utils %}
 
-{% block page_title %} | {{view.project.name}} Project{% endblock %}
+{% block page_title %} | {{view.project.name}} Segment{% endblock %}
 
 {% block page_content %}
           <!-- Page Heading -->
@@ -20,7 +20,7 @@
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                   <h6 class="m-0 font-weight-bold text-primary">Details</h6>
                   {% if view.project.default_project == False %}
-                    <a class="text-gray-500" href="{% url 'project_edit' view.community.id view.project.id %}" title="Edit Project"><i class="fas fa-edit"> </i></a>
+                    <a class="text-gray-500" href="{% url 'project_edit' view.community.id view.project.id %}" title="Edit Segment"><i class="fas fa-edit"> </i></a>
                   {% endif %}
                     
                 </div>
