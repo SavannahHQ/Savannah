@@ -164,14 +164,18 @@ class ProjectOverview(SavannahView):
             activity_counts = dict()
             convo_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if not self.project.default_project:
-                convo_filter = Q(channel__in=self.project.channels.all())
+                if self.project.channels.count() > 0:
+                    convo_filter = convo_filter & Q(channel__in=self.project.channels.all())
                 if self.project.tag is not None:
                     convo_filter = convo_filter | Q(tags=self.project.tag)
                 contrib_filter = convo_filter
                 if self.project.member_tag is not None:
                     convo_filter = convo_filter | Q(speaker__tags=self.project.member_tag)
-
-            conversations = conversations = Conversation.objects.filter(channel__source__community=self.project.community)
+                if self.project.joined_start:
+                    convo_filter = convo_filter & Q(speaker__first_seen__gte=self.project.joined_start)
+                if self.project.joined_end:
+                    convo_filter = convo_filter & Q(speaker__first_seen__lte=self.project.joined_end)
+            conversations = conversations = Conversation.objects.filter(source__community=self.project.community)
             conversations = conversations.filter(convo_filter)
             conversations = conversations.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(convo_count=Count('id', distinct=True)).order_by('month')
 
@@ -184,11 +188,16 @@ class ProjectOverview(SavannahView):
 
             contrib_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if not self.project.default_project:
-                contrib_filter = Q(channel__in=self.project.channels.all())
+                if self.project.channels.count() > 0:
+                    contrib_filter = contrib_filter & Q(channel__in=self.project.channels.all())
                 if self.project.tag is not None:
                     contrib_filter = contrib_filter | Q(tags=self.project.tag)
                 if self.project.member_tag is not None:
                     contrib_filter = contrib_filter | Q(author__tags=self.project.member_tag)
+                if self.project.joined_start:
+                    contrib_filter = contrib_filter & Q(author__first_seen__gte=self.project.joined_start)
+                if self.project.joined_end:
+                    contrib_filter = contrib_filter & Q(author__first_seen__lte=self.project.joined_end)
             activity = Contribution.objects.filter(community=self.project.community)
             activity = activity.filter(contrib_filter)
             activity = activity.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(contrib_count=Count('id', distinct=True)).order_by('month')
