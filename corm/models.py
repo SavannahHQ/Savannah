@@ -39,8 +39,8 @@ class UserAuthCredentials(models.Model):
     connector = models.CharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
-    auth_secret = models.CharField(max_length=256, null=True, blank=True)
-    auth_refresh = models.CharField(max_length=256, null=True, blank=True)
+    auth_secret = models.CharField(max_length=1024, null=True, blank=True)
+    auth_refresh = models.CharField(max_length=1024, null=True, blank=True)
 
     def __str__(self):
         return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
@@ -806,7 +806,7 @@ class Source(models.Model):
     name = models.CharField(max_length=256)
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
-    auth_secret = models.CharField(max_length=256, null=True, blank=True)
+    auth_secret = models.CharField(max_length=1024, null=True, blank=True)
     api_key = models.CharField(max_length=256, null=True, blank=True)
     icon_name = models.CharField(max_length=256, null=True, blank=True)
     first_import = models.DateTimeField(null=True, blank=True)
