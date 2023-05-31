@@ -315,20 +315,31 @@ class ContributionSerializer(serializers.Serializer):
             except Exception as e:
                 pass
 
-        contrib, created = Contribution.objects.update_or_create(
-            origin_id=self.validated_data.get('origin_id'), 
-            community=source.community, 
-            source=source,
-            defaults={
-                'contribution_type':contribution_type, 
-                'channel':channel, 
-                'author':author, 
-                'timestamp':self.validated_data.get('timestamp'), 
-                'title':self.validated_data.get('title'), 
-                'location':self.validated_data.get('location'),
-                'conversation':conversation
-            }
-        )
+        try:
+            contrib, created = Contribution.objects.update_or_create(
+                origin_id=self.validated_data.get('origin_id'), 
+                community=source.community, 
+                source=source,
+                defaults={
+                    'contribution_type':contribution_type, 
+                    'channel':channel, 
+                    'author':author, 
+                    'timestamp':self.validated_data.get('timestamp'), 
+                    'title':self.validated_data.get('title'), 
+                    'location':self.validated_data.get('location'),
+                    'conversation':conversation
+                }
+            )
+        except Contribution.MultipleObjectsReturned:
+            contrib = Contribution.objects.filter(origin_id=self.validated_data.get('origin_id'), community=source.community, source=source).order_by('id').first()
+            contrib.contribution_type = contribution_type 
+            contrib.channel = channel
+            contrib.author = author
+            contrib.timestamp = self.validated_data.get('timestamp')
+            contrib.title = self.validated_data.get('title')
+            contrib.location = self.validated_data.get('location')
+            contrib.conversation = conversation
+            created = False
 
         for tag_name in self.validated_data.get('tags', []):
             if tag_name is not None and len(tag_name.strip()) > 0:
