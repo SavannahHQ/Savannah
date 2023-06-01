@@ -192,8 +192,11 @@ class AcceptManager(SavannahView):
                     return redirect('dashboard', community_id=community_id)
                 else:
                     context['error'] = "Your invitation has expired"
-            except:
+            except ManagerInvite.DoesNotExist:
                 context['error'] = "Invalid invitation"
+            except Exception as e:
+                # Something went wrong in the code
+                raise e
 
         return render(request, "savannahv2/manager_accept.html", context)
 
