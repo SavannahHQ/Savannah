@@ -12,15 +12,16 @@ from corm.plugins import BasePlugin, PluginImporter
 from corm.models import *
 from frontendv2.views import SavannahView
 
-FACEBOOK_API_ROOT = 'https://graph.facebook.com/v12.0'
+FACEBOOK_API_VERSION = 'v17.0'
+FACEBOOK_API_ROOT = 'https://graph.facebook.com/%s' % FACEBOOK_API_VERSION
 FACEBOOK_SELF_URL = FACEBOOK_API_ROOT + '/me?fields=id,name,groups{name,administrator,member_count}'
 FACEBOOK_GROUP_FEED = FACEBOOK_API_ROOT + '/%s/feed?fields=message,created_time,updated_time,from,source,link,type,comments'
 FACEBOOK_PROFILE_URL = FACEBOOK_API_ROOT + '/%s?fields=name,link,picture'
 FACEBOOK_GROUP_EVENTS = FACEBOOK_API_ROOT + '/%s/events?fields=name,description,owner,start_time,end_time,is_draft,is_canceled'
 FACEBOOK_TIMESTAMP = '%Y-%m-%dT%H:%M:%S%z'
 
-AUTHORIZATION_BASE_URL = 'https://www.facebook.com/v12.0/dialog/oauth'
-TOKEN_URL = 'https://graph.facebook.com/v12.0/oauth/access_token'
+AUTHORIZATION_BASE_URL = 'https://www.facebook.com/%s/dialog/oauth' % FACEBOOK_API_VERSION
+TOKEN_URL = 'https://graph.facebook.com/%s/oauth/access_token' % FACEBOOK_API_VERSION
 
 class FacebookOrgForm(forms.ModelForm):
     class Meta:
