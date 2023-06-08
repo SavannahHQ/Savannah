@@ -49,6 +49,56 @@ class Command(BaseCommand):
             self.make_tag_insights(community)
             self.make_new_member_insights(community)
             self.make_first_contrib(community)
+            self.check_for_burnout(community)
+
+    def check_for_burnout(self, community):
+        offset_days = 7
+        trend_days = 90
+
+        trend_start = datetime.datetime.utcnow() - datetime.timedelta(days=(offset_days*2)+trend_days)
+        trend_end = baseline_start = datetime.datetime.utcnow() - datetime.timedelta(days=offset_days*2)
+        baseline_end = insight_start = datetime.datetime.utcnow() - datetime.timedelta(days=offset_days)
+        insight_end = datetime.datetime.utcnow()
+
+        members = Member.objects.filter(community=community, last_seen__gte=trend_start)
+        members = members.annotate(trend_count=Count('speaker_in', distinct=True, filter=Q(speaker_in__timestamp__gt=trend_start, speaker_in__timestamp__lte=trend_end)))
+        members = members.annotate(baseline_count=Count('speaker_in', distinct=True, filter=Q(speaker_in__timestamp__gt=baseline_start, speaker_in__timestamp__lte=baseline_end)))
+        members = members.annotate(insight_count=Count('speaker_in', distinct=True, filter=Q(speaker_in__timestamp__gt=insight_start, speaker_in__timestamp__lte=insight_end)))
+        members = members.filter(baseline_count__gt=0, trend_count__gt=0)
+
+        for member in members:
+            baseline_diff = 100 * (member.insight_count - member.baseline_count)/member.baseline_count
+            trend = (member.trend_count / trend_days) * offset_days
+            trend_diff = 100 * (member.insight_count - trend)/trend
+            if member.insight_count > member.baseline_count or member.insight_count > trend:
+                continue
+            if trend <= member.baseline_count*2 or trend*2 < offset_days:
+                continue
+            if self.verbosity >= 2:
+                print("%s [baseline]: %s -> %s (%s%%)" % (member.name, member.baseline_count, member.insight_count, baseline_diff))
+                print("%s [trend]: %s -> %s (%s%%)" % (member.name, trend, member.insight_count, trend_diff))
+
+            uid = 'member-burnout:%s' % member.id
+            try:
+                last_insight = Insight.objects.filter(community=community, uid=uid).order_by('-timestamp')[0]
+                days_since_last_insight = (datetime.datetime.utcnow() - last_insight.timestamp).days
+                if days_since_last_insight < offset_days:
+                    return
+            except:
+                pass
+            insight_title = 'Drop in activity from <b>%s</b>' % member.name
+            insight_text = '<p>%s averaged <b>%0.2f</b> conversations per week over the last %s days, but that activity dropped to <b>%s</b> last week and <b>%s</b> this week.</p>' % (member.name, trend, trend_days, member.baseline_count, member.insight_count)
+
+            Insight.create(
+                community=community, 
+                recipient=community.managers or community.owner,
+                uid=uid,
+                level=Insight.InsightLevel.DANGER,
+                title=insight_title,
+                text=insight_text,
+                cta="View Member Activity",
+                link=reverse('member_activity', kwargs={'member_id':member.id})
+            )
 
     def make_new_member_insights(self, community):
         offset_days = 7
