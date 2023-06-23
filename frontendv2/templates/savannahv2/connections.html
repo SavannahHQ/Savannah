@@ -150,7 +150,7 @@ d3.json("{% url 'connections_json' view.community.id %}{% if view.tag %}?tag={{v
     .selectAll("line")
     .data(links)
     .join("line")
-      .attr("stroke-width", d => Math.sqrt(d.value));
+      .attr("stroke-width", d => Math.sqrt(d.count));
 
   const node = svg.append("g")
       .attr("stroke", "#fff")

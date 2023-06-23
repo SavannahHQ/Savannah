@@ -125,7 +125,7 @@ class Connections(SavannahFilterView):
                 connections = connections.exclude(Q(to_member__role=view.role)|Q(from_member__role=view.role))
             else:
                 connections = connections.filter(Q(to_member__role=view.role)&Q(from_member__role=view.role))
-        connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected')
+        connections = connections.select_related('from_member').prefetch_related('from_member__tags').order_by('-last_connected', '-connection_count')
 
         for connection in connections:
             if connection.from_member_id != connection.to_member_id:
@@ -134,7 +134,7 @@ class Connections(SavannahFilterView):
                 else:
                     connection_id = str(connection.from_member_id) + ":" + str(connection.to_member_id)
 
-                links.append({"source":connection.from_member_id, "target":connection.to_member_id})
+                links.append({"source":connection.from_member_id, "target":connection.to_member_id, "count":connection.connection_count})
                 member_map[connection.from_member_id] = connection.from_member
                 if connection.from_member_id in missing_members:
                     missing_members.remove(connection.from_member_id)
