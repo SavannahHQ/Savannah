@@ -219,7 +219,7 @@ class Command(BaseCommand):
 
     def process_timestamp_field(self, member, field_name, value):
         try:
-            value = timestamp_parser.parse(value)
+            value = timestamp_parser.parse(value).replace(tzinfo=None)
         except:
             raise RuntimeError("Unknown timestamp format: %s" % value)
 

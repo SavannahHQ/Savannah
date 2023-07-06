@@ -308,7 +308,7 @@ class ImportList(SavannahView):
         self.active_tab = "sources"
 
     def all_uploads(self):
-        return UploadedFile.objects.filter(community_id=self.community.id)
+        return UploadedFile.objects.filter(community_id=self.community.id).order_by('uploaded_at')
 
     def as_view(request, community_id):
         view = ImportList(request, community_id)
