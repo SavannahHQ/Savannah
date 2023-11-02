@@ -639,6 +639,7 @@ class QuickAddAttendee(SavannahView):
                 self._form = AttendeeSignupForm()
         return self._form
 
+    @login_required
     def as_view(request, event_id):
         view = QuickAddAttendee(request, event_id)
         if request.method == 'POST':
