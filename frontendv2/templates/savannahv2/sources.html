@@ -49,6 +49,7 @@
                         {% endfor %}
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'integration_add' %}"><i class="fas fa-edit"></i> API Integration</a>
+                        <a class="dropdown-item" href="{% url 'import_upload' view.community.id %}"><i class="fas fa-file-arrow-up"></i> Import from file</a>
 
                     </div>
                   </div>

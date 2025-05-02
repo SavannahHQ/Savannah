@@ -20,10 +20,41 @@ from corm.connectors import ConnectionManager
 from frontendv2.views import SavannahView
 from frontendv2.models import ManagerInvite, ManagerProfile, PublicDashboard
 
-class Managers(SavannahView):
+class CommunitySettings(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
         self.active_tab = "community"
+        self.is_owner = False
+
+    def all_managers(self):
+        managers = []
+        if self.community.managers is not None:
+            for user in self.community.managers.user_set.all():
+                manager, created = ManagerProfile.objects.get_or_create(community=self.community, user=user)
+                managers.append(manager)
+        return sorted(managers, key=lambda m: m.last_seen or datetime.datetime(1970, 1, 1), reverse=True)
+
+    def invitations(self):
+        return ManagerInvite.objects.filter(community=self.community)
+
+    def plan(self):
+        return self.community.management.name
+
+    def all_webhooks(self):
+        hooks = WebHook.objects.filter(community=self.community)
+        return hooks
+
+    @login_required
+    def as_view(request, community_id):
+        view = CommunitySettings(request, community_id)
+        view.is_owner = request.user == view.community.owner
+
+        return render(request, "savannahv2/community_settings.html", view.context)
+
+class Managers(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.active_tab = "managers"
         self.is_owner = False
 
     def all_managers(self):
@@ -70,6 +101,7 @@ class Managers(SavannahView):
                 view.community.managers.user_set.remove(manager.user)
                 manager_name = str(manager)
                 manager.delete()
+                view.community.management.update()
                 messages.success(request, "Removed manager: <b>%s</b>" % manager_name)
 
                 return redirect('managers', community_id=community_id)
@@ -149,6 +181,8 @@ class AcceptManager(SavannahView):
                 invite = ManagerInvite.objects.get(community=view.community, key=confirmation_key)
                 if invite.expires >= datetime.datetime.utcnow():
                     view.community.managers.user_set.add(request.user)
+                    if view.community.management is not None:
+                        view.community.management.update()
                     if not request.user.email:
                         request.user.email = invite.email
                         request.user.save()
@@ -158,8 +192,11 @@ class AcceptManager(SavannahView):
                     return redirect('dashboard', community_id=community_id)
                 else:
                     context['error'] = "Your invitation has expired"
-            except:
+            except ManagerInvite.DoesNotExist:
                 context['error'] = "Invalid invitation"
+            except Exception as e:
+                # Something went wrong in the code
+                raise e
 
         return render(request, "savannahv2/manager_accept.html", context)
 
@@ -189,6 +226,52 @@ def revoke_invitation(request, community_id):
         invite.delete()
         messages.success(request, "Invitation has been revoked")
     return redirect('managers', community_id=community_id)
+
+EVENT_CHOICES = (
+    ('Member.*', "Member.*"),
+    ('Member.created', "Member.created"),
+    ('Member.changed', "Member.changed"),
+    ('Member.deleted', "Member.deleted"),
+    ('Member.merged', "Member.merged"),
+    ('EngagementLevel.*', "EngagementLevel.*"),
+    ('EngagementLevel.Up', "EngagementLevel.up"),
+    ('EngagementLevel.Down', "EngagementLevel.down"),
+)
+class WebhookForm(forms.ModelForm):
+
+    event = forms.ChoiceField(choices=EVENT_CHOICES)
+    class Meta:
+        model = WebHook
+        fields = ['event', 'target', 'enabled']
+
+class WebhookEdit(SavannahView):
+
+    def __init__(self, request, community_id, hook_id):
+        super(WebhookEdit, self).__init__(request, community_id)
+        self.community = get_object_or_404(Community, id=community_id)
+        self.hook = get_object_or_404(WebHook, id=hook_id)
+        self.active_tab = "community"
+        self._form = None
+
+    @property 
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = WebhookForm(instance=self.hook, data=self.request.POST, files=self.request.FILES)
+            else:
+                self._form = WebhookForm(instance=self.hook)
+        return self._form
+
+    @login_required
+    def as_view(request, community_id, hook_id):
+        view = WebhookEdit(request, community_id, hook_id)
+        if request.method == "POST" and view.form.is_valid():
+            community = view.form.save()
+            messages.success(request, "Webhook updated")
+            return redirect('community_settings', community_id=community_id)
+
+        return render(request, 'savannahv2/webhook_edit.html', view.context)
+
 
 class Gifts(SavannahView):
     def __init__(self, request, community_id):
@@ -279,8 +362,10 @@ class ManagerPreferences(SavannahView):
             form = ManagerPreferencesForm(instance=self.manager, data=self.request.POST)
         else:
             form = ManagerPreferencesForm(instance=self.manager)
-        form.fields['member'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=self.community)]
-        form.fields['member'].widget.choices.insert(0, ('', '-----'))
+        if self.manager.member is not None:
+            form.fields['member'].widget.choices = [(self.manager.member.id, self.manager.member.name)]
+        else:
+            form.fields['member'].widget.choices = []
         return form
 
     @login_required
@@ -422,7 +507,7 @@ class EditCommunity(SavannahView):
         if request.method == "POST" and view.form.is_valid():
             community = view.form.save()
             messages.success(request, "Community information updated")
-            return redirect('managers', community_id=community_id)
+            return redirect('community_settings', community_id=community_id)
 
         return render(request, 'savannahv2/community_edit.html', view.context)
 

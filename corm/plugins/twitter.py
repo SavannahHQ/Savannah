@@ -107,6 +107,12 @@ class TwitterPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return "https://www.twitter.com/%s" % contact.detail
 
+    def get_channel_url(self, channel):
+        if channel.name[0] == '@':
+            return "https://www.twitter.com/%s" % channel.name[1:]
+        else:
+            return 'https://twitter.com/search?q=%%23%s' % channel.name[1:]
+
     def get_company_url(self, group):
         return None
 
@@ -218,10 +224,10 @@ class TwitterImporter(PluginImporter):
         resp = requests.get(TWITTER_USER_LOOKUP, params={'usernames': user_id}, headers={'Authorization': 'Bearer %s' % self.source.auth_secret})
         if resp.status_code == 200:
             data = resp.json()
-            self._users[user_id] = data['data'][0]
-            return self._users[user_id]
-        else:
-            print("Failed to lookup identity info: %s" % resp.content)
+            if 'data' in data:
+                self._users[user_id] = data['data'][0]
+                return self._users[user_id]
+        print("Failed to lookup identity info: %s" % resp.content)
         return None
 
     def update_identity(self, identity):
@@ -279,11 +285,17 @@ class TwitterImporter(PluginImporter):
                 data = resp.json()
                 users = dict()
                 replied_to = dict()
-                for user in data['includes']['users']:
-                    users[user['id']] = user
-                for tweet in data['includes']['tweets']:
-                    replied_to[tweet['id']] = tweet
+                if 'includes' in data:
+                    for user in data['includes']['users']:
+                        users[user['id']] = user
+                    if 'tweets' in data['includes']:
+                        for tweet in data['includes']['tweets']:
+                            replied_to[tweet['id']] = tweet
 
+                if 'data' not in data:
+                    print(resp.content)
+                    raise RuntimeError("Failed to retreive username mentions")
+                    
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
                         continue
@@ -333,8 +345,18 @@ class TwitterImporter(PluginImporter):
                     print(resp.content)
                 data = resp.json()
                 users = dict()
-                for user in data['includes']['users']:
-                    users[user['id']] = user
+                replied_to = dict()
+                if 'includes' in data:
+                    for user in data['includes']['users']:
+                        users[user['id']] = user
+                    if 'tweets' in data['includes']:
+                        for tweet in data['includes']['tweets']:
+                            replied_to[tweet['id']] = tweet
+
+                if 'data' not in data:
+                    print(resp.content)
+                    raise RuntimeError("Failed to retreive hashtag mentions")
+
                 for tweet in data['data']:
                     if tweet['text'].startswith('RT'):
                         continue
@@ -345,8 +367,13 @@ class TwitterImporter(PluginImporter):
                     has_more = True
 
                     thread = None
-                    if tweet.get('conversation_id', None) and tweet['conversation_id'] != tweet['id']:
-                        thread = self.make_conversation(tweet['conversation_id'], channel=channel, speaker=replied_to, tstamp=tstamp)
+                    if tweet.get('conversation_id', None) and tweet['conversation_id'] != tweet['id'] and tweet['conversation_id'] in replied_to:
+                        parent = replied_to[tweet['conversation_id']]
+                        parent_tstamp = self.strptime(parent['created_at'])
+                        parent_user = users[parent['author_id']]
+                        parent_speaker = self.make_member(parent_user['id'], detail=parent_user['username'], name=parent_user.get('name', parent_user['username']), avatar_url=parent_user.get('profile_image_url', None), speaker=True)
+                        parent_url = 'https://twitter.com/%s/status/%s' % (parent_user['username'], parent['id'])
+                        thread = self.make_conversation(tweet['conversation_id'], channel=channel, speaker=parent_speaker, tstamp=parent_tstamp, location=parent_url, content=parent['text'])
 
                     user = users[tweet['author_id']]
                     speaker = self.make_member(user['id'], detail=user['username'], name=user.get('name', user['username']), avatar_url=user.get('profile_image_url', None), speaker=True)

@@ -87,15 +87,18 @@ class SourceAdd(SavannahView):
             if resp.status_code == 200:
                 data = resp.json()
                 # print(data)
-                for grp in data['data']['self']['memberships']['edges']:
-                    group_choices.append((grp['node']['id'], grp['node']['name']))
-                    group_names[grp['node']['id']] = grp['node']['name']
-                    if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
-                        pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
-                        group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
-                if  data['data']['self']['memberships']['pageInfo']['endCursor'] and  data['data']['self']['memberships']['pageInfo']['endCursor'] != cursor:
-                    cursor =  data['data']['self']['memberships']['pageInfo']['endCursor']
-                    has_more = True
+                if data['data']['self'] is not None and 'memberships' in data['data']['self'] and 'edges' in data['data']['self']['memberships']:
+                    for grp in data['data']['self']['memberships']['edges']:
+                        group_choices.append((grp['node']['id'], grp['node']['name']))
+                        group_names[grp['node']['id']] = grp['node']['name']
+                        if 'proNetwork' in grp['node'] and grp['node']['proNetwork'] is not None and grp['node']['proNetwork']['id'] not in group_names:
+                            pro_choices.append((grp['node']['proNetwork']['id'], grp['node']['proNetwork']['name']))
+                            group_names[grp['node']['proNetwork']['id']] = grp['node']['proNetwork']['name']
+                    if  data['data']['self']['memberships']['pageInfo']['endCursor'] and  data['data']['self']['memberships']['pageInfo']['endCursor'] != cursor:
+                        cursor =  data['data']['self']['memberships']['pageInfo']['endCursor']
+                        has_more = True
+                else:
+                    messages.error(request, "Failed to retrieve Meetup groups: No group memberships found!")
             else:
                 messages.error(request, "Failed to retrieve Meetup groups: %s"%  resp.content)
 
@@ -173,6 +176,9 @@ class MeetupPlugin(BasePlugin):
 
     def get_identity_url(self, contact):
         return "https://www.meetup.com/members/%s" % contact.origin_id
+
+    def get_channel_url(self, channel):
+        return "https://www.meetup.com/%s" % channel.name.lower().replace(' ', '-')
 
     def get_company_url(self, group):
         return None
@@ -385,6 +391,7 @@ class MeetupImporter(PluginImporter):
                 attendee = self.add_event_attendee(new_event, h, EventAttendee.HOST)
                 contrib, contrib_created = Contribution.objects.get_or_create(
                     community=self.community,
+                    source=self.source,
                     channel=channel,
                     author=h,
                     contribution_type=self.HOST_CONTRIBUTION,

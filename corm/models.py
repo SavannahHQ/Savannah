@@ -1,13 +1,14 @@
 import datetime, pytz
 import uuid
 from django.db import models
-from django.db.models import F, Q, Count, Max
+from django.db.models import F, Q, Count, Max, QuerySet
 from django.contrib.auth.models import User, Group
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404, reverse
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.messages.constants import DEFAULT_TAGS, WARNING
+from django.utils.safestring import mark_safe
 from jsonfield.fields import JSONField
 
 from imagekit import ImageSpec
@@ -15,6 +16,11 @@ from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
 
 from corm.connectors import ConnectionManager
+
+from django.dispatch import receiver
+from django.db.models.signals import post_save, post_delete
+
+from .signals import hook_event
 
 class IsNull(models.Func):
     _output_field = models.BooleanField()
@@ -33,8 +39,8 @@ class UserAuthCredentials(models.Model):
     connector = models.CharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
-    auth_secret = models.CharField(max_length=256, null=True, blank=True)
-    auth_refresh = models.CharField(max_length=256, null=True, blank=True)
+    auth_secret = models.CharField(max_length=1024, null=True, blank=True)
+    auth_refresh = models.CharField(max_length=1024, null=True, blank=True)
 
     def __str__(self):
         return "%s on %s" % (self.user, ConnectionManager.display_name(self.connector))
@@ -120,10 +126,24 @@ class NoManagement(ManagementPermissionMixin):
         self.community = community
         self.metadata = metadata
 
+    def update(self):
+        pass
+
+    @property 
+    def is_billable(self):
+        return False
+
 class DemoManagement(ManagementPermissionMixin):
     def __init__(self, community):
         self.community = community
         self.metadata = {}
+
+    def update(self):
+        pass
+
+    @property 
+    def is_billable(self):
+        return False
 
     @property
     def name(self):
@@ -157,6 +177,11 @@ class DemoManagement(ManagementPermissionMixin):
     def sales_itegration(self):
         return True
 
+class DevelopmentManagement(DemoManagement):
+    @property
+    def name(self):
+        return "Development Testing"
+
 class Community(models.Model):
     SETUP = 0
     ACTIVE = 1
@@ -164,6 +189,7 @@ class Community(models.Model):
     DEACTIVE = 3
     ARCHIVED = 4
     DEMO = 5
+    DEVELOPMENT = 6
 
     STATUS_CHOICES = [
         (SETUP, 'Setup'),
@@ -172,6 +198,7 @@ class Community(models.Model):
         (DEACTIVE, 'Deactive'),
         (ARCHIVED, 'Archived'),
         (DEMO, 'Demonstration'),
+        (DEVELOPMENT, 'Development'),
     ]
     STATUS_NAMES = {
         SETUP: "Setup",
@@ -180,6 +207,7 @@ class Community(models.Model):
         DEACTIVE: "Deactive",
         ARCHIVED: "Archived",
         DEMO: "Demonstration",
+        DEVELOPMENT: "Development",
     }
     class Meta:
         verbose_name = _("Community")
@@ -188,7 +216,7 @@ class Community(models.Model):
     name = models.CharField(verbose_name="Community Name", max_length=256)
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     managers = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
-    logo = models.ImageField(verbose_name="Community Icon", help_text="Will be resized to a 32x32px icon.", upload_to='community_logos', null=True)
+    logo = models.ImageField(verbose_name="Community Icon", help_text="Will be resized to a 32x32px icon.", upload_to='community_logos', null=True, blank=True)
     icon = ImageSpecField(source='logo', spec=Icon)
     created = models.DateTimeField(auto_now_add=True)
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=SETUP)
@@ -254,7 +282,7 @@ class Community(models.Model):
     @property    
     def contribution_type_names(self):
         ctype_query = self.contributiontype_set.all().order_by('name')
-        ctype_query = ctype_query.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0)
+        # ctype_query = ctype_query.annotate(contrib_count=Count('contribution')).filter(contrib_count__gt=0)
         try:
             return [ctype.name for ctype in ctype_query.distinct('name')]
         except:
@@ -267,6 +295,44 @@ class Community(models.Model):
     def __str__(self):
         return self.name
 
+class Insight(models.Model):
+    class InsightLevel(models.TextChoices):
+        SUCCESS = "success"
+        INFO = "info"
+        WARNING = "warning"
+        DANGER = "danger"
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=256, null=False, blank=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    level = models.CharField(choices=InsightLevel.choices, default=InsightLevel.INFO, max_length=20)
+    text = models.TextField()
+    link = models.CharField(max_length=256, blank=True, null=True)
+    cta = models.CharField(max_length=256, blank=True, null=True, default='More...')
+    unread = models.BooleanField(default=True, blank=False, db_index=True)
+    uid = models.CharField(max_length=256, null=False, blank=False)
+
+    def create(community, recipient, uid, title, text, level=InsightLevel.INFO, link=None, cta="More..."):
+        if isinstance(recipient, Group):
+            recipients = recipient.user_set.all()
+        elif isinstance(recipient, (QuerySet, list)):
+            recipients = recipient
+        else:
+            recipients = [recipient]
+
+        for recipient in recipients:
+            insight = Insight.objects.create(
+                community=community,
+                recipient=recipient,
+                uid=uid,
+                title=title,
+                level=level,
+                unread=True,
+                link=link,
+                cta=cta,
+                text=text
+            )
+            
 class Tag(models.Model):
     class Meta:
         ordering = ("name",)
@@ -415,13 +481,42 @@ class Member(TaggableModel):
             return "fas fa-user"
 
     def __str__(self):
-        return self.name
+        if self.name:
+            return self.name
+        elif self.email_address:
+            return self.email_address
+        else:
+            return self.id
+
+    def serialize(self):
+        company_name = None
+        try:
+            if self.company:
+                company_name = self.company.name
+        except:
+            pass
+        tags = []
+        try:
+            tags = [tag.name for tag in self.tags.all()]
+        except:
+            pass
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email_address,
+            'role': self.get_role_display(),
+            'company': company_name,
+            'tags': tags 
+        }
+
 
     def merge_with(self, other_member):
         merge_record = MemberMergeRecord.from_member(other_member, self)
 
         if self.user is None and other_member.user is not None :
             self.user = other_member.user
+            other_member.user = None
+            other_member.save()
         if other_member.first_seen is not None and (self.first_seen is None or self.first_seen > other_member.first_seen):
             self.first_seen = other_member.first_seen
         if other_member.last_seen is not None and (self.last_seen is None or self.last_seen < other_member.last_seen):
@@ -453,6 +548,7 @@ class Member(TaggableModel):
         Contribution.objects.filter(author=other_member).update(author=self)
         Gift.objects.filter(member=other_member).update(member=self)
         MemberWatch.objects.filter(member=other_member).update(member=self)
+        Opportunity.objects.filter(member=other_member).update(member=self)
 
         for tag in other_member.tags.all():
             self.tags.add(tag)
@@ -489,7 +585,29 @@ class Member(TaggableModel):
                 attendance.save()
 
         self.save()
+        send_hook(community=self.community, event='Member.merged', payload={'from': other_member.serialize(), 'to':self.serialize()}, sender=self.__class__)
         other_member.delete()
+
+@receiver(post_save, sender=Member, dispatch_uid='member-saved-hook')
+def member_saved(sender, instance,
+                        created,
+                        raw,
+                        using,
+                        **kwargs):
+    # print("Firing model_saved event for: %s" % instance)
+    event = 'Member.created' if created else 'Member.updated'
+    send_hook(community=instance.community, event=event, payload=instance.serialize(), sender=Member)
+
+@receiver(post_delete, sender=Member, dispatch_uid='member-deleted-hook')
+def model_deleted(sender, instance,
+                          using,
+                          **kwargs):
+    """
+    Automatically triggers "deleted" actions.
+    """
+    # print("Firing model_deleted event for: %s" % instance)
+    event = 'Member.deleted'
+    send_hook(community=instance.community, event=event, payload=instance.serialize(), sender=Member)
 
 class MemberMergeRecord(models.Model):
     community =  models.ForeignKey(Community, on_delete=models.CASCADE)
@@ -524,6 +642,7 @@ class MemberMergeRecord(models.Model):
             'event_attendance': [c.id for c in EventAttendee.objects.filter(member=member)],
             'watches': [w.id for w in MemberWatch.objects.filter(member=member)],
             'tasks': [t.id for t in Task.objects.filter(stakeholders=member)],
+            'opportunities': [o.id for o in Opportunity.objects.filter(member=member)],
             'levels': dict([(level.project_id, (level.level, level.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%f'))) for level in MemberLevel.objects.filter(member=member)])
         }
         return data
@@ -630,6 +749,22 @@ class MemberWatch(models.Model):
     last_seen = models.DateTimeField(null=True, blank=True)
     last_channel = models.ForeignKey('Channel', on_delete=models.SET_NULL, null=True, blank=True)
 
+class ImpactReport(models.Model):
+    class Meta:
+        ordering = ('start_timestamp',)
+    name = models.CharField(max_length=256)
+    start_timestamp = models.DateTimeField(null=False, blank=False)
+    impact_score = models.IntegerField(default=0, null=False, blank=False)
+    impact_1d = models.IntegerField(default=0, null=False, blank=False)
+    impact_7d = models.IntegerField(default=0, null=False, blank=False)
+    impact_15d = models.IntegerField(default=0, null=False, blank=False)
+    impact_30d = models.IntegerField(default=0, null=False, blank=False)
+    impact_60d = models.IntegerField(default=0, null=False, blank=False)
+    impact_90d = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
 class GiftType(models.Model):
     class Meta:
         ordering = ('discontinued', 'name')
@@ -671,7 +806,7 @@ class Source(models.Model):
     name = models.CharField(max_length=256)
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
-    auth_secret = models.CharField(max_length=256, null=True, blank=True)
+    auth_secret = models.CharField(max_length=1024, null=True, blank=True)
     api_key = models.CharField(max_length=256, null=True, blank=True)
     icon_name = models.CharField(max_length=256, null=True, blank=True)
     first_import = models.DateTimeField(null=True, blank=True)
@@ -718,6 +853,7 @@ class Channel(ImportedDataModel):
     last_import = models.DateTimeField(null=True, blank=True)
     import_failed_attempts = models.SmallIntegerField(default=0)
     import_failed_message = models.CharField(max_length=256, null=True, blank=True)
+    last_tagged = models.DateTimeField(null=True, blank=True)
     enabled = models.BooleanField(default=True)
 
     @property
@@ -727,6 +863,14 @@ class Channel(ImportedDataModel):
     @property
     def connector_name(self):
         return ConnectionManager.display_name(self.source.connector)
+
+    def get_origin_url(self):
+        try:
+            return ConnectionManager.CONNECTOR_PLUGINS[self.source.connector].get_channel_url(self)
+        except Exception as e:
+            print(e)
+            return None
+
 
     def __str__(self):
         return self.name
@@ -764,6 +908,8 @@ class Activity(TaggableModel):
     class Meta:
         ordering = ("-timestamp",)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='activity', on_delete=models.SET_NULL, null=True, blank=True)
     timestamp = models.DateTimeField(db_index=True)
@@ -783,6 +929,9 @@ class Activity(TaggableModel):
         else:
             return Member.objects.none()
         
+    def __str__(self):
+        return self.short_description
+
 class Hyperlink(models.Model):
     """
     For tracking links people mention in conversations
@@ -801,6 +950,8 @@ class Hyperlink(models.Model):
 class Conversation(TaggableModel, ImportedDataModel):
     class Meta:
         ordering = ("-timestamp",)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     speaker = models.ForeignKey(Member, related_name='speaker_in', on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField(null=True, blank=True)
@@ -855,6 +1006,8 @@ class Conversation(TaggableModel, ImportedDataModel):
         activity, created = Activity.objects.get_or_create(
             conversation=self,
             defaults = {
+                'community':self.community,
+                'source':self.source,
                 'channel':self.channel,
                 'member':self.speaker,
                 'timestamp':self.timestamp,
@@ -892,9 +1045,11 @@ class Project(models.Model):
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     owner = models.ForeignKey(Member, related_name='owned_projects', on_delete=models.SET_NULL, null=True, blank=True)
     default_project = models.BooleanField(default=False)
-    tag = models.ForeignKey(Tag, verbose_name="Content tag", related_name='projects_by_content', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any content with this tag will be included in this project\'s activity')
-    member_tag = models.ForeignKey(Tag, verbose_name="Member tag", related_name='projects_by_member', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any activity by a member with this tag will be included in this project\'s activity')
-    channels = models.ManyToManyField(Channel, blank=True, help_text='Any activity in these channels will be included in this project\'s activity')
+    tag = models.ForeignKey(Tag, verbose_name="Content tag", related_name='projects_by_content', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any content with this tag will be included in this segment\'s activity')
+    member_tag = models.ForeignKey(Tag, verbose_name="Member tag", related_name='projects_by_member', on_delete=models.SET_NULL, null=True, blank=True, help_text='Any activity by a member with this tag will be included in this segment\'s activity')
+    channels = models.ManyToManyField(Channel, blank=True, help_text='Any activity in these channels will be included in this segment\'s activity')
+    joined_start = models.DateTimeField(blank=True, null=True, help_text='Any activity by a member first seen after this date will have their activity included in this segment\'s activity')
+    joined_end = models.DateTimeField(blank=True, null=True, help_text='Any activity by a member first seen before this date will have their activity included in this segment\'s activity')
     threshold_period = models.SmallIntegerField(verbose_name="Activity Period", default=365, help_text="Timerange in days to look at for level activity")
     threshold_user = models.SmallIntegerField(verbose_name="Visitor level", default=1, help_text="Number of conversations needed to become a Visitor")
     threshold_participant = models.SmallIntegerField(verbose_name="Participant level", default=3, help_text="Number of conversations needed to become a Participant")
@@ -936,7 +1091,7 @@ class MemberLevel(models.Model):
     ]
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
     member = models.ForeignKey(Member, related_name='collaborations', on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name='Segment')
     level = models.SmallIntegerField(choices=LEVEL_CHOICES, default=USER, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     conversation_count = models.IntegerField(default=0)
@@ -950,7 +1105,7 @@ class Task(TaggableModel):
     class Meta:
         ordering = ("done", "due",)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=False, blank=False)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=False, blank=False, verbose_name='Segment')
     owner = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
     name = models.CharField(max_length=256)
     detail = models.TextField(null=True, blank=True)
@@ -997,6 +1152,7 @@ class Contribution(TaggableModel, ImportedDataModel):
         verbose_name_plural = _("Contributions")
         ordering = ('-timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
     contribution_type = models.ForeignKey(ContributionType, on_delete=models.CASCADE)
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=256)
@@ -1015,6 +1171,8 @@ class Contribution(TaggableModel, ImportedDataModel):
         activity, created = Activity.objects.update_or_create(
             contribution=self,
             defaults = {
+                'community':self.community,
+                'source':self.source,
                 'channel':self.channel,
                 'member':self.author,
                 'timestamp':self.timestamp,
@@ -1054,8 +1212,8 @@ class Event(ImportedDataModel):
         verbose_name_plural = _("Events")
         ordering = ('start_timestamp',)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
-    channel = models.ForeignKey(Channel, on_delete=models.SET_NULL, null=True, blank=True)
+    source = models.ForeignKey(Source, on_delete=models.CASCADE)
+    channel = models.ForeignKey(Channel, on_delete=models.CASCADE)
     title = models.CharField(max_length=256)
     description = models.TextField(null=True, blank=True)
     start_timestamp = models.DateTimeField(db_index=True)
@@ -1119,6 +1277,8 @@ class EventAttendee(models.Model):
         activity, created = Activity.objects.get_or_create(
             event_attendance=self,
             defaults = {
+                'community':self.community,
+                'source':self.event.source,
                 'channel':self.event.channel,
                 'member':self.member,
                 'timestamp':self.timestamp,
@@ -1219,7 +1379,7 @@ class SuggestTag(Suggestion):
 
 class SuggestTask(Suggestion):
     stakeholder = models.ForeignKey(Member, related_name='task_suggestions', on_delete=models.CASCADE)    
-    project = models.ForeignKey(Project, related_name='task_suggestions', on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, related_name='task_suggestions', on_delete=models.CASCADE, verbose_name='Segment')
     due_in_days = models.SmallIntegerField(default=0)
     name = models.CharField(max_length=256)
     description = models.TextField()
@@ -1266,8 +1426,9 @@ class SuggestConversationAsContribution(Suggestion):
         supporters = self.conversation.participation.exclude(member_id=self.conversation.speaker.id)
         for supporter in supporters:
             contrib, created = Contribution.objects.get_or_create(
-                community=self.contribution_type.community,
+                community=self.conversation.community,
                 contribution_type=self.contribution_type,
+                source=self.conversation.source,
                 channel=self.conversation.channel,
                 title=self.title,
                 timestamp=self.conversation.timestamp,
@@ -1527,3 +1688,242 @@ class EmailRecord(models.Model):
     body = models.TextField(null=False, max_length=1024)
     ok = models.BooleanField(null=False, default=True)
 
+class UploadedFile(models.Model):
+    UPLOADED = 0
+    PENDING = 1
+    PROCESSING = 2
+    COMPLETE = 3
+    FAILED = 4
+    CANCELED = 5
+    STATUS_CHOICES = [
+        (UPLOADED, 'Uploaded'),
+        (PENDING, 'Pending'),
+        (PROCESSING, 'Processing'),
+        (COMPLETE, 'Complete'),
+        (FAILED, 'Failed'),
+        (CANCELED, 'Canceled'),
+    ]
+    STATUS_NAMES = {
+        UPLOADED: "Uploaded",
+        PENDING: "Pending",
+        PROCESSING: "Processing",
+        COMPLETE: "Complete",
+        FAILED: "Failed",
+        CANCELED: "Canceled",
+    }
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=512)
+    mime_type = models.CharField(max_length=64, null=True, blank=True)
+    record_length = models.PositiveIntegerField(default=0)
+    header = models.CharField(max_length=512, null=True, blank=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_to = models.FileField()
+    mapping = models.JSONField(default=dict())
+    status = models.PositiveSmallIntegerField(default=UPLOADED, choices=STATUS_CHOICES)
+    status_msg = models.CharField(max_length=256, null=True, blank=True)
+    import_tag = models.ForeignKey(Tag, on_delete=models.SET_NULL, null=True, blank=True, help_text="Tag all Members in this file")
+
+    def __str__(self):
+        return self.name
+
+    def get_status_display(self):
+        if self.status == self.CANCELED:
+            return mark_safe('<span class="text-muted font-weight-bold">Canceled</span>')
+        elif self.status == self.FAILED:
+            return mark_safe('<span class="text-danger font-weight-bold" title="%s">Failed</span>' % self.status_msg.replace('"', '&quot;'))
+        elif self.status == self.COMPLETE:
+            return mark_safe('<span class="text-success font-weight-bold">Complete</span>')
+        elif self.status == self.PROCESSING:
+            return mark_safe('<span class="text-primary font-weight-bold">Processing</span>')
+        elif self.status == self.PENDING:
+            return mark_safe('<span class="text-info font-weight-bold">Ready</span>')
+        elif self.status == self.UPLOADED:
+            return mark_safe('<span class="text-savannah-orange font-weight-bold">Needs Mapping</span>')
+        else:
+            return mark_safe('<span class="text-muted font-weight-bold">%s</span>' % self.STATUS_NAMES[self.status])
+    @property
+    def columns(self):
+        return [f.replace('"', '') for f in self.header.split(',')]
+
+    def save(self, *args, **kwargs):
+        header_lines = 1
+        if self.header is None:
+            self.header = self.uploaded_to.file.readline().decode(getattr(self.uploaded_to, 'encoding', 'utf-8')).strip().replace('"', '')
+            header_lines = 0
+        if self.mime_type is None and hasattr(self.uploaded_to.file, 'content_type'):
+            self.mime_type = self.uploaded_to.file.content_type
+        if self.record_length == 0:
+            self.record_length = len(self.uploaded_to.file.readlines()) - header_lines
+        super(UploadedFile, self).save(*args, **kwargs)
+
+class Opportunity(models.Model):
+    class Meta:
+        verbose_name_plural = "Opportunities"
+        # ordering = ("-created_at")
+    REJECTED = -2
+    DECLINED = -1
+    IDENTIFIED = 0
+    PROPOSED = 1
+    AGREED = 2
+    SUBMITTED = 3
+    COMPLETE = 4
+    CLOSED_STATUSES = (REJECTED, DECLINED, COMPLETE)
+    STATUS_CHOICES = [
+        (REJECTED, "Rejected"),
+        (DECLINED, "Declined"),
+        (IDENTIFIED, "Identified"),
+        (PROPOSED, "Proposed"),
+        (AGREED, "Agreed"),
+        (SUBMITTED, "Submitted"),
+        (COMPLETE, "Complete"),
+        
+    ]
+    STATUS_MAP = dict(STATUS_CHOICES)
+    STATUS_ICONS = {
+        IDENTIFIED: 'fas fa-shield',
+        PROPOSED: 'fas fa-shield-exclamation',
+        AGREED: 'fas fa-shield-heart',
+        SUBMITTED: 'fas fa-shield-plus',
+        COMPLETE: 'fas fa-shield-check',
+        DECLINED: 'fas fa-shield-minus',
+        REJECTED: 'fas fa-shield-xmark',
+    }
+    STATUS_COLORS = {
+        IDENTIFIED: 'secondary',
+        PROPOSED: 'primary',
+        AGREED: 'info',
+        SUBMITTED: 'success',
+        COMPLETE: 'success',
+        DECLINED: 'danger',
+        REJECTED: 'danger',
+    }
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='opportunities')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, related_name='opportunities')
+    name = models.CharField(max_length=512)
+    description = models.TextField()
+    contribution_type = models.ForeignKey(ContributionType, on_delete=models.CASCADE, related_name='opportunities')
+    source = models.ForeignKey(Source, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities')
+    status = models.SmallIntegerField(choices=STATUS_CHOICES, default=IDENTIFIED)
+    deadline = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities_created')
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='opportunities_closed')
+    activities = models.ManyToManyField(Activity, null=True, blank=True, related_name='opportunities')
+
+    @property
+    def past_due(self):
+        return self.deadline < datetime.datetime.utcnow()
+
+    @property
+    def is_done(self):
+        return self.closed_at is not None
+
+    def __str__(self):
+        return self.name
+
+    def get_next_options(self):
+        options = []
+        if self.status == self.IDENTIFIED:
+            options = [
+                self.PROPOSED,
+                self.REJECTED,
+            ]
+        if self.status == self.PROPOSED:
+            options = [
+                self.AGREED,
+                self.DECLINED,
+            ]
+        if self.status == self.AGREED:
+            options = [
+                self.SUBMITTED,
+                self.DECLINED,
+            ]
+        if self.status == self.SUBMITTED:
+            options = [
+                self.COMPLETE,
+                self.REJECTED,
+            ]
+
+        return [(self.STATUS_MAP[o], o, self.STATUS_ICONS[o], 'opportunity-%s' % self.STATUS_MAP[o].lower()) for o in options]
+
+    @property
+    def current_history(self):
+        return self.history.filter(opportunity=self, ended_at__isnull=True).order_by('-started_at').first()
+
+    def save(self, *args, **kwargs):
+        r = super().save(*args, **kwargs)
+        c = self.current_history
+        if c is not None:
+            if c.stage != self.status:
+                c.ended_at = datetime.datetime.now()
+                c.save()
+                c = OpportunityHistory.objects.create(community=self.community, opportunity=self, stage=self.status, started_at=datetime.datetime.now())
+        else:
+            c = OpportunityHistory.objects.create(community=self.community, opportunity=self, stage=self.status, started_at=datetime.datetime.now())
+
+class OpportunityHistory(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    opportunity = models.ForeignKey(Opportunity, on_delete=models.CASCADE, related_name='history')
+    stage = models.SmallIntegerField(choices=Opportunity.STATUS_CHOICES, default=Opportunity.IDENTIFIED)
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+
+# Create your models here.
+class WebHook(models.Model):
+    class Meta:
+        ordering = ('-created',)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    community = models.ForeignKey(Community, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='%(class)ss', on_delete=models.CASCADE)
+    event = models.CharField('Event', max_length=64, db_index=True)
+    target = models.URLField('Target URL', max_length=255)
+    secret = models.UUIDField(default=uuid.uuid4, editable=False)
+    enabled = models.BooleanField(default=True)
+    send_failed_attempts = models.SmallIntegerField(default=0)
+    send_failed_message = models.CharField(max_length=512, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)
+
+
+class WebHookEvent(models.Model):
+    class Meta:
+        ordering = ('-created',)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created = models.DateTimeField(auto_now_add=True)
+    hook = models.ForeignKey(WebHook, related_name='events', on_delete=models.CASCADE)
+    event = models.CharField(max_length=256)
+    payload = models.JSONField()
+    send_failed_attempts = models.SmallIntegerField(default=0)
+    send_failed_message = models.CharField(max_length=512, null=True, blank=True)
+    success = models.BooleanField(default=False)
+
+    @property
+    def last_attempt(self):
+        return self.log.last()
+
+    def __str__(self):
+        return str(self.id)
+
+
+class WebHookEventLog(models.Model):
+    class Meta:
+        ordering = ('-timestamp',)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(WebHookEvent, related_name='log', on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.SmallIntegerField(null=True, blank=True)
+    response = models.TextField(blank=True)
+
+    def __str__(self):
+        return str(self.id)
+
+from .webhooks import hook_triggered as send_hook

@@ -148,6 +148,9 @@ class GitlabPlugin(BasePlugin):
     def get_identity_url(self, contact):
         return contact.origin_id
 
+    def get_channel_url(self, channel):
+        return '%s/%s/%s' % (channel.source.server, channel.source.auth_id, channel.name)
+
     def get_icon_name(self):
         return 'fab fa-gitlab'
 
@@ -255,7 +258,7 @@ class GitlabImporter(PluginImporter):
             gitlab_user_id = author.get('web_url')
             submitter = self.make_member(origin_id=gitlab_user_id, detail=author.get('username'), channel=channel, tstamp=thread_tstamp, avatar_url=author.get('avatar_url'), name=author.get('name'), speaker=True)
             
-            contrib, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':thread_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link})
+            contrib, created = Contribution.objects.update_or_create(origin_id=issue.get('iid'), community=source.community, source=source, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':submitter, 'timestamp':thread_tstamp, 'title':issue.get('title'), 'location':gitlab_convo_link})
             contrib.update_activity(thread.activity)
             # Not all comments should get the channel tag, but all PRs should
             if channel.tag:

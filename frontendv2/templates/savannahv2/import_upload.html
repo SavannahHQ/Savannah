@@ -1,0 +1,65 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Import File{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Import from file</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Upload File</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                <form class="form" action="{% url 'import_upload' view.community.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if view.upload.event %}
+                <div id="div_id_event" class="form-group"> Event: <span class="ml-3 font-weight-bold"> <a href="{% url 'event' view.upload.event.id %}">{{view.upload.event.title}}</a> </span> </div>
+                <input type="hidden" name="event" value="{{view.upload.event.id}}" />
+                {% endif %}
+                {{ view.form|crispy }}
+                <button class="btn btn-primary" type="submit">Upload</button>
+                </form>
+                </div>            
+
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  jQuery('#id_source').on('change', function() {
+    if (this.value == 'other' ) {
+        jQuery('#div_id_other').show();
+    }
+    else {
+        jQuery('#div_id_other').hide();
+    }
+});
+
+if (document.getElementById('id_source').value != 'other') {
+    jQuery('#div_id_other').hide();
+}
+</script>
+{% endblock %}

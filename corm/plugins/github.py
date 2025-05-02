@@ -159,6 +159,9 @@ class GithubPlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        return channel.origin_id
+
     def get_icon_name(self):
         return 'fab fa-github'
 
@@ -273,6 +276,8 @@ class GithubImporter(PluginImporter):
                 conversations = set()
                 tstamp = datetime.datetime.strptime(issue['created_at'], GITHUB_TIMESTAMP)
                 github_convo_link = issue['url']
+                if self.verbosity >= 3:
+                    print("Found issue: %s" % github_convo_link)
 
                 # Add Member
                 github_user_id = 'github.com/%s' % issue['user']['login']
@@ -287,7 +292,7 @@ class GithubImporter(PluginImporter):
                     conversations.add(convo)
                     # Pull Requests are Contributions
                     if 'pull_request' in issue:
-                        contrib, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'][:255], 'location':issue['html_url']})
+                        contrib, created = Contribution.objects.update_or_create(origin_id=github_convo_link, community=community, source=source, defaults={'contribution_type':self.PR_CONTRIBUTION, 'channel':channel, 'author':member, 'timestamp':tstamp, 'title':issue['title'][:255], 'location':issue['html_url']})
                         contrib.update_activity(convo.activity)
                         # Not all comments should get the channel tag, but all PRs should
                         if channel.tag:
@@ -324,7 +329,12 @@ class GithubImporter(PluginImporter):
                                             participants.add(tagged_contact.member)
                                         except:
                                             pass#print("    Failed to find Contact for %s" % tagged_user)
-
+                    else:
+                        if self.verbosity >= 1:
+                            print("Error fetching comments for %s, API returned %s" % (github_convo_link, comment_resp.status_code))
+                else:
+                    if self.verbosity >= 2:
+                        print("No comments found on %s" % github_convo_link)
 
                 try:
                     tagged = set(tag_matcher.findall(issue['body']))
@@ -345,7 +355,8 @@ class GithubImporter(PluginImporter):
                 # Add everybody involved as a participant in every conversation
                 for convo in conversations:
                     self.add_participants(convo, participants)
-
+        else:
+            raise RuntimeError("Error reading issues from Github, API returned %s" % resp.status_code)
 
         # If there are more pages of issues, continue on to the next apge
         if 'link' in resp.headers and 'rel="next"' in resp.headers['link']:

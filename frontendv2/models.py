@@ -101,11 +101,14 @@ class PasswordResetRequest(models.Model):
 
     @classmethod
     def send(cls, email):
+        email = email.lower()
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email__iexact=email)
+        except User.MultipleObjectsReturned:
+            user = User.objects.filter(email__iexact=email).order_by('-last_login').first()
         except User.DoesNotExist:
             try:
-                manager = ManagerProfile.objects.get(contact_email=email)
+                manager = ManagerProfile.objects.get(contact_email__iexact=email)
                 user = manager.user
             except ManagerProfile.DoesNotExist:
                 # No matching user, silently ignore
@@ -199,7 +202,10 @@ class PublicDashboard(models.Model):
             view.rangeend = datetime.datetime.utcnow()
 
         if self.pin_time:
-            view.rangeend = datetime.datetime.strptime(filters.get('rangeend', self.created_at), view.DATE_FORMAT)
+            if 'rangeend' in filters and filters.get('rangeend') is not None:
+                view.rangeend = datetime.datetime.strptime(filters.get('rangeend'), view.DATE_FORMAT)
+            else:
+                view.rangeend = self.created_at
             if 'rangestart' in filters and filters.get('rangestart') is not None:
                 view.rangestart = datetime.datetime.strptime(filters.get('rangestart'), view.DATE_FORMAT)
             else:

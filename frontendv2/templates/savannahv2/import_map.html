@@ -1,0 +1,45 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Import Mapping{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Map import data</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Column Mapping</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                <form class="form" action="{% url 'import_map' view.community.id view.upload.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ view.form|crispy }}
+                <button class="btn btn-primary" type="submit">Save Mapping</button>
+                </form>
+                </div>            
+
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

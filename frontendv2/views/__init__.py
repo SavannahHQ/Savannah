@@ -1,7 +1,8 @@
 import operator
 import datetime
 import json
-from django.shortcuts import render, get_object_or_404, redirect, reverse
+from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404, Http404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count, Max
 from django.db.models.functions import Lower
@@ -10,10 +11,17 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, User
 from django.contrib import messages
 from django.conf import settings
 from django import forms
+from django.views.decorators.csrf import csrf_exempt
 
 from corm.models import *
 from frontendv2 import colors
 from frontendv2.models import EmailMessage, PasswordResetRequest, PublicDashboard
+
+@csrf_exempt
+def dump(request):
+    print(request.get_raw_uri())
+    print(request.body)
+    return HttpResponse(content=str(request.body))
 
 # Create your views here.
 def index(request):
@@ -62,7 +70,10 @@ def login(request):
                 raw_password = login_form.cleaned_data.get("password")
                 user = authenticate(username=username, password=raw_password)
                 login_user(request, user, backend=user.backend)
-                return redirect(next_view)
+                try:
+                    return redirect(next_view)
+                except:
+                    raise Http404("Page does not exist")
             else:
                 context["login_form"] = login_form
                 context["action"] = "login"
@@ -74,7 +85,10 @@ def login(request):
                 raw_password = signup_form.cleaned_data.get("password1")
                 user = authenticate(username=username, password=raw_password)
                 login_user(request, user, backend=user.backend)
-                return redirect(next_view)
+                try:
+                    return redirect(next_view)
+                except:
+                    raise Http404("Page does not exist")
             else:
                 context["signup_form"] = signup_form
                 context["action"] = "signup"
@@ -168,7 +182,7 @@ class SavannahView:
         else:
             self.community = None
         if request.user.is_authenticated:
-            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow()})
+            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow(), 'send_notifications':(not request.user.is_superuser)})
             self.user_member = self.manager_profile.member
         else:
             self.manager_profile = None
@@ -179,6 +193,8 @@ class SavannahView:
         self.DATE_FORMAT = '%Y-%m-%d'
         self._add_sources_message()
 
+    def unread_insights(self):
+        return Insight.objects.filter(community=self.community, recipient=self.request.user, unread=True).order_by('-timestamp')
 
     def _add_sources_message(self):
         if self.request.method == "GET" and self.request.user.is_authenticated:
@@ -189,19 +205,31 @@ class SavannahView:
             elif self.community.status == Community.ARCHIVED:
                 messages.info(self.request, "This community has been archived and will no longer receive updates.")
             elif self.community.source_set.all().count() == 0:
-                messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-file-import\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                    messages.error(self.request, "We can't import data for <b>%s</b> until you've added add your first data source. You can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-database\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+                else:
+                    messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-database\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
+                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                    messages.info(self.request, "You can try demo of Savannah CRM using sample data on <b><a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a></b>.")
             elif self.community.status == Community.SETUP:
                 messages.success(self.request, "Your community is all set! <a href=\"%s\">Start you subsription now</a> and Savannah will begin importing your data." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
+                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                    messages.info(self.request, "You can try demo of Savannah CRM using sample data on <a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a>.")
         
     @property
-    def context(self):
+    def all_user_communities(self):
+        if hasattr(self, '_user_communities'):
+            return self._user_communities
         if self.request.user.is_authenticated:
-            communities = Community.objects.filter(Q(status__lte=Community.SUSPENDED)|Q(status=Community.DEMO)).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
+            self._user_communities = Community.objects.exclude(status=Community.DEACTIVE).exclude(status=Community.ARCHIVED).filter(Q(owner=self.request.user) | Q(managers__in=self.request.user.groups.all())).annotate(member_count=Count('member')).order_by('-member_count')
         else:
-            communities = []
+            self._user_communities = Community.objects.none()
+        return self._user_communities
+
+    @property
+    def context(self):
         return {
             "SITE_ROOT": settings.SITE_ROOT,
-            "communities": communities,
             "active_community": self.community,
             "active_tab": self.active_tab,
             "view": self,
@@ -329,9 +357,9 @@ class SavannahFilterView(SavannahView):
             self.exclude_source = False
             request.session['source'] = None
 
-        self.rangestart = None
-        self.rangeend = None
         self.timespan = self.MAX_TIMESPAN
+        self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
+        self.rangeend = datetime.datetime.utcnow()
         self.DATE_FORMAT = '%Y-%m-%d'
         if 'timefilter' not in request.session:
             request.session['timefilter'] = 'timespan'
@@ -343,7 +371,7 @@ class SavannahFilterView(SavannahView):
                     self.rangestart = datetime.datetime.strptime(request.GET.get('rangestart'), self.DATE_FORMAT)
                     request.session['rangestart'] = self.rangestart.strftime(self.DATE_FORMAT)
                     request.session['timefilter'] = 'range'
-            elif 'rangestart' in request.session:
+            elif request.session.get('rangestart'):
                 self.rangestart = datetime.datetime.strptime(request.session.get('rangestart'), self.DATE_FORMAT)
 
             if 'rangeend' in request.GET:
@@ -354,8 +382,9 @@ class SavannahFilterView(SavannahView):
                     self.rangeend = self.rangeend.replace(hour=23, minute=59, second=59)
                     request.session['rangeend'] = self.rangeend.strftime(self.DATE_FORMAT)
                     request.session['timefilter'] = 'range'
-            elif 'rangeend' in request.session:
+            elif request.session.get('rangeend'):
                 self.rangeend = datetime.datetime.strptime(request.session.get('rangeend'), self.DATE_FORMAT)
+                self.rangeend = self.rangeend.replace(hour=23, minute=59, second=59)
 
             if 'timespan' in request.GET:
                 if request.GET.get('timespan') == '':
@@ -378,7 +407,7 @@ class SavannahFilterView(SavannahView):
         if self.timefilter == 'timespan':
             self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
             self.rangeend = datetime.datetime.utcnow()
-        else:
+        elif self.rangestart is not None and self.rangeend is not None:
             self.timespan = (self.rangeend - self.rangestart).days + 1
 
     def filters_as_dict(self, request):

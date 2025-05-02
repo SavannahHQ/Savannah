@@ -1,0 +1,82 @@
+{% extends "savannahv2/base.html"%}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Edit Webhook{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Edit Webhook</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Hook Form  -->
+            <div class="col-xl-6 col-lg-8 col-md-10 col-sm-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Webhook Settings</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+
+                <form class="form" action="{% url 'webhook_edit' view.community.id view.hook.id %}" method="POST">
+                {% csrf_token %}
+                {{ view.form|crispy }}
+                <p class="mt-3"><b>Secret Key:</b> {{view.hook.secret}}</p>
+
+                <button class="btn btn-primary" type="submit">Save</button>
+                <a class="btn btn-secondary" href="{% url 'community_settings' view.community.id %}">Cancel</a>
+                </form>
+
+              </div>            
+
+                </div>
+              </div>
+            </div>
+
+
+            <!-- Hook Form  -->
+            <div class="col-xl-6 col-lg-4 col-md-10 col-sm-12">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Events</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                {% for event in view.hook.events.all %}
+                <div class="row mb-2">
+                  <div class="col-6">
+                    {% if event.success %}
+                      <i class="text-success fas fa-circle-check"></i>
+                    {% else %}
+                      <i class="text-danger fas fa-circle-xmark" data-toggle="tooltip" data-placement="left" data-container="body" data-title="{{event.last_attempt.response}}"></i>
+                    {% endif %}
+                    {{event.event}}</div>
+                  <div class="col-6">{{event.created}}</div>
+                  <div class="col-12 text-muted">{{event.payload}}</div>
+
+                </div>
+                {% endfor %}
+              </div>            
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+

@@ -95,7 +95,7 @@ class RssPlugin(BasePlugin):
     def get_channels(self, source):
         channels = []
 
-        resp = requests.get(source.server)   
+        resp = requests.get(source.server, headers={'User-agent': 'SavannahCRM'})   
         if resp.status_code == 200:
             data = resp.text
             try:
@@ -155,7 +155,7 @@ class RssImporter(PluginImporter):
       source = channel.source
       community = source.community
 
-      resp = requests.get(channel.origin_id)
+      resp = requests.get(channel.origin_id, headers={'User-agent': 'SavannahCRM'})
       if resp.status_code == 200:
           rawxml = io.StringIO(resp.text)
           tree = XMLParser.parse(rawxml)
@@ -185,7 +185,12 @@ class RssImporter(PluginImporter):
         blog_author_id = '%s/%s' % (source.server, author_name)
         member = self.make_member(blog_author_id, detail=author_name, channel=channel, tstamp=tstamp, name=author_name, speaker=True)
 
-        blog_content = item.find('description').text
+        blog_content = None
+        if item.find('{http://purl.org/rss/1.0/modules/content/}encoded') is not None:
+            blog_content = item.find('{http://purl.org/rss/1.0/modules/content/}encoded').text
+        elif item.find('description') is not None:
+            blog_content = item.find('description').text
+
         if blog_content is not None:
             blog_content = re.sub('<[^<]+?>', '', blog_content)
         origin_parts = origin_id.split("#")
@@ -196,12 +201,12 @@ class RssImporter(PluginImporter):
             if article_title.startswith("Comment on "):
                 # Wordpress comments prefix this to the article title
                 article_title = article_title[11:]
-            contrib, created = Contribution.objects.get_or_create(community=community, origin_id=origin_parts[0], contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':None, 'timestamp':tstamp, 'location':origin_parts[0]})
+            contrib, created = Contribution.objects.get_or_create(community=community, source=source, origin_id=origin_parts[0], contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':None, 'timestamp':tstamp, 'location':origin_parts[0]})
             convo = self.make_conversation(origin_id=origin_id, channel=channel, speaker=member, content=blog_content, tstamp=tstamp, location=origin_id, thread=getattr(contrib, 'conversation', None))
         else:
             if self.verbosity >= 2:
                 print("Found article: %s" % origin_id)
-            contrib, created = Contribution.objects.update_or_create(community=community, origin_id=origin_id, contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
+            contrib, created = Contribution.objects.update_or_create(community=community, source=source, origin_id=origin_id, contribution_type=self.BLOG_CONTRIBUTION, defaults={'channel':channel, 'title':article_title, 'author':member, 'timestamp':tstamp, 'title':article_title, 'location':article_link})
             convo = self.make_conversation(origin_id=origin_id, channel=channel, speaker=member, content=blog_content, tstamp=tstamp, location=origin_id, contribution=contrib)
             if channel.tag:
                 contrib.tags.add(channel.tag)

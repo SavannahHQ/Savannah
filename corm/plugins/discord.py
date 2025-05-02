@@ -163,6 +163,12 @@ class DiscordPlugin(BasePlugin):
         else:
             return None
 
+    def get_channel_url(self, channel):
+        if channel.origin_id:
+            return "https://discord.com/channels/%s/%s" % (channel.source.auth_id, channel.origin_id)
+        else:
+            return None
+
     def get_icon_name(self):
         return 'fab fa-discord'
         
@@ -260,6 +266,7 @@ class DiscordImporter(PluginImporter):
                         raise e
             else:
                 print("Failed to get conversations: %s" % resp.content)
+                raise RuntimeError("Failed to get conversations: %s" % resp.content)
 
         return
 

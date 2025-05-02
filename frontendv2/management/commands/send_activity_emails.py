@@ -37,6 +37,8 @@ class Command(BaseCommand):
 
     def send_missed_activity_report(self, manager):
         community = manager.community
+        if community.status != Community.ACTIVE:
+            return
         start = manager.last_seen
         end = datetime.datetime.utcnow()
         soon = end + datetime.timedelta(days=3)

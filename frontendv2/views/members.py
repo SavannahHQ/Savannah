@@ -447,6 +447,8 @@ class AllMembers(SavannahFilterView):
             members = members.order_by(Lower('name'))
         elif self.sort_by == '-name':
             members = members.order_by(Lower('name').desc())
+        elif self.sort_by == '-last_seen':
+            members = members.order_by(IsNull('last_seen'), '-last_seen')
         else:
             members = members.order_by(self.sort_by)
         return members
@@ -557,7 +559,7 @@ class AllMembers(SavannahFilterView):
         view = AllMembers(request, community_id)
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="members.csv"'
-        writer = csv.DictWriter(response, fieldnames=['Member', 'Company', 'Role', 'First Seen', 'Last Seen', 'Activity Count', 'Tags'])
+        writer = csv.DictWriter(response, fieldnames=['Member', 'Email', 'Company', 'Role', 'First Seen', 'Last Seen', 'Activity Count', 'Tags'])
         writer.writeheader()
         for member in view.get_members():
             company_name = ''
@@ -565,6 +567,7 @@ class AllMembers(SavannahFilterView):
                 company_name = member.company.name
             writer.writerow({
                 'Member': member.name, 
+                'Email': member.email_address, 
                 'Company':company_name, 
                 'Role': member.get_role_display(),
                 'First Seen':member.first_seen, 
@@ -573,6 +576,29 @@ class AllMembers(SavannahFilterView):
                 'Tags': ",".join([tag.name for tag in member.tags.all()])
             })
         return response
+
+class MemberLookup(SavannahView):
+    def __init__(self, request, community_id):
+        super().__init__(request, community_id)
+        self.search = request.GET.get('q', None)
+
+    @property
+    def members(self):
+        if self.search is not None:
+            return Member.objects.filter(community=self.community, name__icontains=self.search).order_by(IsNull('last_seen'), '-last_seen')
+        else:
+            return Member.objects.filter(community=self.community).order_by(IsNull('last_seen'), '-last_seen')
+
+    def as_json(request, community_id):
+        view = MemberLookup(request, community_id)
+        memberdata = [{'id':'', 'text':'-----'}]
+        for member in view.members[:100]:
+            text = member.name
+            if member.company:
+                text += ' (%s)' % member.company.name
+
+            memberdata.append({'id': member.id, 'text': text})
+        return JsonResponse({'search': view.search, 'members': memberdata})
 
 class MemberNoteForm(forms.ModelForm):
     class Meta:
@@ -606,6 +632,10 @@ class MemberProfile(SavannahView):
         return Gift.objects.filter(community=self.community, member=self.member)
 
     @property
+    def open_opportunities(self):
+        return Opportunity.objects.filter(community=self.community, member=self.member, closed_at__isnull=True).order_by('-created_at')[:10]
+
+    @property
     def all_contributions(self):
         contributions = Contribution.objects.filter(community=self.member.community, author=self.member).annotate(tag_count=Count('tags'), channel_name=F('channel__name'), channel_icon=F('channel__source__icon_name')).order_by('-timestamp')
 
@@ -632,8 +662,11 @@ class MemberProfile(SavannahView):
     @property
     def journey(self):
         activity_filter = Q(channel__activity__member=self.member)
-        touches = Source.objects.filter(community=self.community).annotate(first_seen=Min('channel__activity__timestamp', filter=activity_filter)).filter(first_seen__isnull=False).order_by('first_seen')
-        return touches
+        touches = Source.objects.filter(community=self.community)
+        touches = touches.values('name', 'connector', 'icon_name')
+        touches = touches.annotate(first_seen=Min('channel__activity__timestamp', filter=activity_filter))
+        touches = touches.order_by('first_seen')
+        return [touch for touch in touches if touch['first_seen'] is not None]
 
     @login_required
     def as_view(request, member_id):
@@ -888,6 +921,7 @@ class PromoteToContribution(SavannahView):
             contribution_type=default_type,
             title=default_title,
             author=self.conversation.speaker, 
+            source=self.conversation.source, 
             channel=self.conversation.channel, 
             timestamp=self.conversation.timestamp, 
             location=self.conversation.location
@@ -968,12 +1002,14 @@ class AddContribution(SavannahView):
         try:
             last_activity = Activity.objects.filter(member=self.member, contribution__isnull=True).order_by('-timestamp')[0]
             default_channel = last_activity.channel
+            default_source = default_channel.source
             default_timestamp = last_activity.timestamp
             default_link = last_activity.location
             default_type = ContributionType.objects.filter(source=default_channel.source).annotate(use_count=Count('contribution')).order_by('-use_count')[0]
             default_title = "%s in %s on %s" % (default_type.name, default_channel.name, default_channel.source.connector_name)
         except:
             default_channel = None
+            default_source = None
             default_type = None
             default_title = ""
             default_timestamp = datetime.datetime.utcnow()
@@ -983,6 +1019,7 @@ class AddContribution(SavannahView):
             contribution_type=default_type,
             title=default_title,
             author=self.member, 
+            source=default_source,
             channel=default_channel,
             timestamp=default_timestamp, 
             location=default_link
@@ -1001,7 +1038,9 @@ class AddContribution(SavannahView):
 
         if request.method == 'POST':
             if view.form.is_valid():
-                contrib = view.form.save()
+                contrib = view.form.save(commit=False)
+                contrib.source = contrib.channel.source
+                contrib.save()
                 contrib.update_activity()
                 messages.success(request, "Contribution has been recorded")
                 return redirect('member_profile', member_id=member_id)
