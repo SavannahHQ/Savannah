@@ -6,8 +6,9 @@
 
 {% block page_content %}
           <!-- Page Heading -->
-          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4 col-xl-8 col-lg-7">
             <h1 class="h3 mb-0 text-gray-800">Add Member</h1>
+            <a class="btn btn-primary" href="{% url 'import_upload' view.community.id %}"><i class="fas fa-file-arrow-up"></i> Import from file</a>
           </div>
 
           <!-- Content Row -->

@@ -151,7 +151,7 @@ class iCalImporter(PluginImporter):
 
         event_id = ical_event['UID']
         title = ical_event['SUMMARY']
-        description = ical_event['DESCRIPTION']
+        description = ical_event.get('DESCRIPTION', None)
         location = ical_event.get('URL', None)
 
         start_timestamp = ical_event['DTSTART'].dt

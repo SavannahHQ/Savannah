@@ -1,6 +1,6 @@
 {% load static %}
 {% load notifications_tags %}
-{% load i18n %}
+{% load i18n cache %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,7 +15,7 @@
   <title>Savannah{% block page_title %}{% endblock %}</title>
 
   <!-- Custom fonts for this template-->
-  <script src="https://kit.fontawesome.com/a160749d77.js" crossorigin="anonymous"></script>
+  <script src="{{FONTAWESOME_KIT_URL}}" crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
   <!-- Custom styles for this template-->
@@ -23,6 +23,9 @@
   <link href="{% static 'vendor/bootstrap-datepicker/css/bootstrap-datepicker.standalone.min.css' %}" rel="stylesheet">
   <link href="{% static 'savannah/savannah.css' %}" rel="stylesheet">
 
+  <!-- Select2 widgets -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  
   <link rel="icon" href="{% static 'savannah/Savannah32.png' %}" type="image/png" sizes="32x32">
   <link rel="icon" href="{% static 'savannah/Savannah64.png' %}" type="image/png" sizes="64x64">
   <link rel="icon" href="{% static 'savannah/Savannah128.png' %}" type="image/png" sizes="128x128">
@@ -75,12 +78,12 @@
       </li>
 
       <!-- Divider -->
-      <hr class="sidebar-divider">
+      <hr class="sidebar-divider my-0">
 
       <!-- Heading -->
-      <div class="sidebar-heading">
+      {% comment %} <div class="sidebar-heading">
         Community
-      </div>
+      </div> {% endcomment %}
 
       <li class="nav-item {% if active_tab == "overview" %}active{% endif %}">
         <a class="nav-link" href="{% url 'overview' request.session.community %}">
@@ -108,6 +111,13 @@
           <span>Contributions</span></a>
       </li>
 
+      <!-- Nav Item - Opportunities -->
+      <li class="nav-item {% if active_tab == "opportunities" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'opportunities' request.session.community %}">
+          <i class="fas fa-fw fa-file-shield"></i>
+          <span>Opportunities</span></a>
+      </li>
+
       <!-- Nav Item - Events -->
       <li class="nav-item {% if active_tab == "events" %}active{% endif %}">
         <a class="nav-link" href="{% url 'events' request.session.community %}">
@@ -118,15 +128,15 @@
       <!-- Nav Item - Connections -->
       <li class="nav-item {% if active_tab == "connections" %}active{% endif %}">
         <a class="nav-link" href="{% url 'connections' request.session.community %}">
-          <i class="fas fa-fw fa-project-diagram"></i>
+          <i class="fas fa-fw fa-chart-network"></i>
           <span>Connections</span></a>
       </li>
 
-      <!-- Nav Item - Projects -->
+      <!-- Nav Item - Segments -->
       <li class="nav-item {% if active_tab == "projects" %}active{% endif %}">
         <a class="nav-link" href="{% url 'projects' view.community.id %}">
-          <i class="fas fa-fw fa-tasks"></i>
-          <span>Projects</span></a>
+          <i class="fas fa-fw fa-puzzle"></i>
+          <span>Segments</span></a>
       </li>
 
       <!-- Nav Item - Companies -->
@@ -134,13 +144,6 @@
         <a class="nav-link" href="{% url 'companies' view.community.id %}">
           <i class="fas fa-fw fa-building"></i>
           <span>Companies</span></a>
-      </li>
-
-      <!-- Nav Item - Reports -->
-      <li class="nav-item {% if active_tab == "reports" %}active{% endif %}">
-        <a class="nav-link" href="{% url 'reports' request.session.community %}">
-          <i class="fas fa-fw fa-file-invoice"></i>
-          <span>Reports</span></a>
       </li>
 
       <!-- Nav Item - Tasks -->
@@ -152,25 +155,41 @@
       </li>
       -->
 
-      <!-- Divider -->
+      {% comment %} <!-- Divider -->
       <hr class="sidebar-divider">
 
       <!-- Heading -->
       <div class="sidebar-heading">
-        Settings
-      </div>
+        Community
+      </div> {% endcomment %}
 
-      <!-- Nav Item - Managers -->
-      <li class="nav-item {% if active_tab == "community" %}active{% endif %}">
+      {% comment %} <!-- Nav Item - Managers -->
+      <li class="nav-item {% if active_tab == "managers" %}active{% endif %}">
         <a class="nav-link" href="{% url 'managers' view.community.id %}">
           <i class="fas fa-fw fa-users-cog"></i>
-          <span>Community</span></a>
+          <span>Managers</span></a>
+      </li> {% endcomment %}
+
+      <!-- Nav Item - Reports -->
+      <li class="nav-item {% if active_tab == "reports" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'reports' request.session.community %}">
+          <i class="fas fa-fw fa-file-invoice"></i>
+          <span>Reports</span></a>
       </li>
 
+      <hr class="sidebar-divider my-0">
+
+      <!-- Nav Item - Managers -->
+      <li class="nav-item {% if active_tab == "public" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'public_dashboards' view.community.id %}">
+          <i class="fas fa-share-alt"></i>
+          <span>Shared</span></a>
+      </li>
+      
       <!-- Nav Item - Sources -->
       <li class="nav-item {% if active_tab == "sources" %}active{% endif %}">
         <a class="nav-link" href="{% url 'sources' view.community.id %}">
-          <i class="fas fa-fw fa-filter"></i>
+          <i class="fas fa-fw fa-database"></i>
           <span>Sources</span></a>
       </li>
 
@@ -188,15 +207,15 @@
           <span>Gifts</span></a>
       </li>
 
-      <!-- Nav Item - Managers -->
-      <li class="nav-item {% if active_tab == "public" %}active{% endif %}">
-        <a class="nav-link" href="{% url 'public_dashboards' view.community.id %}">
-          <i class="fas fa-share-alt"></i>
-          <span>Shared</span></a>
+      {% comment %} <!-- Nav Item - Settings -->
+      <li class="nav-item {% if active_tab == "community" %}active{% endif %}">
+        <a class="nav-link" href="{% url 'community_settings' view.community.id %}">
+          <i class="fas fa-fw fa-cogs"></i>
+          <span>Settings</span></a>
       </li>
-
       <!-- Divider -->
-      <hr class="sidebar-divider d-none d-md-block">
+
+      <hr class="sidebar-divider d-none d-md-block"> {% endcomment %}
 
       <!-- Sidebar Toggler (Sidebar) -->
       <div class="text-center d-none d-md-inline">
@@ -220,7 +239,7 @@
             <i class="fa fa-bars"></i>
           </button>
 
-          <!-- Community Switcher -->
+          {% comment %} <!-- Community Switcher -->
           <div class="dropdown">
             <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <img src="{{active_community.icon_path}}" /><span class="d-none d-sm-inline-block mr-auto ml-md-3 my-2 my-md-0 mw-100">{{active_community.name}}</span>
@@ -232,7 +251,7 @@
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item " href="{% url 'add-community' %}"><i class="text-lg text-muted fas fa-plus-square align-top"> </i> New Community</a>
             </div>
-          </div>
+          </div> {% endcomment %}
 
           <!-- Topbar Search -->
           <form class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-search" action="{% url 'all_members' active_community.id %}">
@@ -275,7 +294,41 @@
               </div>
             </li>
 
-            <!-- Nav Item - Notifications -->
+            <!-- Nav Item - Insights -->
+            {% if view.unread_insights.count > 0 %}
+            <li class="nav-item dropdown no-arrow mx-1">
+              <a class="nav-link dropdown-toggle" href="#" id="insightsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-lightbulb fa-fw"></i>
+                <!-- Counter - Insights -->
+
+                <span class="badge badge-success badge-counter">{{view.unread_insights|length|default:""}}</span>
+              </a>
+              <!-- Dropdown - Insights -->
+              <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="insightsDropdown">
+                <h6 class="dropdown-header">
+                  Insights
+                </h6>
+                <div class="insights_menu">
+                  {% for insight in view.unread_insights|slice:":5" %}
+                  <a class="border-left-{{insight.level}} dropdown-item d-flex align-items-center" href="{% url 'insights' view.community.id %}?show={{insight.id}}">
+                    <div class="">
+                      <div class="small text-gray-500">{{insight.timestamp}}</div>
+                      {{insight.title|safe}}
+                    </div>
+                  </a>
+                  {% endfor %}
+                </div>
+                  <a class="dropdown-item text-center small text-gray-500" href="{% url 'insights' view.community.id %}?show=unread">Show Unread</a>
+              </div>
+            </li>
+            {% else %}
+            <li class="nav-item mx-1">
+              <a class="nav-link" href="{% url 'insights' view.community.id %}" title="Show Insights">
+                <i class="fas fa-lightbulb fa-fw"> </i>
+              </a>
+            </li>
+            {% endif %}
+          <!-- Nav Item - Notifications -->
             <li class="nav-item dropdown no-arrow mx-1">
               <a class="nav-link dropdown-toggle" href="#" id="messagesDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="fas fa-bell fa-fw"></i>
@@ -294,49 +347,84 @@
               </div>
             </li>
 
+
             <div class="topbar-divider d-none d-sm-block"></div>
 
             <!-- Nav Item - User Information -->
             <li class="nav-item dropdown no-arrow">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{view.manager_profile}}</span>
-                <span class="badge badge-secondary"><i class="text-lg fas fa-user"> </i></span>
+                <div class="mr-2 d-none d-lg-inline text-gray-600" style="line-height: 1em;">
+                  <div class="m-0 p-0">{{active_community.name}}<br/></div>
+                  <div class="m-0 p-0 small">{{view.manager_profile}}</div>
+                </div>
+                <img src="{{active_community.icon_path}}" />
               </a>
               <!-- Dropdown - User Information -->
               <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <div class="dropdown-header">User</div>
                 {% if request.user.is_staff %}
-                <a class="dropdown-item" href="{% url 'admin:index' %}" target="_blank">
-                  <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                <a class="dropdown-item text-right" href="{% url 'admin:index' %}" target="_blank">
                   Admin
+                  <i class="fas fa-cogs fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
                 {% endif %}
                 {% if view.user_member %}
-                <a class="dropdown-item" href="{% url 'member_profile' view.user_member.id %}">
-                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                <a class="dropdown-item text-right" href="{% url 'member_profile' view.user_member.id %}">
                   Profile
+                  <i class="fas fa-user fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
                 {% endif %}
-                <a class="dropdown-item" href="{% url 'manager_preferences' view.community.id %}">
-                  <i class="fas fa-sliders-h fa-sm fa-fw mr-2 text-gray-400"></i>
+                <a class="dropdown-item text-right" href="{% url 'manager_preferences' view.community.id %}">
                   Preferences
+                  <i class="fas fa-sliders-h fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
-                {% if view.community.owner == request.user %}
-                <a class="dropdown-item" href="{% url 'billing:manage_account' view.community.id %}">
-                  <i class="fas fa-money-check-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                  Billing
-                </a>
-                {% endif %}
-                <a class="dropdown-item" href="http://docs.savannahhq.com/" target="_blank">
-                  <i class="fas fa-question-circle fa-sm fa-fw mr-2 text-gray-400"></i>
+                <a class="dropdown-item text-right" href="http://docs.savannahhq.com/" target="_blank">
                   Help
+                  <i class="fas fa-question-circle fa-fw mr-2 ml-2 text-gray-600"></i>
+                </a>
+                <a class="dropdown-item text-right" href="#" data-toggle="modal" data-target="#logoutModal">
+                  Logout
+                  <i class="fas fa-sign-out-alt fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                  Logout
+                <div class="dropdown-header">Community</div>
+                <a class="dropdown-item text-right" href="{% url 'managers' view.community.id %}">
+                  Managers
+                  <i class="fas fa-users fa-fw mr-2 ml-2 text-gray-600"></i>
                 </a>
+                <a class="dropdown-item text-right" href="{% url 'sources' view.community.id %}">
+                  Sources
+                  <i class="fas fa-database fa-fw mr-2 ml-2 text-gray-600"></i>
+                </a>
+                <a class="dropdown-item text-right" href="{% url 'import_list' view.community.id %}">
+                  Imports
+                  <i class="fas fa-file-arrow-up fa-fw mr-2 ml-2 text-gray-600"></i>
+                </a>
+                <a class="dropdown-item text-right" href="{% url 'community_settings' view.community.id %}">
+                  Settings
+                  <i class="fas fa-cogs fa-fw mr-2 ml-2 text-gray-600"></i>
+                </a>
+                {% if view.community.owner == request.user %}
+                <a class="dropdown-item text-right" href="{% url 'billing:manage_account' view.community.id %}">
+                  Billing
+                  <i class="fas fa-money-check-alt fa-fw mr-2 ml-2 text-gray-600"></i>
+                </a>
+                {% endif %}
+                {% cache 500 community_dropdown view.request.user %}
+                {% if view.all_user_communities.count > 1 %}
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-header">Switch Community</div>
+                {% for c in view.all_user_communities %}
+                  {% if c.id != view.community.id %}
+                  <a class="dropdown-item text-right" href="{% url 'dashboard' c.id %}">{{c.name}} <img class="ml-2" src="{{c.icon_path}}" /></a>
+                  {% endif %}
+                {% endfor %}
+                <div class="dropdown-divider"></div>
+                {% endif %}
+                <a class="dropdown-item text-right" href="{% url 'add-community' %}">New Community <i class="text-lg fas fa-plus-square fa-fw m-2 text-gray-600"> </i></a>
+                {% endcache %}
               </div>
-            </li>
+          </li>
 
           </ul>
 
@@ -413,6 +501,7 @@
   <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
   <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
   <script src="{% static 'vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js' %}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
 $(function () {
   $('[data-toggle="tooltip"]').tooltip({boundary: 'window'})
@@ -496,7 +585,7 @@ function mark_all_as_read() {
   r.send();
 }
   </script>
-  {% register_notify_callbacks fetch=5 refresh_period=60 callbacks='fill_messages_list,fill_notification_badge' %}
+  {% register_notify_callbacks fetch=5 refresh_period=120 callbacks='fill_messages_list,fill_notification_badge' %}
 
 <!-- Chart scripts -->
 {% block chart_scripts %}

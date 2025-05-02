@@ -1,6 +1,9 @@
 import operator
 from functools import reduce
 import datetime
+import csv
+import re
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib.auth.decorators import login_required
 from django.db.models import F, Q, Count, Max, Min
@@ -84,6 +87,23 @@ class EventProfile(SavannahView):
         return [page+offset for page in range(min(10, pages))]
 
     @login_required
+    def as_csv(request, event_id):
+        view = EventProfile(request, event_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="attendees.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Event', 'Member', 'Email', 'Attended', 'Role'])
+        writer.writeheader()
+        for attendee in EventAttendee.objects.filter(event=view.event).select_related('member'):
+            writer.writerow({
+                'Event': attendee.event.title, 
+                'Member':attendee.member, 
+                'Email':attendee.member.email_address, 
+                'Attended': attendee.timestamp,
+                'Role':EventAttendee.ROLE_NAME[attendee.role], 
+            })
+        return response
+
+    @login_required
     def as_view(request, event_id):
         view = EventProfile(request, event_id)
         if request.method == 'POST':
@@ -136,7 +156,10 @@ def tag_event(request, community_id):
             event = Event.objects.get(community=community, id=event_id)
             tag_id = request.POST.get('tag_select')
             try:
-                event.tag = Tag.objects.get(id=tag_id, community=community_id)
+                if tag_id == '':
+                    event.tag = None
+                else:
+                    event.tag = Tag.objects.get(id=tag_id, community=community_id)
                 event.save()
             except:
                 messages.error(request, "Unkown tag")
@@ -150,10 +173,16 @@ class EventAttendeeForm(forms.ModelForm):
     class Meta:
         model = EventAttendee
         fields = ['member', 'role', 'timestamp']
+        widgets = {
+            'timestamp': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
 
-    def limit_to(self, community):
-        self.fields['member'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=community).order_by(Lower('name'))]
-        self.fields['member'].widget.choices.insert(0, ('', '-----'))
+    def limit(self):
+        if self.instance and hasattr(self.instance, 'member'):
+            self.fields['member'].widget.choices = [(self.instance.member.id, self.instance.member.name)]
+        else:
+            self.fields['member'].widget.choices = []
+
 
 class AddAttendee(SavannahView):
     def __init__(self, request, event_id):
@@ -179,7 +208,7 @@ class AddAttendee(SavannahView):
             form = EventAttendeeForm(instance=self.edit_attendee, data=self.request.POST)
         else:
             form = EventAttendeeForm(instance=self.edit_attendee)
-        form.limit_to(self.community)
+        form.limit()
         return form
 
     @login_required
@@ -207,6 +236,7 @@ class AddAttendee(SavannahView):
                 if attendee.role == EventAttendee.HOST:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -223,6 +253,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.SPEAKER:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -238,6 +269,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.STAFF:
                     contrib, contrib_created = Contribution.objects.get_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -255,6 +287,7 @@ class AddAttendee(SavannahView):
                     try:
                         contrib = Contribution.objects.get(
                             community=view.event.community,
+                            source=view.event.source,
                             channel=view.event.channel,
                             author=attendee.member,
                             activity__event_attendance__event=view.event,
@@ -271,6 +304,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.HOST:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -286,6 +320,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.SPEAKER:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -301,6 +336,7 @@ class AddAttendee(SavannahView):
                 elif attendee.role == EventAttendee.STAFF:
                     contrib, contrib_created = Contribution.objects.update_or_create(
                         community=view.event.community,
+                        source=view.event.source,
                         channel=view.event.channel,
                         author=attendee.member,
                         activity__event_attendance__event=view.event,
@@ -346,6 +382,10 @@ class Events(SavannahFilterView):
             self.event_search = None
         self.result_count = 0
 
+        self._sourcesChart = None
+        self._attendeeSourcesChart = None
+        self._tagsChart = None
+
     def all_events(self):
         events = Event.objects.filter(community=self.community).annotate(attendee_count=Count('rsvp')).order_by('-start_timestamp')
         self.result_count = events.count()
@@ -385,6 +425,67 @@ class Events(SavannahFilterView):
             offset = 1
         return [page+offset for page in range(min(10, pages))]
 
+    def sourcesChart(self):
+        if not self._sourcesChart:
+            sources = Source.objects.filter(community=self.community)
+
+            sources = sources.annotate(event_count=Count('event')).filter(event_count__gt=0).order_by('-event_count')
+
+            self._sourcesChart = PieChart("sourcesChart", title="Events by Source", limit=5)
+            for source in sources:
+                self._sourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), source.event_count)
+        self.charts.add(self._sourcesChart)
+        return self._sourcesChart
+
+    def attendeeSourcesChart(self):
+        if not self._attendeeSourcesChart:
+            sources = Source.objects.filter(community=self.community)
+
+            sources = sources.annotate(attendee_count=Count('event__rsvp')).filter(attendee_count__gt=0).order_by('-attendee_count')
+
+            self._attendeeSourcesChart = PieChart("attendeeSourcesChart", title="Attendees by Source", limit=5)
+            for source in sources:
+                self._attendeeSourcesChart.add("%s (%s)" % (source.name, ConnectionManager.display_name(source.connector)), source.attendee_count)
+        self.charts.add(self._attendeeSourcesChart)
+        return self._attendeeSourcesChart
+
+    def tagsChart(self):
+        if not self._tagsChart:
+            tags = Tag.objects.filter(community=self.community)
+
+            tags = tags.annotate(event_count=Count('event')).filter(event_count__gt=0).order_by('-event_count')
+
+            self._tagsChart = PieChart("tagsChart", title="Events by Tag", limit=8)
+            for tag in tags:
+                self._tagsChart.add(tag.name, tag.event_count, tag.color)
+        self.charts.add(self._tagsChart)
+        return self._tagsChart
+
+    @login_required
+    def as_csv(request, community_id):
+        view = Events(request, community_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="events.csv"'
+        writer = csv.DictWriter(response, fieldnames=['Title', 'Start', 'End', 'Category', 'Attendee Count', 'Tag', 'Impact'])
+        writer.writeheader()
+        for event in Event.objects.filter(community=view.community).annotate(attendee_count=Count('rsvp')).order_by('-start_timestamp'):
+            tag_name = ''
+            channel_name = ''
+            if event.tag:
+                tag_name = event.tag.name
+            if event.channel:
+                channel_name = event.channel.name
+            writer.writerow({
+                'Title': event.title, 
+                'Start':event.start_timestamp, 
+                'End': event.end_timestamp,
+                'Category':channel_name, 
+                'Attendee Count':event.attendee_count,
+                'Tag': tag_name,
+                'Impact':event.impact
+            })
+        return response
+
     @login_required
     def as_view(request, community_id):
         view = Events(request, community_id)
@@ -405,6 +506,7 @@ class Events(SavannahFilterView):
                 try:
                     Contribution.objects.filter(
                         community=event.community,
+                        source=event.source,
                         channel=event.channel,
                         activity__event_attendance__event=event,
                     ).delete()
@@ -442,8 +544,8 @@ class EventEditForm(forms.ModelForm):
         super(EventEditForm, self).__init__(*args, **kwargs)
         self.fields['start_timestamp'].input_formats = ["%Y-%m-%dT%H:%M"]
         self.fields['end_timestamp'].input_formats = ["%Y-%m-%dT%H:%M"]
-        if self.initial.get('channel', None) is not None:
-            self.initial['channel'] = self.instance.channel.name
+
+        self.initial['channel'] = self.instance.channel.name
         self.fields['channel'].label = "Category"
         self.fields['channel'].help_text = "Category for your events, such as Conference or Meetup."
 
@@ -461,7 +563,8 @@ class EventEditForm(forms.ModelForm):
 class AddEvent(SavannahView):
     def __init__(self, request, community_id):
         super().__init__(request, community_id)
-        self.edit_event = Event(community=self.community, source=self.community.manual_source)
+        event_channel, created =Channel.objects.get_or_create(source=self.community.manual_source, name="Event")
+        self.edit_event = Event(community=self.community, source=self.community.manual_source, channel=event_channel)
         self.active_tab = "events"
 
     @property
@@ -501,13 +604,82 @@ class EditEvent(SavannahView):
             edited_event = view.form.save()
             if old_channel != edited_event.channel and edited_event.channel is not None:
                 for attendee in edited_event.rsvp.all():
+                    attendee.activity.source = edited_event.source
                     attendee.activity.channel = edited_event.channel
                     attendee.activity.save()
                     if attendee.activity.contribution is not None:
+                        attendee.activity.contribution.source = edited_event.source
                         attendee.activity.contribution.channel = edited_event.channel
                         attendee.activity.contribution.save()
 
             return redirect('event', event_id=edited_event.id)
+        return render(request, 'savannahv2/event_edit.html', view.context)
 
-        return render(request, "savannahv2/event_edit.html", view.context)
 
+class AttendeeSignupForm(forms.Form):
+    name = forms.CharField(label="Name")
+    company = forms.CharField(label="Company", required=False)
+    email_address = forms.CharField(label="Email Address", required=False)
+    phone_number = forms.CharField(label="Phone Number", required=False)
+    note = forms.CharField(label="Notes", required=False, widget=forms.Textarea(attrs={'cols': 40, 'rows': 3}))
+    followup = forms.BooleanField(label="Follow-up", required=False)
+
+class QuickAddAttendee(SavannahView):
+    def __init__(self, request, event_id):
+        self.event = get_object_or_404(Event, id=event_id)
+        super().__init__(request, self.event.community.id)
+        self._form = None
+
+    @property
+    def form(self):
+        if self._form is None:
+            if self.request.method == 'POST':
+                self._form = AttendeeSignupForm(data=self.request.POST)
+            else:
+                self._form = AttendeeSignupForm()
+        return self._form
+
+    @login_required
+    def as_view(request, event_id):
+        view = QuickAddAttendee(request, event_id)
+        if request.method == 'POST':
+            if view.form.is_valid():
+                if view.form.cleaned_data['company'] != '':
+                    company, created = Company.objects.get_or_create(community=view.community, name=view.form.cleaned_data['company'])
+                else:
+                    company=None
+                new_member = Member.objects.create(
+                    community=view.community,
+                    name=view.form.cleaned_data['name'],
+                    email_address=view.form.cleaned_data['email_address'],
+                    phone_number=view.form.cleaned_data['phone_number'],
+                    company=company,
+                    first_seen=datetime.datetime.utcnow(),
+                    last_seen=datetime.datetime.utcnow(),
+                )
+                if view.form.cleaned_data['note'] != '':
+                    Note.objects.create(
+                        member=new_member,
+                        author=request.user,
+                        timestamp=datetime.datetime.utcnow(),
+                        content=view.form.cleaned_data['note']
+                    )
+                if view.form.cleaned_data['followup']:
+                    new_task = Task.objects.create(
+                        community=view.community,
+                        project=view.community.default_project,
+                        owner=request.user,
+                        name='Followup after %s' % view.event.title,
+                        detail=view.form.cleaned_data['note'],
+                        due=view.event.end_timestamp + datetime.timedelta(days=2)
+                    )         
+                    new_task.stakeholders.add(new_member)           
+                EventAttendee.objects.create(
+                    community=view.community, 
+                    event=view.event, 
+                    member=new_member,
+                    timestamp=datetime.datetime.utcnow(), 
+                    role=EventAttendee.GUEST
+                ).update_activity()
+                return redirect('attendee_quickadd', event_id=view.event.id)
+        return render(request, "savannahv2/attendee_quickadd.html", view.context)

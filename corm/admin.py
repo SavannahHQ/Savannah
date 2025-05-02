@@ -83,6 +83,7 @@ class CommunityAdmin(admin.ModelAdmin):
     search_fields = ("name", "owner__username", "owner__email")
     actions = ('download_owners',)
     date_hierarchy='created'
+    ordering = ('-created',)
 
     def get_queryset(self, request):
         qs = super(CommunityAdmin, self).get_queryset(request)
@@ -287,7 +288,7 @@ class ConversationAdmin(admin.ModelAdmin):
     list_display = ("__str__", "channel", "timestamp", "link", "participant_list", "tag_list")
     list_filter = ("channel__source__community", "channel__source__connector", "timestamp")
     search_fields = ("content",)
-    raw_id_fields = ('speaker', 'thread_start', 'contribution')
+    raw_id_fields = ('channel', 'source', 'speaker', 'thread_start', 'contribution', 'links')
     date_hierarchy='timestamp'
 
     def link(self, conversation):
@@ -605,3 +606,82 @@ class HyperlinkAdmin(admin.ModelAdmin):
     list_filter = ["ignored", "community", "content_type", "host"]
     search_fields = ["url"]
 admin.site.register(Hyperlink, HyperlinkAdmin)
+
+class InsightAdmin(admin.ModelAdmin):
+    list_display = ("uid", "level", "community", "recipient", "unread", "timestamp")
+    list_filter = ("unread", "community", "level", "timestamp")
+    search_fields = ["uid"]
+admin.site.register(Insight, InsightAdmin)
+
+class UploadedFileAdmin(admin.ModelAdmin):
+    list_display = ("name", "status", "uploaded_by", "uploaded_at")
+    list_filter = ("status", "community", "uploaded_by", "uploaded_at")
+    raw_id_fields = ("event", )
+    search_fields = ["uploaded_to"]
+admin.site.register(UploadedFile, UploadedFileAdmin)
+
+class OpportunityHistoryInline(admin.TabularInline):
+    model = OpportunityHistory
+    fk_name = "opportunity"
+    extra=0
+
+class OpportunityAdmin(admin.ModelAdmin):
+    list_display = ("name", "status", "contribution_type", "community", "created_by", "created_at")
+    list_filter = ("status", "community", "created_at", "closed_at")
+    search_fields = ("name", )
+    raw_id_fields = ('member', 'source', 'contribution_type', 'activities')
+    inlines = [
+        OpportunityHistoryInline,
+    ]
+admin.site.register(Opportunity, OpportunityAdmin)
+
+from django.forms import BaseInlineFormSet
+class LimitModelFormset(BaseInlineFormSet):
+    """ Base Inline formset to limit inline Model query results. """
+    def __init__(self, *args, **kwargs):
+        super(LimitModelFormset, self).__init__(*args, **kwargs)
+        _kwargs = {self.fk.name: kwargs['instance']}
+        self.queryset = kwargs['queryset'].filter(**_kwargs).order_by(*self.model._meta.ordering)[:20]
+
+class WebhookEventInline(admin.TabularInline):
+    model=WebHookEvent
+    fields = ('created', 'event', 'payload', 'success')
+    readonly_fields = ('created', 'event', 'payload', 'success')
+    show_change_link = True
+    formset = LimitModelFormset
+
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(WebHook)
+class WebhookAdmin(admin.ModelAdmin):
+    list_display = ('event', 'community', 'user', 'target', 'enabled')
+    list_filter = ('enabled', 'community')
+    readonly_fields = ('secret',)
+    inlines = [WebhookEventInline]
+
+class WebhookEventLogInline(admin.TabularInline):
+    model=WebHookEventLog
+    fields = ('timestamp', 'status', 'response')
+    readonly_fields = ('timestamp', 'status', 'response')
+    show_change_link = True
+    formset = LimitModelFormset
+    def has_change_permission(self, request, obj=None):
+        return False
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(WebHookEvent)
+class WebhookEventAdmin(admin.ModelAdmin):
+    list_display = ('created', 'hook', 'event', 'success')
+    list_filter = ('event', 'hook__community')
+    inlines = [WebhookEventLogInline]
+
+@admin.register(WebHookEventLog)
+class WebookEventLog(admin.ModelAdmin):
+    list_display = ('timestamp', 'event', 'status')
+    list_filter = ('event__event', 'event__hook__community')

@@ -18,22 +18,25 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from frontendv2.views.dashboard import Overview, ManagerDashboard, ManagerTaskEdit, ManagerTasksCalendar
-from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, MemberSettings, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution, AddContribution
+from frontendv2.views.members import Members, MemberProfile, MemberActivity, MemberMerge, MemberMergeHistory, AllMembers, MemberAdd, MemberEdit, MemberSettings, tag_member, add_note, watch_member, GiftManager, MemberTaskAdd, MemberTaskEdit, followup_on_member, PromoteToContribution, AddContribution, MemberLookup
 from frontendv2.views.conversations import Conversations, ignore_hyperlink, show_hyperlink
 from frontendv2.views.contributions import Contributions, Contributors
 from frontendv2.views.connections import Connections
-from frontendv2.views.sources import Sources, Channels, tag_channel, add_source
+from frontendv2.views.sources import Sources, Channels, tag_channel, add_source, ImportUpload, ImportMap, ImportList, ImportInfo, ImportCancel
 from frontendv2.views.tags import Tags, AddTag, EditTag
 from frontendv2.views.suggestions import TagSuggestions, MemberMergeSuggestions, ContributionSuggestions, CompanyCreationSuggestions, TaskSuggestions
-from frontendv2.views.community import EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards
+from frontendv2.views.community import CommunitySettings, EditCommunity, Managers, ManagerPreferences, ManagerPasswordChange, ManagerDelete, InviteManager, AcceptManager, resend_invitation, revoke_invitation, Gifts, GiftTypeManager, PublicDashboards, WebhookEdit
 from frontendv2.views.projects import Projects, ProjectsGraph, ProjectAdd, ProjectOverview, ProjectEdit, ProjectThresholdEdit, ProjectTaskEdit, ProjectTaskAdd, ProjectDelete
 from frontendv2.views.reports import Reports, view_report, publish_report, view_public_report
 from frontendv2.views.company import Companies, CompanyProfile, AddCompany, EditCompany, tag_company, CompanyLookup, CompanyMerge
-from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee
+from frontendv2.views.events import Events, EventProfile, AddEvent, EditEvent, tag_event, AddAttendee, QuickAddAttendee
+from frontendv2.views.insights import InsightsList, toggle_insight_read_state
+from frontendv2.views.opportunities import Opportunities, AddOpportunity, EditOpportunity
 from frontendv2 import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('dump/', views.dump, name='dump'),
     path('home/', views.home, name='home'),
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
@@ -49,6 +52,7 @@ urlpatterns = [
     path('dashboard/<int:community_id>/task/done', ManagerTaskEdit.mark_task_done, name='manager_task_done'),
     path('manager/<str:secret_key>/savannah_tasks.ical', ManagerTasksCalendar(), name='manager_task_ical'),
     path('dashboard/<int:community_id>/gift/received', ManagerDashboard.mark_gift_received, name='manager_gift_received'),
+    path('dashboard/<int:community_id>/opportunity/update', ManagerDashboard.update_opportunity, name='manager_opportunity_update'),
     path('overview/<int:community_id>/', Overview.as_view, name='overview'),
     path('overview/<int:community_id>/publish', Overview.publish, name='publish_overview'),
     path('public/overview/<str:dashboard_id>/', Overview.public, name='public_overview'),
@@ -74,6 +78,7 @@ urlpatterns = [
     path('member/<int:member_id>/task/<int:task_id>/', MemberTaskEdit.as_view, name='task_edit'),
     path('member/<int:member_id>/task/done', MemberTaskEdit.mark_task_done, name='task_done'),
     path('member/<int:community_id>/publish', Members.publish, name='publish_members'),
+    path('members/<int:community_id>/lookup', MemberLookup.as_json, name='member_lookup'),
     path('public/member/<str:dashboard_id>/', Members.public, name='public_members'),
     path('conversations/<int:community_id>/', Conversations.as_view, name='conversations'),
     path('conversations/<int:community_id>/publish', Conversations.publish, name='publish_conversations'),
@@ -87,6 +92,10 @@ urlpatterns = [
     path('contributions/<int:community_id>/contributors.csv', Contributors.as_csv, name='contributors_csv'),
     path('contributions/<int:community_id>/publish', Contributions.publish, name='publish_contributions'),
     path('public/contributions/<str:dashboard_id>/', Contributions.public, name='public_contributions'),
+    path('opportunities/<int:community_id>/', Opportunities.as_view, name='opportunities'),
+    path('opportunities/<int:community_id>/update', Opportunities.update_opportunity, name='opportunity_update'),
+    path('opportunities/<int:community_id>/add', AddOpportunity.as_view, name='opportunity_add'),
+    path('opportunities/<int:community_id>/edit/<int:opp_id>/', EditOpportunity.as_view, name='opportunity_edit'),
     path('connections/<int:community_id>/', Connections.as_view, name='connections'),
     path('connections/<int:community_id>/json', Connections.as_json, name='connections_json'),
     path('suggest/<int:community_id>/merge', MemberMergeSuggestions.as_view, name='member_merge_suggestions'),
@@ -115,6 +124,7 @@ urlpatterns = [
     path('gifts/<int:community_id>/add', GiftTypeManager.add_view, name='gift_type_add'),
     path('gifts/<int:community_id>/edit/<int:type_id>/', GiftTypeManager.edit_view, name='gift_type_edit'),
     path('community/<int:community_id>/change', EditCommunity.as_view, name='community_edit'),
+    path('community/<int:community_id>/settings', CommunitySettings.as_view, name='community_settings'),
     path('managers/<int:community_id>/', Managers.as_view, name='managers'),
     path('managers/<int:community_id>/invite', InviteManager.as_view, name='manager_invite'),
     path('managers/<int:community_id>/accept', AcceptManager.as_view, name='manager_accept'),
@@ -123,11 +133,17 @@ urlpatterns = [
     path('managers/<int:community_id>/preferences', ManagerPreferences.as_view, name='manager_preferences'),
     path('managers/<int:community_id>/password', ManagerPasswordChange.as_view, name='manager_password'),
     path('managers/<int:community_id>/delete', ManagerDelete.as_view, name='manager_delete'),
+    path('community/<int:community_id>/webhook/<str:hook_id>/', WebhookEdit.as_view, name='webhook_edit'),
     path('sources/<int:community_id>/', Sources.as_view, name='sources'),
     path('sources/<int:community_id>/add/<str:connector>', add_source, name='add_source'),
     path('sources/<int:community_id>/json', Sources.as_json, name='members_json'),
     path('sources/<int:community_id>/channels/<int:source_id>/', Channels.as_view, name='channels'),
     path('sources/<int:community_id>/channels/<int:source_id>/tag', tag_channel, name='channel_tag_form'),
+    path('sources/<int:community_id>/import/', ImportList.as_view, name='import_list'),
+    path('sources/<int:community_id>/import/upload', ImportUpload.as_view, name='import_upload'),
+    path('sources/<int:community_id>/import/<int:upload_id>/map', ImportMap.as_view, name='import_map'),
+    path('sources/<int:community_id>/import/<int:upload_id>/status', ImportInfo.as_view, name='import_info'),
+    path('sources/<int:community_id>/import/<int:upload_id>/cancel', ImportCancel.as_view, name='import_cancel'),
     path('tags/<int:community_id>/', Tags.as_view, name='tags'),
     path('tags/<int:community_id>/add', AddTag.as_view, name='tag_add'),
     path('tag/<int:tag_id>/edit', EditTag.as_view, name='tag_edit'),
@@ -136,13 +152,20 @@ urlpatterns = [
     path('companies/<int:community_id>/add', AddCompany.as_view, name='company_add'),
     path('companies/<int:community_id>/tag', tag_company, name='company_tag_form'),
     path('companies/<int:community_id>/lookup', CompanyLookup.as_view, name='company_lookup'),
+    path('companies/<int:community_id>/companies.csv', Companies.as_csv, name='companies_csv'),
     path('company/<int:company_id>/', CompanyProfile.as_view, name='company_profile'),
     path('company/<int:company_id>/edit', EditCompany.as_view, name='company_edit'),
     path('company/<int:company_id>/merge', CompanyMerge.as_view, name='company_merge'),
     path('events/<int:community_id>/', Events.as_view, name='events'),
     path('events/<int:community_id>/add', AddEvent.as_view, name='event_add'),
     path('events/<int:community_id>/tag', tag_event, name='event_tag_form'),
+    path('events/<int:community_id>/events.csv', Events.as_csv, name='events_csv'),
     path('event/<int:event_id>/', EventProfile.as_view, name='event'),
     path('event/<int:event_id>/edit', EditEvent.as_view, name='event_edit'),
     path('event/<int:event_id>/add', AddAttendee.as_view, name='attendee_add'),
+    path('event/<int:event_id>/attendees.csv', EventProfile.as_csv, name='attendee_csv'),
+    path('event/<int:event_id>/signup/quick', QuickAddAttendee.as_view, name='attendee_quickadd'),
+
+    path('insights/<int:community_id>/', InsightsList.as_view, name='insights'),
+    path('insights/<int:community_id>/toggle_read_state', toggle_insight_read_state, name='toggle_insight_read_state'),
 ]

@@ -32,7 +32,7 @@ class Projects(SavannahView):
         charts = []
         for project in Project.objects.filter(community=self.community):
 
-            chart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES)
+            chart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES, invert=True)
             for level, name in MemberLevel.LEVEL_CHOICES:
                 chart.add(level, MemberLevel.objects.filter(community=self.community, project=project, level=level).count())
 
@@ -131,11 +131,26 @@ class ProjectOverview(SavannahView):
         levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.CONTRIBUTOR).order_by('-contribution_count', '-timestamp').select_related('member').prefetch_related('member__tags')
         levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
         return levels[:200]
-        
+
+    def participant_levels(self):
+        levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.PARTICIPANT).order_by('-conversation_count', '-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        return levels[:200]
+
+    def visitor_levels(self):
+        levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=MemberLevel.USER).order_by('-conversation_count', '-timestamp').select_related('member').prefetch_related('member__tags')
+        levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        return levels[:200]
+
+    def member_count(self):
+        members = MemberLevel.objects.filter(community=self.community, project=self.project)
+        members = members.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
+        return members.count()
+
     @property
     def levels_chart(self):
         if self._levelsChart is None:
-            self._levelsChart = FunnelChart("project%s" % self.project.id, "Engagement Pyramid", stages=MemberLevel.LEVEL_CHOICES)
+            self._levelsChart = FunnelChart("project%s" % self.project.id, "Engagement Pyramid", stages=MemberLevel.LEVEL_CHOICES, invert=True)
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=self.project, level=level)
                 levels = levels.filter(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
@@ -149,14 +164,18 @@ class ProjectOverview(SavannahView):
             activity_counts = dict()
             convo_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if not self.project.default_project:
-                convo_filter = Q(channel__in=self.project.channels.all())
+                if self.project.channels.count() > 0:
+                    convo_filter = convo_filter & Q(channel__in=self.project.channels.all())
                 if self.project.tag is not None:
                     convo_filter = convo_filter | Q(tags=self.project.tag)
                 contrib_filter = convo_filter
                 if self.project.member_tag is not None:
                     convo_filter = convo_filter | Q(speaker__tags=self.project.member_tag)
-
-            conversations = conversations = Conversation.objects.filter(channel__source__community=self.project.community)
+                if self.project.joined_start:
+                    convo_filter = convo_filter & Q(speaker__first_seen__gte=self.project.joined_start)
+                if self.project.joined_end:
+                    convo_filter = convo_filter & Q(speaker__first_seen__lte=self.project.joined_end)
+            conversations = conversations = Conversation.objects.filter(source__community=self.project.community)
             conversations = conversations.filter(convo_filter)
             conversations = conversations.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(convo_count=Count('id', distinct=True)).order_by('month')
 
@@ -169,11 +188,16 @@ class ProjectOverview(SavannahView):
 
             contrib_filter = Q(timestamp__gte=datetime.datetime.now() - datetime.timedelta(days=self.timespan))
             if not self.project.default_project:
-                contrib_filter = Q(channel__in=self.project.channels.all())
+                if self.project.channels.count() > 0:
+                    contrib_filter = contrib_filter & Q(channel__in=self.project.channels.all())
                 if self.project.tag is not None:
                     contrib_filter = contrib_filter | Q(tags=self.project.tag)
                 if self.project.member_tag is not None:
                     contrib_filter = contrib_filter | Q(author__tags=self.project.member_tag)
+                if self.project.joined_start:
+                    contrib_filter = contrib_filter & Q(author__first_seen__gte=self.project.joined_start)
+                if self.project.joined_end:
+                    contrib_filter = contrib_filter & Q(author__first_seen__lte=self.project.joined_end)
             activity = Contribution.objects.filter(community=self.project.community)
             activity = activity.filter(contrib_filter)
             activity = activity.annotate(month=Trunc('timestamp', self.trunc_span)).values('month').annotate(contrib_count=Count('id', distinct=True)).order_by('month')
@@ -282,10 +306,15 @@ class ProjectOverview(SavannahView):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'owner', 'tag', 'member_tag', 'channels']
-
+        fields = ['name', 'owner', 'joined_start', 'joined_end', 'tag', 'member_tag', 'channels']
+        widgets = {
+            'joined_start': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+            'joined_end': forms.DateTimeInput(format="%Y-%m-%dT%H:%M", attrs={'type': 'datetime-local'}),
+        }
     def __init__(self, *args, **kwargs):
         super(ProjectForm, self).__init__(*args, **kwargs)
+        self.fields['joined_start'].input_formats = ["%Y-%m-%dT%H:%M"]
+        self.fields['joined_end'].input_formats = ["%Y-%m-%dT%H:%M"]
 
     def limit_to(self, community):
         self.fields['owner'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=community)]

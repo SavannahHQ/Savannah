@@ -18,6 +18,7 @@ from corm.models import SuggestTag, SuggestMemberMerge, SuggestMemberTag, Sugges
 from corm.models import pluralize
 from notifications.signals import notify
 
+SUGGESTION_SEARCH_SPAN = 90
 
 def get_support_activity(thankful_convo):
     try:
@@ -50,11 +51,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--community', dest='community_id', type=int)
+        parser.add_argument('--timespan', dest='timespan', type=int)
 
     def handle(self, *args, **options):
         community_id = options.get('community_id')
+        self.timespan = options.get('timespan')
         self.verbosity = options.get('verbosity')
 
+        if not self.timespan:
+            self.timespan = SUGGESTION_SEARCH_SPAN
         if community_id:
             community = Community.objects.get(id=community_id)
             print("Using Community: %s" % community.name)
@@ -164,7 +169,7 @@ class Command(BaseCommand):
         suggestion_count = 0
 
         # Get potential conversations
-        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None)
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
 
 
         # From Chat-style sources
@@ -273,7 +278,7 @@ class Command(BaseCommand):
             return
 
         # Get potential conversations
-        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None)
+        convos = Conversation.objects.filter(speaker__community=community, contribution_suggestions=None, timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
 
         # Only look at thankful converstions
         convos = convos.filter(tags=thankful)
@@ -286,7 +291,7 @@ class Command(BaseCommand):
             print("%s has no #greeting tag" % community)
 
         # From Chat-style sources
-        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss'))
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss', 'corm.plugins.twitter', 'corm.plugins.facebook', 'corm.plugins.meetup'))
         convos = convos.filter(channel__source__in=chat_sources)
 
         # Involving only the speaker and one other participant
@@ -334,7 +339,7 @@ class Command(BaseCommand):
                 score -= 1
 
             # Only suggest for high positive scores
-            if score < 2:
+            if score < 1:
                 continue
 
             # Exclude conversations that are part of another contribution's thread
@@ -347,19 +352,20 @@ class Command(BaseCommand):
                 continue
             last_helped = convo.speaker
 
-            supporter = convo.participation.exclude(member_id=convo.speaker.id)[0]
-            suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
-                community=community,
-                reason="%s gave support to %s" % (supporter.member, convo.speaker),
-                conversation=convo,
-                activity=activity,
-                contribution_type=helped,
-                source_id=convo.channel.source_id,
-                score=score,
-                title="Helped %s in %s" % (convo.speaker, convo.channel),
-            )
-            if created:
-                suggestion_count += 1
+            supporters = convo.participation.exclude(member_id=convo.speaker.id)
+            for supporter in supporters:
+                suggestion, created = SuggestConversationAsContribution.objects.get_or_create(
+                    community=community,
+                    reason="%s gave support to %s" % (supporter.member, convo.speaker),
+                    conversation=convo,
+                    activity=activity,
+                    contribution_type=helped,
+                    source_id=convo.channel.source_id,
+                    score=score,
+                    title="Helped %s in %s" % (convo.speaker, convo.channel),
+                )
+                if created:
+                    suggestion_count += 1
 
         print("Suggested %s contributions" % suggestion_count)
         if suggestion_count > 0:
@@ -407,7 +413,7 @@ class Command(BaseCommand):
         untagged = []
 
         conversations = Conversation.objects.filter(channel__source__community=community, content__isnull=False)
-        conversations = conversations.filter(timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=60))
+        conversations = conversations.filter(timestamp__gte=datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan))
         conversations = conversations.exclude(speaker__role=Member.BOT)
         for c in conversations:
 
@@ -416,7 +422,7 @@ class Command(BaseCommand):
             else:
                 untagged.append(c.content)
 
-        used_keywords = set(('http', 'https', 'com', 'github', 'open', 'closed', 'merge', 'pr', 'issue', 'pull', 'issue', 'problem', 'help'))
+        used_keywords = set(('http', 'https', 'com', 'github', 'open', 'closed', 'merge', 'pr', 'issue', 'pull', 'issue', 'problem', 'help', 'like', 'want', 'know'))
         # exclude keywords already in tags
         for tag in community.tag_set.filter(keywords__isnull=False):
             for word in tag.keywords.split(","):
@@ -465,9 +471,9 @@ class Command(BaseCommand):
             print("\n===Tag Words===")
         for k, v in sorted(tagwords.items(), key=operator.itemgetter(1), reverse=True)[:25]:
             percent = 100 * v / convo_count
-            if percent >= 0.5:
-                if self.verbosity >= 3:
-                    print("%s (%0.2f%%)" % (k, percent))
+            if self.verbosity >= 3:
+                print("%s (%0.2f%%)" % (k, percent))
+            if percent >= 0.9:
                 suggestion, created = SuggestTag.objects.get_or_create(
                     community=community,
                     keyword=k,

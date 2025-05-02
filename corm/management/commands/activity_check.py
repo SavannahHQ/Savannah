@@ -34,23 +34,23 @@ class Command(BaseCommand):
         for community in communities:
             self.check_for_inactivity(community)
             self.check_for_resuming_activity(community)
-            self.check_for_first_contrib(community)
+            # self.check_for_first_contrib(community)
 
-    def check_for_first_contrib(self, community):
-        members = Member.objects.filter(community=community)
-        members = members.annotate(first_contrib=Min('contribution__timestamp'))
-        members = members.filter(first_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=1))
-        for member in members:
-            print("%s made their first contribution on %s" % (member.name, member.first_contrib))
-            recipients = community.managers or community.owner
-            notify.send(member, 
-                recipient=recipients, 
-                verb="made their first contribution to ",
-                target=community,
-                level='success',
-                icon_name="fas fa-mail-bulk",
-                link=reverse('member_activity', kwargs={'member_id':member.id})
-            )
+    # def check_for_first_contrib(self, community):
+    #     members = Member.objects.filter(community=community)
+    #     members = members.annotate(first_contrib=Min('contribution__timestamp'))
+    #     members = members.filter(first_contrib__gte=datetime.datetime.utcnow() - datetime.timedelta(days=1))
+    #     for member in members:
+    #         print("%s made their first contribution on %s" % (member.name, member.first_contrib))
+    #         recipients = community.managers or community.owner
+    #         notify.send(member, 
+    #             recipient=recipients, 
+    #             verb="made their first contribution to ",
+    #             target=community,
+    #             level='success',
+    #             icon_name="fas fa-mail-bulk",
+    #             link=reverse('member_activity', kwargs={'member_id':member.id})
+    #         )
 
     def check_for_inactivity(self, community):
         members = Member.objects.filter(community=community, last_seen__lte=datetime.datetime.utcnow() - datetime.timedelta(days=community.inactivity_threshold_days), last_seen__gt=datetime.datetime.utcnow() - datetime.timedelta(days=community.inactivity_threshold_days+1))

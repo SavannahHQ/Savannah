@@ -58,6 +58,9 @@ class BasePlugin:
     def get_company_url(self, group):
         return None
         
+    def get_channel_url(self, channel):
+        return None
+        
     def get_connector(self):
         return self.__class__.__module__
 
@@ -93,6 +96,7 @@ class PluginImporter:
         self._first_import = False
         self._full_import = False
         self._member_cache = dict()
+        self._link_cache = dict()
         self.API_HEADERS = dict()
         self.TIMESTAMP_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
         self.TAGGED_USER_MATCHER = re.compile('\@([a-zA-Z0-9]+)')
@@ -179,6 +183,66 @@ class PluginImporter:
 
         return member
 
+    def make_hyperlink(self, link):
+        if link in self._link_cache:
+            return self._link_cache[link]
+        else:
+            url = urllib.parse.urlparse(link)
+            if not url.hostname or not url.scheme:
+                raise RuntimeError("Failed to parse link: %s" % link)
+
+            # Clean hostname
+            host = url.hostname
+            host_parts = host.split('.')
+            if len(host_parts) > 2:
+                try:
+                    int(host_parts[-3])
+                    pass # host is an IP
+                except:
+                    try:
+                        int(host_parts[-3][0])
+                        # 3-rd level subdomain starts with a number and is likely generated
+                        host = '.'.join(host_parts[-2:])
+                    except:
+                        pass
+            if host[:4] == 'www.':
+                host = host[4:] # Ignore www subdomains
+            # Determine content type
+            ctype = None
+            if url.path is not None and url.path != '':
+                ext = url.path.split('.')[-1].lower()
+                if ext in ['html', 'htm']:
+                    ctype = 'Webpage'
+                elif ext in ['png', 'jpg', 'jpeg', 'gif', 'svg'] or host in ['i.imgur.com', 'media.giphy.com', 'i.reddit.com']:
+                    ctype = 'Image'
+                elif ext in ['zip', 'tar', 'gz', 'xz']:
+                    ctype = 'Archive'
+                elif ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
+                    ctype = 'Document'
+                elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
+                    ctype = 'Code'
+                elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
+                    ctype = 'Code'
+                elif host in ['youtube.com', 'youtu.be', 'vimeo.com', 'twitch.com', 'v.reddit.com']:
+                    ctype = 'Video'
+                else:
+                    ctype = 'Webpage'
+            hl, created = Hyperlink.objects.get_or_create(
+                community=self.community,
+                url=link,
+                defaults={
+                    'host':host,
+                    'path':url.path or '/',
+                    'content_type': ctype,
+                }
+            )
+
+            if len(self._link_cache) > 1000:
+                self._link_cache.clear()
+                
+            self._link_cache[link] = hl
+            return hl
+
     def make_conversation(self, origin_id, channel, speaker, content=None, tstamp=None, location=None, thread=None, contribution=None, dedup=False):
         if dedup:
             try:
@@ -186,7 +250,17 @@ class PluginImporter:
             except:
                 pass
 
-        convo, created = Conversation.objects.update_or_create(origin_id=origin_id, channel=channel, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        try:
+            convo, created = Conversation.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, defaults={'channel': channel, 'timestamp':tstamp, 'location':location, 'thread_start':thread, 'contribution':contribution})
+        except Conversation.MultipleObjectsReturned:
+            convo = Conversation.objects.filter(origin_id=origin_id, community=self.community, source=self.source).order_by('id').first()
+            convo.channel = channel
+            convo.timestamp = tstamp
+            convo.location = location
+            convo.thread_start = thread
+            convo.contribution = contribution
+            created = False
+
         if content is not None and (convo.content is None or len(convo.content) < len(content)):
             convo.content = content
         if tstamp is not None and speaker is not None and (speaker.last_seen is None or  speaker.last_seen < tstamp):
@@ -201,58 +275,10 @@ class PluginImporter:
             tagged_users = self.get_tagged_users(content)
             for tagged in tagged_users:
                 self.add_participants(convo, tagged_users)
+
             for link in self.get_links(content):
                 try:
-                    url = urllib.parse.urlparse(link)
-                    if not url.hostname or not url.scheme:
-                        continue
-                    if self.verbosity >= 3:
-                        print(link)
-                    # Clean hostname
-                    host = url.hostname
-                    host_parts = host.split('.')
-                    if len(host_parts) > 2:
-                        try:
-                            int(host_parts[-3])
-                            pass # host is an IP
-                        except:
-                            try:
-                                int(host_parts[-3][0])
-                                # 3-rd level subdomain starts with a number and is likely generated
-                                host = '.'.join(host_parts[-2:])
-                            except:
-                                pass
-                    if host[:4] == 'www.':
-                        host = host[4:] # Ignore www subdomains
-                    # Determine content type
-                    ctype = None
-                    if url.path is not None and url.path != '':
-                        ext = url.path.split('.')[-1].lower()
-                        if ext in ['html', 'htm']:
-                            ctype = 'Webpage'
-                        elif ext in ['png', 'jpg', 'jpeg', 'gif', 'svg'] or host in ['i.imgur.com', 'media.giphy.com', 'i.reddit.com']:
-                            ctype = 'Image'
-                        elif ext in ['zip', 'tar', 'gz', 'xz']:
-                            ctype = 'Archive'
-                        elif ext in ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
-                            ctype = 'Document'
-                        elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
-                            ctype = 'Code'
-                        elif ext in ['py', 'rs', 'go', 'cpp', 'php', 'rb', 'js', 'ts']:
-                            ctype = 'Code'
-                        elif host in ['youtube.com', 'youtu.be', 'vimeo.com', 'twitch.com', 'v.reddit.com']:
-                            ctype = 'Video'
-                        else:
-                            ctype = 'Webpage'
-                    hl, created = Hyperlink.objects.get_or_create(
-                        community=self.community,
-                        url=link,
-                        defaults={
-                            'host':host,
-                            'path':url.path or '/',
-                            'content_type': ctype,
-                        }
-                    )
+                    hl = self.make_hyperlink(link)
                     convo.links.add(hl)
                 except:
                     pass # Keep going even if capturing the hyperlink fails
@@ -328,7 +354,7 @@ class PluginImporter:
     def make_event(self, origin_id, channel, title, description, start, end, location=None, dedup=False):
         if dedup:
             try:
-                return Event.objects.filter(origin_id=origin_id, channel__source__community=self.community)[0]
+                return Event.objects.filter(origin_id=origin_id, community=self.community)[0]
             except:
                 pass
         event, created = Event.objects.update_or_create(origin_id=origin_id, community=self.community, source=self.source, channel=channel, defaults={'title':title, 'description':description, 'start_timestamp':start, 'end_timestamp':end, 'location':location})
@@ -402,6 +428,8 @@ class PluginImporter:
             retries = self.API_BACKOFF_ATTEMPTS
         backoff_time = 0
         resp = requests.get(url, headers=headers, params=params, timeout=timeout)
+        if resp.status_code == 503:
+            raise RuntimeError("Remote service not available")
         while resp.status_code == 429 and retries > 0:
             retries -= 1
             if settings.DEBUG:

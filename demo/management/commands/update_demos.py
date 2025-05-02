@@ -38,14 +38,15 @@ class Command(BaseCommand):
         print("Making Conversations...")
         tags = [None]
         tag_weights = [70]
-        members = list(community.member_set.all())
-        member_count = len(members)
+        members = community.member_set.all()
+        member_count = members.count()
         for tag in Tag.objects.filter(community=community).order_by('last_changed'):
             tags.append(tag)
             tag_weights.append(tag_weights[-1]+5)
             if tag_weights[-1] >= 95:
                 break
-        for from_member in random.sample(members, int(member_count/100)):
+        members = members.annotate(activity_count=Count('speaker_in')).order_by('-activity_count')
+        for from_member in random.sample(list(members[:int(member_count/2)]), int(member_count/200)):
             conversation_count = random.randint(1, 3)
             print("Adding %s conversations for %s" % (conversation_count, from_member))
             tag_counts = dict()
@@ -55,7 +56,7 @@ class Command(BaseCommand):
                 channel = random.choices(contact.source.channel_set.all(), k=1)[0]
                 conversation_date = datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randrange(0, 60))
 
-                conversation = Conversation.objects.create(channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
+                conversation = Conversation.objects.create(community=community, source=channel.source, channel=channel, speaker=from_member, content=conversation_text, timestamp=conversation_date)
                 if from_member.connections.count() > 1:
                     participant_count = random.randint(1, min(5, from_member.connections.count()))
                     participants = random.sample(list(from_member.connections.all()), participant_count)
@@ -95,20 +96,20 @@ class Command(BaseCommand):
         print("Making Contributions...")
         github = community.source_set.get(connector="corm.plugins.github")
         pr, created = ContributionType.objects.get_or_create(community=community, source=github, name="Pull Request")
-        skip = random.randint(0, 5)
+        skip = random.randint(0, 20)
         if not skip:
             for contributor in random.sample(members, k=random.randint(0, int(member_count/100))):
                 for i in range(random.choices([5, 4, 3, 2, 1], cum_weights=[5, 10, 20, 50, 90], k=1)[0]):
                     contribution_title = "PR: %s" % lorem.get_sentence(count=1, word_range=(5, 10))
                     contribution_date = datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randrange(0, 60))
                     contribution_channel = random.choice(github.channel_set.all())
-                    contribution = Contribution.objects.create(community=community, contribution_type=pr, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=contribution_date)
+                    contribution = Contribution.objects.create(community=community, contribution_type=pr, title=contribution_title, source=github, channel=contribution_channel, author=contributor, timestamp=contribution_date)
                     feature_tag = random.choices(tags, cum_weights=tag_weights, k=1)[0]
                     if feature_tag:
                         contribution.tags.add(feature_tag)
                     contribution.update_activity()
 
-        skip = random.randint(0, 5)
+        skip = random.randint(0, 10)
         if not skip:
             slack = community.source_set.get(connector="corm.plugins.slack")
             support, created = ContributionType.objects.get_or_create(community=community, source=slack, name="Support")
@@ -119,7 +120,7 @@ class Command(BaseCommand):
                     contribution_date = datetime.datetime.utcnow() - datetime.timedelta(minutes=random.randrange(0, 60))
                     contribution_channel = random.choice(slack.channel_set.all())
                     contribution_title = "Helped in %s" % contribution_channel.name
-                    contribution = Contribution.objects.create(community=community, contribution_type=support, title=contribution_title, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
+                    contribution = Contribution.objects.create(community=community, contribution_type=support, title=contribution_title, source=slack, channel=contribution_channel, author=contributor, timestamp=convo.timestamp)
                     contribution.tags.set(convo.tags.all())
                     contribution.update_activity(convo.activity)
 

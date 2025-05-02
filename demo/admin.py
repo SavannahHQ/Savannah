@@ -13,6 +13,12 @@ class DemoAdmin(admin.ModelAdmin):
     def link(self, demo):
         return mark_safe("<a href=\"/dashboard/%s\" target=\"_blank\">View</a>" % demo.community.id)
     link.short_description = "Dashboard"
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
+
+
 admin.site.register(Demonstration, DemoAdmin)
 
 class DemoLogAdmin(admin.ModelAdmin):

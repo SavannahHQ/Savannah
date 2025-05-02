@@ -1,0 +1,63 @@
+{% extends "savannahv2/base.html"%}
+{% load static member_utils %}
+{% load crispy_forms_tags %}
+
+{% block page_title %} | Add Opportunity{% endblock %}
+
+{% block page_content %}
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800"><a href="{{view.back_url}}"><i class="fas fa-chevron-left"></i></a> Add Opportunity</h1>
+          </div>
+
+          <!-- Content Row -->
+
+          <div class="row">
+
+            <!-- Profile  -->
+            <div class="col-xl-8 col-lg-7">
+              <div class="card shadow mb-4">
+                <!-- Card Header - Dropdown -->
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Contribution Opportunity</h6>
+
+                </div>
+                <!-- Card Body -->
+                <div class="card-body">
+                <div class="container-fluid">
+
+                <form class="form" action="{{view.self_url}}" method="POST">
+                {% csrf_token %}
+                {{ view.form|crispy }}
+                <button class="btn btn-primary" type="submit">Save</button>
+                <a class="btn btn-secondary" href="{{view.back_url}}">Cancel</a>
+                </form>
+                </div>            
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- /.container-fluid -->
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+$('#id_member').select2({
+  multiple: false,
+  ajax: {
+    url: '{% url "member_lookup" view.community.id %}',
+    dataType: 'json',
+    // Additional AJAX parameters go here; see the end of this chapter for the full code of this example
+    processResults: function (data) {
+      // Transforms the top-level key of the response object from 'items' to 'results'
+      return {
+        results: data.members
+      };
+    }
+  }    
+});
+</script>
+{% endblock %}

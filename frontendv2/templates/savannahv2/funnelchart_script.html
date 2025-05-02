@@ -11,7 +11,7 @@ var myPieChart = new Chart(ctx, {
     }],
   },
   options: {
-    sort: 'asc',
+    sort: {% if chart.invert %}'asc'{% else %}'desc'{% endif %},
     maintainAspectRatio: false,
     tooltips: {
       backgroundColor: "rgb(255,255,255)",

@@ -37,27 +37,50 @@ class ManagerDashboard(SavannahView):
         self.charts = set()
 
     @property
+    def source_activity(self):
+        current_range = 7
+        average_range = 30
+        sources = Source.objects.filter(community=self.community, enabled=True).exclude(connector='corm.plugins.null')
+        sources = sources.annotate(current_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=current_range), activity__timestamp__lte=datetime.datetime.utcnow())))
+        sources = sources.annotate(previous_count=Count('activity', filter=Q(activity__timestamp__gt=datetime.datetime.utcnow() - datetime.timedelta(days=average_range+current_range), activity__timestamp__lte=datetime.datetime.utcnow() - datetime.timedelta(days=current_range))))
+        sources = sources.order_by('-previous_count')[:12]
+        for source in sources:
+            if source.previous_count <= 0:
+                continue
+            source.previous_avg = source.previous_count / (average_range/current_range)
+            source.percent = 100 * source.current_count / source.previous_avg
+            source.view_name = 'conversations'
+            if source.connector in ['corm.plugins.meetup', 'corm.plugins.ical'] or 'calendar' in source.icon_name:
+                source.view_name = 'events'
+            yield source
+        # return sources
+
+    @property
     def recent_notes(self):
         return Note.objects.filter(member__community=self.community, author=self.request.user).order_by('-timestamp')[:5]
 
     @property
     def open_tasks(self):
-        return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due')
+        return Task.objects.filter(community=self.community, owner=self.request.user, done__isnull=True).order_by('due').prefetch_related('stakeholders')
+
+    @property
+    def open_opportunities(self):
+        return Opportunity.objects.filter(community=self.community, created_by=self.request.user, closed_at__isnull=True).order_by('deadline').select_related('member')
 
     @property
     def open_gifts(self):
-        return Gift.objects.filter(community=self.community, received_date__isnull=True).order_by('sent_date')
+        return Gift.objects.filter(community=self.community, received_date__isnull=True).order_by('sent_date').select_related('gift_type', 'member')
 
     @property
     def member_watches(self):
         watches = MemberWatch.objects.filter(manager=self.request.user, member__community=self.community).order_by(IsNull('last_seen'), '-last_seen')
-        watches = watches.select_related('member').prefetch_related('member__tags')
+        watches = watches.select_related('member', 'member__company', 'last_channel__source').prefetch_related('member__tags')
         return watches
 
     @property
     def new_members(self):
         members = Member.objects.filter(community=self.community).order_by("-first_seen")[:5]
-        members = members.prefetch_related('tags')
+        members = members.prefetch_related('tags').select_related('company')
         return members
 
     @property
@@ -76,12 +99,12 @@ class ManagerDashboard(SavannahView):
     @property 
     def top_connections(self):
         if self.user_member:
-            participants = Participant.objects.filter(initiator=self.user_member).exclude(member=self.user_member)
-            participants = participants.values('member').annotate(connection_count=Count('conversation', distinct=True))
-            for p in participants.order_by('-connection_count')[:10]:
-                m = Member.objects.get(id=p['member'])
-                m.connection_count = p['connection_count']
-                yield m
+            members = Member.objects.filter(community=self.community).exclude(id=self.user_member.id)
+            members = members.annotate(connection_count=Count('participant_in', filter=Q(participant_in__initiator=self.user_member)))
+            members = members.filter(connection_count__gt=0).order_by('-connection_count')
+            members = members.select_related('company')
+            return members[:10]
+
         else:
             return []
 
@@ -124,6 +147,33 @@ class ManagerDashboard(SavannahView):
         return redirect('dashboard', community_id=community_id)
 
     @login_required
+    def update_opportunity(request, community_id):
+        if request.method == "POST":
+            try:
+                opp_id, status = request.POST.get('move_to').split(':')
+                opp_id = int(opp_id)
+                status = int(status)
+            except:
+                messages.error(request, 'Bad opportunity or status, can not update.')
+                return redirect('dashboard', community_id=community_id)
+            try:
+                opp = Opportunity.objects.get(id=opp_id, community_id=community_id)
+                opp.status = status
+                if opp.status in Opportunity.CLOSED_STATUSES:
+                    if opp.closed_at is None:
+                        opp.closed_at = datetime.datetime.utcnow()
+                    if opp.closed_by is None:
+                        opp.closed_by = request.user
+                else:
+                    opp.closed_at = None
+                    opp.closed_by = None
+                messages.success(request, "Opportunity status updated to %s." % opp.get_status_display())
+                opp.save()
+            except:
+                messages.error(request, "Opportunity not found, can not update its status.")
+        return redirect('dashboard', community_id=community_id)
+
+    @login_required
     def as_view(request, community_id):
         dashboard = ManagerDashboard(request, community_id)
 
@@ -143,7 +193,7 @@ class ManagerTaskEdit(SavannahView):
             form = TaskForm(instance=self.task)
         form.fields['owner'].widget.choices = [(user.id, user.username) for user in User.objects.filter(groups=self.community.managers)]
         form.fields['project'].widget.choices = [(project.id, project.name) for project in Project.objects.filter(community=self.community).order_by('-default_project', 'name')]
-        form.fields['stakeholders'].widget.choices = [(member.id, member.name) for member in Member.objects.filter(community=self.community)]
+        form.fields['stakeholders'].widget.choices = [(member.id, member.name) for member in self.task.stakeholders.all()]
         return form
 
     @login_required
@@ -424,7 +474,7 @@ class Overview(SavannahFilterView):
     def levels_chart(self):
         if self._levelsChart is None:
             project = get_object_or_404(Project, community=self.community, default_project=True)
-            self._levelsChart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES)
+            self._levelsChart = FunnelChart(project.id, project.name, stages=MemberLevel.LEVEL_CHOICES, invert=True)
             for level, name in MemberLevel.LEVEL_CHOICES:
                 levels = MemberLevel.objects.filter(community=self.community, project=project, level=level)
                 levels = levels.filter(timestamp__gte=self.rangestart, timestamp__lte=self.rangeend)

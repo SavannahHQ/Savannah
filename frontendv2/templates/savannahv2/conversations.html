@@ -4,6 +4,10 @@
 {% block page_title %} | {{view.community.name}} Conversations{% endblock %}
 
 {% block page_content %}
+<!--
+  rangestart: {{view.rangestart}}
+  rangeend: {{view.rangeend}}
+-->
           <!-- Page Heading -->
           <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Conversations</h1>
@@ -31,7 +35,8 @@
                       <div class="dropdown-header">Show by:</div>
                       <a class="dropdown-item text-muted" href="?by_convo"><i class="fas fa-comment"> </i> Conversation</a>
                       <a class="dropdown-item text-muted" href="?by_tag"><i class="fas fa-tags"> </i> Tag</a>
-                      <a class="dropdown-item text-muted" href="?by_source"><i class="fas fa-filter"> </i> Source</a>
+                      <a class="dropdown-item text-muted" href="?by_source"><i class="fas fa-database"> </i> Source</a>
+                      <a class="dropdown-item text-muted" href="?by_channel"><i class="fas fa-hashtag"> </i> Channel</a>
                       <a class="dropdown-item text-muted" href="?by_role"><i class="fas fa-users"> </i> Role</a>
                     </div>
                   </div>
@@ -275,7 +280,7 @@
               <!-- Most Engaged Users-->
               <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                  <h6 class="m-0 font-weight-bold text-primary">Most Engaged</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Most Connected</h6>
                 </div>
                 <div class="card-body p-0">
                 <table class="table">
@@ -342,7 +347,7 @@
                 {% for conversation in view.all_conversations %}
                 <tr>
                   <td class="text-nowrap">{{conversation.timestamp|dateortime}}</td>
-                  <td class="text-nowrap"><i class="{{conversation.channel.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
+                  <td class="text-nowrap"><i class="{{conversation.source.icon_name}}" title="{{conversation.source.name}}"></i> {{conversation.channel.name}}</td>
                   <td>{% if conversation.speaker %}<a href="{% url 'member_profile' conversation.speaker.id %}">{{conversation.speaker.name}}</a>{% endif %}</td>
                   <td class="show-children-on-hover">
                   <div class="show-on-parent-hover d-inline" style="margin-left: -1.5em">

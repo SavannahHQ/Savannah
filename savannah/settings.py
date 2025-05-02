@@ -36,6 +36,8 @@ SITE_ROOT = 'https://savannahcrm.com'
 SITE_DOMAIN = 'savannahcrm.com'
 SITE_NAME = 'Savannah CRM'
 SYSTEM_USER = 'admin'
+FONTAWESOME_KIT_URL = 'https://kit.fontawesome.com/a160749d77.js'
+
 PUBLIC_EMAIL_DOMAINS = [
     'gmail.com',
     'googlemail.com',
@@ -128,8 +130,7 @@ CORM_PLUGINS = [
     "corm.plugins.rss.RssPlugin",
     "corm.plugins.slack.SlackPlugin",
     "corm.plugins.stackexchange.StackExchangePlugin",
-    "corm.plugins.salesforce.SalesforcePlugin",
-    "corm.plugins.twitter.TwitterPlugin"
+    "corm.plugins.salesforce.SalesforcePlugin"
 ]
 
 MIDDLEWARE = [
@@ -160,6 +161,7 @@ TEMPLATES = [
                 "totd.context_processors.tips",
                 "simple_ga.context_processors.events",
                 "frontendv2.context_processors.colors",
+                "frontendv2.context_processors.fonts",
             ],
         },
     },
@@ -243,3 +245,12 @@ GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
 GITHUB_SCOPE = "read:org,public_repo"
 
 TOTD_EXCLUDE_NS = ['admin']
+
+DJSTRIPE_WEBHOOK_EVENT_CALLBACK = "billing.callbacks.stripe_event_callback"
+# Stripe fake keys
+DJSTRIPE_WEBHOOK_SECRET = "whsec_"
+STRIPE_TEST_SECRET_KEY = "sk_test_xx"
+STRIPE_TEST_PUBLIC_KEY = "pk_test_xx"
+STRIPE_LIVE_SECRET_KEY = "sk_live_xx"
+STRIPE_LIVE_PUBLIC_KEY = "pk_live_xx"
+STRIPE_SECRET_KEY = "sk_xx"
