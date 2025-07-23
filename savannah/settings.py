@@ -32,10 +32,10 @@ IS_DEMO = False
 DEMO_POOL = 3
 DEMO_DURATION_HOURS = 24
 DEMO_SIZE = 500
-SITE_ROOT = 'https://savannahcrm.com'
-SITE_DOMAIN = 'savannahcrm.com'
-SITE_NAME = 'Savannah CRM'
-SYSTEM_USER = 'admin'
+SITE_ROOT = os.environ.get('SITE_ROOT')
+SITE_DOMAIN = os.environ.get('SITE_DOMAIN')
+SITE_NAME = os.environ.get('SITE_NAME')
+SYSTEM_USER = os.environ.get('SYSTEM_USER')
 FONTAWESOME_KIT_URL = 'https://kit.fontawesome.com/a160749d77.js'
 
 PUBLIC_EMAIL_DOMAINS = [
@@ -80,13 +80,13 @@ COMPANY_SUGGESTION_MATCHES = 3
 
 ALLOWED_HOSTS = []
 ALLOWED_EMAILS_PER_DAY = 100
-DEFAULT_FROM_EMAIL = "SavannahHQ <noreply@savannahhq.com>"
+DEFAULT_FROM_EMAIL = 'SavannahHQ <noreply@savannahhq.com>'
 EMAIL_CONFIRMAION_EXPIRATION_DAYS = 10
 PASSWORD_RESET_EXPIRATION_DAYS = 1
 
 MAX_CHANNEL_IMPORT_FAILURES = 24
 MAX_SOURCE_IMPORT_FAILURES = 48
-MAX_IMPORT_HISTORY_DAYS=180
+MAX_IMPORT_HISTORY_DAYS = 180
 
 # Application definition
 
@@ -101,8 +101,8 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     'rest_framework',
-    "imagekit",
-    "imagekit_cropper",
+    'imagekit',
+    'imagekit_cropper',
     'notifications',
     'crispy_forms',
     'totd',
@@ -119,19 +119,18 @@ INSTALLED_APPS = [
 ]
 
 CORM_PLUGINS = [
-    "corm.plugins.discord.DiscordPlugin",
-    "corm.plugins.discourse.DiscoursePlugin",
-    "corm.plugins.github.GithubPlugin",
-    "corm.plugins.gitlab.GitlabPlugin",
-    "corm.plugins.facebook.FacebookPlugin",
-    "corm.plugins.ical.iCalPlugin",
-    "corm.plugins.meetup.MeetupPlugin",
-    "corm.plugins.reddit.RedditPlugin",
-    "corm.plugins.rss.RssPlugin",
-    "corm.plugins.slack.SlackPlugin",
-    "corm.plugins.stackexchange.StackExchangePlugin",
-    "corm.plugins.salesforce.SalesforcePlugin",
-    "corm.plugins.twitter.TwitterPlugin"
+    'corm.plugins.discord.DiscordPlugin',
+    'corm.plugins.discourse.DiscoursePlugin',
+    'corm.plugins.github.GithubPlugin',
+    'corm.plugins.gitlab.GitlabPlugin',
+    'corm.plugins.facebook.FacebookPlugin',
+    'corm.plugins.ical.iCalPlugin',
+    'corm.plugins.meetup.MeetupPlugin',
+    'corm.plugins.reddit.RedditPlugin',
+    'corm.plugins.rss.RssPlugin',
+    'corm.plugins.slack.SlackPlugin',
+    'corm.plugins.stackexchange.StackExchangePlugin',
+    'corm.plugins.salesforce.SalesforcePlugin'
 ]
 
 MIDDLEWARE = [
@@ -142,8 +141,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "simple_ga.middleware.GAEventMiddleware",
-    "frontendv2.middleware.ReadNotificationMiddleware",
+    'simple_ga.middleware.GAEventMiddleware',
+    'frontendv2.middleware.ReadNotificationMiddleware',
 ]
 
 ROOT_URLCONF = 'savannah.urls'
@@ -159,10 +158,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                "totd.context_processors.tips",
-                "simple_ga.context_processors.events",
-                "frontendv2.context_processors.colors",
-                "frontendv2.context_processors.fonts",
+                'totd.context_processors.tips',
+                'simple_ga.context_processors.events',
+                'frontendv2.context_processors.colors',
+                'frontendv2.context_processors.fonts',
             ],
         },
     },
@@ -174,13 +173,36 @@ WSGI_APPLICATION = 'savannah.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
+DEFAULT_AUTO_FIELD='django.db.models.AutoField' 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+   'default': {
+       'ENGINE': 'django.db.backends.sqlite3',
+       'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+   }
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.environ.get('POSTGRES_DB'),
+#         'USER': os.environ.get('POSTGRES_USER'),
+#         'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+#         'HOST': os.environ.get('POSTGRES_HOST'),
+#         'PORT': os.environ.get('POSTGRES_PORT'),
+#     }
+# }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.environ.get('MYSQL_DATABASE'),
+#         'USER': os.environ.get('MYSQL_USER'),
+#         'PASSWORD': os.environ.get('MYSQL_PASSWORD'),
+#         'HOST': os.environ.get('MYSQL_DB_HOST'),
+#         'PORT': os.environ.get('MYSQL_DB_PORT'),
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -216,11 +238,11 @@ USE_TZ = True
 LOGIN_URL = '/login/'
 
 MESSAGE_TAGS = {
-    messages.DEBUG: "alert-debug",
-    messages.INFO: "alert-info",
-    messages.SUCCESS: "alert-success",
-    messages.WARNING: "alert-warning",
-    messages.ERROR: "alert-danger",
+    messages.DEBUG: 'alert-debug',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
 }
 
 DJANGO_NOTIFICATIONS_CONFIG = { 
@@ -234,8 +256,8 @@ CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 STATIC_URL = '/static/'
 STATIC_ROOT = './static/'
-MEDIA_ROOT = "./media/"
-MEDIA_URL = "/media/"
+MEDIA_ROOT = './media/'
+MEDIA_URL = '/media/'
 
 SLACK_CLIENT_ID = os.environ.get('SLACK_CLIENT_ID')
 SLACK_CLIENT_SECRET = os.environ.get('SLACK_CLIENT_SECRET')
@@ -243,8 +265,13 @@ SLACK_SCOPE = 'channels:history,channels:read,users:read'
 
 GITHUB_CLIENT_ID = os.environ.get('GITHUB_CLIENT_ID')
 GITHUB_CLIENT_SECRET = os.environ.get('GITHUB_CLIENT_SECRET')
-GITHUB_SCOPE = "read:org,public_repo"
+GITHUB_SCOPE = 'read:org,public_repo'
 
 TOTD_EXCLUDE_NS = ['admin']
 
-DJSTRIPE_WEBHOOK_EVENT_CALLBACK = "billing.callbacks.stripe_event_callback"
+DJSTRIPE_WEBHOOK_EVENT_CALLBACK = 'billing.callbacks.stripe_event_callback'
+
+DJSTRIPE_WEBHOOK_SECRET = os.environ.get('DJSTRIPE_WEBHOOK_SECRET')
+STRIPE_TEST_SECRET_KEY = os.environ.get('STRIPE_TEST_SECRET_KEY')
+STRIPE_LIVE_SECRET_KEY = os.environ.get('STRIPE_LIVE_SECRET_KEY')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')

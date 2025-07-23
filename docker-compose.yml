@@ -1,0 +1,56 @@
+
+services:
+  app:
+    build:
+      context: .
+    env_file:
+      - .env
+    ports:
+      - "8085:8000"
+    volumes:
+      - .:/app
+    command: >
+      bash -c "./entrypoint.sh"
+    ## Enable this section if using Postgres or MySql/MariaDB
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+
+    ## Enable this section if using Postgres DB
+    ## Also note the settings in savanna/settings.py
+    #   db:
+    #     image: postgres:15
+    #     env_file:
+    #       - .env
+    #     ports:
+    #       - "5432:5432"
+    #     volumes:
+    #       - postgres_data:/var/lib/postgresql/data
+    #     healthcheck:
+    #       test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER"]
+    #       interval: 10s
+    #       timeout: 5s
+    #       retries: 5
+    # volumes:
+    #   postgres_data:
+
+    ## Enable this section if using MySQL/MariaDB
+    ## Also note the settings in savanna/settings.py
+    # db:
+    #   image: mysql:5.7
+    #   container_name: savannah_mariadb
+    #   restart: always
+    #   volumes:
+    #     - mysql_data:/var/lib/mysql
+    #     - ./mysql-logs:/var/log/mysql
+    #   env_file:
+    #     - .env
+    #   ports:
+    #     - "3306:3306"
+    #   healthcheck:
+    #     test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
+    #     timeout: 20s
+    #     retries: 10
+    #   # command: --general-log=1 --general-log-file=/var/log/mysql/mysql.log --log-error=/var/log/mysql/error.log
+    # volumes:
+    #   mysql_data:

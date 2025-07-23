@@ -291,7 +291,7 @@ class Command(BaseCommand):
             print("%s has no #greeting tag" % community)
 
         # From Chat-style sources
-        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss', 'corm.plugins.twitter', 'corm.plugins.facebook', 'corm.plugins.meetup'))
+        chat_sources = Source.objects.filter(community=community, connector__in=('corm.plugins.slack', 'corm.plugins.discord', 'corm.plugins.reddit', 'corm.plugins.rss', 'corm.plugins.facebook', 'corm.plugins.meetup'))
         convos = convos.filter(channel__source__in=chat_sources)
 
         # Involving only the speaker and one other participant

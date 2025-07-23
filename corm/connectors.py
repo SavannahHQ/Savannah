@@ -42,6 +42,4 @@ class ConnectionManager(object):
             return "https://github.com/%s" % contact.detail
         if connector == "corm.plugins.reddit":
             return "https://reddit.com/u/%s" % contact.detail
-        if connector == "corm.plugins.twitter":
-            return "https://twitter.com/%s" % contact.detail
         return None

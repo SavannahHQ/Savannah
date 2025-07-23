@@ -11,6 +11,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, User
 from django.contrib import messages
 from django.conf import settings
 from django import forms
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 from corm.models import *
@@ -124,7 +125,7 @@ def password_reset_request(request):
 def reset_password(request, request_key):
     try:
         reset = PasswordResetRequest.objects.get(key=request_key)
-        if reset.expires >= datetime.datetime.utcnow():
+        if reset.expires >= timezone.now():
             if request.method == "POST":
                 form = SetPasswordForm(user=reset.user, data=request.POST)
                 if form.is_valid():
@@ -182,7 +183,7 @@ class SavannahView:
         else:
             self.community = None
         if request.user.is_authenticated:
-            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': datetime.datetime.utcnow(), 'send_notifications':(not request.user.is_superuser)})
+            self.manager_profile, created = ManagerProfile.objects.update_or_create(user=request.user, community=self.community, defaults={'last_seen': timezone.now(), 'send_notifications':(not request.user.is_superuser)})
             self.user_member = self.manager_profile.member
         else:
             self.manager_profile = None
@@ -205,15 +206,15 @@ class SavannahView:
             elif self.community.status == Community.ARCHIVED:
                 messages.info(self.request, "This community has been archived and will no longer receive updates.")
             elif self.community.source_set.all().count() == 0:
-                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                if self.community.created <= timezone.now() - datetime.timedelta(days=1):
                     messages.error(self.request, "We can't import data for <b>%s</b> until you've added add your first data source. You can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-database\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
                 else:
                     messages.info(self.request, "It looks like you haven't added any data sources to <b>%s</b> yet, you can do that on the <a class=\"btn btn-primary btn-sm\" href=\"%s\"><i class=\"fas fa-database\"></i> Sources</a> page." % (self.community.name, reverse('sources', kwargs={'community_id':self.community.id})))
-                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                if self.community.created <= timezone.now() - datetime.timedelta(days=1):
                     messages.info(self.request, "You can try demo of Savannah CRM using sample data on <b><a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a></b>.")
             elif self.community.status == Community.SETUP:
                 messages.success(self.request, "Your community is all set! <a href=\"%s\">Start you subsription now</a> and Savannah will begin importing your data." % reverse('billing:signup_org', kwargs={'community_id':self.community.id}))
-                if self.community.created <= datetime.datetime.utcnow() - datetime.timedelta(days=1):
+                if self.community.created <= timezone.now() - datetime.timedelta(days=1):
                     messages.info(self.request, "You can try demo of Savannah CRM using sample data on <a href=\"https://demo.savannahhq.com\" target=\"_blank\">our demo site</a>.")
         
     @property
@@ -358,8 +359,8 @@ class SavannahFilterView(SavannahView):
             request.session['source'] = None
 
         self.timespan = self.MAX_TIMESPAN
-        self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
-        self.rangeend = datetime.datetime.utcnow()
+        self.rangestart = timezone.now() - datetime.timedelta(days=self.timespan)
+        self.rangeend = timezone.now()
         self.DATE_FORMAT = '%Y-%m-%d'
         if 'timefilter' not in request.session:
             request.session['timefilter'] = 'timespan'
@@ -405,8 +406,8 @@ class SavannahFilterView(SavannahView):
 
         self.timefilter = request.session['timefilter']
         if self.timefilter == 'timespan':
-            self.rangestart = datetime.datetime.utcnow() - datetime.timedelta(days=self.timespan)
-            self.rangeend = datetime.datetime.utcnow()
+            self.rangestart = timezone.now() - datetime.timedelta(days=self.timespan)
+            self.rangeend = timezone.now()
         elif self.rangestart is not None and self.rangeend is not None:
             self.timespan = (self.rangeend - self.rangestart).days + 1
 
@@ -428,7 +429,7 @@ class SavannahFilterView(SavannahView):
 
     @property
     def is_filtered(self):
-        if self.filter['timespan'] and (self.timespan != self.MAX_TIMESPAN or self.rangeend.date != datetime.datetime.utcnow().date):
+        if self.filter['timespan'] and (self.timespan != self.MAX_TIMESPAN or self.rangeend.date != timezone.now().date):
             return True
         if self.filter['member_role'] and self.role is not None:
             return True
