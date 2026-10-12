@@ -163,6 +163,7 @@ TEMPLATES = [
                 "simple_ga.context_processors.events",
                 "frontendv2.context_processors.colors",
                 "frontendv2.context_processors.fonts",
+                "frontendv2.context_processors.company_logos",
             ],
         },
     },
@@ -248,3 +249,13 @@ GITHUB_SCOPE = "read:org,public_repo"
 TOTD_EXCLUDE_NS = ['admin']
 
 DJSTRIPE_WEBHOOK_EVENT_CALLBACK = "billing.callbacks.stripe_event_callback"
+
+# Company logos are looked up by website domain from a favicon/logo service.
+# COMPANY_LOGO_URL must contain %(domain)s. The default, DuckDuckGo's favicon
+# service, needs no API key. Other options:
+#   Google:   https://www.google.com/s2/favicons?domain=%(domain)s&sz=64
+#   logo.dev: https://img.logo.dev/%(domain)s?token=YOUR_TOKEN&size=64
+# Set COMPANY_LOGO_URL to an empty string to disable automatic logos.
+COMPANY_LOGO_URL = os.environ.get('COMPANY_LOGO_URL', 'https://icons.duckduckgo.com/ip3/%(domain)s.ico')
+COMPANY_LOGO_ATTRIBUTION = os.environ.get('COMPANY_LOGO_ATTRIBUTION', 'Logos provided by DuckDuckGo')
+COMPANY_LOGO_ATTRIBUTION_URL = os.environ.get('COMPANY_LOGO_ATTRIBUTION_URL', 'https://duckduckgo.com')

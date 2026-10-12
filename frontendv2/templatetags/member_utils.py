@@ -39,7 +39,7 @@ def avatar(member):
             html = '<img class="rounded mr-1" src="%s" height="32" width="32" />' % static('img/user-bot.png')
         else:
             html = '<img class="rounded mr-1" src="%s" height="32" width="32" />' % static('img/user-default.png')
-    if member.company and member.company.icon_url:
-        html += '<img title="%s" class="icon-badge rounded mr-1 small" src="%s" />' % (member.company.name, member.company.icon_url)
+    if member.company and member.company.logo_url:
+        html += '<img title="%s" class="icon-badge rounded mr-1 small" src="%s" onerror="this.src=\'%s\';" />' % (member.company.name, member.company.logo_url, static('img/company-default.png'))
     return mark_safe('<span class="avatar-group">' + html +'</span>')
 
