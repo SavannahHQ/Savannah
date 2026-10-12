@@ -1415,18 +1415,29 @@ class Company(models.Model):
             self.set_tag(new_tag)
 
     @property
+    def domain(self):
+        if not self.website:
+            return None
+        website = self.website.strip()
+        if '://' in website:
+            website = website.split('://', 1)[1]
+        domain = website.split('/')[0].split('?')[0].split(':')[0].lower()
+        if domain.startswith('www.'):
+            domain = domain[4:]
+        return domain or None
+
+    @property
     def logo_url(self):
+        # An explicitly set icon_url always wins. Otherwise derive a logo from
+        # the website's domain using the configured provider, without storing
+        # it, so the provider can be changed later (see COMPANY_LOGO_URL).
         if self.icon_url:
             return self.icon_url
-        elif self.website:
-            domain = self.website.split("/")[2]
-            if domain.startswith('www.'):
-                domain = domain[4:]
-            self.icon_url = "https://logo.clearbit.com/%s?size=32" % domain
-            self.save()
-            return self.icon_url
-        else:
-            return None
+        template = getattr(settings, 'COMPANY_LOGO_URL', '')
+        domain = self.domain
+        if template and domain:
+            return template % {'domain': domain}
+        return None
 
     @property
     def first_seen(self):

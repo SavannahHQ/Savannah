@@ -98,9 +98,11 @@
 
 
               </div>
+              {% if company_logo_attribution %}
               <div class="d-flex justify-content-center">
-                <a class="text-muted" href="https://clearbit.com">Logos provided by Clearbit</a>
+                <a class="text-muted" href="{{company_logo_attribution_url}}">{{company_logo_attribution}}</a>
               </div>
+              {% endif %}
 
             </div>
 

@@ -242,7 +242,7 @@
                 {% for company in view.company_members %}
                 <tr>
                   <td>
-                    {{company.icon_url|icon:"img/company-default.png"}}
+                    {{company.logo_url|icon:"img/company-default.png"}}
                     {{ company.name }}
                   </td>
                   <td>{{company.member_count}}</td>
@@ -274,7 +274,7 @@
                 {% for company in view.company_conversations %}
                 <tr>
                   <td>
-                    {{company.icon_url|icon:"img/company-default.png"}}
+                    {{company.logo_url|icon:"img/company-default.png"}}
                     {{ company.name }}
                   </td>
                   <td>{{company.convo_count}}</td>
@@ -306,7 +306,7 @@
                 {% for company in view.company_contributions %}
                 <tr>
                   <td>
-                    {{company.icon_url|icon:"img/company-default.png"}}
+                    {{company.logo_url|icon:"img/company-default.png"}}
                     {{ company.name }}
                   </td>
                   <td>{{company.contrib_count}}</td>
