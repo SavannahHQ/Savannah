@@ -43,7 +43,7 @@ Once logged in you will need to go to the Django admin (http://localhost:8000/ad
 
 You can now view the Savannah dashboard at http://localhost:8000/dashboard/1/
 
-Savannah can import data from Slack, Github, Discourse and RSS feeds. To import, create a `Source` from the `Sources` page.
+Savannah can import data from Slack, Github, Discourse, Linear and RSS feeds. To import, create a `Source` from the `Sources` page.
 
 
 ### Running importers
