@@ -123,6 +123,7 @@ CORM_PLUGINS = [
     "corm.plugins.gitlab.GitlabPlugin",
     "corm.plugins.facebook.FacebookPlugin",
     "corm.plugins.ical.iCalPlugin",
+    "corm.plugins.linear.LinearPlugin",
     "corm.plugins.meetup.MeetupPlugin",
     "corm.plugins.reddit.RedditPlugin",
     "corm.plugins.rss.RssPlugin",
