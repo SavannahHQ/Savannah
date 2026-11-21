@@ -4,6 +4,37 @@ from django.db import migrations, models
 import django.db.models.deletion
 import uuid
 
+# Tables that were renamed without their indexes, mapped to the name each had before.
+RENAMED_TABLES = {
+    'corm_contribution': 'corm_activity',
+    'corm_contribution_tags': 'corm_activity_tags',
+    'corm_contributiontype': 'corm_activitytype',
+}
+
+
+def rename_indexes_of_renamed_tables(apps, schema_editor):
+    # PostgreSQL index names are unique per schema, not per table, so the indexes
+    # still named after the old Activity tables would collide with the indexes of
+    # the Activity model created below. A fresh SQLite or MySQL database has no
+    # such collision.
+    if schema_editor.connection.vendor == 'postgresql':
+        with schema_editor.connection.cursor() as cursor:
+            cursor.execute(
+                'SELECT tablename, indexname FROM pg_indexes'
+                ' WHERE schemaname = current_schema() AND tablename = ANY(%s)',
+                [list(RENAMED_TABLES)],
+            )
+            indexes = cursor.fetchall()
+
+        for table, index in indexes:
+            old_table = RENAMED_TABLES[table]
+
+            if index.startswith(old_table + '_'):
+                old_name = schema_editor.quote_name(index)
+                new_name = schema_editor.quote_name(table + index[len(old_table):])
+                schema_editor.execute(f'ALTER INDEX {old_name} RENAME TO {new_name}')
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,6 +42,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(rename_indexes_of_renamed_tables, migrations.RunPython.noop),
         migrations.CreateModel(
             name='Activity',
             fields=[
