@@ -16,6 +16,7 @@ from imagekit.models import ImageSpecField
 from imagekit.processors import ResizeToFill
 
 from corm.connectors import ConnectionManager
+from corm.fields import DeploymentChoicesCharField
 
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
@@ -36,7 +37,7 @@ class Icon(ImageSpec):
 
 class UserAuthCredentials(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    connector = models.CharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
+    connector = DeploymentChoicesCharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
     auth_secret = models.CharField(max_length=1024, null=True, blank=True)
@@ -341,7 +342,7 @@ class Tag(models.Model):
     color = models.CharField(max_length=16)
     keywords = models.CharField(max_length=256, null=True, blank=True, help_text=_("Comma-separated list of words. If found in a conversation, this tag will be applied."))
     last_changed = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    connector = models.CharField(max_length=256, null=True, blank=True, choices=ConnectionManager.CONNECTOR_CHOICES)
+    connector = DeploymentChoicesCharField(max_length=256, null=True, blank=True, choices=ConnectionManager.CONNECTOR_CHOICES)
     editable = models.BooleanField(default=True)
 
     @property
@@ -802,7 +803,7 @@ class Source(models.Model):
     class Meta:
         ordering = ("name",)
     community = models.ForeignKey(Community, on_delete=models.CASCADE)
-    connector = models.CharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
+    connector = DeploymentChoicesCharField(max_length=256, choices=ConnectionManager.CONNECTOR_CHOICES)
     name = models.CharField(max_length=256)
     server = models.CharField(max_length=256, null=True, blank=True)
     auth_id = models.CharField(max_length=256, null=True, blank=True)
@@ -1474,7 +1475,7 @@ class ManagerProfile(models.Model):
     member = models.ForeignKey(Member, verbose_name=_("Member Profile"), on_delete=models.SET_NULL, blank=True, null=True)
     realname = models.CharField(verbose_name=_("Preferred Name"), max_length=150, blank=True)
     contact_email = models.EmailField(verbose_name=_("Preferred Email"), null=True, blank=True)
-    tz = models.CharField(
+    tz = DeploymentChoicesCharField(
         max_length=32,
         verbose_name=_("Timezone"),
         default="UTC",
