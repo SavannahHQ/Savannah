@@ -211,7 +211,11 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+# Savannah stores and compares naive UTC datetimes (datetime.utcnow()) throughout,
+# so time zone support has to stay off: aware values from the database cannot be
+# compared with them. This relies on TIME_ZONE staying 'UTC'; any other zone would
+# make Django's own timestamps (auto_now, sessions) disagree with utcnow().
+USE_TZ = False
 
 LOGIN_URL = '/login/'
 

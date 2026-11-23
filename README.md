@@ -65,3 +65,22 @@ To auto-tag conversations & contributions, run:
 ./env/bin/python manage.py tag_conversations
 ./env/bin/python manage.py tag_contributions
 ```
+
+## Running the tests
+
+The tests need Python 3.8 and a PostgreSQL server, because they build their database by running every migration the way a new PostgreSQL installation does.
+
+Install the test tools next to the application requirements:
+
+```
+./env/bin/pip install -r requirements.txt -r requirements-dev.txt
+```
+
+Tell the tests where PostgreSQL is and run them:
+
+```
+export DATABASE_HOST=localhost DATABASE_NAME=savannah DATABASE_USER=savannah DATABASE_PASSWORD=savannah
+./env/bin/pytest
+```
+
+`DATABASE_PORT` defaults to 5432. The tests never touch `DATABASE_NAME` itself: they create and drop a separate `test_<DATABASE_NAME>` database (or the one named by `TEST_DATABASE_NAME`), so the user needs permission to create databases. The settings they run with are in `savannah/test_settings.py`.
